@@ -1,49 +1,36 @@
 
 
-# Market Analysis Improvements Plan
+# System-Wide Dead Code Removal
 
 ## Summary
-Five improvements to the Market Analysis feature: region selector, resilient AI parsing, empty states, export/print, and skill gap overlay.
+After auditing every component, hook, utility, and edge function for usage references, three files have zero consumers and should be removed.
 
----
+## Dead Code Found
+
+### 1. `src/utils/majorContent.ts` (295 lines)
+A hardcoded map of major-to-skills/courses/trends data. It was likely superseded by the AI-driven `market-intelligence` edge function and the `careerSkillFramework.ts` utility. No file in the project imports `majorContent`, `getMajorContent`, or `getAllMajors`.
+
+### 2. `supabase/functions/job-digest/index.ts`
+A weekly email digest function that fetches new job postings and sends emails via Resend. It is never invoked from the frontend, never scheduled via a cron trigger, and requires a `RESEND_API_KEY` that may not even be configured. Dead deployment cost with no consumer.
+
+### 3. `supabase/functions/process-referral/index.ts`
+A function to process referral codes and grant rewards. Never called from any frontend code. The `ReferralCard` component handles referral logic client-side via direct Supabase queries instead.
+
+## What stays (verified active)
+Every other file was verified as having at least one active import chain. Specifically checked and confirmed active:
+- All hooks (`useOutcomeTracking`, `useFeedbackModal`, `useVoiceInterview`, `useCareerReadiness`, etc.)
+- All components (`WhatsAppShareButton`, `ImageCropper`, `FeatureGate`, `ReferralCard`, etc.)
+- All remaining edge functions (`admin-users`, `admin-feedback`, `compute-user-intelligence`, `suggest-courses`, `generate-module-quiz`, `interview-tts`, etc.)
+- All utilities (`careerSkillFramework`, `countries`, `languages`, `notifications`)
 
 ## Changes
 
-### 1. Region Selector (Analysis.tsx)
-Add a `Select` dropdown next to the header letting users pick a region (Global, North America, Europe, Africa, Asia, Middle East, Latin America). Pass the selected region to `useMarketIntelligence(major, region)`. The hook already accepts a `region` parameter -- just need UI to control it via `useState`.
+| Action | File | Reason |
+|--------|------|--------|
+| Delete | `src/utils/majorContent.ts` | Zero imports, superseded by AI-driven market intelligence |
+| Delete | `supabase/functions/job-digest/index.ts` | Never invoked, no cron schedule |
+| Delete | `supabase/functions/process-referral/index.ts` | Never invoked from frontend |
+| Edit | `supabase/config.toml` | Remove `[functions.process-referral]` and `[functions.job-digest]` blocks |
 
-### 2. Resilient JSON Parsing (Edge Function)
-Wrap `JSON.parse(rawContent)` in a try-catch in `market-intelligence/index.ts`. If parsing fails:
-- Strip markdown fences (` ```json ... ``` `) and retry
-- If still fails, return a 502 with `"AI returned malformed data"` instead of crashing with a 500
-
-### 3. Empty State Handling (MarketOverviewTab + CareerOutlookTab)
-Add checks for empty arrays (`hard_skills.length === 0`, etc.) and render helpful empty-state messages instead of blank sections. For example: "No skill data available for this major yet."
-
-### 4. Export / Print Button (Analysis.tsx)
-Add a "Download Report" button next to the Refresh button. Uses `window.print()` with a print-friendly CSS media query, or generates a simple text/PDF summary of the current data using the browser print dialog.
-
-### 5. Skill Gap Overlay (MarketOverviewTab)
-Fetch the user's skills from the `user_skills` table via the existing Supabase client. Overlay a marker or secondary bar on the Hard Skills demand chart showing which skills the user already has vs. which they're missing. Display a small "You have this" badge next to matched skills.
-
----
-
-## Files Modified
-
-| File | Change |
-|------|--------|
-| `src/pages/Analysis.tsx` | Add region state, Select dropdown, Download button |
-| `src/hooks/useMarketIntelligence.ts` | No changes needed (already supports region param) |
-| `supabase/functions/market-intelligence/index.ts` | Add resilient JSON parsing with fence stripping |
-| `src/components/analysis/MarketOverviewTab.tsx` | Add empty states, skill gap overlay with user_skills lookup |
-| `src/components/analysis/CareerOutlookTab.tsx` | Add empty states for forecast/outlook arrays |
-
----
-
-## Technical Notes
-
-- Region selector uses the existing `Select` UI component -- no new dependencies
-- Skill gap overlay fetches `user_skills` client-side via `supabase.from('user_skills').select(...)` and matches against `hard_skills[].skill` using case-insensitive comparison
-- Export uses `window.print()` -- lightweight, no library needed
-- Edge function parsing fix is backward-compatible; valid JSON still works as before
+Total lines removed: ~500. No functional impact.
 
