@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import AnimatedSection from "./AnimatedSection";
 
-interface FinalCTASectionProps {
-  onSignUp: () => void;
-}
+export default function FinalCTASection() {
+  const navigate = useNavigate();
 
-export default function FinalCTASection({ onSignUp }: FinalCTASectionProps) {
   return (
     <section className="py-24 bg-background">
       <div className="container mx-auto px-6">
@@ -16,17 +15,17 @@ export default function FinalCTASection({ onSignUp }: FinalCTASectionProps) {
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
 
             <h2 className="relative text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-5 max-w-2xl mx-auto leading-tight">
-              Your career deserves strategy, not guesswork.
+              Take Your Free Career Assessment
             </h2>
             <p className="relative text-lg text-muted-foreground max-w-xl mx-auto mb-9">
-              Join thousands of students who are building careers with clarity and confidence.
+              5 minutes. No sign-up required. Discover which careers fit you best.
             </p>
             <Button
               size="lg"
-              onClick={onSignUp}
+              onClick={() => navigate('/assessment')}
               className="relative rounded-full px-8 h-12 text-base gap-2"
             >
-              Create Your Account
+              Start Assessment
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

@@ -6,12 +6,9 @@ import AuthDialog from "@/components/auth/AuthDialog";
 import LandingBackground from "@/components/landing/LandingBackground";
 import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
-import ProblemSection from "@/components/landing/ProblemSection";
 import SolutionSection from "@/components/landing/SolutionSection";
-import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import VideoDemoSection from "@/components/landing/VideoDemoSection";
 import SocialProofSection from "@/components/landing/SocialProofSection";
-import PricingSection from "@/components/landing/PricingSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 
@@ -50,18 +47,14 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Background image only behind hero */}
       <LandingBackground />
       <div className="relative z-10">
         <LandingHeader onSignIn={openSignIn} onSignUp={openSignUp} />
         <HeroSection onSignUp={openSignUp} />
-        <ProblemSection />
         <SolutionSection />
-        <HowItWorksSection />
         <VideoDemoSection />
         <SocialProofSection />
-        <PricingSection onSignUp={openSignUp} onNavigatePricing={() => navigate('/pricing')} />
-        <FinalCTASection onSignUp={openSignUp} />
+        <FinalCTASection />
         <LandingFooter />
       </div>
 

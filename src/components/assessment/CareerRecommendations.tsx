@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Briefcase, ChevronDown, ChevronUp, GraduationCap, Lightbulb, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { Briefcase, ChevronDown, ChevronUp, GraduationCap, Lightbulb, Sparkles, TrendingUp, Zap, MapPin, FileText, Mic, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
 import type { CareerRecommendation } from '@/hooks/useCareerRecommendations';
 
 interface CareerCardProps {
@@ -100,6 +103,14 @@ const CareerCard = ({ rec, rank }: CareerCardProps) => {
   );
 };
 
+interface JobMatch {
+  id: string;
+  title: string;
+  location: string;
+  employment_type: string;
+  skills: string[] | null;
+}
+
 interface CareerRecommendationsProps {
   recommendations: CareerRecommendation[];
   clusterInsight: { title: string; themes: string[] } | null;
@@ -117,6 +128,34 @@ const CareerRecommendations = ({
   tertiaryInterest,
   loading,
 }: CareerRecommendationsProps) => {
+  const navigate = useNavigate();
+  const [jobMatches, setJobMatches] = useState<JobMatch[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+
+  // Fetch matching jobs based on career recommendation industries
+  useEffect(() => {
+    if (recommendations.length === 0) return;
+
+    const fetchJobs = async () => {
+      setJobsLoading(true);
+      try {
+        const { data } = await supabase
+          .from('job_postings')
+          .select('id, title, location, employment_type, skills')
+          .eq('status', 'active')
+          .limit(5);
+
+        setJobMatches(data || []);
+      } catch (err) {
+        console.error('Failed to fetch job matches:', err);
+      } finally {
+        setJobsLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [recommendations]);
+
   if (loading) {
     return (
       <Card>
@@ -129,15 +168,25 @@ const CareerRecommendations = ({
 
   if (recommendations.length === 0) return null;
 
+  const topCareer = recommendations[0]?.career;
+
   return (
     <div className="space-y-6">
       {/* Interest Badges + Cluster */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Sparkles className="h-5 w-5 text-primary" />
-            Your Career Profile
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Your Career Profile
+            </CardTitle>
+            <WhatsAppShareButton
+              text={`I just discovered my top career match is ${topCareer?.title || 'amazing'} on Syncareer! Take the free assessment:`}
+              url={`${window.location.origin}/assessment`}
+            >
+              Share Result
+            </WhatsAppShareButton>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
@@ -196,7 +245,46 @@ const CareerRecommendations = ({
         </CardContent>
       </Card>
 
-      {/* Personalization Extensions */}
+      {/* Jobs You Qualify For */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <MapPin className="h-5 w-5 text-primary" />
+            Jobs You Qualify For
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {jobsLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Loading job matches...</p>
+          ) : jobMatches.length > 0 ? (
+            <div className="space-y-3">
+              {jobMatches.map((job) => (
+                <div key={job.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate">{job.title}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" /> {job.location} · {job.employment_type}
+                    </p>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => navigate('/markets')} className="shrink-0 text-xs">
+                    Prepare & Apply
+                  </Button>
+                </div>
+              ))}
+              <Button variant="ghost" className="w-full text-sm" onClick={() => navigate('/markets')}>
+                View all opportunities <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-sm text-muted-foreground mb-1">No open positions yet matching your profile.</p>
+              <p className="text-xs text-muted-foreground">We'll notify you when matching jobs are posted.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Actionable Next Steps */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -206,33 +294,51 @@ const CareerRecommendations = ({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-lg border p-4 space-y-2">
+            <button
+              onClick={() => navigate('/interview', { state: { prefillRole: topCareer?.title, prefillIndustry: topCareer?.industry } })}
+              className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
+            >
               <div className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Interview Prep</span>
+                <Mic className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Practice Interview</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Practice interviews for {recommendations[0]?.career.industry || 'your top'} industry roles to sharpen your readiness.
+                Practice for {topCareer?.industry || 'your top'} industry roles
               </p>
-            </div>
-            <div className="rounded-lg border p-4 space-y-2">
+              <span className="text-xs text-primary flex items-center gap-1">
+                Start now <ArrowRight className="h-3 w-3" />
+              </span>
+            </button>
+            <button
+              onClick={() => navigate('/cv-builder')}
+              className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
+            >
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-accent" />
-                <span className="text-sm font-medium">Skill Building</span>
+                <FileText className="h-4 w-4 text-accent" />
+                <span className="text-sm font-medium">Build Your CV</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Focus on: {recommendations.slice(0, 3).flatMap(r => r.career.required_skills.slice(0, 1)).join(', ')}.
+                Create an ATS-friendly CV for your target roles
               </p>
-            </div>
-            <div className="rounded-lg border p-4 space-y-2">
+              <span className="text-xs text-primary flex items-center gap-1">
+                Open builder <ArrowRight className="h-3 w-3" />
+              </span>
+            </button>
+            <button
+              onClick={() => navigate('/markets')}
+              className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
+            >
               <div className="flex items-center gap-2">
-                <GraduationCap className="h-4 w-4 text-secondary" />
-                <span className="text-sm font-medium">Learning Paths</span>
+                <Briefcase className="h-4 w-4 text-secondary" />
+                <span className="text-sm font-medium">View Opportunities</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Explore majors in {recommendations[0]?.career.suggested_majors.slice(0, 2).join(' or ') || 'your recommended fields'}.
+                Browse {jobMatches.length > 0 ? `${jobMatches.length}+` : ''} open positions matching your profile
               </p>
-            </div>
+              <span className="text-xs text-primary flex items-center gap-1">
+                Browse jobs <ArrowRight className="h-3 w-3" />
+              </span>
+            </button>
           </div>
         </CardContent>
       </Card>
