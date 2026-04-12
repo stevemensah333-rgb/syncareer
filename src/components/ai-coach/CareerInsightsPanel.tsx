@@ -67,10 +67,13 @@ export function CareerInsightsPanel() {
   }
 
   const topSkills = Object.entries(profile.skill_mastery_json)
+    .map(([name, data]) => [name, { ...data, level: Number(data.level) || 0 }] as const)
     .sort(([, a], [, b]) => b.level - a.level)
     .slice(0, 4);
 
-  const topClusters = profile.career_clusters.slice(0, 3);
+  const topClusters = profile.career_clusters
+    .filter((c) => c.cluster)
+    .slice(0, 3);
 
   return (
     <div className="space-y-3">
@@ -119,8 +122,8 @@ export function CareerInsightsPanel() {
           </CardHeader>
           <CardContent className="p-3 pt-1">
             <div className="flex flex-wrap gap-1.5">
-              {topClusters.map((c) => (
-                <Badge key={c.cluster} variant="outline" className="text-[10px]">
+              {topClusters.map((c, i) => (
+                <Badge key={`${c.cluster}-${i}`} variant="outline" className="text-[10px]">
                   {c.cluster}
                 </Badge>
               ))}
