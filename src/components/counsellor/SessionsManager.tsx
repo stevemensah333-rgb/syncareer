@@ -104,11 +104,11 @@ export function SessionsManager({ counsellorId }: SessionsManagerProps) {
 
       // Send notification to the user about their booking status
       if (booking) {
-        const { data: counsellorData } = await supabase
-          .from('counsellor_details')
+        const { data: counsellorData } = await (supabase
+          .from('counsellor_booking_view' as any)
           .select('full_name, meeting_link')
           .eq('id', counsellorId)
-          .single();
+          .single() as any) as { data: { full_name: string; meeting_link: string | null } | null };
 
         const counsellorName = counsellorData?.full_name || 'A counsellor';
         const meetingLink = counsellorData?.meeting_link;
