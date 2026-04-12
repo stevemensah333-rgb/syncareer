@@ -22,6 +22,7 @@ const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const Install = lazy(() => import("./pages/Install"));
 
 // Student pages
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Assessment = lazy(() => import("./pages/Assessment"));
 const Stocks = lazy(() => import("./pages/Stocks"));
 const Currencies = lazy(() => import("./pages/Currencies"));
@@ -89,11 +90,14 @@ const App = () => (
                 } />
                 
                 {/* Legacy redirect */}
-                <Route path="/home" element={<Navigate to="/portfolio" replace />} />
+                <Route path="/home" element={<Navigate to="/dashboard" replace />} />
 
                 {/* ============ STUDENT-ONLY ROUTES ============ */}
                 {/* Assessment is publicly accessible (guest mode supported) */}
                 <Route path="/assessment" element={<Assessment />} />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute><RoleRoute allowedRoles={['student']}><Dashboard /></RoleRoute></ProtectedRoute>
+                } />
                 <Route path="/skills" element={
                   <ProtectedRoute><RoleRoute allowedRoles={['student']}><Stocks /></RoleRoute></ProtectedRoute>
                 } />

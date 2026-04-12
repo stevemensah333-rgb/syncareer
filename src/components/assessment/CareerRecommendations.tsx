@@ -317,57 +317,12 @@ const CareerRecommendations = ({
         </CardContent>
       </Card>
 
-      {/* Actionable Next Steps */}
+      {/* Guided Journey */}
       {!isGuest && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="h-5 w-5 text-accent" />
-              Next Steps
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button
-                onClick={() => navigate('/interview-simulator', { state: { prefillRole: topCareer?.title, prefillIndustry: topCareer?.industry } })}
-                className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Mic className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Practice Interview</span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Practice for {topCareer?.industry || 'your top'} industry roles
-                </p>
-                <span className="text-xs text-primary flex items-center gap-1">Start now <ArrowRight className="h-3 w-3" /></span>
-              </button>
-              <button
-                onClick={() => navigate('/cv-builder')}
-                className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-accent" />
-                  <span className="text-sm font-medium">Build Your CV</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Create an ATS-friendly CV for your target roles</p>
-                <span className="text-xs text-primary flex items-center gap-1">Open builder <ArrowRight className="h-3 w-3" /></span>
-              </button>
-              <button
-                onClick={() => navigate('/opportunities')}
-                className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-secondary-foreground" />
-                  <span className="text-sm font-medium">View Opportunities</span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Browse {jobMatches.length > 0 ? `${jobMatches.length}+` : ''} open positions matching your profile
-                </p>
-                <span className="text-xs text-primary flex items-center gap-1">Browse jobs <ArrowRight className="h-3 w-3" /></span>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+        <GuidedJourney
+          topCareerTitle={topCareer?.title}
+          topCareerIndustry={topCareer?.industry}
+        />
       )}
     </div>
   );
