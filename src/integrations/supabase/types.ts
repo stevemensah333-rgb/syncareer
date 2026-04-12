@@ -293,6 +293,13 @@ export type Database = {
             foreignKeyName: "counsellor_availability_counsellor_id_fkey"
             columns: ["counsellor_id"]
             isOneToOne: false
+            referencedRelation: "counsellor_booking_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counsellor_availability_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
             referencedRelation: "counsellor_details"
             referencedColumns: ["id"]
           },
@@ -346,6 +353,13 @@ export type Database = {
           user_name?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "counsellor_bookings_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "counsellor_booking_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "counsellor_bookings_counsellor_id_fkey"
             columns: ["counsellor_id"]
@@ -443,6 +457,13 @@ export type Database = {
             foreignKeyName: "counsellor_reviews_counsellor_id_fkey"
             columns: ["counsellor_id"]
             isOneToOne: false
+            referencedRelation: "counsellor_booking_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counsellor_reviews_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
             referencedRelation: "counsellor_details"
             referencedColumns: ["id"]
           },
@@ -499,6 +520,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "counsellor_sessions_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "counsellor_booking_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "counsellor_sessions_counsellor_id_fkey"
             columns: ["counsellor_id"]
@@ -2092,6 +2120,42 @@ export type Database = {
           },
         ]
       }
+      counsellor_booking_view: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          full_name: string | null
+          hiring_price: number | null
+          id: string | null
+          location: string | null
+          meeting_link: string | null
+          specialization: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          full_name?: string | null
+          hiring_price?: number | null
+          id?: string | null
+          location?: string | null
+          meeting_link?: string | null
+          specialization?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          full_name?: string | null
+          hiring_price?: number | null
+          id?: string | null
+          location?: string | null
+          meeting_link?: string | null
+          specialization?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       counsellor_bookings_public: {
         Row: {
           counsellor_id: string | null
@@ -2121,6 +2185,13 @@ export type Database = {
           user_name?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "counsellor_bookings_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "counsellor_booking_view"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "counsellor_bookings_counsellor_id_fkey"
             columns: ["counsellor_id"]
