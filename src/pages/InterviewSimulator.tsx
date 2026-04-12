@@ -32,33 +32,6 @@ const SESSION_OPTIONS: Array<{ value: SessionLength; label: string; description:
   { value: 'extended', label: 'Deep Dive', description: '~45 min · 20 questions', questions: 20, icon: Clock },
 ];
 
-const MAJOR_ROLE_MAP: Record<string, { role: string; industry: string }> = {
-  'Computer Science': { role: 'Software Developer', industry: 'Technology' },
-  'Data Science': { role: 'Data Analyst', industry: 'Technology' },
-  'Business Administration': { role: 'Business Analyst', industry: 'Consulting' },
-  'Finance': { role: 'Financial Analyst', industry: 'Finance' },
-  'Marketing': { role: 'Marketing Coordinator', industry: 'Marketing' },
-  'Law': { role: 'Legal Associate', industry: 'Legal' },
-  'Medicine': { role: 'Medical Intern', industry: 'Healthcare' },
-  'Electrical Engineering': { role: 'Electrical Engineer', industry: 'Engineering' },
-  'Mechanical Engineering': { role: 'Mechanical Engineer', industry: 'Engineering' },
-  'Civil Engineering': { role: 'Site Engineer', industry: 'Construction' },
-  'Chemical Engineering': { role: 'Process Engineer', industry: 'Manufacturing' },
-  'Information Technology': { role: 'IT Support Specialist', industry: 'Technology' },
-  'Accounting': { role: 'Junior Accountant', industry: 'Finance' },
-  'Human Resources': { role: 'HR Coordinator', industry: 'Human Resources' },
-  'Economics': { role: 'Economic Analyst', industry: 'Research' },
-  'Psychology': { role: 'HR Specialist', industry: 'Human Resources' },
-  'Nursing': { role: 'Registered Nurse', industry: 'Healthcare' },
-  'Pharmacy': { role: 'Pharmacist', industry: 'Healthcare' },
-  'Architecture': { role: 'Junior Architect', industry: 'Architecture' },
-  'Graphic Design': { role: 'Graphic Designer', industry: 'Creative' },
-  'Communications': { role: 'Communications Specialist', industry: 'Media' },
-  'Education': { role: 'Teacher', industry: 'Education' },
-  'Environmental Science': { role: 'Environmental Consultant', industry: 'Environment' },
-  'Agriculture': { role: 'Agricultural Scientist', industry: 'Agriculture' },
-};
-
 const InterviewSimulator = () => {
   const { studentDetails } = useUserProfile();
   const { isPremium } = useSubscription();
@@ -76,13 +49,63 @@ const InterviewSimulator = () => {
     jobDescription: '',
   });
 
+  // Dynamic pre-fill from assessment results + saved CV
   useEffect(() => {
-    if (studentDetails?.major) {
-      const mapping = MAJOR_ROLE_MAP[studentDetails.major];
-      if (mapping) {
-        setConfig(prev => ({ ...prev, jobRole: mapping.role, industry: mapping.industry }));
+    const prefill = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Load assessment-based role/industry
+      const { data: assessment } = await supabase
+        .from('assessments')
+        .select('primary_interest')
+        .eq('user_id', user.id)
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (assessment?.primary_interest) {
+        setConfig(prev => ({
+          ...prev,
+          jobRole: prev.jobRole || assessment.primary_interest,
+          industry: prev.industry || assessment.primary_interest,
+        }));
+      } else if (studentDetails?.major) {
+        // Fallback: use major as a rough guide
+        setConfig(prev => ({
+          ...prev,
+          jobRole: prev.jobRole || studentDetails.major,
+          industry: prev.industry || studentDetails.major,
+        }));
       }
-    }
+
+      // Load saved CV as resume context
+      const { data: resume } = await supabase
+        .from('resumes')
+        .select('personal_info, education, experience, skills, projects')
+        .eq('user_id', user.id)
+        .eq('is_primary', true)
+        .maybeSingle();
+
+      if (resume) {
+        const pi = resume.personal_info as any;
+        const skills = Array.isArray(resume.skills) ? (resume.skills as string[]).join(', ') : '';
+        const expSummary = Array.isArray(resume.experience)
+          ? (resume.experience as any[]).map((e: any) => `${e.role || ''} at ${e.company || ''}`).filter(Boolean).join('; ')
+          : '';
+        const resumeText = [
+          pi?.firstName ? `${pi.firstName} ${pi.lastName || ''}` : '',
+          skills ? `Skills: ${skills}` : '',
+          expSummary ? `Experience: ${expSummary}` : '',
+        ].filter(Boolean).join('\n');
+
+        if (resumeText.trim()) {
+          setConfig(prev => ({ ...prev, resumeText: prev.resumeText || resumeText }));
+        }
+      }
+    };
+    prefill();
   }, [studentDetails]);
 
   const { data: interviewHistory, isLoading: historyLoading } = useQuery({

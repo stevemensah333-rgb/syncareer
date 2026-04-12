@@ -3,7 +3,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Download, Eye, Sparkles, Save, FileText, MessageCircle } from 'lucide-react';
+import { Download, Eye, Sparkles, Save, FileText, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
 import { toast } from 'sonner';
 import { CVFormPersonal } from '@/components/cv-builder/CVFormPersonal';
@@ -358,12 +358,19 @@ const CVBuilder = () => {
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="flex w-full overflow-x-auto">
-              <TabsTrigger value="personal" className="flex-1 min-w-[80px]">Personal</TabsTrigger>
-              <TabsTrigger value="education" className="flex-1 min-w-[80px]">Education</TabsTrigger>
-              <TabsTrigger value="experience" className="flex-1 min-w-[80px]">Experience</TabsTrigger>
-              <TabsTrigger value="projects" className="flex-1 min-w-[80px]">Projects</TabsTrigger>
-              <TabsTrigger value="activities" className="flex-1 min-w-[80px]">Activities</TabsTrigger>
-              <TabsTrigger value="skills" className="flex-1 min-w-[80px]">Skills</TabsTrigger>
+              {([
+                { value: 'personal', label: 'Personal', filled: !!(cvData.personal.firstName && cvData.personal.email) },
+                { value: 'education', label: 'Education', filled: !!cvData.education.university },
+                { value: 'experience', label: 'Experience', filled: cvData.experience.length > 0 },
+                { value: 'projects', label: 'Projects', filled: cvData.projects.length > 0 },
+                { value: 'activities', label: 'Activities', filled: cvData.activities.length > 0 },
+                { value: 'skills', label: 'Skills', filled: cvData.skills.length > 0 },
+              ] as const).map(tab => (
+                <TabsTrigger key={tab.value} value={tab.value} className="flex-1 min-w-[80px] gap-1.5">
+                  {tab.label}
+                  {tab.filled && <CheckCircle2 className="h-3 w-3 text-primary" />}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
             <TabsContent value="personal" className="mt-4">
