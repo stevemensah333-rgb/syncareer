@@ -56,11 +56,6 @@ export function Sidebar({ isCollapsed, onToggle, className }: SidebarProps) {
       href: '/assessment',
     },
     {
-      title: 'My Skills',
-      icon: Star,
-      href: '/skills',
-    },
-    {
       title: 'Learn',
       icon: GraduationCap,
       href: '/learn',
@@ -128,11 +123,6 @@ export function Sidebar({ isCollapsed, onToggle, className }: SidebarProps) {
       title: 'Applicants',
       icon: Users,
       href: '/applicants',
-    },
-    {
-      title: 'Train',
-      icon: GraduationCap,
-      href: '/train',
     },
     {
       title: 'Talent Insights',

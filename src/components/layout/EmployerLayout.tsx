@@ -21,7 +21,6 @@ const employerNavItems = [
     { title: 'My Company', icon: Building2, href: '/my-company' },
     { title: 'Post a Job', icon: FileText, href: '/post-job' },
     { title: 'Applicants', icon: Users, href: '/applicants' },
-    { title: 'Train', icon: GraduationCap, href: '/train' },
   ]},
   { label: 'Tools', items: [
     { title: 'Talent Insights', icon: TrendingUp, href: '/talent-insights' },
