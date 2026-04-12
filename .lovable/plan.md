@@ -1,36 +1,35 @@
 
 
-# System-Wide Dead Code Removal
+## Phase 1: Removals — Talent Insights, Employee Invite, and Edge Function
 
-## Summary
-After auditing every component, hook, utility, and edge function for usage references, three files have zero consumers and should be removed.
+### What gets removed
 
-## Dead Code Found
+1. **Talent Insights page** — `src/pages/employer/TalentInsights.tsx` (privacy risk, duplicates Hire with AI)
+2. **AddEmployeeDialog** — `src/components/employer/AddEmployeeDialog.tsx` (non-functional, no backend table)
+3. **send-employee-invite edge function** — `supabase/functions/send-employee-invite/index.ts` (supports removed feature)
+4. **Employee section in MyCompany** — the "Registered Employees" card referencing `AddEmployeeDialog`
 
-### 1. `src/utils/majorContent.ts` (295 lines)
-A hardcoded map of major-to-skills/courses/trends data. It was likely superseded by the AI-driven `market-intelligence` edge function and the `careerSkillFramework.ts` utility. No file in the project imports `majorContent`, `getMajorContent`, or `getAllMajors`.
+### Files modified
 
-### 2. `supabase/functions/job-digest/index.ts`
-A weekly email digest function that fetches new job postings and sends emails via Resend. It is never invoked from the frontend, never scheduled via a cron trigger, and requires a `RESEND_API_KEY` that may not even be configured. Dead deployment cost with no consumer.
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Remove `TalentInsights` import (line 46) and route (lines 128-130) |
+| `src/components/layout/EmployerLayout.tsx` | Remove Talent Insights nav item (line 26) |
+| `src/components/layout/Sidebar.tsx` | Remove Talent Insights nav entry (lines 123-126) |
+| `src/components/layout/MobileBottomNav.tsx` | Remove Insights tab (line 43) |
+| `src/pages/employer/MyCompany.tsx` | Remove `AddEmployeeDialog` import and the employees section |
 
-### 3. `supabase/functions/process-referral/index.ts`
-A function to process referral codes and grant rewards. Never called from any frontend code. The `ReferralCard` component handles referral logic client-side via direct Supabase queries instead.
+### Files deleted
 
-## What stays (verified active)
-Every other file was verified as having at least one active import chain. Specifically checked and confirmed active:
-- All hooks (`useOutcomeTracking`, `useFeedbackModal`, `useVoiceInterview`, `useCareerReadiness`, etc.)
-- All components (`WhatsAppShareButton`, `ImageCropper`, `FeatureGate`, `ReferralCard`, etc.)
-- All remaining edge functions (`admin-users`, `admin-feedback`, `compute-user-intelligence`, `suggest-courses`, `generate-module-quiz`, `interview-tts`, etc.)
-- All utilities (`careerSkillFramework`, `countries`, `languages`, `notifications`)
+| File |
+|------|
+| `src/pages/employer/TalentInsights.tsx` |
+| `src/components/employer/AddEmployeeDialog.tsx` |
+| `supabase/functions/send-employee-invite/index.ts` |
 
-## Changes
+### Edge function cleanup
+The deployed `send-employee-invite` edge function will also be removed from the backend.
 
-| Action | File | Reason |
-|--------|------|--------|
-| Delete | `src/utils/majorContent.ts` | Zero imports, superseded by AI-driven market intelligence |
-| Delete | `supabase/functions/job-digest/index.ts` | Never invoked, no cron schedule |
-| Delete | `supabase/functions/process-referral/index.ts` | Never invoked from frontend |
-| Edit | `supabase/config.toml` | Remove `[functions.process-referral]` and `[functions.job-digest]` blocks |
-
-Total lines removed: ~500. No functional impact.
+### What stays
+My Company (profile), Post Job, Applicants, Hire with AI, Settings — all untouched. These will be improved in subsequent phases.
 
