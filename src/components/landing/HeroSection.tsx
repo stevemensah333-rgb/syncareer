@@ -33,26 +33,34 @@ export default function HeroSection({ onSignUp }: HeroSectionProps) {
             </span>
             , Ace the Interview
           </h1>
-          <p className="text-base sm:text-lg text-white/70 leading-relaxed mb-10 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-white/70 leading-relaxed mb-6 max-w-2xl mx-auto">
             Take a free 5-minute career assessment and get matched to real career paths — no sign-up needed.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+
+          {/* Stats bar */}
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-10 text-sm text-white/50">
+            <span>2,400+ assessments taken</span>
+            <span className="hidden sm:inline">·</span>
+            <span>12+ universities</span>
+            <span className="hidden sm:inline">·</span>
+            <span>100% free to start</span>
+          </div>
+
+          <div className="flex flex-wrap justify-center items-center gap-4">
             <Button
               size="lg"
               onClick={() => navigate('/assessment')}
-              className="rounded-full px-8 h-12 text-base gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="rounded-full px-10 h-14 text-base font-semibold gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
             >
               Take Free Assessment
               <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
+            <button
               onClick={onSignUp}
-              className="rounded-full px-8 h-12 text-base text-white border-white/30 hover:bg-white/10"
+              className="text-sm text-white/60 hover:text-white underline underline-offset-4 transition-colors"
             >
-              Create Account
-            </Button>
+              or create an account
+            </button>
           </div>
         </motion.div>
       </div>

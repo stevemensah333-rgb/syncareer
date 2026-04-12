@@ -103,7 +103,7 @@
 
   html,
   body {
-    @apply h-full overflow-x-hidden antialiased;
+    @apply min-h-full overflow-x-hidden antialiased;
   }
 
   body {

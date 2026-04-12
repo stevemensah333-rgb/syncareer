@@ -6,6 +6,7 @@ import AuthDialog from "@/components/auth/AuthDialog";
 import LandingBackground from "@/components/landing/LandingBackground";
 import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
+import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import SolutionSection from "@/components/landing/SolutionSection";
 import VideoDemoSection from "@/components/landing/VideoDemoSection";
 import SocialProofSection from "@/components/landing/SocialProofSection";
@@ -51,6 +52,7 @@ export default function Landing() {
       <div className="relative z-10">
         <LandingHeader onSignIn={openSignIn} onSignUp={openSignUp} />
         <HeroSection onSignUp={openSignUp} />
+        <HowItWorksSection />
         <SolutionSection />
         <VideoDemoSection />
         <SocialProofSection />
