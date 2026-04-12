@@ -6,6 +6,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+function tryParseJSON(raw: string): unknown {
+  // First attempt: direct parse
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // Strip markdown fences and retry
+    const stripped = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    try {
+      return JSON.parse(stripped);
+    } catch {
+      return null;
+    }
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -64,7 +79,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // No valid cache — generate via OpenAI
+    // No valid cache — generate via AI
     const systemPrompt = `You are a senior labour market intelligence analyst with access to real-time job market data, BLS projections, and industry hiring trends. Your analysis must be grounded, realistic, and specific to the academic major provided. Never give generic or placeholder data.`;
 
     const userPrompt = `Generate a comprehensive labour market intelligence report for a student studying "${major}" seeking opportunities in ${region === "global" ? "the global job market" : region}.
@@ -155,7 +170,7 @@ Requirements:
 
     if (!aiResp.ok) {
       const errBody = await aiResp.text();
-      console.error("OpenAI error:", errBody);
+      console.error("AI error:", errBody);
       return new Response(JSON.stringify({ error: "AI generation failed" }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -171,7 +186,16 @@ Requirements:
       });
     }
 
-    const intelligence = JSON.parse(rawContent);
+    const intelligence = tryParseJSON(rawContent);
+    if (!intelligence || typeof intelligence !== "object") {
+      console.error("Malformed AI JSON:", rawContent.substring(0, 500));
+      return new Response(JSON.stringify({ error: "AI returned malformed data. Please try again." }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const parsed = intelligence as Record<string, unknown>;
 
     // Upsert into cache
     const expiresAt = new Date();
@@ -183,14 +207,14 @@ Requirements:
         {
           major: major.toLowerCase(),
           region: region.toLowerCase(),
-          hard_skills: intelligence.hard_skills ?? [],
-          soft_skills: intelligence.soft_skills ?? [],
-          salary_data: intelligence.salary_data ?? [],
-          demand_forecast: intelligence.demand_forecast ?? [],
-          career_outlook: intelligence.career_outlook ?? [],
-          market_insights: intelligence.market_insights ?? [],
-          region_summary: intelligence.region_summary ?? "",
-          data_confidence: intelligence.data_confidence ?? "",
+          hard_skills: parsed.hard_skills ?? [],
+          soft_skills: parsed.soft_skills ?? [],
+          salary_data: parsed.salary_data ?? [],
+          demand_forecast: parsed.demand_forecast ?? [],
+          career_outlook: parsed.career_outlook ?? [],
+          market_insights: parsed.market_insights ?? [],
+          region_summary: parsed.region_summary ?? "",
+          data_confidence: parsed.data_confidence ?? "",
           generated_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
           updated_at: new Date().toISOString(),
@@ -202,8 +226,7 @@ Requirements:
 
     if (saveError) {
       console.warn("Cache save failed (non-fatal):", saveError.message);
-      // Return data anyway even if cache fails
-      return new Response(JSON.stringify({ ...intelligence, major, region, from_cache: false }), {
+      return new Response(JSON.stringify({ ...parsed, major, region, from_cache: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
