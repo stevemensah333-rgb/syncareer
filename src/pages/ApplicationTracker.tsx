@@ -92,7 +92,7 @@ const ApplicationTracker = () => {
         // Fetch counsellor details (name + meeting link) for each booking
         const enriched = await Promise.all(data.map(async (b) => {
           const { data: cd } = await supabase
-            .from('counsellor_details')
+            .from('counsellor_booking_view' as any)
             .select('full_name, meeting_link')
             .eq('id', b.counsellor_id)
             .single();
