@@ -33,3 +33,5 @@ project_id = "fsorkxlcasekndigezlx"
     verify_jwt = false
   [functions.verify-paystack-payment]
     verify_jwt = false
+  [functions.scrape-jobs]
+    verify_jwt = false
