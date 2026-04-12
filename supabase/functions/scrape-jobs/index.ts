@@ -66,7 +66,7 @@ async function parseJobsWithAI(markdown: string, sourceName: string, lovableApiK
   // Truncate to avoid token limits
   const truncated = markdown.substring(0, 15000);
 
-  const response = await fetch('https://ai.lovable.dev/api/v1/chat/completions', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${lovableApiKey}`,
