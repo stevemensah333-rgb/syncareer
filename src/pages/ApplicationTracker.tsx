@@ -310,7 +310,7 @@ const ApplicationTracker = () => {
                     ? "Start applying to jobs from the Opportunities page"
                     : "No applications match your search criteria"}
                 </p>
-                <Button onClick={() => window.location.href = '/opportunities'}>
+                <Button onClick={() => window.location.href = '/markets'}>
                   Browse Opportunities
                 </Button>
               </div>
