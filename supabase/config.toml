@@ -37,7 +37,3 @@ project_id = "fsorkxlcasekndigezlx"
     verify_jwt = false
   [functions.compute-university-insights]
     verify_jwt = false
-  [functions.process-referral]
-    verify_jwt = false
-  [functions.job-digest]
-    verify_jwt = false
