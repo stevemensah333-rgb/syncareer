@@ -3,21 +3,14 @@ import { StudentLayout } from '@/components/layout/StudentLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, Mic, Briefcase, MapPin, ArrowRight, TrendingUp, ClipboardList, FolderOpen, CheckCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { FileText, Mic, Briefcase, MapPin, ArrowRight, TrendingUp, ClipboardList, FolderOpen, CheckCircle, Target, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import ReadinessOverview from '@/components/learn/ReadinessOverview';
 import { useCareerReadiness } from '@/hooks/useCareerReadiness';
 import { GuidedJourney } from '@/components/assessment/GuidedJourney';
 import { ReferralCard } from '@/components/referral/ReferralCard';
 import { UniversityInsightsCard } from '@/components/dashboard/UniversityInsightsCard';
-
-interface QuickStat {
-  label: string;
-  value: string | number;
-  icon: React.ElementType;
-  href: string;
-}
 
 interface JobMatch {
   id: string;
@@ -35,6 +28,7 @@ const Dashboard = () => {
   const [jobMatches, setJobMatches] = useState<JobMatch[]>([]);
   const [stats, setStats] = useState({ applications: 0, interviewScore: 0, cvScore: 0 });
   const [loading, setLoading] = useState(true);
+  const [fullName, setFullName] = useState<string>('');
 
   const readiness = useCareerReadiness(major);
 
@@ -44,14 +38,19 @@ const Dashboard = () => {
       if (!session?.user) return;
       const userId = session.user.id;
 
-      const [studentRes, assessmentRes, appsRes, interviewRes, resumeRes, jobsRes] = await Promise.all([
+      const [studentRes, assessmentRes, appsRes, interviewRes, resumeRes, jobsRes, profileRes] = await Promise.all([
         supabase.from('student_details').select('major, school').eq('user_id', userId).maybeSingle(),
         supabase.from('assessments').select('primary_interest').eq('user_id', userId).not('completed_at', 'is', null).order('completed_at', { ascending: false }).limit(1),
         supabase.from('job_applications').select('id').eq('applicant_id', userId),
         supabase.from('mock_interviews').select('overall_score').eq('user_id', userId).not('overall_score', 'is', null).order('created_at', { ascending: false }).limit(1),
         supabase.from('resumes').select('personal_info, education, experience, skills, projects').eq('user_id', userId).eq('is_primary', true).maybeSingle(),
         supabase.from('job_postings').select('id, title, location, employment_type, created_at').eq('status', 'active').order('created_at', { ascending: false }).limit(5),
+        supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle(),
       ]);
+
+      if (profileRes.data?.full_name) {
+        setFullName(profileRes.data.full_name.split(' ')[0]);
+      }
 
       if (studentRes.data) {
         setMajor(studentRes.data.major);
@@ -64,7 +63,6 @@ const Dashboard = () => {
 
       setJobMatches(jobsRes.data || []);
 
-      // Simple CV score calc
       let cvScore = 0;
       if (resumeRes.data) {
         const r = resumeRes.data as any;
@@ -89,13 +87,6 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  const quickStats: QuickStat[] = [
-    { label: 'Applications', value: stats.applications, icon: Briefcase, href: '/applications' },
-    { label: 'CV Strength', value: `${stats.cvScore}%`, icon: FileText, href: '/cv-builder' },
-    { label: 'Interview Score', value: stats.interviewScore > 0 ? `${stats.interviewScore}%` : '—', icon: Mic, href: '/interview-simulator' },
-  ];
-
-  // Determine if user is "new" — no assessment, no CV, no applications
   const isNewUser = !topCareer && stats.cvScore === 0 && stats.applications === 0 && stats.interviewScore === 0;
 
   const getStartedSteps = [
@@ -105,62 +96,165 @@ const Dashboard = () => {
     { label: 'Add a portfolio project', description: 'Showcase your work to stand out', icon: FolderOpen, href: '/portfolio', done: false },
   ];
 
+  const statCards = [
+    {
+      label: 'Applications',
+      value: stats.applications,
+      icon: Briefcase,
+      href: '/applications',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+    },
+    {
+      label: 'CV Strength',
+      value: `${stats.cvScore}%`,
+      icon: FileText,
+      href: '/cv-builder',
+      color: stats.cvScore >= 60 ? 'text-green-600' : stats.cvScore > 0 ? 'text-amber-600' : 'text-muted-foreground',
+      bgColor: stats.cvScore >= 60 ? 'bg-green-50 dark:bg-green-950/30' : stats.cvScore > 0 ? 'bg-amber-50 dark:bg-amber-950/30' : 'bg-muted',
+      progress: stats.cvScore,
+    },
+    {
+      label: 'Interview Score',
+      value: stats.interviewScore > 0 ? `${stats.interviewScore}%` : '—',
+      icon: Mic,
+      href: '/interview-simulator',
+      color: stats.interviewScore >= 70 ? 'text-green-600' : stats.interviewScore > 0 ? 'text-amber-600' : 'text-muted-foreground',
+      bgColor: stats.interviewScore >= 70 ? 'bg-green-50 dark:bg-green-950/30' : stats.interviewScore > 0 ? 'bg-amber-50 dark:bg-amber-950/30' : 'bg-muted',
+      progress: stats.interviewScore > 0 ? stats.interviewScore : undefined,
+    },
+  ];
+
   return (
-    <StudentLayout title="Dashboard">
+    <StudentLayout title="">
       <div className="space-y-6">
+        {/* Greeting Header */}
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold">
+            {fullName ? `Welcome back, ${fullName}` : 'Welcome back'}
+          </h1>
+          {major && (
+            <p className="text-sm text-muted-foreground">
+              {major} {university ? `· ${university}` : ''}
+            </p>
+          )}
+        </div>
+
+        {/* Career Readiness Hero */}
+        {!readiness.loading && major && (
+          <Card className="overflow-hidden">
+            <CardContent className="p-0">
+              <div className="flex items-stretch">
+                <div className="flex items-center justify-center px-6 py-5 bg-primary/5 border-r border-border">
+                  <div className="text-center">
+                    <div className="relative h-20 w-20">
+                      <svg className="h-20 w-20 -rotate-90" viewBox="0 0 36 36">
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="hsl(var(--muted))"
+                          strokeWidth="2.5"
+                        />
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth="2.5"
+                          strokeDasharray={`${readiness.overallScore}, 100`}
+                          strokeLinecap="round"
+                          className="transition-all duration-1000"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xl font-bold">{readiness.overallScore}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 p-5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Target className="h-4 w-4 text-primary" />
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Career Readiness</h2>
+                  </div>
+                  <p className="text-lg font-semibold mb-3">{major}</p>
+                  <div className="flex items-center gap-3">
+                    <Badge 
+                      variant="outline" 
+                      className={
+                        readiness.level === 'Career Ready' ? 'border-green-500 text-green-600' :
+                        readiness.level === 'Proficient' ? 'border-primary text-primary' :
+                        readiness.level === 'Developing' ? 'border-amber-500 text-amber-600' :
+                        'border-muted-foreground text-muted-foreground'
+                      }
+                    >
+                      {readiness.level}
+                    </Badge>
+                    <div className="flex-1">
+                      <Progress value={readiness.overallScore} className="h-2" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Getting Started — shown for new users */}
         {isNewUser && !loading && (
-          <Card className="border-primary/30 bg-primary/5">
+          <Card className="border-primary/20">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Welcome to Syncareer 👋</CardTitle>
-              <p className="text-sm text-muted-foreground">Complete these steps to unlock your full career potential.</p>
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Zap className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Get Started</CardTitle>
+                  <p className="text-xs text-muted-foreground">Complete these steps to unlock your career potential</p>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               {getStartedSteps.map((step) => (
                 <div
                   key={step.label}
-                  className="flex items-center gap-4 p-3 rounded-lg border bg-background cursor-pointer hover:shadow-sm transition-shadow"
+                  className="flex items-center gap-3 p-3 rounded-lg border bg-background cursor-pointer hover:border-primary/30 hover:shadow-sm transition-all group"
                   onClick={() => navigate(step.href)}
                 >
-                  <div className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 ${step.done ? 'bg-primary/10' : 'bg-muted'}`}>
-                    {step.done ? <CheckCircle className="h-5 w-5 text-primary" /> : <step.icon className="h-5 w-5 text-muted-foreground" />}
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${step.done ? 'bg-green-100 dark:bg-green-950/30' : 'bg-muted group-hover:bg-primary/10'}`}>
+                    {step.done ? <CheckCircle className="h-4 w-4 text-green-600" /> : <step.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium ${step.done ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{step.label}</p>
                     <p className="text-xs text-muted-foreground">{step.description}</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary shrink-0 transition-colors" />
                 </div>
               ))}
             </CardContent>
           </Card>
         )}
 
-        {/* Readiness Overview */}
-        {!readiness.loading && major && (
-          <ReadinessOverview
-            score={readiness.overallScore}
-            level={readiness.level}
-            careerPath={major}
-          />
-        )}
-
-        {/* Quick Stats */}
+        {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {quickStats.map((stat) => (
+          {statCards.map((stat) => (
             <Card
               key={stat.label}
-              className="cursor-pointer hover:shadow-md transition-shadow"
+              className="cursor-pointer hover:shadow-md hover:border-primary/20 transition-all group"
               onClick={() => navigate(stat.href)}
             >
               <CardContent className="pt-5 pb-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    <p className="text-2xl font-bold mt-1">{stat.value}</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+                    <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.value}</p>
                   </div>
-                  <stat.icon className="h-8 w-8 text-muted-foreground/40" />
+                  <div className={`h-10 w-10 rounded-xl ${stat.bgColor} flex items-center justify-center transition-transform group-hover:scale-110`}>
+                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                  </div>
                 </div>
+                {stat.progress !== undefined && (
+                  <Progress value={stat.progress} className="h-1.5" />
+                )}
               </CardContent>
             </Card>
           ))}
@@ -178,12 +272,12 @@ const Dashboard = () => {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <TrendingUp className="h-5 w-5 text-primary" />
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <TrendingUp className="h-4 w-4 text-primary" />
                   Recent Job Matches
                 </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/opportunities')} className="text-xs">
-                  View all <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                <Button variant="ghost" size="sm" onClick={() => navigate('/opportunities')} className="text-xs h-8">
+                  View all <ArrowRight className="h-3 w-3 ml-1" />
                 </Button>
               </div>
             </CardHeader>
@@ -191,19 +285,23 @@ const Dashboard = () => {
               {jobMatches.length > 0 ? (
                 <div className="space-y-2">
                   {jobMatches.map((job) => (
-                    <div key={job.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                    <div key={job.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 hover:border-primary/20 transition-colors">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{job.title}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                           <MapPin className="h-3 w-3" /> {job.location} · {job.employment_type}
                         </p>
                       </div>
-                      <Badge variant="outline" className="text-[10px] shrink-0">New</Badge>
+                      <Badge variant="secondary" className="text-[10px] shrink-0">New</Badge>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No job matches yet. Complete your assessment to get matched.</p>
+                <div className="text-center py-6">
+                  <Briefcase className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No job matches yet.</p>
+                  <p className="text-xs text-muted-foreground">Complete your assessment to get matched.</p>
+                </div>
               )}
             </CardContent>
           </Card>
