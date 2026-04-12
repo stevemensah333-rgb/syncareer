@@ -706,13 +706,17 @@ export type Database = {
           description: string
           employer_id: string
           employment_type: string
+          external_id: string | null
           id: string
+          is_external: boolean
           location: string
           requirements: string | null
           salary_currency: string | null
           salary_max: number | null
           salary_min: number | null
           skills: string[] | null
+          source: string
+          source_url: string | null
           status: string
           title: string
           updated_at: string
@@ -723,13 +727,17 @@ export type Database = {
           description: string
           employer_id: string
           employment_type: string
+          external_id?: string | null
           id?: string
+          is_external?: boolean
           location: string
           requirements?: string | null
           salary_currency?: string | null
           salary_max?: number | null
           salary_min?: number | null
           skills?: string[] | null
+          source?: string
+          source_url?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -740,13 +748,17 @@ export type Database = {
           description?: string
           employer_id?: string
           employment_type?: string
+          external_id?: string | null
           id?: string
+          is_external?: boolean
           location?: string
           requirements?: string | null
           salary_currency?: string | null
           salary_max?: number | null
           salary_min?: number | null
           skills?: string[] | null
+          source?: string
+          source_url?: string | null
           status?: string
           title?: string
           updated_at?: string
