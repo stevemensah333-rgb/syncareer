@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,13 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Navbar } from '@/components/layout/Navbar';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { CounsellorLayout } from '@/components/layout/CounsellorLayout';
 import { 
   User, Star, MapPin, Phone, DollarSign, Edit2, Save, X, 
-  Calendar, MessageSquare, TrendingUp, Camera, ArrowLeft, Menu
+  Calendar, MessageSquare, TrendingUp, Camera, Wallet
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -50,22 +46,24 @@ interface Booking {
   created_at: string;
 }
 
+interface EarningsSummary {
+  totalEarnings: number;
+  completedSessions: number;
+  pendingSessions: number;
+}
+
 const CounsellorDashboard = () => {
   const { profile } = useUserProfile();
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [counsellorDetails, setCounsellorDetails] = useState<CounsellorDetails | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [earnings, setEarnings] = useState<EarningsSummary>({ totalEarnings: 0, completedSessions: 0, pendingSessions: 0 });
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   
-  // Image cropper state
   const [cropperOpen, setCropperOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   
-  // Edit form state
   const [editForm, setEditForm] = useState({
     bio: '',
     specialization: '',
@@ -82,7 +80,6 @@ const CounsellorDashboard = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
-      // Fetch counsellor details
       const { data: details, error: detailsError } = await supabase
         .from('counsellor_details')
         .select('*')
@@ -102,26 +99,21 @@ const CounsellorDashboard = () => {
           location: details.location || '',
         });
 
-        // Fetch reviews
-        const { data: reviewsData } = await supabase
-          .from('counsellor_reviews')
-          .select('*')
-          .eq('counsellor_id', details.id)
-          .order('created_at', { ascending: false });
+        // Fetch reviews, bookings, and sessions in parallel
+        const [reviewsRes, bookingsRes, sessionsRes] = await Promise.all([
+          supabase.from('counsellor_reviews').select('*').eq('counsellor_id', details.id).order('created_at', { ascending: false }),
+          supabase.from('counsellor_bookings').select('*').eq('counsellor_id', details.id).order('created_at', { ascending: false }),
+          supabase.from('counsellor_sessions').select('status, amount_paid').eq('counsellor_id', details.id),
+        ]);
 
-        if (reviewsData) {
-          setReviews(reviewsData as Review[]);
-        }
-
-        // Fetch bookings
-        const { data: bookingsData } = await supabase
-          .from('counsellor_bookings')
-          .select('*')
-          .eq('counsellor_id', details.id)
-          .order('created_at', { ascending: false });
-
-        if (bookingsData) {
-          setBookings(bookingsData as Booking[]);
+        if (reviewsRes.data) setReviews(reviewsRes.data as Review[]);
+        if (bookingsRes.data) setBookings(bookingsRes.data as Booking[]);
+        
+        if (sessionsRes.data) {
+          const completed = sessionsRes.data.filter(s => s.status === 'completed');
+          const pending = sessionsRes.data.filter(s => s.status === 'scheduled');
+          const total = completed.reduce((sum, s) => sum + (Number(s.amount_paid) || 0), 0);
+          setEarnings({ totalEarnings: total, completedSessions: completed.length, pendingSessions: pending.length });
         }
       }
     } catch (error) {
@@ -133,7 +125,6 @@ const CounsellorDashboard = () => {
 
   const handleSaveProfile = async () => {
     if (!counsellorDetails) return;
-
     try {
       const { error } = await supabase
         .from('counsellor_details')
@@ -146,11 +137,7 @@ const CounsellorDashboard = () => {
         .eq('id', counsellorDetails.id);
 
       if (error) throw error;
-
-      setCounsellorDetails({
-        ...counsellorDetails,
-        ...editForm,
-      });
+      setCounsellorDetails({ ...counsellorDetails, ...editForm });
       setIsEditing(false);
       toast.success('Profile updated successfully');
     } catch (error: any) {
@@ -161,76 +148,32 @@ const CounsellorDashboard = () => {
   const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be smaller than 5MB');
-      return;
-    }
-
-    // Create object URL for cropper
+    if (!file.type.startsWith('image/')) { toast.error('Please upload an image file'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be smaller than 5MB'); return; }
     const imageUrl = URL.createObjectURL(file);
     setImageToCrop(imageUrl);
     setCropperOpen(true);
-    
-    // Reset input so same file can be selected again
     e.target.value = '';
   };
 
   const handleCroppedImage = async (croppedBlob: Blob) => {
     if (!counsellorDetails) return;
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        toast.error('Please sign in to upload an avatar');
-        return;
-      }
+      if (!session?.user) { toast.error('Please sign in to upload an avatar'); return; }
 
       const fileName = `${session.user.id}/avatar.jpg`;
-
-      // Upload cropped image to storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, croppedBlob, { 
-          upsert: true,
-          contentType: 'image/jpeg'
-        });
-
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, croppedBlob, { upsert: true, contentType: 'image/jpeg' });
       if (uploadError) throw uploadError;
 
-      // Get public URL with cache buster
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-      
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
       const urlWithCacheBuster = `${publicUrl}?v=${Date.now()}`;
 
-      // Update counsellor details with avatar URL
-      const { error: updateError } = await supabase
-        .from('counsellor_details')
-        .update({ avatar_url: urlWithCacheBuster })
-        .eq('id', counsellorDetails.id);
-
+      const { error: updateError } = await supabase.from('counsellor_details').update({ avatar_url: urlWithCacheBuster }).eq('id', counsellorDetails.id);
       if (updateError) throw updateError;
 
-      setCounsellorDetails({
-        ...counsellorDetails,
-        avatar_url: urlWithCacheBuster,
-      });
-
-      // Clean up the object URL
-      if (imageToCrop) {
-        URL.revokeObjectURL(imageToCrop);
-        setImageToCrop(null);
-      }
-
+      setCounsellorDetails({ ...counsellorDetails, avatar_url: urlWithCacheBuster });
+      if (imageToCrop) { URL.revokeObjectURL(imageToCrop); setImageToCrop(null); }
       toast.success('Profile picture updated successfully!');
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
@@ -246,66 +189,31 @@ const CounsellorDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <CounsellorLayout title="My Portfolio">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </CounsellorLayout>
     );
   }
 
   if (!counsellorDetails) {
     return (
-      <div className="p-6">
+      <CounsellorLayout title="My Portfolio">
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">Counsellor profile not found. Please complete your onboarding.</p>
         </Card>
-      </div>
+      </CounsellorLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar onMobileMenuClick={() => setIsMobileDrawerOpen(true)} />
-      
-      <div className="flex-1 flex">
-        {/* Desktop Sidebar */}
-        {!isMobile && (
-          <Sidebar isCollapsed={false} onToggle={() => {}} />
-        )}
-        
-        {/* Mobile Drawer */}
-        {isMobile && (
-          <Sheet open={isMobileDrawerOpen} onOpenChange={setIsMobileDrawerOpen}>
-            <SheetContent side="left" className="p-0 w-72">
-              <Sidebar 
-                isCollapsed={false} 
-                onToggle={() => setIsMobileDrawerOpen(false)} 
-                className="border-none"
-              />
-            </SheetContent>
-          </Sheet>
-        )}
-        
-        <main className="flex-1 transition-all duration-300">
-          {/* Mobile Header with Back Button */}
-          <div className="lg:hidden sticky top-0 z-20 bg-background border-b p-3 flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="h-9 w-9"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="font-semibold">My Portfolio</h1>
-          </div>
-          
-          <div className="p-6 space-y-6">
+    <CounsellorLayout title="My Portfolio">
       {/* Header Section - Portfolio Style */}
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-r from-primary/20 to-primary/5 h-32" />
         <CardContent className="relative pt-0">
           <div className="flex flex-col md:flex-row gap-6 -mt-16">
-            {/* Avatar */}
             <div className="relative">
               <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
                 <AvatarImage src={counsellorDetails.avatar_url || ''} />
@@ -319,7 +227,6 @@ const CounsellorDashboard = () => {
               </label>
             </div>
 
-            {/* Profile Info */}
             <div className="flex-1 pt-4 md:pt-8">
               <div className="flex items-start justify-between">
                 <div>
@@ -338,14 +245,13 @@ const CounsellorDashboard = () => {
                 <Button
                   variant={isEditing ? "outline" : "default"}
                   size="sm"
-                  onClick={() => isEditing ? setIsEditing(false) : setIsEditing(true)}
+                  onClick={() => setIsEditing(!isEditing)}
                 >
                   {isEditing ? <X className="h-4 w-4 mr-1" /> : <Edit2 className="h-4 w-4 mr-1" />}
                   {isEditing ? 'Cancel' : 'Edit Profile'}
                 </Button>
               </div>
 
-              {/* Stats Row */}
               <div className="flex flex-wrap gap-4 mt-4">
                 <Badge variant="secondary" className="flex items-center gap-1 px-3 py-1">
                   <Star className="h-4 w-4 text-yellow-500" />
@@ -359,7 +265,7 @@ const CounsellorDashboard = () => {
                   <Calendar className="h-4 w-4" />
                   {bookings.length} Sessions
                 </Badge>
-                <Badge variant="outline" className="flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 border-green-200">
+                <Badge variant="outline" className="flex items-center gap-1 px-3 py-1">
                   <DollarSign className="h-4 w-4" />
                   ${counsellorDetails.hiring_price}/session
                 </Badge>
@@ -369,7 +275,7 @@ const CounsellorDashboard = () => {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Bio & Specialization */}
@@ -481,6 +387,40 @@ const CounsellorDashboard = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Earnings Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wallet className="h-5 w-5" />
+                Earnings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center py-2">
+                <p className="text-3xl font-bold text-primary">${earnings.totalEarnings.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Total Revenue</p>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Completed Sessions</span>
+                <span className="font-semibold">{earnings.completedSessions}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Upcoming Sessions</span>
+                <span className="font-semibold">{earnings.pendingSessions}</span>
+              </div>
+              {earnings.completedSessions > 0 && (
+                <>
+                  <Separator />
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Avg. per Session</span>
+                    <span className="font-semibold">${(earnings.totalEarnings / earnings.completedSessions).toFixed(0)}</span>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Quick Stats */}
           <Card>
             <CardHeader>
@@ -512,7 +452,7 @@ const CounsellorDashboard = () => {
               <Separator />
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Session Price</span>
-                <span className="font-semibold text-green-600">${counsellorDetails.hiring_price}</span>
+                <span className="font-semibold">${counsellorDetails.hiring_price}</span>
               </div>
             </CardContent>
           </Card>
@@ -527,9 +467,7 @@ const CounsellorDashboard = () => {
             </CardHeader>
             <CardContent>
               {bookings.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  No bookings yet
-                </p>
+                <p className="text-muted-foreground text-center py-4">No bookings yet</p>
               ) : (
                 <div className="space-y-3">
                   {bookings.slice(0, 5).map((booking) => (
@@ -547,30 +485,23 @@ const CounsellorDashboard = () => {
               )}
             </CardContent>
           </Card>
-
         </div>
       </div>
-          </div>
-        </main>
-      </div>
-      
+
       {/* Image Cropper Dialog */}
       {imageToCrop && (
         <ImageCropper
           open={cropperOpen}
           onClose={() => {
             setCropperOpen(false);
-            if (imageToCrop) {
-              URL.revokeObjectURL(imageToCrop);
-              setImageToCrop(null);
-            }
+            if (imageToCrop) { URL.revokeObjectURL(imageToCrop); setImageToCrop(null); }
           }}
           imageSrc={imageToCrop}
           onCropComplete={handleCroppedImage}
           aspectRatio={1}
         />
       )}
-    </div>
+    </CounsellorLayout>
   );
 };
 

@@ -3,7 +3,8 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Users, Edit, Globe, Mail, Phone } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Building2, MapPin, Users, Edit, Globe, Mail, Phone, Briefcase, FileText, TrendingUp } from 'lucide-react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { EditCompanyDialog } from '@/components/employer/EditCompanyDialog';
 import { AddEmployeeDialog } from '@/components/employer/AddEmployeeDialog';
@@ -14,6 +15,7 @@ interface CompanyStats {
   activeJobPosts: number;
   totalApplications: number;
   employees: number;
+  applicationsByStatus: Record<string, number>;
 }
 
 const MyCompany = () => {
@@ -23,6 +25,7 @@ const MyCompany = () => {
     activeJobPosts: 0,
     totalApplications: 0,
     employees: 0,
+    applicationsByStatus: {},
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -35,38 +38,39 @@ const MyCompany = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Fetch active job posts count
-      const { count: jobPostsCount, error: jobsError } = await supabase
+      const { count: jobPostsCount } = await supabase
         .from('job_postings')
         .select('*', { count: 'exact', head: true })
         .eq('employer_id', session.user.id)
         .eq('status', 'active');
 
-      if (jobsError) throw jobsError;
-
-      // Fetch total applications for employer's jobs
-      const { data: jobIds, error: jobIdsError } = await supabase
+      const { data: jobIds } = await supabase
         .from('job_postings')
         .select('id')
         .eq('employer_id', session.user.id);
 
-      if (jobIdsError) throw jobIdsError;
-
       let applicationsCount = 0;
+      let applicationsByStatus: Record<string, number> = {};
+
       if (jobIds && jobIds.length > 0) {
-        const { count, error: appsError } = await supabase
+        const { data: apps } = await supabase
           .from('job_applications')
-          .select('*', { count: 'exact', head: true })
+          .select('status')
           .in('job_id', jobIds.map(j => j.id));
 
-        if (appsError) throw appsError;
-        applicationsCount = count || 0;
+        if (apps) {
+          applicationsCount = apps.length;
+          apps.forEach(a => {
+            applicationsByStatus[a.status] = (applicationsByStatus[a.status] || 0) + 1;
+          });
+        }
       }
 
       setStats({
         activeJobPosts: jobPostsCount || 0,
         totalApplications: applicationsCount,
-        employees: 0, // Will be updated when employee management is implemented
+        employees: 0,
+        applicationsByStatus,
       });
     } catch (error) {
       console.error('Error fetching company stats:', error);
@@ -79,18 +83,27 @@ const MyCompany = () => {
     return (
       <PageLayout title="My Company">
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading company information...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
       </PageLayout>
     );
   }
+
+  const statusColors: Record<string, string> = {
+    pending: 'bg-accent',
+    reviewing: 'bg-primary/20',
+    shortlisted: 'bg-secondary/20',
+    interview: 'bg-primary/30',
+    offered: 'bg-primary/40',
+    hired: 'bg-primary',
+    rejected: 'bg-destructive/20',
+  };
 
   return (
     <PageLayout title="My Company">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Company Info */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Company Profile Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -123,53 +136,38 @@ const MyCompany = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    {employerDetails?.company_website || 'Website not set'}
-                  </span>
+                  <span className="text-sm">{employerDetails?.company_website || 'Website not set'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    {employerDetails?.company_email || 'Email not set'}
-                  </span>
+                  <span className="text-sm">{employerDetails?.company_email || 'Email not set'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    {employerDetails?.company_phone || 'Phone not set'}
-                  </span>
+                  <span className="text-sm">{employerDetails?.company_phone || 'Phone not set'}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Company Description */}
           <Card>
             <CardHeader>
               <CardTitle>About the Company</CardTitle>
             </CardHeader>
             <CardContent>
               {employerDetails?.company_description ? (
-                <p className="text-muted-foreground whitespace-pre-wrap">
-                  {employerDetails.company_description}
-                </p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{employerDetails.company_description}</p>
               ) : (
                 <p className="text-muted-foreground">
                   Add a description about your company, its mission, values, and what makes it a great place to work.
-                  This will be visible to job seekers browsing your job postings.
                 </p>
               )}
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => setIsEditDialogOpen(true)}
-              >
+              <Button variant="outline" className="mt-4" onClick={() => setIsEditDialogOpen(true)}>
                 {employerDetails?.company_description ? 'Edit Description' : 'Add Company Description'}
               </Button>
             </CardContent>
           </Card>
 
-          {/* Team Overview */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -182,9 +180,7 @@ const MyCompany = () => {
                 <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>No employees registered yet</p>
                 <p className="text-sm mt-2">Invite employees to join your company training programs</p>
-                <AddEmployeeDialog 
-                  trigger={<Button className="mt-4">Invite Employees</Button>}
-                />
+                <AddEmployeeDialog trigger={<Button className="mt-4">Invite Employees</Button>} />
               </div>
             </CardContent>
           </Card>
@@ -192,33 +188,62 @@ const MyCompany = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Quick Stats */}
+          {/* Summary Stats */}
+          <div className="grid grid-cols-1 gap-4">
+            <Card>
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Briefcase className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{statsLoading ? '–' : stats.activeJobPosts}</p>
+                  <p className="text-sm text-muted-foreground">Active Jobs</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{statsLoading ? '–' : stats.totalApplications}</p>
+                  <p className="text-sm text-muted-foreground">Total Applications</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Application Pipeline */}
           <Card>
             <CardHeader>
-              <CardTitle>Company Stats</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <TrendingUp className="h-5 w-5" />
+                Hiring Pipeline
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Active Job Posts</span>
-                <span className="font-bold text-lg">
-                  {statsLoading ? '...' : stats.activeJobPosts}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Total Applications</span>
-                <span className="font-bold text-lg">
-                  {statsLoading ? '...' : stats.totalApplications}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Employees</span>
-                <span className="font-bold text-lg">
-                  {statsLoading ? '...' : stats.employees}
-                </span>
-              </div>
+            <CardContent className="space-y-3">
+              {statsLoading ? (
+                <p className="text-muted-foreground text-center py-4">Loading...</p>
+              ) : stats.totalApplications === 0 ? (
+                <p className="text-muted-foreground text-center py-4 text-sm">No applications yet. Post a job to start receiving candidates.</p>
+              ) : (
+                ['pending', 'reviewing', 'shortlisted', 'interview', 'offered', 'hired', 'rejected'].map(status => {
+                  const count = stats.applicationsByStatus[status] || 0;
+                  const pct = stats.totalApplications > 0 ? (count / stats.totalApplications) * 100 : 0;
+                  return (
+                    <div key={status} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="capitalize text-muted-foreground">{status}</span>
+                        <span className="font-medium">{count}</span>
+                      </div>
+                      <Progress value={pct} className="h-2" />
+                    </div>
+                  );
+                })
+              )}
             </CardContent>
           </Card>
-
         </div>
       </div>
 
