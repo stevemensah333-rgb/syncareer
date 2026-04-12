@@ -1,149 +1,70 @@
 import { useState, useEffect } from 'react';
 import { sendNotification } from '@/utils/notifications';
-import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogFooter
-} from '@/components/ui/dialog';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { 
-  Users, Briefcase, Search, Filter, Calendar, Clock, 
-  Mail, Phone, FileText, Star, ChevronRight, Video,
-  CheckCircle, XCircle, MessageSquare, ArrowRight, ExternalLink
-} from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
-interface ApplicantProfile {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-}
-
-interface Application {
-  id: string;
-  job_id: string;
-  applicant_id: string;
-  status: string;
-  cover_letter: string | null;
-  resume_url: string | null;
-  notes: string | null;
-  created_at: string;
-  job?: {
-    title: string;
-    location: string;
-    department: string | null;
-  };
-  applicant?: ApplicantProfile;
-}
-
-interface Interview {
-  id: string;
-  application_id: string;
-  scheduled_at: string;
-  duration_minutes: number;
-  interview_type: string;
-  meeting_link: string | null;
-  status: string;
-  notes: string | null;
-}
-
-const PIPELINE_STAGES = [
-  { id: 'pending', label: 'Applied', color: 'bg-slate-100 text-slate-700' },
-  { id: 'reviewing', label: 'Reviewing', color: 'bg-blue-100 text-blue-700' },
-  { id: 'interview', label: 'Interview', color: 'bg-purple-100 text-purple-700' },
-  { id: 'offered', label: 'Offered', color: 'bg-green-100 text-green-700' },
-  { id: 'rejected', label: 'Rejected', color: 'bg-red-100 text-red-700' },
-];
+import { Application, Interview, PIPELINE_STAGES } from '@/components/employer/applicants/types';
+import { ApplicantFilters } from '@/components/employer/applicants/ApplicantFilters';
+import { PipelineView } from '@/components/employer/applicants/PipelineView';
+import { ApplicantListView } from '@/components/employer/applicants/ApplicantListView';
+import { InterviewsView } from '@/components/employer/applicants/InterviewsView';
+import { ScheduleInterviewDialog } from '@/components/employer/applicants/ScheduleInterviewDialog';
 
 const ApplicantTracker = () => {
-  const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedJob, setSelectedJob] = useState<string>('all');
+  const [selectedJob, setSelectedJob] = useState('all');
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
-  const [interviewDate, setInterviewDate] = useState<Date>();
-  const [interviewTime, setInterviewTime] = useState('10:00');
-  const [interviewType, setInterviewType] = useState('video');
-  const [meetingLink, setMeetingLink] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
-      // Fetch jobs first
       const { data: jobs } = await supabase
         .from('job_postings')
         .select('id, title, location, department')
         .eq('employer_id', session.user.id);
 
-      if (jobs && jobs.length > 0) {
-        const jobIds = jobs.map(j => j.id);
-        
-        // Fetch applications for these jobs
-        const { data: apps } = await supabase
-          .from('job_applications')
-          .select('*')
-          .in('job_id', jobIds)
-          .order('created_at', { ascending: false });
+      if (!jobs || jobs.length === 0) { setLoading(false); return; }
 
-        if (apps) {
-          // Fetch applicant profiles
-          const applicantIds = [...new Set(apps.map(a => a.applicant_id))];
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, full_name, avatar_url')
-            .in('id', applicantIds);
+      const jobIds = jobs.map(j => j.id);
 
-          // Map job and profile details to applications
-          const appsWithDetails = apps.map(app => ({
-            ...app,
-            job: jobs.find(j => j.id === app.job_id),
-            applicant: profiles?.find(p => p.id === app.applicant_id)
-          }));
-          setApplications(appsWithDetails);
+      const { data: apps } = await supabase
+        .from('job_applications')
+        .select('*')
+        .in('job_id', jobIds)
+        .order('created_at', { ascending: false });
 
-          // Fetch interviews
-          const appIds = apps.map(a => a.id);
-          if (appIds.length > 0) {
-            const { data: ints } = await supabase
-              .from('interview_sessions')
-              .select('*')
-              .in('application_id', appIds);
-            
-            if (ints) setInterviews(ints);
-          }
+      if (apps) {
+        const applicantIds = [...new Set(apps.map(a => a.applicant_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', applicantIds);
+
+        setApplications(apps.map(app => ({
+          ...app,
+          job: jobs.find(j => j.id === app.job_id),
+          applicant: profiles?.find(p => p.id === app.applicant_id),
+        })));
+
+        const appIds = apps.map(a => a.id);
+        if (appIds.length > 0) {
+          const { data: ints } = await supabase
+            .from('interview_sessions')
+            .select('*')
+            .in('application_id', appIds);
+          if (ints) setInterviews(ints);
         }
       }
     } catch (error) {
@@ -156,15 +77,12 @@ const ApplicantTracker = () => {
   const updateApplicationStatus = async (appId: string, newStatus: string) => {
     try {
       const app = applications.find(a => a.id === appId);
-      
       const { error } = await supabase
         .from('job_applications')
         .update({ status: newStatus })
         .eq('id', appId);
-
       if (error) throw error;
 
-      // Notify the applicant about the status change
       if (app) {
         const stageName = PIPELINE_STAGES.find(s => s.id === newStatus)?.label || newStatus;
         sendNotification({
@@ -177,80 +95,74 @@ const ApplicantTracker = () => {
         });
       }
 
-      setApplications(prev => prev.map(app => 
-        app.id === appId ? { ...app, status: newStatus } : app
-      ));
-
-      toast.success(`Application moved to ${newStatus}`);
+      setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: newStatus } : a));
+      toast.success(`Application moved to ${PIPELINE_STAGES.find(s => s.id === newStatus)?.label || newStatus}`);
     } catch (error: any) {
       toast.error(error.message || 'Failed to update status');
     }
   };
 
-  const scheduleInterview = async () => {
-    if (!selectedApplication || !interviewDate) return;
-
+  const handleScheduleInterview = async (data: {
+    applicationId: string;
+    scheduledAt: Date;
+    interviewType: string;
+    meetingLink: string;
+  }) => {
+    const app = applications.find(a => a.id === data.applicationId);
     try {
-      const scheduledAt = new Date(interviewDate);
-      const [hours, minutes] = interviewTime.split(':');
-      scheduledAt.setHours(parseInt(hours), parseInt(minutes));
-
-      const { error } = await supabase
-        .from('interview_sessions')
-        .insert({
-          application_id: selectedApplication.id,
-          scheduled_at: scheduledAt.toISOString(),
-          interview_type: interviewType,
-          meeting_link: meetingLink || null,
-          duration_minutes: 60,
-        });
-
+      const { error } = await supabase.from('interview_sessions').insert({
+        application_id: data.applicationId,
+        scheduled_at: data.scheduledAt.toISOString(),
+        interview_type: data.interviewType,
+        meeting_link: data.meetingLink || null,
+        duration_minutes: 60,
+      });
       if (error) throw error;
 
-      // Update application status to interviewing
-      await updateApplicationStatus(selectedApplication.id, 'interview');
+      await updateApplicationStatus(data.applicationId, 'interview');
 
-      // Send notification to applicant
-      const formattedDate = format(scheduledAt, 'PPp');
-      sendNotification({
-        user_id: selectedApplication.applicant_id,
-        type: 'interview',
-        title: 'Interview Scheduled',
-        message: `Your interview for "${selectedApplication.job?.title}" has been scheduled for ${formattedDate}. Interview type: ${interviewType}.`,
-        category: 'interview',
-        link: '/applications',
-      });
+      if (app) {
+        sendNotification({
+          user_id: app.applicant_id,
+          type: 'interview',
+          title: 'Interview Scheduled',
+          message: `Your interview for "${app.job?.title}" is scheduled for ${format(data.scheduledAt, 'PPp')}. Type: ${data.interviewType}.`,
+          category: 'interview',
+          link: '/applications',
+        });
+      }
 
-      toast.success('Interview scheduled successfully!');
+      toast.success('Interview scheduled!');
       setScheduleDialogOpen(false);
       setSelectedApplication(null);
-      setInterviewDate(undefined);
-      setMeetingLink('');
       fetchData();
     } catch (error: any) {
       toast.error(error.message || 'Failed to schedule interview');
     }
   };
 
-  const getStageCount = (stage: string) => {
-    return applications.filter(a => a.status === stage).length;
-  };
-
+  // Derived data
   const filteredApplications = applications.filter(app => {
-    const matchesSearch = searchQuery === '' || 
-      app.applicant_id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = !searchQuery ||
+      (app.applicant?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesJob = selectedJob === 'all' || app.job_id === selectedJob;
     return matchesSearch && matchesJob;
   });
 
-  const uniqueJobs = Array.from(new Set(applications.map(a => a.job?.title)))
-    .filter(Boolean) as string[];
+  const stageCounts: Record<string, number> = {};
+  applications.forEach(a => { stageCounts[a.status] = (stageCounts[a.status] || 0) + 1; });
+
+  const uniqueJobs = [...new Set(applications.map(a => a.job?.title).filter(Boolean))] as string[];
 
   if (loading) {
     return (
       <PageLayout title="Applicant Tracker">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12" />)}
+          </div>
+          <Skeleton className="h-12" />
+          <Skeleton className="h-64" />
         </div>
       </PageLayout>
     );
@@ -258,383 +170,50 @@ const ApplicantTracker = () => {
 
   return (
     <PageLayout title="Applicant Tracker">
-      <div className="space-y-6">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {PIPELINE_STAGES.map((stage) => (
-            <Card key={stage.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">{stage.label}</span>
-                <Badge className={stage.color}>{getStageCount(stage.id)}</Badge>
-              </div>
-            </Card>
-          ))}
-        </div>
+      <div className="space-y-5">
+        <ApplicantFilters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedJob={selectedJob}
+          onJobChange={setSelectedJob}
+          uniqueJobs={uniqueJobs}
+          stageCounts={stageCounts}
+        />
 
-        {/* Filters */}
-        <Card className="p-4">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex-1 min-w-[200px]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search applicants..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-            <Select value={selectedJob} onValueChange={setSelectedJob}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by job" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Jobs</SelectItem>
-                {uniqueJobs.map((job) => (
-                  <SelectItem key={job} value={job}>{job}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </Card>
-
-        {/* Pipeline View */}
         <Tabs defaultValue="pipeline" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="pipeline">Pipeline View</TabsTrigger>
-            <TabsTrigger value="list">List View</TabsTrigger>
-            <TabsTrigger value="interviews">Interviews</TabsTrigger>
+            <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+            <TabsTrigger value="list">List</TabsTrigger>
+            <TabsTrigger value="interviews">Interviews ({interviews.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="pipeline">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              {PIPELINE_STAGES.map((stage) => (
-                <Card key={stage.id} className="min-h-[400px]">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center justify-between">
-                      <span>{stage.label}</span>
-                      <Badge variant="outline">{getStageCount(stage.id)}</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {filteredApplications
-                      .filter(app => app.status === stage.id)
-                      .map((app) => (
-                        <div
-                          key={app.id}
-                          className="p-3 bg-muted/50 rounded-lg space-y-2 hover:bg-muted transition-colors cursor-pointer"
-                          onClick={() => navigate(`/portfolio/${app.applicant_id}`)}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                                {app.applicant?.full_name?.substring(0, 2).toUpperCase() || 'AP'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                {app.applicant?.full_name || 'Applicant'}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {app.job?.title}
-                              </p>
-                            </div>
-                          </div>
-                        <div className="flex flex-wrap gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs flex-1 min-w-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/portfolio/${app.applicant_id}`);
-                              }}
-                            >
-                              <ExternalLink className="h-3 w-3 mr-1 shrink-0" />
-                              <span className="truncate">Portfolio</span>
-                            </Button>
-                            {stage.id !== 'rejected' && stage.id !== 'offered' && (
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 w-7 p-0 shrink-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const nextStage = PIPELINE_STAGES[
-                                      PIPELINE_STAGES.findIndex(s => s.id === stage.id) + 1
-                                    ];
-                                    if (nextStage) {
-                                      updateApplicationStatus(app.id, nextStage.id);
-                                    }
-                                  }}
-                                  title="Move to next stage"
-                                >
-                                  <ArrowRight className="h-3 w-3" />
-                                </Button>
-                                {(stage.id === 'pending' || stage.id === 'reviewing' || stage.id === 'interview') && (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-7 w-7 p-0 shrink-0"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedApplication(app);
-                                      setScheduleDialogOpen(true);
-                                    }}
-                                    title="Schedule interview"
-                                  >
-                                    <Calendar className="h-3 w-3" />
-                                  </Button>
-                                )}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 w-7 p-0 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateApplicationStatus(app.id, 'rejected');
-                                  }}
-                                  title="Reject applicant"
-                                >
-                                  <XCircle className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <PipelineView
+              applications={filteredApplications}
+              onUpdateStatus={updateApplicationStatus}
+              onScheduleInterview={(app) => { setSelectedApplication(app); setScheduleDialogOpen(true); }}
+            />
           </TabsContent>
 
           <TabsContent value="list">
-            <Card>
-              <CardContent className="pt-6">
-                {filteredApplications.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No applications yet</p>
-                    <p className="text-sm">Applications to your job posts will appear here</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {filteredApplications.map((app) => (
-                      <div 
-                        key={app.id} 
-                        className="p-4 border rounded-lg hover:border-primary/50 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/portfolio/${app.applicant_id}`)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-10 w-10">
-                              <AvatarFallback className="bg-primary/10 text-primary">
-                                {app.applicant?.full_name?.substring(0, 2).toUpperCase() || 'AP'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{app.applicant?.full_name || 'Applicant'}</p>
-                              <p className="text-sm text-muted-foreground">
-                                Applied for: {app.job?.title}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/portfolio/${app.applicant_id}`);
-                              }}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-1" />
-                              View Portfolio
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedApplication(app);
-                                setScheduleDialogOpen(true);
-                              }}
-                              title="Schedule interview"
-                            >
-                              <Calendar className="h-4 w-4 mr-1" />
-                              Schedule
-                            </Button>
-                            {app.status !== 'rejected' && app.status !== 'offered' && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-destructive border-destructive/50 hover:bg-destructive/10"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateApplicationStatus(app.id, 'rejected');
-                                }}
-                              >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Reject
-                              </Button>
-                            )}
-                            <Badge className={
-                              PIPELINE_STAGES.find(s => s.id === app.status)?.color
-                            }>
-                              {PIPELINE_STAGES.find(s => s.id === app.status)?.label}
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(app.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ApplicantListView
+              applications={filteredApplications}
+              onUpdateStatus={updateApplicationStatus}
+              onScheduleInterview={(app) => { setSelectedApplication(app); setScheduleDialogOpen(true); }}
+            />
           </TabsContent>
 
           <TabsContent value="interviews">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Scheduled Interviews
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {interviews.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No interviews scheduled</p>
-                    <p className="text-sm">Schedule interviews from the pipeline view</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {interviews.map((interview) => (
-                      <div key={interview.id} className="p-4 border rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                              <Video className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-medium">
-                                {format(new Date(interview.scheduled_at), 'PPp')}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {interview.interview_type} interview • {interview.duration_minutes} min
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={interview.status === 'scheduled' ? 'default' : 'secondary'}>
-                              {interview.status}
-                            </Badge>
-                            {interview.meeting_link && (
-                              <Button size="sm" variant="outline" asChild>
-                                <a href={interview.meeting_link} target="_blank" rel="noopener noreferrer">
-                                  <Video className="h-4 w-4 mr-1" />
-                                  Join
-                                </a>
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <InterviewsView interviews={interviews} />
           </TabsContent>
         </Tabs>
 
-        {/* Schedule Interview Dialog */}
-        <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Schedule Interview</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !interviewDate && "text-muted-foreground"
-                      )}
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {interviewDate ? format(interviewDate, "PPP") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-[60]" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={interviewDate}
-                      onSelect={setInterviewDate}
-                      disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Time</Label>
-                <Input
-                  type="time"
-                  value={interviewTime}
-                  onChange={(e) => setInterviewTime(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Interview Type</Label>
-                <Select value={interviewType} onValueChange={setInterviewType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="video">Video Call</SelectItem>
-                    <SelectItem value="phone">Phone Call</SelectItem>
-                    <SelectItem value="in-person">In Person</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Meeting Link {interviewType === 'video' ? '(required)' : '(optional)'}</Label>
-                <Input
-                  value={meetingLink}
-                  onChange={(e) => setMeetingLink(e.target.value)}
-                  placeholder="https://zoom.us/j/... or https://meet.google.com/..."
-                />
-                {interviewType === 'video' && !meetingLink && (
-                  <p className="text-xs text-muted-foreground">A Zoom or Google Meet link is required for video interviews</p>
-                )}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setScheduleDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={scheduleInterview} disabled={!interviewDate || (interviewType === 'video' && !meetingLink)}>
-                Schedule Interview
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <ScheduleInterviewDialog
+          open={scheduleDialogOpen}
+          onOpenChange={setScheduleDialogOpen}
+          application={selectedApplication}
+          onSchedule={handleScheduleInterview}
+        />
       </div>
     </PageLayout>
   );
