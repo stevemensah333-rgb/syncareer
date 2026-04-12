@@ -28,7 +28,7 @@ const studentNavItems = [
     { title: 'CV Builder', icon: FileText, href: '/cv-builder' },
     { title: 'Applications', icon: ClipboardList, href: '/applications' },
     { title: 'Interview Prep', icon: Mic, href: '/interview-simulator' },
-    { title: 'Performance', icon: BarChart, href: '/performance' },
+    
   ]},
   { label: 'Account', items: [
     { title: 'SynAI', icon: Sparkles, href: '/ai-coach' },

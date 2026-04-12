@@ -32,7 +32,7 @@ const studentMoreItems: NavTab[] = [
   { title: 'CV Builder', icon: FileText, href: '/cv-builder' },
   { title: 'Applications', icon: ClipboardList, href: '/applications' },
   { title: 'Interview Prep', icon: ClipboardList, href: '/interview-simulator' },
-  { title: 'Performance', icon: Star, href: '/performance' },
+  
   { title: 'Settings', icon: Settings, href: '/settings' },
 ];
 
