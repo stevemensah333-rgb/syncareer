@@ -4,18 +4,34 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sparkles, GraduationCap, RefreshCw, AlertCircle, BarChart3, TrendingUp, LineChart } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sparkles, GraduationCap, RefreshCw, AlertCircle, BarChart3, TrendingUp, LineChart, Download } from 'lucide-react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useMarketIntelligence } from '@/hooks/useMarketIntelligence';
 import { MarketOverviewTab } from '@/components/analysis/MarketOverviewTab';
 import { CareerOutlookTab } from '@/components/analysis/CareerOutlookTab';
 import { Link } from 'react-router-dom';
 
+const REGIONS = [
+  { value: 'global', label: 'Global' },
+  { value: 'north_america', label: 'North America' },
+  { value: 'europe', label: 'Europe' },
+  { value: 'africa', label: 'Africa' },
+  { value: 'asia', label: 'Asia' },
+  { value: 'middle_east', label: 'Middle East' },
+  { value: 'latin_america', label: 'Latin America' },
+];
+
 const Analysis = () => {
   const { studentDetails, loading: profileLoading } = useUserProfile();
   const major = studentDetails?.major;
+  const [region, setRegion] = useState('global');
 
-  const { data, loading, error, refresh } = useMarketIntelligence(major);
+  const { data, loading, error, refresh } = useMarketIntelligence(major, region);
+
+  const handleExport = () => {
+    window.print();
+  };
 
   if (profileLoading) {
     return (
@@ -48,9 +64,9 @@ const Analysis = () => {
 
   return (
     <PageLayout title="">
-      <div className="space-y-6">
+      <div className="space-y-6 print:space-y-4">
         {/* Portfolio / Market Analysis tab strip */}
-        <div className="flex items-center gap-1 border-b border-border -mt-2 mb-2">
+        <div className="flex items-center gap-1 border-b border-border -mt-2 mb-2 print:hidden">
           <Link
             to="/portfolio"
             className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors -mb-px"
@@ -71,7 +87,7 @@ const Analysis = () => {
           <CardContent className="pt-5 pb-5">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                <div className="p-2 rounded-lg bg-primary/10 shrink-0 print:hidden">
                   <Sparkles className="h-5 w-5 text-primary" />
                 </div>
                 <div>
@@ -95,16 +111,40 @@ const Analysis = () => {
                   </p>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={refresh}
-                disabled={loading}
-                className="gap-1.5 shrink-0"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-                Refresh
-              </Button>
+              <div className="flex items-center gap-2 shrink-0 print:hidden">
+                <Select value={region} onValueChange={setRegion}>
+                  <SelectTrigger className="w-[150px] h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REGIONS.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExport}
+                  disabled={!data || loading}
+                  className="gap-1.5"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Export</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refresh}
+                  disabled={loading}
+                  className="gap-1.5"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -158,7 +198,7 @@ const Analysis = () => {
         {/* Main Content */}
         {data && !loading && (
           <Tabs defaultValue="overview">
-            <TabsList className="mb-6">
+            <TabsList className="mb-6 print:hidden">
               <TabsTrigger value="overview" className="gap-1.5">
                 <BarChart3 className="h-3.5 w-3.5" />
                 Market Overview
