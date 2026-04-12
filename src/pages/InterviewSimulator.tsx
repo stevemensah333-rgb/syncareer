@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Mic, CheckCircle, Phone, Clock, Zap, Target, Lock, Sparkles, Trash2, History } from 'lucide-react';
+import { Mic, CheckCircle, Phone, Clock, Zap, Target, Lock, Sparkles, Trash2, History, Briefcase, MapPin, ArrowRight } from 'lucide-react';
+import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/contexts/UserProfileContext';
@@ -96,6 +97,20 @@ const InterviewSimulator = () => {
         .order('created_at', { ascending: false })
         .limit(20);
       if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch active job postings for "Practice for a real job"
+  const { data: liveJobs } = useQuery({
+    queryKey: ['live_jobs_for_interview'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('job_postings')
+        .select('id, title, location, employment_type, skills, description')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(5);
       return data || [];
     },
   });
@@ -277,6 +292,47 @@ const InterviewSimulator = () => {
                   </Button>
                 </CardContent>
               </Card>
+
+              {/* Practice for a real job */}
+              {liveJobs && liveJobs.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-primary" />
+                      Or practice for an open position
+                    </CardTitle>
+                    <CardDescription>
+                      Prepare for a real job listing with a tailored interview
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {liveJobs.map((job) => (
+                      <button
+                        key={job.id}
+                        onClick={() => {
+                          setConfig(prev => ({
+                            ...prev,
+                            jobRole: job.title,
+                            industry: job.employment_type,
+                            jobDescription: job.description || '',
+                            difficulty: 'beginner',
+                          }));
+                          toast.success(`Interview setup pre-filled for "${job.title}"`);
+                        }}
+                        className="w-full flex items-center justify-between gap-3 rounded-lg border p-3 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm truncate">{job.title}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> {job.location} · {job.employment_type}
+                          </p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </button>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* How it works */}
               <Card>
