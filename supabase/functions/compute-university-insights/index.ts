@@ -54,7 +54,7 @@ Return a JSON object with:
 Be realistic and specific to Ghana's job market. Consider the university's strengths and reputation.
 Return ONLY valid JSON, no markdown.`
 
-    const aiResponse = await fetch('https://ai-gateway.lovable.dev/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
