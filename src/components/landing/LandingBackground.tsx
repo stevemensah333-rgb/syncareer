@@ -8,10 +8,10 @@ export default function LandingBackground() {
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
       />
-      {/* Dark overlay for readability */}
-      <div className="absolute inset-0 bg-black/60" />
-      {/* Subtle warm vignette */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/30" />
+      {/* Stronger overlay to hide baked-in text */}
+      <div className="absolute inset-0 bg-black/70" />
+      {/* Vignette */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/40" />
     </div>
   );
 }
