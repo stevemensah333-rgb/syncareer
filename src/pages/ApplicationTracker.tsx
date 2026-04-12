@@ -273,34 +273,15 @@ const ApplicationTracker = () => {
           ))}
         </div>
 
-        {/* Search and Filter */}
-        <div className="flex gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search applications..."
-              className="pl-10"
-            />
-          </div>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-40">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="reviewing">Reviewing</SelectItem>
-              <SelectItem value="shortlisted">Shortlisted</SelectItem>
-              <SelectItem value="interview">Interview</SelectItem>
-              <SelectItem value="offered">Offered</SelectItem>
-              <SelectItem value="hired">Hired</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-              <SelectItem value="withdrawn">Withdrawn</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search applications..."
+            className="pl-10"
+          />
         </div>
 
         {/* Applications List */}
