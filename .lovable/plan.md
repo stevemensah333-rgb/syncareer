@@ -1,145 +1,56 @@
 
 
-# Implementation Plan: Engagement & Retention Features
+# Landing Page Assessment & Improvement Plan
 
-## Overview
-Five features to increase daily usage and retention: guided post-assessment journey, job match email digests, referral system, career readiness dashboard score, and university-specific context.
+## Current Issues
 
----
+### Critical: Page doesn't scroll
+The `html, body { h-full }` in `index.css` (line 106) prevents scrolling on the landing page. The SolutionSection, VideoDemoSection, SocialProofSection, FinalCTA, and Footer are all rendered but completely invisible — users only see the hero. This means 80% of the landing page content is hidden.
 
-## 1. Guided Journey After Assessment
+### "Create Account" button is nearly invisible
+The white outline button blends into the lighter areas of the background image. On mobile it's almost unreadable.
 
-**Problem:** After seeing results, users don't know what to do next.
+### Background image text conflict
+The background image contains "SynCareer — Where Ambition meets Opportunity" text baked into the image, which competes with the hero headline. Two competing headlines on screen at once is confusing.
 
-**Solution:** Replace the current static "Next Steps" cards in `CareerRecommendations.tsx` with a sequential guided journey component.
-
-- Create `src/components/assessment/GuidedJourney.tsx` — a stepped card that tracks which steps the user has completed (assessment done, CV built, interview practiced, job applied)
-- Query `resumes`, `mock_interviews`, `job_applications` to check completion status
-- Show the *next uncompleted step* prominently with a primary CTA, dim completed steps with checkmarks
-- Each step links directly to the relevant tool with pre-filled context (e.g., top career title passed to interview simulator)
-- Add a progress bar: "2 of 4 steps complete"
-- Replace the existing Next Steps section in `CareerRecommendations.tsx` with this component
+### No mobile hamburger menu
+The header nav links (Features, Demo) are hidden on mobile via `hidden md:flex`, but there's no mobile menu alternative.
 
 ---
 
-## 2. Job Match Email Digests
+## Improvement Plan
 
-**Problem:** No retention hook to bring users back.
+### 1. Fix scrolling (Critical)
+Change `h-full` to `min-h-full` on `html, body` in `index.css` so the page can scroll past the viewport height. This will immediately reveal all 5 sections.
 
-**Solution:** A scheduled edge function that sends weekly email digests of new job matches.
+### 2. Fix "Create Account" button visibility
+Change the outline button to use a semi-transparent white background (`bg-white/20`) so it's visible regardless of what part of the background image is behind it.
 
-### Database
-- Add `last_digest_sent_at` column to `notification_preferences` table (timestamp, nullable)
+### 3. Clean up background image overlap
+Add a stronger overlay or larger blur specifically behind the hero text area so the baked-in background text doesn't compete with the headline.
 
-### Edge Function: `job-digest`
-- Runs weekly via `pg_cron` (Sundays at 9am UTC)
-- For each user with `email_enabled = true` and `weekly_digest = true`:
-  - Fetch their assessment interests from `assessments`
-  - Query `job_postings` created since `last_digest_sent_at`
-  - Match by industry/skills overlap
-  - Send email via Resend with job count + top 5 listings
-  - Update `last_digest_sent_at`
-- Uses service role key (server-to-server, no auth header)
+### 4. Add mobile navigation
+Add a hamburger menu icon on mobile that opens a sheet/drawer with the nav links (Features, Demo, Log in, Get Started).
 
-### UI
-- The `weekly_digest` preference toggle already exists in `notification_preferences` — just ensure the Settings notification panel surfaces it clearly
+### 5. Add a "How It Works" micro-section
+Between Hero and SolutionSection, add a simple 3-step strip: "1. Take Assessment → 2. Build Your CV → 3. Practice Interviews". This gives visitors an immediate mental model before scrolling further.
 
----
+### 6. Add social proof numbers to hero
+Below the subtitle, add a small stats bar: "2,400+ assessments taken · 12+ universities · 100% free to start". Numbers build instant trust.
 
-## 3. Referral Loop
-
-**Problem:** No viral growth mechanism.
-
-### Database
-- Create `referrals` table: `id`, `referrer_id` (uuid), `referee_id` (uuid, nullable), `referral_code` (text, unique), `status` (text: pending/completed), `reward_granted` (boolean), `created_at`
-- RLS: users can read/create their own referrals
-
-### Implementation
-- On signup, generate a unique referral code and insert into `referrals` (trigger or edge function)
-- Add `referral_code` field to `profiles` table for quick access
-- Create `src/components/referral/ReferralCard.tsx` — shows on the student dashboard/settings:
-  - "Share your code, both get 7 days of premium"
-  - Copy link button, WhatsApp share button
-  - Count of successful referrals
-- When a new user signs up with a referral code (via URL param `?ref=CODE`):
-  - Store the code during signup flow
-  - After email verification, mark referral as completed
-  - Grant both users 7-day premium extension (update `subscriptions.current_period_end`)
-- Edge function `process-referral` handles the reward logic securely
+### 7. Improve CTA hierarchy
+The hero has two CTAs that compete. Make "Take Free Assessment" larger and more prominent. Make "Create Account" smaller text-link style, not a full button.
 
 ---
 
-## 4. Career Readiness Score on Dashboard
+## Technical Changes
 
-**Problem:** No single metric creating a game loop.
-
-**Solution:** The `useCareerReadiness` hook already computes an overall score (0-100%). Surface it prominently.
-
-### Changes
-- Create `src/pages/Dashboard.tsx` as the new student home page
-- Move the student default route from `/portfolio` to `/dashboard` in `RoleRoute.tsx`
-- Dashboard includes:
-  - `ReadinessOverview` component (already exists) showing the score + level
-  - Quick stats: applications this month, interview score, CV strength
-  - "Continue your journey" section (the guided journey component from #1)
-  - Recent job matches
-  - Referral card from #3
-- The score updates automatically as users complete assessment, build CV, do interviews, add portfolio projects (already computed by `useCareerReadiness`)
-
-### Sidebar
-- Add "Dashboard" as the first nav item in `StudentLayout.tsx` and `Sidebar.tsx`
-
----
-
-## 5. University-Specific Context
-
-**Problem:** Content feels generic. Students want to see data relevant to their school.
-
-### Database
-- Create `university_insights` table: `id`, `university_name` (text), `major` (text), `top_careers` (jsonb), `graduate_outcomes` (jsonb), `last_updated` (timestamp)
-- Pre-populate with data for top Ghanaian universities (UG, KNUST, Ashesi, UCC, etc.)
-- RLS: anyone authenticated can read
-
-### Edge Function: `compute-university-insights`
-- Uses AI (Lovable AI Gateway) to generate insights based on university + major
-- Caches results in `university_insights` table
-- Called on-demand when a student first views their dashboard and no cached data exists
-
-### UI
-- Add `UniversityInsightsCard` to the Dashboard:
-  - "Top careers for [Major] students at [University]"
-  - "What [University] graduates are doing"
-  - Shows top 5 career paths with match percentages
-- Data sourced from `student_details.school` and `student_details.major`
-
----
-
-## Technical Summary
-
-### New Files
-- `src/pages/Dashboard.tsx`
-- `src/components/assessment/GuidedJourney.tsx`
-- `src/components/referral/ReferralCard.tsx`
-- `src/components/dashboard/UniversityInsightsCard.tsx`
-- `supabase/functions/job-digest/index.ts`
-- `supabase/functions/process-referral/index.ts`
-- `supabase/functions/compute-university-insights/index.ts`
-
-### Modified Files
-- `src/App.tsx` — add Dashboard route
-- `src/components/auth/RoleRoute.tsx` — change student home to `/dashboard`
-- `src/components/layout/StudentLayout.tsx` — add Dashboard nav item
-- `src/components/layout/Sidebar.tsx` — add Dashboard nav item
-- `src/components/assessment/CareerRecommendations.tsx` — replace Next Steps with GuidedJourney
-- `src/pages/Settings.tsx` or notification settings — surface weekly digest toggle
-
-### Database Migrations
-1. Add `last_digest_sent_at` to `notification_preferences`
-2. Add `referral_code` to `profiles`
-3. Create `referrals` table with RLS
-4. Create `university_insights` table with RLS
-
-### Scheduled Jobs
-- `job-digest`: weekly (Sunday 9am UTC)
-- Referral processing: triggered on signup completion
+| File | Change |
+|------|--------|
+| `src/index.css` (line 106) | Change `h-full` to `min-h-full` |
+| `src/components/landing/HeroSection.tsx` | Fix button visibility, add stats bar, adjust CTA hierarchy |
+| `src/components/landing/LandingBackground.tsx` | Strengthen overlay behind hero area |
+| `src/components/landing/LandingHeader.tsx` | Add mobile hamburger menu with Sheet component |
+| `src/components/landing/HowItWorksSection.tsx` | Create new 3-step strip component |
+| `src/pages/Landing.tsx` | Insert HowItWorksSection between Hero and Solution |
 
