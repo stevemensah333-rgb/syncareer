@@ -1,56 +1,49 @@
 
 
-# Landing Page Assessment & Improvement Plan
+# Market Analysis Improvements Plan
 
-## Current Issues
-
-### Critical: Page doesn't scroll
-The `html, body { h-full }` in `index.css` (line 106) prevents scrolling on the landing page. The SolutionSection, VideoDemoSection, SocialProofSection, FinalCTA, and Footer are all rendered but completely invisible — users only see the hero. This means 80% of the landing page content is hidden.
-
-### "Create Account" button is nearly invisible
-The white outline button blends into the lighter areas of the background image. On mobile it's almost unreadable.
-
-### Background image text conflict
-The background image contains "SynCareer — Where Ambition meets Opportunity" text baked into the image, which competes with the hero headline. Two competing headlines on screen at once is confusing.
-
-### No mobile hamburger menu
-The header nav links (Features, Demo) are hidden on mobile via `hidden md:flex`, but there's no mobile menu alternative.
+## Summary
+Five improvements to the Market Analysis feature: region selector, resilient AI parsing, empty states, export/print, and skill gap overlay.
 
 ---
 
-## Improvement Plan
+## Changes
 
-### 1. Fix scrolling (Critical)
-Change `h-full` to `min-h-full` on `html, body` in `index.css` so the page can scroll past the viewport height. This will immediately reveal all 5 sections.
+### 1. Region Selector (Analysis.tsx)
+Add a `Select` dropdown next to the header letting users pick a region (Global, North America, Europe, Africa, Asia, Middle East, Latin America). Pass the selected region to `useMarketIntelligence(major, region)`. The hook already accepts a `region` parameter -- just need UI to control it via `useState`.
 
-### 2. Fix "Create Account" button visibility
-Change the outline button to use a semi-transparent white background (`bg-white/20`) so it's visible regardless of what part of the background image is behind it.
+### 2. Resilient JSON Parsing (Edge Function)
+Wrap `JSON.parse(rawContent)` in a try-catch in `market-intelligence/index.ts`. If parsing fails:
+- Strip markdown fences (` ```json ... ``` `) and retry
+- If still fails, return a 502 with `"AI returned malformed data"` instead of crashing with a 500
 
-### 3. Clean up background image overlap
-Add a stronger overlay or larger blur specifically behind the hero text area so the baked-in background text doesn't compete with the headline.
+### 3. Empty State Handling (MarketOverviewTab + CareerOutlookTab)
+Add checks for empty arrays (`hard_skills.length === 0`, etc.) and render helpful empty-state messages instead of blank sections. For example: "No skill data available for this major yet."
 
-### 4. Add mobile navigation
-Add a hamburger menu icon on mobile that opens a sheet/drawer with the nav links (Features, Demo, Log in, Get Started).
+### 4. Export / Print Button (Analysis.tsx)
+Add a "Download Report" button next to the Refresh button. Uses `window.print()` with a print-friendly CSS media query, or generates a simple text/PDF summary of the current data using the browser print dialog.
 
-### 5. Add a "How It Works" micro-section
-Between Hero and SolutionSection, add a simple 3-step strip: "1. Take Assessment → 2. Build Your CV → 3. Practice Interviews". This gives visitors an immediate mental model before scrolling further.
-
-### 6. Add social proof numbers to hero
-Below the subtitle, add a small stats bar: "2,400+ assessments taken · 12+ universities · 100% free to start". Numbers build instant trust.
-
-### 7. Improve CTA hierarchy
-The hero has two CTAs that compete. Make "Take Free Assessment" larger and more prominent. Make "Create Account" smaller text-link style, not a full button.
+### 5. Skill Gap Overlay (MarketOverviewTab)
+Fetch the user's skills from the `user_skills` table via the existing Supabase client. Overlay a marker or secondary bar on the Hard Skills demand chart showing which skills the user already has vs. which they're missing. Display a small "You have this" badge next to matched skills.
 
 ---
 
-## Technical Changes
+## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/index.css` (line 106) | Change `h-full` to `min-h-full` |
-| `src/components/landing/HeroSection.tsx` | Fix button visibility, add stats bar, adjust CTA hierarchy |
-| `src/components/landing/LandingBackground.tsx` | Strengthen overlay behind hero area |
-| `src/components/landing/LandingHeader.tsx` | Add mobile hamburger menu with Sheet component |
-| `src/components/landing/HowItWorksSection.tsx` | Create new 3-step strip component |
-| `src/pages/Landing.tsx` | Insert HowItWorksSection between Hero and Solution |
+| `src/pages/Analysis.tsx` | Add region state, Select dropdown, Download button |
+| `src/hooks/useMarketIntelligence.ts` | No changes needed (already supports region param) |
+| `supabase/functions/market-intelligence/index.ts` | Add resilient JSON parsing with fence stripping |
+| `src/components/analysis/MarketOverviewTab.tsx` | Add empty states, skill gap overlay with user_skills lookup |
+| `src/components/analysis/CareerOutlookTab.tsx` | Add empty states for forecast/outlook arrays |
+
+---
+
+## Technical Notes
+
+- Region selector uses the existing `Select` UI component -- no new dependencies
+- Skill gap overlay fetches `user_skills` client-side via `supabase.from('user_skills').select(...)` and matches against `hard_skills[].skill` using case-insensitive comparison
+- Export uses `window.print()` -- lightweight, no library needed
+- Edge function parsing fix is backward-compatible; valid JSON still works as before
 
