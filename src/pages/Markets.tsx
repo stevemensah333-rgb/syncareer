@@ -491,15 +491,26 @@ const Opportunities = () => {
                 )}
 
                 {/* Apply Button */}
-                <Button 
-                  className="w-full gap-2" 
-                  size="lg"
-                  onClick={() => handleApply(selectedJob)}
-                  disabled={applying}
-                >
-                  <Briefcase className="h-4 w-4" />
-                  {applying ? 'Submitting...' : 'Apply with Syncareer'}
-                </Button>
+                {selectedJob.is_external && selectedJob.source_url ? (
+                  <Button 
+                    className="w-full gap-2" 
+                    size="lg"
+                    onClick={() => window.open(selectedJob.source_url!, '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Apply on {selectedJob.source.charAt(0).toUpperCase() + selectedJob.source.slice(1)}
+                  </Button>
+                ) : (
+                  <Button 
+                    className="w-full gap-2" 
+                    size="lg"
+                    onClick={() => handleApply(selectedJob)}
+                    disabled={applying}
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    {applying ? 'Submitting...' : 'Apply with Syncareer'}
+                  </Button>
+                )}
               </div>
             </>
           )}
