@@ -18,7 +18,7 @@ interface EmployerLayoutProps {
 
 const employerNavItems = [
   { label: 'Main', items: [
-    { title: 'My Company', icon: Building2, href: '/my-company' },
+    { title: 'Dashboard', icon: Building2, href: '/my-company' },
     { title: 'Post a Job', icon: FileText, href: '/post-job' },
     { title: 'Applicants', icon: Users, href: '/applicants' },
   ]},

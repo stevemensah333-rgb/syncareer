@@ -105,7 +105,7 @@ export function Sidebar({ isCollapsed, onToggle, className }: SidebarProps) {
   // Navigation items for employers
   const employerNavItems: NavItem[] = [
     {
-      title: 'My Company',
+      title: 'Dashboard',
       icon: Building2,
       href: '/my-company',
     },

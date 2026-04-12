@@ -37,10 +37,9 @@ const studentMoreItems: NavTab[] = [
 ];
 
 const employerTabs: NavTab[] = [
-  { title: 'Company', icon: Building2, href: '/my-company' },
+  { title: 'Dashboard', icon: Building2, href: '/my-company' },
   { title: 'Post Job', icon: FileText, href: '/post-job' },
   { title: 'Applicants', icon: Users, href: '/applicants' },
-  
 ];
 
 const employerMoreItems: NavTab[] = [
