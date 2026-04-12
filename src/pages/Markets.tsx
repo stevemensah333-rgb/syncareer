@@ -41,9 +41,29 @@ const Opportunities = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [applying, setApplying] = useState(false);
 
-  // User's skills from their profile/resume (in a real app, fetch from DB)
+  const [userDbSkills, setUserDbSkills] = useState<string[] | null>(null);
+
+  // Fetch real skills from user_skills table
+  useEffect(() => {
+    const fetchUserSkills = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('user_skills')
+        .select('skill_name')
+        .eq('user_id', user.id);
+      if (data && data.length > 0) {
+        setUserDbSkills(data.map(s => s.skill_name));
+      }
+    };
+    fetchUserSkills();
+  }, []);
+
+  // User's skills - prefer DB skills, fall back to major-based
   const getUserSkills = useCallback((): string[] => {
-    // For now, return skills based on their major
+    if (userDbSkills && userDbSkills.length > 0) return userDbSkills;
+
+    // Fallback to major-based skills
     const major = studentDetails?.major?.toLowerCase() || '';
     
     if (major.includes('computer') || major.includes('software') || major.includes('data')) {
@@ -56,7 +76,7 @@ const Opportunities = () => {
       return ['CAD', 'Project Management', 'Technical Writing', 'Problem Solving', 'Mathematics'];
     }
     return ['Communication', 'Problem Solving', 'Teamwork', 'Microsoft Office'];
-  }, [studentDetails?.major]);
+  }, [studentDetails?.major, userDbSkills]);
 
   const calculateMatchPercentage = useCallback((jobSkills: string[] | null, userSkills: string[]): { percentage: number; matched: string[]; missing: string[] } => {
     if (!jobSkills || jobSkills.length === 0) {

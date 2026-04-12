@@ -441,6 +441,15 @@ const InterviewSimulator = () => {
                 setStep('setup');
                 queryClient.invalidateQueries({ queryKey: ['mock_interviews_history'] });
                 feedbackModal.triggerFeedback();
+                toast.success('Interview complete! Share your achievement.', {
+                  action: {
+                    label: 'Share on WhatsApp',
+                    onClick: () => {
+                      const msg = encodeURIComponent(`I just completed a mock interview for "${config.jobRole}" on Syncareer! Practice yours free: ${window.location.origin}`);
+                      window.open(`https://wa.me/?text=${msg}`, '_blank');
+                    },
+                  },
+                });
               }}
             />
           </InterviewErrorBoundary>
