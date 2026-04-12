@@ -8,7 +8,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   Star, GraduationCap, TrendingUp, BarChart, Settings, 
-  ChevronRight, ChevronLeft, Sparkles, FileText, ClipboardList, Mic
+  ChevronRight, ChevronLeft, Sparkles, FileText, ClipboardList, Mic, LayoutDashboard
 } from 'lucide-react';
 
 interface StudentLayoutProps {
@@ -18,6 +18,7 @@ interface StudentLayoutProps {
 
 const studentNavItems = [
   { label: 'Main', items: [
+    { title: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { title: 'Assessment', icon: ClipboardList, href: '/assessment' },
     { title: 'My Skills', icon: Star, href: '/skills' },
     { title: 'Learn', icon: GraduationCap, href: '/learn' },

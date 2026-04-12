@@ -1051,6 +1051,7 @@ export type Database = {
           email_enabled: boolean
           id: string
           interview_reminders: boolean
+          last_digest_sent_at: string | null
           marketing_emails: boolean
           push_enabled: boolean
           system_announcements: boolean
@@ -1065,6 +1066,7 @@ export type Database = {
           email_enabled?: boolean
           id?: string
           interview_reminders?: boolean
+          last_digest_sent_at?: string | null
           marketing_emails?: boolean
           push_enabled?: boolean
           system_announcements?: boolean
@@ -1079,6 +1081,7 @@ export type Database = {
           email_enabled?: boolean
           id?: string
           interview_reminders?: boolean
+          last_digest_sent_at?: string | null
           marketing_emails?: boolean
           push_enabled?: boolean
           system_announcements?: boolean
@@ -1255,6 +1258,7 @@ export type Database = {
           id: string
           linkedin_url: string | null
           onboarding_completed: boolean | null
+          referral_code: string | null
           updated_at: string | null
           user_type: string | null
           username: string | null
@@ -1267,6 +1271,7 @@ export type Database = {
           id: string
           linkedin_url?: string | null
           onboarding_completed?: boolean | null
+          referral_code?: string | null
           updated_at?: string | null
           user_type?: string | null
           username?: string | null
@@ -1279,6 +1284,7 @@ export type Database = {
           id?: string
           linkedin_url?: string | null
           onboarding_completed?: boolean | null
+          referral_code?: string | null
           updated_at?: string | null
           user_type?: string | null
           username?: string | null
@@ -1369,6 +1375,39 @@ export type Database = {
           recommended_item_title?: string
           user_action?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referee_id: string | null
+          referral_code: string
+          referrer_id: string
+          reward_granted: boolean
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referee_id?: string | null
+          referral_code: string
+          referrer_id: string
+          reward_granted?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referee_id?: string | null
+          referral_code?: string
+          referrer_id?: string
+          reward_granted?: boolean
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1669,6 +1708,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      university_insights: {
+        Row: {
+          created_at: string
+          graduate_outcomes: Json
+          id: string
+          major: string
+          top_careers: Json
+          university_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          graduate_outcomes?: Json
+          id?: string
+          major: string
+          top_careers?: Json
+          university_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          graduate_outcomes?: Json
+          id?: string
+          major?: string
+          top_careers?: Json
+          university_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       unmapped_skills_log: {
         Row: {

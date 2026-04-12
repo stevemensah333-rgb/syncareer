@@ -10,7 +10,7 @@ interface RoleRouteProps {
 
 // Maps each role to its default landing page
 const ROLE_HOME_ROUTES: Record<UserRole, string> = {
-  student: '/portfolio',
+  student: '/dashboard',
   employer: '/my-company',
   career_counsellor: '/counsellor-dashboard',
 };
