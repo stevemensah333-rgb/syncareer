@@ -20,7 +20,6 @@ const studentNavItems = [
   { label: 'Main', items: [
     { title: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { title: 'Assessment', icon: ClipboardList, href: '/assessment' },
-    { title: 'My Skills', icon: Star, href: '/skills' },
     { title: 'Learn', icon: GraduationCap, href: '/learn' },
     { title: 'Opportunities', icon: TrendingUp, href: '/opportunities' },
   ]},

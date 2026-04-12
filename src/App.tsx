@@ -20,12 +20,10 @@ const PublicPortfolio = lazy(() => import("./pages/PublicPortfolio"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
-const Install = lazy(() => import("./pages/Install"));
 
 // Student pages
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Assessment = lazy(() => import("./pages/Assessment"));
-const Stocks = lazy(() => import("./pages/Stocks"));
 const Learn = lazy(() => import("./pages/Learn"));
 const Markets = lazy(() => import("./pages/Markets"));
 const Portfolio = lazy(() => import("./pages/Portfolio"));
@@ -47,7 +45,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const MyCompany = lazy(() => import("./pages/employer/MyCompany"));
 const TalentInsights = lazy(() => import("./pages/employer/TalentInsights"));
 const PostJob = lazy(() => import("./pages/employer/PostJob"));
-const TrainEmployees = lazy(() => import("./pages/employer/TrainEmployees"));
+
 const HireWithAI = lazy(() => import("./pages/employer/HireWithAI"));
 const ApplicantTracker = lazy(() => import("./pages/employer/ApplicantTracker"));
 
@@ -76,7 +74,6 @@ const App = () => (
                 <Route path="/subscription-success" element={<SubscriptionSuccess />} />
                 <Route path="/portfolio/:userId" element={<PublicPortfolio />} />
                 <Route path="/terms" element={<TermsAndConditions />} />
-                <Route path="/install" element={<Install />} />
                 
                 {/* Onboarding - any authenticated user */}
                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
@@ -98,9 +95,6 @@ const App = () => (
                 <Route path="/assessment" element={<Assessment />} />
                 <Route path="/dashboard" element={
                   <ProtectedRoute><RoleRoute allowedRoles={['student']}><Dashboard /></RoleRoute></ProtectedRoute>
-                } />
-                <Route path="/skills" element={
-                  <ProtectedRoute><RoleRoute allowedRoles={['student']}><Stocks /></RoleRoute></ProtectedRoute>
                 } />
                 <Route path="/learn" element={
                   <ProtectedRoute><RoleRoute allowedRoles={['student']}><Learn /></RoleRoute></ProtectedRoute>
@@ -139,9 +133,6 @@ const App = () => (
                 } />
                 <Route path="/post-job" element={
                   <ProtectedRoute><RoleRoute allowedRoles={['employer']}><PostJob /></RoleRoute></ProtectedRoute>
-                } />
-                <Route path="/train" element={
-                  <ProtectedRoute><RoleRoute allowedRoles={['employer']}><TrainEmployees /></RoleRoute></ProtectedRoute>
                 } />
                 <Route path="/hire-ai" element={
                   <ProtectedRoute><RoleRoute allowedRoles={['employer']}><HireWithAI /></RoleRoute></ProtectedRoute>

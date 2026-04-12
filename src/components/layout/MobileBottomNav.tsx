@@ -22,7 +22,6 @@ interface NavTab {
 
 const studentTabs: NavTab[] = [
   { title: 'Assessment', icon: ClipboardList, href: '/assessment' },
-  { title: 'Skills', icon: Star, href: '/skills' },
   { title: 'Learn', icon: GraduationCap, href: '/learn' },
   { title: 'SynAI', icon: Sparkles, href: '/ai-coach' },
 ];
@@ -45,7 +44,6 @@ const employerTabs: NavTab[] = [
 ];
 
 const employerMoreItems: NavTab[] = [
-  { title: 'Train', icon: GraduationCap, href: '/train' },
   { title: 'Hire with AI', icon: Users, href: '/hire-ai' },
   { title: 'Settings', icon: Settings, href: '/settings' },
 ];
