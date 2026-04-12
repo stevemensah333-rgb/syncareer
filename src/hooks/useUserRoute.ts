@@ -42,7 +42,7 @@ function getRouteForType(userId: string, userType: string | null): string {
 
 export function useUserRoute(userId: string | null): UserRouteInfo {
   const [routeInfo, setRouteInfo] = useState<UserRouteInfo>({
-    route: userId ? `/portfolio/${userId}` : '/',
+    route: userId ? `/dashboard` : '/',
     userType: null,
   });
 
