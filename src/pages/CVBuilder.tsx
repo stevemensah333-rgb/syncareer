@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Download, Eye, Sparkles, Save, FileText } from 'lucide-react';
+import { Download, Eye, Sparkles, Save, FileText, MessageCircle } from 'lucide-react';
+import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
 import { toast } from 'sonner';
 import { CVFormPersonal } from '@/components/cv-builder/CVFormPersonal';
 import { CVFormEducation } from '@/components/cv-builder/CVFormEducation';
@@ -152,7 +153,15 @@ const CVBuilder = () => {
       };
 
       await html2pdf().set(opt).from(element).save();
-      toast.success('CV downloaded successfully!');
+      toast.success('CV downloaded! Share your achievement.', {
+        action: {
+          label: 'Share on WhatsApp',
+          onClick: () => {
+            const msg = encodeURIComponent(`I just built my professional CV with Syncareer! Try it free: ${window.location.origin}`);
+            window.open(`https://wa.me/?text=${msg}`, '_blank');
+          },
+        },
+      });
       feedbackModal.triggerFeedback();
     } catch (error) {
       console.error('PDF generation error:', error);
@@ -211,7 +220,23 @@ const CVBuilder = () => {
         console.warn('[CVBuilder] Intelligence recompute failed:', e)
       );
 
-      toast.success('CV saved successfully!');
+      // Check for matching jobs
+      const { data: matchingJobs } = await supabase
+        .from('job_postings')
+        .select('id')
+        .eq('status', 'active');
+      
+      const jobCount = matchingJobs?.length || 0;
+      if (jobCount > 0) {
+        toast.success(`CV saved! Your profile matches ${jobCount} open position${jobCount > 1 ? 's' : ''}.`, {
+          action: {
+            label: 'View Jobs',
+            onClick: () => window.location.href = '/markets',
+          },
+        });
+      } else {
+        toast.success('CV saved successfully!');
+      }
     } catch (error) {
       console.error('Save error:', error);
       toast.error('Failed to save CV');
