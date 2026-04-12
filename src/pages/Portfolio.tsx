@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, ExternalLink, Trash2, Linkedin, Save, LineChart } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Upload, ExternalLink, Trash2, Linkedin, Save, LineChart, Copy, CheckCircle } from 'lucide-react';
 import { UploadProjectDialog } from '@/components/portfolio/UploadProjectDialog';
 import ProfileSummaryCard from '@/components/portfolio/ProfileSummaryCard';
+import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface Project {
   id: string;
@@ -29,6 +31,8 @@ const Portfolio = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [savingLinkedin, setSavingLinkedin] = useState(false);
+  const [profileData, setProfileData] = useState<{ bio: string | null; full_name: string | null } | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -44,14 +48,15 @@ const Portfolio = () => {
       
       setCurrentUserId(session.user.id);
 
-      const { data: profileData } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
-        .select('linkedin_url')
+        .select('linkedin_url, bio, full_name')
         .eq('id', session.user.id)
         .maybeSingle();
       
-      if (profileData?.linkedin_url) {
-        setLinkedinUrl(profileData.linkedin_url);
+      if (profile) {
+        if (profile.linkedin_url) setLinkedinUrl(profile.linkedin_url);
+        setProfileData({ bio: profile.bio, full_name: profile.full_name });
       }
 
       const { data: projectsData, error: projectsError } = await supabase
@@ -105,8 +110,21 @@ const Portfolio = () => {
     }
   };
 
-  const totalProjects = projects.length;
+  // Portfolio completeness score
+  const completeness = useMemo(() => {
+    let score = 0;
+    const checks = [
+      { label: 'At least 1 project', done: projects.length >= 1 },
+      { label: '3+ projects', done: projects.length >= 3 },
+      { label: 'LinkedIn added', done: !!linkedinUrl },
+      { label: 'Bio added', done: !!profileData?.bio },
+      { label: 'Verified project', done: projects.some(p => p.is_verified) },
+    ];
+    checks.forEach(c => { if (c.done) score += 20; });
+    return { score, checks };
+  }, [projects, linkedinUrl, profileData]);
 
+  // Skill distribution
   const skillCounts: Record<string, number> = {};
   projects.forEach(project => {
     project.tags.forEach(tag => {
@@ -115,17 +133,17 @@ const Portfolio = () => {
   });
   const topSkills = Object.entries(skillCounts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 4);
+    .slice(0, 6);
+  const maxSkillCount = topSkills.length > 0 ? topSkills[0][1] : 1;
 
-  const getProjectEmoji = (tags: string[]) => {
-    const tagLower = tags[0]?.toLowerCase() || '';
-    if (tagLower.includes('react') || tagLower.includes('vue')) return '⚛️';
-    if (tagLower.includes('node') || tagLower.includes('backend')) return '🖥️';
-    if (tagLower.includes('mobile') || tagLower.includes('flutter')) return '📱';
-    if (tagLower.includes('data') || tagLower.includes('python')) return '📊';
-    if (tagLower.includes('design') || tagLower.includes('ui')) return '🎨';
-    if (tagLower.includes('game')) return '🎮';
-    return '💼';
+  // Public share URL
+  const publicUrl = currentUserId ? `${window.location.origin}/portfolio/${currentUserId}` : '';
+
+  const copyShareLink = () => {
+    navigator.clipboard.writeText(publicUrl);
+    setLinkCopied(true);
+    toast.success('Portfolio link copied!');
+    setTimeout(() => setLinkCopied(false), 2000);
   };
 
   if (loading) {
@@ -140,7 +158,6 @@ const Portfolio = () => {
 
   return (
     <PageLayout title="">
-      {/* Custom header with Market Analysis tab — students only */}
       <div className="flex items-center justify-between mb-6 -mt-2">
         <div className="flex items-center gap-1 border-b border-border w-full pb-0">
           <Link
@@ -222,11 +239,12 @@ const Portfolio = () => {
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div className="text-5xl mb-3">{getProjectEmoji(project.tags)}</div>
+                      <CardTitle className="text-lg">{project.title}</CardTitle>
                       <div className="flex items-center gap-2">
                         {project.is_verified && (
-                          <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
-                            ✓ AI Verified
+                          <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            Verified
                           </span>
                         )}
                         <Button
@@ -242,7 +260,6 @@ const Portfolio = () => {
                         </Button>
                       </div>
                     </div>
-                    <CardTitle className="text-lg">{project.title}</CardTitle>
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {project.description}
                     </p>
@@ -278,55 +295,77 @@ const Portfolio = () => {
 
         <div className="space-y-6">
           <ProfileSummaryCard />
+
+          {/* Portfolio Completeness */}
           <Card>
-            <CardHeader>
-              <CardTitle>Portfolio Stats</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Portfolio Completeness</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Projects</span>
-                <span className="font-bold">{totalProjects}</span>
+              <div className="flex items-center gap-3">
+                <Progress value={completeness.score} className="flex-1 h-2" />
+                <span className="text-sm font-bold">{completeness.score}%</span>
+              </div>
+              <div className="space-y-1.5">
+                {completeness.checks.map((c) => (
+                  <div key={c.label} className="flex items-center gap-2 text-xs">
+                    <CheckCircle className={`h-3.5 w-3.5 ${c.done ? 'text-primary' : 'text-muted'}`} />
+                    <span className={c.done ? 'text-foreground' : 'text-muted-foreground'}>{c.label}</span>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
+          {/* Skills Distribution */}
           <Card>
-            <CardHeader>
-              <CardTitle>Skills in Portfolio</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Skills in Portfolio</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2.5">
               {topSkills.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  Add projects to see skill breakdown
-                </p>
+                <p className="text-muted-foreground text-sm">Add projects to see skill breakdown</p>
               ) : (
                 topSkills.map(([skill, count]) => (
-                  <div key={skill} className="flex justify-between items-center">
-                    <span className="text-sm">{skill}</span>
-                    <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
-                      {count} project{count > 1 ? 's' : ''}
-                    </span>
+                  <div key={skill} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>{skill}</span>
+                      <span className="text-muted-foreground">{count} project{count > 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-1.5">
+                      <div
+                        className="bg-primary h-1.5 rounded-full transition-all"
+                        style={{ width: `${(count / maxSkillCount) * 100}%` }}
+                      />
+                    </div>
                   </div>
                 ))
               )}
             </CardContent>
           </Card>
 
+          {/* Share Portfolio */}
           <Card className="bg-primary text-primary-foreground">
-            <CardContent className="pt-6 text-center">
-              <h3 className="font-bold mb-2">Share Your Portfolio</h3>
-              <p className="text-sm mb-4 opacity-90">
-                Let employers see your amazing work!
+            <CardContent className="pt-6 space-y-3">
+              <h3 className="font-bold text-center">Share Your Portfolio</h3>
+              <p className="text-sm text-center opacity-90">
+                Let employers see your work
               </p>
-              <Button 
-                variant="secondary"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success('Portfolio link copied to clipboard!');
-                }}
-              >
-                Copy Link
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={copyShareLink}
+                >
+                  {linkCopied ? <CheckCircle className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                  {linkCopied ? 'Copied!' : 'Copy Link'}
+                </Button>
+                <WhatsAppShareButton
+                  url={publicUrl}
+                  text={`Check out my portfolio on Syncareer:`}
+                  variant="icon"
+                />
+              </div>
             </CardContent>
           </Card>
         </div>
