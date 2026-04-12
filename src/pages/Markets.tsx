@@ -450,6 +450,47 @@ const Opportunities = () => {
               </DialogHeader>
 
               <div className="space-y-6 py-4">
+                {/* About the Company */}
+                {!selectedJob.is_external && (
+                  <div className="p-4 rounded-lg border">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <Building2 className="h-4 w-4" /> About the Company
+                    </h4>
+                    {loadingEmployer ? (
+                      <p className="text-sm text-muted-foreground">Loading company info...</p>
+                    ) : employerInfo ? (
+                      <div className="space-y-2 text-sm">
+                        <p className="font-medium">{employerInfo.company_name}</p>
+                        <div className="flex flex-wrap gap-3 text-muted-foreground">
+                          {employerInfo.industry && (
+                            <span className="flex items-center gap-1"><Briefcase className="h-3 w-3" />{employerInfo.industry}</span>
+                          )}
+                          {employerInfo.company_location && (
+                            <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{employerInfo.company_location}</span>
+                          )}
+                          {employerInfo.company_size && (
+                            <span className="flex items-center gap-1"><Users className="h-3 w-3" />{employerInfo.company_size}</span>
+                          )}
+                        </div>
+                        {employerInfo.company_description && (
+                          <p className="text-muted-foreground mt-2">{employerInfo.company_description}</p>
+                        )}
+                        {employerInfo.company_website && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="p-0 h-auto gap-1"
+                            onClick={() => window.open(employerInfo.company_website!, '_blank')}
+                          >
+                            <Globe className="h-3 w-3" /> Visit Website
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Company information not available.</p>
+                    )}
+                  </div>
+                )}
                 {/* Match Score */}
                 <div className="p-4 rounded-lg bg-muted">
                   <div className="flex items-center justify-between mb-3">
