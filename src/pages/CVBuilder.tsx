@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Download, Eye, Sparkles, Save, FileText, MessageCircle } from 'lucide-react';
@@ -102,9 +103,61 @@ const CVBuilder = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingCV, setIsLoadingCV] = useState(true);
   const previewRef = useRef<HTMLDivElement>(null);
   const strengthResult = useCVStrengthScore(cvData);
   const feedbackModal = useFeedbackModal('cv_builder');
+
+  // Auto-load saved CV on mount
+  useEffect(() => {
+    const loadSavedCV = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) { setIsLoadingCV(false); return; }
+
+        const { data: resume } = await supabase
+          .from('resumes')
+          .select('personal_info, education, experience, projects, achievements, skills, references_section')
+          .eq('user_id', session.user.id)
+          .eq('is_primary', true)
+          .maybeSingle();
+
+        if (resume) {
+          const pi = resume.personal_info as any;
+          const edu = Array.isArray(resume.education) ? (resume.education as any[])[0] : resume.education;
+          setCVData({
+            personal: {
+              firstName: pi?.firstName || pi?.first_name || '',
+              lastName: pi?.lastName || pi?.last_name || '',
+              phone: pi?.phone || '',
+              nationality: pi?.nationality || '',
+              email: pi?.email || '',
+              schoolEmail: pi?.schoolEmail || pi?.school_email || '',
+              linkedIn: pi?.linkedIn || pi?.linkedin || '',
+            },
+            education: {
+              university: edu?.university || '',
+              location: edu?.location || '',
+              degree: edu?.degree || '',
+              graduationDate: edu?.graduationDate || edu?.graduation_date || '',
+              gpa: edu?.gpa || '',
+            },
+            achievements: Array.isArray(resume.achievements) ? (resume.achievements as any[]) : [],
+            experience: Array.isArray(resume.experience) ? (resume.experience as any[]) : [],
+            projects: Array.isArray(resume.projects) ? (resume.projects as any[]) : [],
+            activities: [],
+            skills: Array.isArray(resume.skills) ? (resume.skills as string[]) : [],
+            references: (resume.references_section as string) || 'Available upon request',
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load saved CV:', err);
+      } finally {
+        setIsLoadingCV(false);
+      }
+    };
+    loadSavedCV();
+  }, []);
 
   const updatePersonal = (data: Partial<CVData['personal']>) => {
     setCVData(prev => ({ ...prev, personal: { ...prev.personal, ...data } }));
@@ -256,6 +309,19 @@ const CVBuilder = () => {
 
   return (
     <PageLayout title="CV Builder">
+      {isLoadingCV ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form Section */}
         <div className="lg:col-span-2 space-y-6">
@@ -291,13 +357,13 @@ const CVBuilder = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-6 w-full">
-              <TabsTrigger value="personal">Personal</TabsTrigger>
-              <TabsTrigger value="education">Education</TabsTrigger>
-              <TabsTrigger value="experience">Experience</TabsTrigger>
-              <TabsTrigger value="projects">Projects</TabsTrigger>
-              <TabsTrigger value="activities">Activities</TabsTrigger>
-              <TabsTrigger value="skills">Skills</TabsTrigger>
+            <TabsList className="flex w-full overflow-x-auto">
+              <TabsTrigger value="personal" className="flex-1 min-w-[80px]">Personal</TabsTrigger>
+              <TabsTrigger value="education" className="flex-1 min-w-[80px]">Education</TabsTrigger>
+              <TabsTrigger value="experience" className="flex-1 min-w-[80px]">Experience</TabsTrigger>
+              <TabsTrigger value="projects" className="flex-1 min-w-[80px]">Projects</TabsTrigger>
+              <TabsTrigger value="activities" className="flex-1 min-w-[80px]">Activities</TabsTrigger>
+              <TabsTrigger value="skills" className="flex-1 min-w-[80px]">Skills</TabsTrigger>
             </TabsList>
 
             <TabsContent value="personal" className="mt-4">
@@ -356,7 +422,7 @@ const CVBuilder = () => {
           />
         </div>
       </div>
-
+      )}
       {/* CV Preview Modal/Section */}
       {showPreview && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-auto">
