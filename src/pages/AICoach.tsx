@@ -70,7 +70,7 @@ export default function AICoach() {
   }, [messages]);
 
   const streamChat = async (userMessage: string) => {
-    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/skillbridge-chat`;
+    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/career-guidance`;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
