@@ -36,7 +36,7 @@ function getRouteForType(userId: string, userType: string | null): string {
     case 'employer':
       return `/my-company`;
     default:
-      return `/portfolio/${userId}`;
+      return `/dashboard`;
   }
 }
 

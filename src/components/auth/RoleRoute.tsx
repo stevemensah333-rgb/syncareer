@@ -19,7 +19,7 @@ export function getHomeRouteForRole(role: string | null): string {
   if (role && role in ROLE_HOME_ROUTES) {
     return ROLE_HOME_ROUTES[role as UserRole];
   }
-  return '/portfolio';
+  return '/dashboard';
 }
 
 /**
