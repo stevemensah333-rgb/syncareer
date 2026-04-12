@@ -43,7 +43,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 
 // Employer pages
 const MyCompany = lazy(() => import("./pages/employer/MyCompany"));
-const TalentInsights = lazy(() => import("./pages/employer/TalentInsights"));
+
 const PostJob = lazy(() => import("./pages/employer/PostJob"));
 
 const HireWithAI = lazy(() => import("./pages/employer/HireWithAI"));
@@ -124,9 +124,6 @@ const App = () => (
                 {/* ============ EMPLOYER-ONLY ROUTES ============ */}
                 <Route path="/my-company" element={
                   <ProtectedRoute><RoleRoute allowedRoles={['employer']}><MyCompany /></RoleRoute></ProtectedRoute>
-                } />
-                <Route path="/talent-insights" element={
-                  <ProtectedRoute><RoleRoute allowedRoles={['employer']}><TalentInsights /></RoleRoute></ProtectedRoute>
                 } />
                 <Route path="/post-job" element={
                   <ProtectedRoute><RoleRoute allowedRoles={['employer']}><PostJob /></RoleRoute></ProtectedRoute>

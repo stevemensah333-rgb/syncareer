@@ -40,7 +40,7 @@ const employerTabs: NavTab[] = [
   { title: 'Company', icon: Building2, href: '/my-company' },
   { title: 'Post Job', icon: FileText, href: '/post-job' },
   { title: 'Applicants', icon: Users, href: '/applicants' },
-  { title: 'Insights', icon: TrendingUp, href: '/talent-insights' },
+  
 ];
 
 const employerMoreItems: NavTab[] = [

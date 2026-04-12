@@ -23,7 +23,6 @@ const employerNavItems = [
     { title: 'Applicants', icon: Users, href: '/applicants' },
   ]},
   { label: 'Tools', items: [
-    { title: 'Talent Insights', icon: TrendingUp, href: '/talent-insights' },
     { title: 'Hire with AI', icon: UserPlus, href: '/hire-ai' },
   ]},
   { label: 'Account', items: [
