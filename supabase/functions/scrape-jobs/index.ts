@@ -158,9 +158,21 @@ Deno.serve(async (req) => {
         for (const job of jobs) {
           if (!job.title || !job.external_id) continue;
 
+          // Check if already exists
+          const { data: existing } = await supabase
+            .from('job_postings')
+            .select('id')
+            .eq('external_id', job.external_id)
+            .maybeSingle();
+
+          if (existing) {
+            totalSkipped++;
+            continue;
+          }
+
           const { error } = await supabase
             .from('job_postings')
-            .upsert({
+            .insert({
               title: job.title,
               department: job.company || source.label,
               location: job.location || 'Accra, Ghana',
@@ -174,9 +186,6 @@ Deno.serve(async (req) => {
               source_url: job.source_url || source.url,
               external_id: job.external_id,
               is_external: true,
-            }, {
-              onConflict: 'external_id',
-              ignoreDuplicates: true,
             });
 
           if (error) {
