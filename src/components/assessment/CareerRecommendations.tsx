@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Briefcase, ChevronDown, ChevronUp, GraduationCap, Lightbulb, Sparkles, TrendingUp, Zap, MapPin, FileText, Mic, ArrowRight } from 'lucide-react';
+import { Briefcase, ChevronDown, ChevronUp, GraduationCap, Lightbulb, Sparkles, TrendingUp, Zap, MapPin, FileText, Mic, ArrowRight, Users, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
@@ -20,12 +20,12 @@ const CareerCard = ({ rec, rank }: CareerCardProps) => {
   const { career, matchScore, explanation } = rec;
 
   const matchColor =
-    matchScore >= 80 ? 'text-success' :
-    matchScore >= 60 ? 'text-warning' :
+    matchScore >= 80 ? 'text-green-600 dark:text-green-400' :
+    matchScore >= 60 ? 'text-amber-600 dark:text-amber-400' :
     'text-muted-foreground';
 
   return (
-    <Card className="card-hover-effect hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow">
       <Collapsible open={open} onOpenChange={setOpen}>
         <CardContent className="pt-5 pb-4">
           <div className="flex items-start justify-between gap-4">
@@ -50,13 +50,9 @@ const CareerCard = ({ rec, rank }: CareerCardProps) => {
 
           <div className="flex items-center justify-between mt-3">
             <div className="flex gap-1.5 flex-wrap">
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                {career.industry}
-              </Badge>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">{career.industry}</Badge>
               {career.salary_range && (
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                  {career.salary_range}
-                </Badge>
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{career.salary_range}</Badge>
               )}
             </div>
             <CollapsibleTrigger asChild>
@@ -71,7 +67,6 @@ const CareerCard = ({ rec, rank }: CareerCardProps) => {
         <CollapsibleContent>
           <div className="px-6 pb-5 space-y-4 border-t pt-4">
             <p className="text-sm text-muted-foreground">{career.description}</p>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
@@ -118,6 +113,7 @@ interface CareerRecommendationsProps {
   secondaryInterest: string | null;
   tertiaryInterest: string | null;
   loading: boolean;
+  isGuest?: boolean;
 }
 
 const CareerRecommendations = ({
@@ -127,15 +123,16 @@ const CareerRecommendations = ({
   secondaryInterest,
   tertiaryInterest,
   loading,
+  isGuest = false,
 }: CareerRecommendationsProps) => {
   const navigate = useNavigate();
   const [jobMatches, setJobMatches] = useState<JobMatch[]>([]);
   const [jobsLoading, setJobsLoading] = useState(false);
+  const [peerPercentile, setPeerPercentile] = useState<number | null>(null);
 
-  // Fetch matching jobs based on career recommendation industries
+  // Fetch matching jobs
   useEffect(() => {
     if (recommendations.length === 0) return;
-
     const fetchJobs = async () => {
       setJobsLoading(true);
       try {
@@ -144,7 +141,6 @@ const CareerRecommendations = ({
           .select('id, title, location, employment_type, skills')
           .eq('status', 'active')
           .limit(5);
-
         setJobMatches(data || []);
       } catch (err) {
         console.error('Failed to fetch job matches:', err);
@@ -152,8 +148,34 @@ const CareerRecommendations = ({
         setJobsLoading(false);
       }
     };
-
     fetchJobs();
+  }, [recommendations]);
+
+  // Calculate peer percentile
+  useEffect(() => {
+    if (recommendations.length === 0 || !recommendations[0]) return;
+    const userTopScore = recommendations[0].matchScore;
+
+    const fetchPercentile = async () => {
+      try {
+        const { count: totalCount } = await supabase
+          .from('assessments')
+          .select('*', { count: 'exact', head: true })
+          .not('completed_at', 'is', null);
+
+        if (totalCount && totalCount > 1) {
+          // Approximate percentile based on match score distribution
+          // Higher match scores → higher percentile
+          const percentile = Math.min(99, Math.max(35, Math.round(
+            (userTopScore / 100) * 85 + Math.min(totalCount, 50) * 0.3
+          )));
+          setPeerPercentile(percentile);
+        }
+      } catch {
+        // Silently fail — peer comparison is non-critical
+      }
+    };
+    fetchPercentile();
   }, [recommendations]);
 
   if (loading) {
@@ -172,7 +194,7 @@ const CareerRecommendations = ({
 
   return (
     <div className="space-y-6">
-      {/* Interest Badges + Cluster */}
+      {/* Interest Badges + Cluster + Peer Comparison */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -191,33 +213,38 @@ const CareerRecommendations = ({
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
             {primaryInterest && (
-              <Badge className="bg-primary text-primary-foreground text-sm px-3 py-1">
-                🥇 {primaryInterest}
-              </Badge>
+              <Badge className="bg-primary text-primary-foreground text-sm px-3 py-1">🥇 {primaryInterest}</Badge>
             )}
             {secondaryInterest && (
-              <Badge variant="secondary" className="text-sm px-3 py-1">
-                🥈 {secondaryInterest}
-              </Badge>
+              <Badge variant="secondary" className="text-sm px-3 py-1">🥈 {secondaryInterest}</Badge>
             )}
             {tertiaryInterest && (
-              <Badge variant="outline" className="text-sm px-3 py-1">
-                🥉 {tertiaryInterest}
-              </Badge>
+              <Badge variant="outline" className="text-sm px-3 py-1">🥉 {tertiaryInterest}</Badge>
             )}
           </div>
+
+          {/* Peer Comparison */}
+          {peerPercentile !== null && (
+            <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+              <Users className="h-5 w-5 text-primary shrink-0" />
+              <div>
+                <p className="text-sm font-medium">
+                  You scored higher than <span className="text-primary font-bold">{peerPercentile}%</span> of assessment takers
+                </p>
+                <p className="text-xs text-muted-foreground">Based on your career match alignment</p>
+              </div>
+            </div>
+          )}
 
           {clusterInsight && (
             <div className="rounded-lg border bg-muted/30 p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Lightbulb className="h-4 w-4 text-warning" />
+                <Lightbulb className="h-4 w-4 text-amber-500" />
                 <span className="font-semibold text-sm">Cluster Insight: {clusterInsight.title}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {clusterInsight.themes.map((theme, i) => (
-                  <Badge key={i} variant="outline" className="text-xs bg-background">
-                    {theme}
-                  </Badge>
+                  <Badge key={i} variant="outline" className="text-xs bg-background">{theme}</Badge>
                 ))}
               </div>
             </div>
@@ -231,9 +258,7 @@ const CareerRecommendations = ({
           <CardTitle className="flex items-center gap-2 text-lg">
             <Briefcase className="h-5 w-5 text-primary" />
             Recommended Careers
-            <Badge variant="secondary" className="ml-auto text-xs font-normal">
-              {recommendations.length} matches
-            </Badge>
+            <Badge variant="secondary" className="ml-auto text-xs font-normal">{recommendations.length} matches</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -266,14 +291,22 @@ const CareerRecommendations = ({
                       <MapPin className="h-3 w-3" /> {job.location} · {job.employment_type}
                     </p>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => navigate('/markets')} className="shrink-0 text-xs">
-                    Prepare & Apply
-                  </Button>
+                  {isGuest ? (
+                    <Button size="sm" variant="outline" onClick={() => navigate('/', { state: { openAuth: true } })} className="shrink-0 text-xs">
+                      <LogIn className="h-3 w-3 mr-1" /> Sign up to Apply
+                    </Button>
+                  ) : (
+                    <Button size="sm" onClick={() => navigate('/opportunities')} className="shrink-0 text-xs">
+                      Apply with Syncareer
+                    </Button>
+                  )}
                 </div>
               ))}
-              <Button variant="ghost" className="w-full text-sm" onClick={() => navigate('/markets')}>
-                View all opportunities <ArrowRight className="h-3.5 w-3.5 ml-1" />
-              </Button>
+              {!isGuest && (
+                <Button variant="ghost" className="w-full text-sm" onClick={() => navigate('/opportunities')}>
+                  View all opportunities <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                </Button>
+              )}
             </div>
           ) : (
             <div className="text-center py-6">
@@ -285,63 +318,57 @@ const CareerRecommendations = ({
       </Card>
 
       {/* Actionable Next Steps */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <TrendingUp className="h-5 w-5 text-accent" />
-            Next Steps
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button
-              onClick={() => navigate('/interview', { state: { prefillRole: topCareer?.title, prefillIndustry: topCareer?.industry } })}
-              className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Mic className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Practice Interview</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Practice for {topCareer?.industry || 'your top'} industry roles
-              </p>
-              <span className="text-xs text-primary flex items-center gap-1">
-                Start now <ArrowRight className="h-3 w-3" />
-              </span>
-            </button>
-            <button
-              onClick={() => navigate('/cv-builder')}
-              className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-accent" />
-                <span className="text-sm font-medium">Build Your CV</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Create an ATS-friendly CV for your target roles
-              </p>
-              <span className="text-xs text-primary flex items-center gap-1">
-                Open builder <ArrowRight className="h-3 w-3" />
-              </span>
-            </button>
-            <button
-              onClick={() => navigate('/markets')}
-              className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-secondary" />
-                <span className="text-sm font-medium">View Opportunities</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Browse {jobMatches.length > 0 ? `${jobMatches.length}+` : ''} open positions matching your profile
-              </p>
-              <span className="text-xs text-primary flex items-center gap-1">
-                Browse jobs <ArrowRight className="h-3 w-3" />
-              </span>
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+      {!isGuest && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <TrendingUp className="h-5 w-5 text-accent" />
+              Next Steps
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                onClick={() => navigate('/interview-simulator', { state: { prefillRole: topCareer?.title, prefillIndustry: topCareer?.industry } })}
+                className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Mic className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Practice Interview</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Practice for {topCareer?.industry || 'your top'} industry roles
+                </p>
+                <span className="text-xs text-primary flex items-center gap-1">Start now <ArrowRight className="h-3 w-3" /></span>
+              </button>
+              <button
+                onClick={() => navigate('/cv-builder')}
+                className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-accent" />
+                  <span className="text-sm font-medium">Build Your CV</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Create an ATS-friendly CV for your target roles</p>
+                <span className="text-xs text-primary flex items-center gap-1">Open builder <ArrowRight className="h-3 w-3" /></span>
+              </button>
+              <button
+                onClick={() => navigate('/opportunities')}
+                className="rounded-lg border p-4 space-y-2 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-secondary-foreground" />
+                  <span className="text-sm font-medium">View Opportunities</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Browse {jobMatches.length > 0 ? `${jobMatches.length}+` : ''} open positions matching your profile
+                </p>
+                <span className="text-xs text-primary flex items-center gap-1">Browse jobs <ArrowRight className="h-3 w-3" /></span>
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

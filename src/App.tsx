@@ -92,9 +92,8 @@ const App = () => (
                 <Route path="/home" element={<Navigate to="/portfolio" replace />} />
 
                 {/* ============ STUDENT-ONLY ROUTES ============ */}
-                <Route path="/assessment" element={
-                  <ProtectedRoute><RoleRoute allowedRoles={['student']}><Assessment /></RoleRoute></ProtectedRoute>
-                } />
+                {/* Assessment is publicly accessible (guest mode supported) */}
+                <Route path="/assessment" element={<Assessment />} />
                 <Route path="/skills" element={
                   <ProtectedRoute><RoleRoute allowedRoles={['student']}><Stocks /></RoleRoute></ProtectedRoute>
                 } />
