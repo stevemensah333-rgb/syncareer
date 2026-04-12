@@ -2,14 +2,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Plus, Eye, Edit, Trash2, MapPin, Briefcase, Clock, DollarSign, Users, X } from 'lucide-react';
+import { FileText, ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+import { JobFormBasics } from '@/components/employer/post-job/JobFormBasics';
+import { JobFormDescription } from '@/components/employer/post-job/JobFormDescription';
+import { JobFormSkills } from '@/components/employer/post-job/JobFormSkills';
+import { JobFormReview } from '@/components/employer/post-job/JobFormReview';
+import { ManageJobsList } from '@/components/employer/post-job/ManageJobsList';
 
 interface JobPosting {
   id: string;
@@ -19,6 +22,7 @@ interface JobPosting {
   employment_type: string;
   salary_min: number | null;
   salary_max: number | null;
+  salary_currency: string | null;
   description: string;
   requirements: string | null;
   skills: string[] | null;
@@ -26,24 +30,32 @@ interface JobPosting {
   created_at: string;
 }
 
+const STEPS = [
+  { label: 'Basics', description: 'Title, location & pay' },
+  { label: 'Description', description: 'Role details' },
+  { label: 'Skills', description: 'Required skills' },
+  { label: 'Review', description: 'Preview & post' },
+];
+
+const initialFormData = {
+  title: '',
+  department: '',
+  location: '',
+  employmentType: '',
+  salaryMin: '',
+  salaryMax: '',
+  salaryCurrency: 'USD',
+  description: '',
+  requirements: '',
+};
+
 const PostJob = () => {
+  const [step, setStep] = useState(0);
   const [skills, setSkills] = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState('');
   const [postedJobs, setPostedJobs] = useState<JobPosting[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    title: '',
-    department: '',
-    location: '',
-    employmentType: '',
-    salaryMin: '',
-    salaryMax: '',
-    description: '',
-    requirements: '',
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -69,35 +81,48 @@ const PostJob = () => {
     fetchJobs();
   }, [fetchJobs]);
 
-  const addSkill = () => {
-    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
-      setSkills([...skills, skillInput.trim()]);
-      setSkillInput('');
-    }
-  };
-
-  const removeSkill = (skill: string) => {
-    setSkills(skills.filter((s) => s !== skill));
+  const updateFormData = (partial: Partial<typeof formData>) => {
+    setFormData((prev) => ({ ...prev, ...partial }));
   };
 
   const resetForm = () => {
-    setFormData({
-      title: '',
-      department: '',
-      location: '',
-      employmentType: '',
-      salaryMin: '',
-      salaryMax: '',
-      description: '',
-      requirements: '',
-    });
+    setFormData(initialFormData);
     setSkills([]);
+    setStep(0);
   };
 
-  const handlePostJob = async () => {
-    if (!formData.title || !formData.location || !formData.employmentType || !formData.description) {
-      toast.error('Please fill in all required fields');
+  const validateStep = (s: number): string | null => {
+    if (s === 0) {
+      if (!formData.title.trim()) return 'Job title is required';
+      if (!formData.location.trim()) return 'Location is required';
+      if (!formData.employmentType) return 'Employment type is required';
+    }
+    if (s === 1) {
+      if (!formData.description.trim()) return 'Job description is required';
+    }
+    return null;
+  };
+
+  const goNext = () => {
+    const error = validateStep(step);
+    if (error) {
+      toast.error(error);
       return;
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  };
+
+  const goBack = () => setStep((s) => Math.max(s - 1, 0));
+
+  const handlePostJob = async () => {
+    // Validate all steps
+    for (let i = 0; i < STEPS.length - 1; i++) {
+      const error = validateStep(i);
+      if (error) {
+        toast.error(error);
+        setStep(i);
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -108,21 +133,20 @@ const PostJob = () => {
         return;
       }
 
-      const { error } = await supabase
-        .from('job_postings')
-        .insert({
-          employer_id: session.user.id,
-          title: formData.title,
-          department: formData.department || null,
-          location: formData.location,
-          employment_type: formData.employmentType,
-          salary_min: formData.salaryMin ? parseInt(formData.salaryMin) : null,
-          salary_max: formData.salaryMax ? parseInt(formData.salaryMax) : null,
-          description: formData.description,
-          requirements: formData.requirements || null,
-          skills: skills.length > 0 ? skills : null,
-          status: 'active',
-        });
+      const { error } = await supabase.from('job_postings').insert({
+        employer_id: session.user.id,
+        title: formData.title,
+        department: formData.department || null,
+        location: formData.location,
+        employment_type: formData.employmentType,
+        salary_min: formData.salaryMin ? parseInt(formData.salaryMin) : null,
+        salary_max: formData.salaryMax ? parseInt(formData.salaryMax) : null,
+        salary_currency: formData.salaryCurrency || null,
+        description: formData.description,
+        requirements: formData.requirements || null,
+        skills: skills.length > 0 ? skills : null,
+        status: 'active',
+      });
 
       if (error) throw error;
 
@@ -139,11 +163,7 @@ const PostJob = () => {
 
   const handleDeleteJob = async (jobId: string) => {
     try {
-      const { error } = await supabase
-        .from('job_postings')
-        .delete()
-        .eq('id', jobId);
-
+      const { error } = await supabase.from('job_postings').delete().eq('id', jobId);
       if (error) throw error;
       toast.success('Job deleted');
       fetchJobs();
@@ -156,11 +176,7 @@ const PostJob = () => {
   const handleToggleStatus = async (jobId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'closed' : 'active';
     try {
-      const { error } = await supabase
-        .from('job_postings')
-        .update({ status: newStatus })
-        .eq('id', jobId);
-
+      const { error } = await supabase.from('job_postings').update({ status: newStatus }).eq('id', jobId);
       if (error) throw error;
       toast.success(`Job ${newStatus === 'active' ? 'activated' : 'closed'}`);
       fetchJobs();
@@ -170,285 +186,118 @@ const PostJob = () => {
     }
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return `${Math.floor(diffDays / 7)} weeks ago`;
-  };
-
   return (
     <PageLayout title="Post a Job">
       <Tabs defaultValue="create" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="create">Create New Post</TabsTrigger>
-          <TabsTrigger value="manage">Manage Posts ({postedJobs.length})</TabsTrigger>
+          <TabsTrigger value="create">Create New</TabsTrigger>
+          <TabsTrigger value="manage">Manage ({postedJobs.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="create">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Job Form */}
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Job Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Job Title *</Label>
-                    <Input 
-                      id="title" 
-                      placeholder="e.g. Senior Software Engineer"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
-                    <Input 
-                      id="department" 
-                      placeholder="e.g. Engineering"
-                      value={formData.department}
-                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location *</Label>
-                    <Input 
-                      id="location" 
-                      placeholder="e.g. Lagos, Nigeria or Remote"
-                      value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="type">Employment Type *</Label>
-                    <Select 
-                      value={formData.employmentType}
-                      onValueChange={(value) => setFormData({ ...formData, employmentType: value })}
+          <Card>
+            {/* Step Indicator */}
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                {STEPS.map((s, i) => (
+                  <div key={s.label} className="flex items-center gap-2 flex-1">
+                    <button
+                      onClick={() => {
+                        // Only allow going to completed or current steps
+                        if (i <= step) setStep(i);
+                      }}
+                      className={cn(
+                        "flex items-center gap-2 text-left transition-colors",
+                        i <= step ? "cursor-pointer" : "cursor-default"
+                      )}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="full-time">Full-time</SelectItem>
-                        <SelectItem value="part-time">Part-time</SelectItem>
-                        <SelectItem value="internship">Internship</SelectItem>
-                        <SelectItem value="remote">Remote</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <div
+                        className={cn(
+                          "h-7 w-7 rounded-full flex items-center justify-center text-xs font-medium shrink-0 transition-colors",
+                          i < step
+                            ? "bg-primary text-primary-foreground"
+                            : i === step
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
+                      </div>
+                      <div className="hidden sm:block min-w-0">
+                        <p className={cn("text-xs font-medium leading-none", i <= step ? "text-foreground" : "text-muted-foreground")}>
+                          {s.label}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{s.description}</p>
+                      </div>
+                    </button>
+                    {i < STEPS.length - 1 && (
+                      <div className={cn("flex-1 h-px", i < step ? "bg-primary" : "bg-border")} />
+                    )}
                   </div>
-                </div>
+                ))}
+              </div>
+            </CardHeader>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="salary-min">Salary Range (Min)</Label>
-                    <Input 
-                      id="salary-min" 
-                      placeholder="e.g. 50000" 
-                      type="number"
-                      value={formData.salaryMin}
-                      onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="salary-max">Salary Range (Max)</Label>
-                    <Input 
-                      id="salary-max" 
-                      placeholder="e.g. 80000" 
-                      type="number"
-                      value={formData.salaryMax}
-                      onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Job Description *</Label>
-                  <Textarea 
-                    id="description" 
-                    placeholder="Describe the role, responsibilities, and what makes this opportunity unique..."
-                    rows={6}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            <CardContent className="pt-0">
+              <div className="min-h-[320px]">
+                {step === 0 && <JobFormBasics formData={formData} onChange={updateFormData} />}
+                {step === 1 && (
+                  <JobFormDescription
+                    description={formData.description}
+                    requirements={formData.requirements}
+                    onChange={updateFormData}
                   />
-                </div>
+                )}
+                {step === 2 && <JobFormSkills skills={skills} onSkillsChange={setSkills} />}
+                {step === 3 && <JobFormReview formData={formData} skills={skills} />}
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="requirements">Requirements</Label>
-                  <Textarea 
-                    id="requirements" 
-                    placeholder="List the qualifications, experience, and skills required..."
-                    rows={4}
-                    value={formData.requirements}
-                    onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
-                  />
-                </div>
+              {/* Navigation */}
+              <div className="flex items-center justify-between pt-6 border-t mt-6">
+                <Button
+                  variant="outline"
+                  onClick={goBack}
+                  disabled={step === 0}
+                  className={cn(step === 0 && "invisible")}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Back
+                </Button>
 
-                <div className="space-y-2">
-                  <Label>Required Skills</Label>
-                  <div className="flex gap-2">
-                    <Input 
-                      value={skillInput}
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      placeholder="Add a skill"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                    />
-                    <Button type="button" onClick={addSkill}>
-                      <Plus className="h-4 w-4" />
+                <div className="flex gap-2">
+                  {step < STEPS.length - 1 ? (
+                    <Button onClick={goNext}>
+                      Next
+                      <ArrowRight className="h-4 w-4 ml-1" />
                     </Button>
-                  </div>
-                  {skills.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {skills.map((skill) => (
-                        <span 
-                          key={skill} 
-                          className="inline-flex items-center gap-1 text-sm bg-secondary text-secondary-foreground px-3 py-1 rounded-full cursor-pointer hover:bg-secondary/80"
-                          onClick={() => removeSkill(skill)}
-                        >
-                          {skill}
-                          <X className="h-3 w-3" />
-                        </span>
-                      ))}
-                    </div>
+                  ) : (
+                    <Button onClick={handlePostJob} disabled={submitting}>
+                      {submitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Posting...
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-4 w-4 mr-2" />
+                          Post Job
+                        </>
+                      )}
+                    </Button>
                   )}
                 </div>
-
-                <div className="flex gap-4 pt-4">
-                  <Button onClick={handlePostJob} className="flex-1" disabled={submitting}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    {submitting ? 'Posting...' : 'Post Job'}
-                  </Button>
-                  <Button variant="outline" onClick={resetForm}>Clear Form</Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Sidebar Tips */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Posting Tips</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Write a Clear Title</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Use specific job titles that candidates commonly search for.
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Be Transparent About Pay</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Jobs with salary ranges get 30% more applications.
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Highlight Growth</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Mention career development opportunities and learning paths.
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Skills Matter</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Adding skills helps match your job with qualified candidates.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="manage">
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Job Posts</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <p className="text-muted-foreground text-center py-8">Loading...</p>
-              ) : postedJobs.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No job posts yet. Create your first job posting!
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {postedJobs.map((job) => (
-                    <div key={job.id} className="p-4 border rounded-lg hover:border-primary/50 transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-lg">{job.title}</h3>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              job.status === 'active' 
-                                ? 'bg-green-100 text-green-700' 
-                                : 'bg-gray-100 text-gray-700'
-                            }`}>
-                              {job.status}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              {job.location}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Briefcase className="h-4 w-4" />
-                              {job.employment_type}
-                            </span>
-                            {(job.salary_min || job.salary_max) && (
-                              <span className="flex items-center gap-1">
-                                <DollarSign className="h-4 w-4" />
-                                {job.salary_min && job.salary_max 
-                                  ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`
-                                  : job.salary_min 
-                                    ? `$${job.salary_min.toLocaleString()}+`
-                                    : `Up to $${job.salary_max?.toLocaleString()}`
-                                }
-                              </span>
-                            )}
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              {formatTimeAgo(job.created_at)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleToggleStatus(job.id, job.status)}
-                          >
-                            {job.status === 'active' ? 'Close' : 'Reopen'}
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-destructive"
-                            onClick={() => handleDeleteJob(job.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ManageJobsList
+            jobs={postedJobs}
+            loading={loading}
+            onToggleStatus={handleToggleStatus}
+            onDelete={handleDeleteJob}
+          />
         </TabsContent>
       </Tabs>
     </PageLayout>
