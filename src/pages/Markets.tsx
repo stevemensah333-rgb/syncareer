@@ -318,9 +318,20 @@ const Opportunities = () => {
             )}
             <Button 
               variant="outline"
-              onClick={() => {
+              onClick={async () => {
                 setSelectedJob(job);
                 setIsDialogOpen(true);
+                setEmployerInfo(null);
+                if (!job.is_external) {
+                  setLoadingEmployer(true);
+                  const { data } = await supabase
+                    .from('employer_details')
+                    .select('company_name, industry, company_location, company_size, company_website, company_description')
+                    .eq('user_id', job.employer_id)
+                    .single();
+                  setEmployerInfo(data as EmployerInfo | null);
+                  setLoadingEmployer(false);
+                }
               }}
             >
               Learn More
