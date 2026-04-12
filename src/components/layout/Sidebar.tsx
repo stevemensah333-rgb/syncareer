@@ -120,11 +120,6 @@ export function Sidebar({ isCollapsed, onToggle, className }: SidebarProps) {
       href: '/applicants',
     },
     {
-      title: 'Talent Insights',
-      icon: TrendingUp,
-      href: '/talent-insights',
-    },
-    {
       title: 'Hire with AI',
       icon: UserPlus,
       href: '/hire-ai',

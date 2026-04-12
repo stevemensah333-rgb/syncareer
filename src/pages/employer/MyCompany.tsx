@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Building2, MapPin, Users, Edit, Globe, Mail, Phone, Briefcase, FileText, TrendingUp } from 'lucide-react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { EditCompanyDialog } from '@/components/employer/EditCompanyDialog';
-import { AddEmployeeDialog } from '@/components/employer/AddEmployeeDialog';
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -168,22 +168,6 @@ const MyCompany = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Registered Employees
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No employees registered yet</p>
-                <p className="text-sm mt-2">Invite employees to join your company training programs</p>
-                <AddEmployeeDialog trigger={<Button className="mt-4">Invite Employees</Button>} />
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Sidebar */}
