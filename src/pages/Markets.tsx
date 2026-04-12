@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Briefcase, MapPin, Clock, DollarSign, TrendingUp, Building2, CheckCircle2, XCircle } from 'lucide-react';
+import { Briefcase, MapPin, Clock, DollarSign, TrendingUp, Building2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -24,6 +25,9 @@ interface JobPosting {
   skills: string[] | null;
   created_at: string;
   employer_id: string;
+  source: string;
+  source_url: string | null;
+  is_external: boolean;
 }
 
 interface JobWithMatch extends JobPosting {
@@ -225,12 +229,17 @@ const Opportunities = () => {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-lg mb-1">{job.title}</CardTitle>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
               <Building2 className="h-3 w-3" />
               <span>{job.department || 'General'}</span>
               <span>•</span>
               <MapPin className="h-3 w-3" />
               <span>{job.location}</span>
+              {job.is_external && (
+                <Badge variant="outline" className="text-xs capitalize">
+                  via {job.source}
+                </Badge>
+              )}
             </div>
           </div>
           <div className="text-right">
@@ -278,14 +287,24 @@ const Opportunities = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button 
-              className="flex-1 gap-2"
-              onClick={() => handleApply(job)}
-              disabled={applying}
-            >
-              <Briefcase className="h-4 w-4" />
-              Apply with Syncareer
-            </Button>
+            {job.is_external && job.source_url ? (
+              <Button 
+                className="flex-1 gap-2"
+                onClick={() => window.open(job.source_url!, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4" />
+                Apply on {job.source.charAt(0).toUpperCase() + job.source.slice(1)}
+              </Button>
+            ) : (
+              <Button 
+                className="flex-1 gap-2"
+                onClick={() => handleApply(job)}
+                disabled={applying}
+              >
+                <Briefcase className="h-4 w-4" />
+                Apply with Syncareer
+              </Button>
+            )}
             <Button 
               variant="outline"
               onClick={() => {
@@ -472,15 +491,26 @@ const Opportunities = () => {
                 )}
 
                 {/* Apply Button */}
-                <Button 
-                  className="w-full gap-2" 
-                  size="lg"
-                  onClick={() => handleApply(selectedJob)}
-                  disabled={applying}
-                >
-                  <Briefcase className="h-4 w-4" />
-                  {applying ? 'Submitting...' : 'Apply with Syncareer'}
-                </Button>
+                {selectedJob.is_external && selectedJob.source_url ? (
+                  <Button 
+                    className="w-full gap-2" 
+                    size="lg"
+                    onClick={() => window.open(selectedJob.source_url!, '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Apply on {selectedJob.source.charAt(0).toUpperCase() + selectedJob.source.slice(1)}
+                  </Button>
+                ) : (
+                  <Button 
+                    className="w-full gap-2" 
+                    size="lg"
+                    onClick={() => handleApply(selectedJob)}
+                    disabled={applying}
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    {applying ? 'Submitting...' : 'Apply with Syncareer'}
+                  </Button>
+                )}
               </div>
             </>
           )}
