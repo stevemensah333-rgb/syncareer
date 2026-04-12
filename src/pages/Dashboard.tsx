@@ -3,7 +3,7 @@ import { StudentLayout } from '@/components/layout/StudentLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, Mic, Briefcase, MapPin, ArrowRight, TrendingUp } from 'lucide-react';
+import { FileText, Mic, Briefcase, MapPin, ArrowRight, TrendingUp, ClipboardList, FolderOpen, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import ReadinessOverview from '@/components/learn/ReadinessOverview';
@@ -95,9 +95,47 @@ const Dashboard = () => {
     { label: 'Interview Score', value: stats.interviewScore > 0 ? `${stats.interviewScore}%` : '—', icon: Mic, href: '/interview-simulator' },
   ];
 
+  // Determine if user is "new" — no assessment, no CV, no applications
+  const isNewUser = !topCareer && stats.cvScore === 0 && stats.applications === 0 && stats.interviewScore === 0;
+
+  const getStartedSteps = [
+    { label: 'Take the career assessment', description: 'Discover your ideal career path in 10 minutes', icon: ClipboardList, href: '/assessment', done: !!topCareer },
+    { label: 'Build your CV', description: 'Create a professional, ATS-friendly CV', icon: FileText, href: '/cv-builder', done: stats.cvScore > 0 },
+    { label: 'Practice an interview', description: 'Simulate a real interview and get AI feedback', icon: Mic, href: '/interview-simulator', done: stats.interviewScore > 0 },
+    { label: 'Add a portfolio project', description: 'Showcase your work to stand out', icon: FolderOpen, href: '/portfolio', done: false },
+  ];
+
   return (
     <StudentLayout title="Dashboard">
       <div className="space-y-6">
+        {/* Getting Started — shown for new users */}
+        {isNewUser && !loading && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Welcome to Syncareer 👋</CardTitle>
+              <p className="text-sm text-muted-foreground">Complete these steps to unlock your full career potential.</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {getStartedSteps.map((step) => (
+                <div
+                  key={step.label}
+                  className="flex items-center gap-4 p-3 rounded-lg border bg-background cursor-pointer hover:shadow-sm transition-shadow"
+                  onClick={() => navigate(step.href)}
+                >
+                  <div className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 ${step.done ? 'bg-primary/10' : 'bg-muted'}`}>
+                    {step.done ? <CheckCircle className="h-5 w-5 text-primary" /> : <step.icon className="h-5 w-5 text-muted-foreground" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${step.done ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{step.label}</p>
+                    <p className="text-xs text-muted-foreground">{step.description}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Readiness Overview */}
         {!readiness.loading && major && (
           <ReadinessOverview
