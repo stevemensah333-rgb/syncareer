@@ -91,11 +91,6 @@ export function Sidebar({ isCollapsed, onToggle, className }: SidebarProps) {
       href: '/analysis',
     },
     {
-      title: 'Performance',
-      icon: BarChart,
-      href: '/performance',
-    },
-    {
       title: 'SynAI',
       icon: Sparkles,
       href: '/ai-coach',

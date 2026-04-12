@@ -27,7 +27,7 @@ const Assessment = lazy(() => import("./pages/Assessment"));
 const Learn = lazy(() => import("./pages/Learn"));
 const Markets = lazy(() => import("./pages/Markets"));
 const Portfolio = lazy(() => import("./pages/Portfolio"));
-const Performance = lazy(() => import("./pages/Performance"));
+
 const Analysis = lazy(() => import("./pages/Analysis"));
 const AICoach = lazy(() => import("./pages/AICoach"));
 const InterviewSimulator = lazy(() => import("./pages/InterviewSimulator"));
@@ -104,9 +104,6 @@ const App = () => (
                 } />
                 <Route path="/portfolio" element={
                   <ProtectedRoute><RoleRoute allowedRoles={['student']}><Portfolio /></RoleRoute></ProtectedRoute>
-                } />
-                <Route path="/performance" element={
-                  <ProtectedRoute><RoleRoute allowedRoles={['student']}><Performance /></RoleRoute></ProtectedRoute>
                 } />
                 <Route path="/analysis" element={
                   <ProtectedRoute><RoleRoute allowedRoles={['student']}><Analysis /></RoleRoute></ProtectedRoute>
