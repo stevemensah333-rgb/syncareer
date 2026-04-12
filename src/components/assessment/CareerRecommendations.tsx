@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
 import type { CareerRecommendation } from '@/hooks/useCareerRecommendations';
+import { GuidedJourney } from '@/components/assessment/GuidedJourney';
 
 interface CareerCardProps {
   rec: CareerRecommendation;
