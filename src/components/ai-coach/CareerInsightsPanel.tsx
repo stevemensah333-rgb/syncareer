@@ -122,8 +122,8 @@ export function CareerInsightsPanel() {
           </CardHeader>
           <CardContent className="p-3 pt-1">
             <div className="flex flex-wrap gap-1.5">
-              {topClusters.map((c) => (
-                <Badge key={c.cluster} variant="outline" className="text-[10px]">
+              {topClusters.map((c, i) => (
+                <Badge key={`${c.cluster}-${i}`} variant="outline" className="text-[10px]">
                   {c.cluster}
                 </Badge>
               ))}
