@@ -279,11 +279,12 @@ const Opportunities = () => {
           </div>
           <div className="flex gap-2">
             <Button 
-              className="flex-1"
+              className="flex-1 gap-2"
               onClick={() => handleApply(job)}
               disabled={applying}
             >
-              Quick Apply
+              <Briefcase className="h-4 w-4" />
+              Apply with Syncareer
             </Button>
             <Button 
               variant="outline"
@@ -472,12 +473,13 @@ const Opportunities = () => {
 
                 {/* Apply Button */}
                 <Button 
-                  className="w-full" 
+                  className="w-full gap-2" 
                   size="lg"
                   onClick={() => handleApply(selectedJob)}
                   disabled={applying}
                 >
-                  {applying ? 'Submitting...' : 'Apply Now'}
+                  <Briefcase className="h-4 w-4" />
+                  {applying ? 'Submitting...' : 'Apply with Syncareer'}
                 </Button>
               </div>
             </>

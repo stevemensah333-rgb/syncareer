@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -16,15 +16,16 @@ import {
 } from 'recharts';
 import {
   ClipboardCheck, ArrowRight, ArrowLeft, RotateCcw, Calendar,
-  Trophy, Brain, User, Zap, Compass, Clock,
+  Trophy, Brain, User, Zap, Compass, Clock, LogIn,
 } from 'lucide-react';
-import { useAssessment } from '@/hooks/useAssessment';
+import { useAssessment, type AssessmentResult } from '@/hooks/useAssessment';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { useCareerRecommendations } from '@/hooks/useCareerRecommendations';
 import { ASSESSMENT_QUESTIONS, LIKERT_OPTIONS, RIASEC_LABELS, RIASEC_DESCRIPTIONS } from '@/data/assessmentQuestions';
 import CareerRecommendations from '@/components/assessment/CareerRecommendations';
 import { format, differenceInDays } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 const QUESTIONS_PER_PAGE = 5;
 const TOTAL_QUESTIONS = 45;
@@ -38,7 +39,6 @@ const SECTION_COLORS: Record<string, string> = {
   Conventional: 'hsl(220, 14%, 46%)',
 };
 
-// Section intro definitions
 const SECTION_INTROS = [
   {
     key: 'personality',
@@ -69,22 +69,76 @@ const SECTION_INTROS = [
   },
 ];
 
-// Which page indices start a new section
 const SECTION_START_PAGES: Record<number, string> = {
   0: 'personality',
   3: 'skills',
   6: 'work_interest',
 };
 
+/** Calculate assessment scores locally (for guest users or reuse) */
+function calculateScoresLocally(answers: Record<number, number>): Omit<AssessmentResult, 'id' | 'created_at'> {
+  const personalityScores: Record<string, number> = {};
+  const skillsScores: Record<string, number> = {};
+  const riasecScores: Record<string, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  const riasecCounts: Record<string, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+
+  ASSESSMENT_QUESTIONS.forEach(q => {
+    const val = answers[q.id];
+    if (q.category === 'personality') {
+      personalityScores[`q${q.id}`] = val;
+    } else if (q.category === 'skills') {
+      skillsScores[`q${q.id}`] = val;
+    } else if (q.category === 'work_interest' && q.subcategory) {
+      riasecScores[q.subcategory] += val;
+      riasecCounts[q.subcategory] += 1;
+    }
+  });
+
+  const workInterestScores: Record<string, number> = {};
+  Object.keys(riasecScores).forEach(key => {
+    const maxPossible = riasecCounts[key] * 5;
+    workInterestScores[key] = maxPossible > 0 ? Math.round((riasecScores[key] / maxPossible) * 100) : 0;
+  });
+
+  const sorted = Object.entries(workInterestScores).sort(([, a], [, b]) => b - a);
+  const primary = sorted[0]?.[0] || null;
+  const secondary = sorted[1]?.[0] || null;
+  const tertiary = sorted[2]?.[0] || null;
+
+  return {
+    completed_at: new Date().toISOString(),
+    personality_score_json: personalityScores,
+    skills_score_json: skillsScores,
+    work_interest_score_json: workInterestScores,
+    primary_interest: primary ? RIASEC_LABELS[primary] : null,
+    secondary_interest: secondary ? RIASEC_LABELS[secondary] : null,
+    tertiary_interest: tertiary ? RIASEC_LABELS[tertiary] : null,
+  };
+}
+
 const Assessment = () => {
   const { profile } = useUserProfile();
+  const navigate = useNavigate();
+  const [isGuest, setIsGuest] = useState<boolean | null>(null); // null = loading
+  const [guestResult, setGuestResult] = useState<AssessmentResult | null>(null);
+
+  // Check auth status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsGuest(!session);
+    });
+  }, []);
+
+  // Only use DB hooks for authenticated users
   const { latestResult, allResults, loading, submitting, canRetake, submitAssessment } = useAssessment();
-  const { recommendations, clusterInsight, loading: careersLoading } = useCareerRecommendations(latestResult);
+  const activeResult = guestResult || latestResult;
+  const { recommendations, clusterInsight, loading: careersLoading } = useCareerRecommendations(activeResult);
   const feedbackModal = useFeedbackModal('assessment');
   const [takingAssessment, setTakingAssessment] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [showIntro, setShowIntro] = useState<string | null>(null); // section key
+  const [showIntro, setShowIntro] = useState<string | null>(null);
+  const [guestSubmitting, setGuestSubmitting] = useState(false);
 
   const totalPages = Math.ceil(TOTAL_QUESTIONS / QUESTIONS_PER_PAGE);
   const currentQuestions = ASSESSMENT_QUESTIONS.slice(
@@ -101,23 +155,17 @@ const Assessment = () => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   }, []);
 
-  // Auto-advance when all current questions answered
+  // Auto-advance
   useEffect(() => {
     if (!takingAssessment || showIntro) return;
     const allAnswered = currentQuestions.every(q => answers[q.id] !== undefined);
-    if (!allAnswered) return;
-    if (currentPage >= totalPages - 1) return;
+    if (!allAnswered || currentPage >= totalPages - 1) return;
 
     const nextPage = currentPage + 1;
     const nextSectionKey = SECTION_START_PAGES[nextPage];
-
-    // Small delay for smooth UX
     const timer = setTimeout(() => {
-      if (nextSectionKey) {
-        setShowIntro(nextSectionKey);
-      } else {
-        setCurrentPage(nextPage);
-      }
+      if (nextSectionKey) setShowIntro(nextSectionKey);
+      else setCurrentPage(nextPage);
     }, 400);
     return () => clearTimeout(timer);
   }, [answers, currentPage, currentQuestions, takingAssessment, showIntro, totalPages]);
@@ -126,11 +174,8 @@ const Assessment = () => {
     if (currentPage < totalPages - 1) {
       const nextPage = currentPage + 1;
       const nextSectionKey = SECTION_START_PAGES[nextPage];
-      if (nextSectionKey) {
-        setShowIntro(nextSectionKey);
-      } else {
-        setCurrentPage(nextPage);
-      }
+      if (nextSectionKey) setShowIntro(nextSectionKey);
+      else setCurrentPage(nextPage);
     }
   };
 
@@ -139,8 +184,6 @@ const Assessment = () => {
   };
 
   const handleIntroNext = () => {
-    const intro = SECTION_INTROS.find(s => s.key === showIntro);
-    if (!intro) return;
     const startPage = Object.entries(SECTION_START_PAGES).find(([, k]) => k === showIntro)?.[0];
     if (startPage !== undefined) setCurrentPage(parseInt(startPage));
     setShowIntro(null);
@@ -152,38 +195,61 @@ const Assessment = () => {
   };
 
   const handleSubmit = async () => {
-    const success = await submitAssessment(answers);
-    if (success) {
-      setTakingAssessment(false);
-      setAnswers({});
-      setCurrentPage(0);
-      feedbackModal.triggerFeedback();
+    if (isGuest) {
+      // Guest: calculate results locally
+      setGuestSubmitting(true);
+      try {
+        if (Object.keys(answers).length !== 45) {
+          return;
+        }
+        const result = calculateScoresLocally(answers);
+        setGuestResult({
+          id: 'guest',
+          created_at: new Date().toISOString(),
+          ...result,
+        });
+        setTakingAssessment(false);
+        setAnswers({});
+        setCurrentPage(0);
+      } finally {
+        setGuestSubmitting(false);
+      }
+    } else {
+      // Authenticated: save to DB
+      const success = await submitAssessment(answers);
+      if (success) {
+        setTakingAssessment(false);
+        setAnswers({});
+        setCurrentPage(0);
+        feedbackModal.triggerFeedback();
+      }
     }
   };
 
   const allCurrentAnswered = currentQuestions.every(q => answers[q.id] !== undefined);
   const isLastPage = currentPage === totalPages - 1;
 
-  // Days remaining until retake
   const daysUntilRetake = latestResult
     ? Math.max(0, 30 - differenceInDays(new Date(), new Date(latestResult.completed_at)))
     : 0;
 
-  if (profile && profile.user_type !== 'student') {
-    return <Navigate to={getHomeRouteForRole(profile.user_type)} replace />;
-  }
-
-  if (loading) {
+  // Loading state
+  if (isGuest === null || (!isGuest && loading)) {
     return (
       <PageLayout title="Assessment">
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading assessment data...</p>
+          <p className="text-muted-foreground">Loading assessment...</p>
         </div>
       </PageLayout>
     );
   }
 
-  // ── Section Intro Screen ──────────────────────────────────────────────────
+  // Redirect non-students who are authenticated
+  if (!isGuest && profile && profile.user_type !== 'student') {
+    return <Navigate to={getHomeRouteForRole(profile.user_type)} replace />;
+  }
+
+  // ── Section Intro Screen ──────────────────────────────────────────
   if (takingAssessment && showIntro) {
     const intro = SECTION_INTROS.find(s => s.key === showIntro)!;
     const Icon = intro.icon;
@@ -191,7 +257,6 @@ const Assessment = () => {
     return (
       <PageLayout title="Assessment">
         <div className="max-w-xl mx-auto">
-          {/* Overall progress */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2 text-sm text-muted-foreground">
               <span>{answeredCount} of {TOTAL_QUESTIONS} answered</span>
@@ -199,21 +264,16 @@ const Assessment = () => {
             </div>
             <Progress value={progressPercent} className="h-1.5" />
           </div>
-
           <Card>
             <CardContent className="pt-10 pb-10 flex flex-col items-center text-center space-y-5">
               <div className={`w-16 h-16 rounded-full flex items-center justify-center ${intro.bg}`}>
                 <Icon className={`h-8 w-8 ${intro.color}`} />
               </div>
               <div className="space-y-1">
-                <Badge variant="secondary" className="text-xs mb-2">
-                  Questions {intro.questionRange}
-                </Badge>
+                <Badge variant="secondary" className="text-xs mb-2">Questions {intro.questionRange}</Badge>
                 <h2 className="text-xl font-semibold">{intro.title}</h2>
               </div>
-              <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
-                {intro.description}
-              </p>
+              <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">{intro.description}</p>
               <Button size="lg" onClick={handleIntroNext} className="mt-2">
                 Begin Section <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -224,12 +284,11 @@ const Assessment = () => {
     );
   }
 
-  // ── Taking Assessment ─────────────────────────────────────────────────────
+  // ── Taking Assessment ─────────────────────────────────────────────
   if (takingAssessment) {
     return (
       <PageLayout title="Assessment">
         <div className="max-w-2xl mx-auto space-y-6">
-          {/* Progress */}
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-2">
@@ -243,7 +302,6 @@ const Assessment = () => {
             </CardContent>
           </Card>
 
-          {/* Questions */}
           <div className="space-y-4">
             {currentQuestions.map((q, idx) => (
               <Card key={q.id} className={`border-l-4 transition-colors ${answers[q.id] !== undefined ? 'border-l-primary' : 'border-l-primary/20'}`}>
@@ -266,9 +324,7 @@ const Assessment = () => {
                         onClick={() => handleAnswer(q.id, opt.value)}
                       >
                         <RadioGroupItem value={opt.value.toString()} id={`q${q.id}-${opt.value}`} />
-                        <Label htmlFor={`q${q.id}-${opt.value}`} className="cursor-pointer flex-1 text-sm">
-                          {opt.label}
-                        </Label>
+                        <Label htmlFor={`q${q.id}-${opt.value}`} className="cursor-pointer flex-1 text-sm">{opt.label}</Label>
                       </div>
                     ))}
                   </RadioGroup>
@@ -277,24 +333,19 @@ const Assessment = () => {
             ))}
           </div>
 
-          {/* Auto-advance hint */}
           {allCurrentAnswered && !isLastPage && (
             <p className="text-center text-xs text-muted-foreground animate-pulse">
               All answered — advancing automatically...
             </p>
           )}
 
-          {/* Navigation */}
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={handlePrev} disabled={currentPage === 0}>
               <ArrowLeft className="h-4 w-4 mr-2" /> Previous
             </Button>
             {isLastPage ? (
-              <Button
-                onClick={handleSubmit}
-                disabled={answeredCount < TOTAL_QUESTIONS || submitting}
-              >
-                {submitting ? 'Submitting...' : 'Submit Assessment'}
+              <Button onClick={handleSubmit} disabled={answeredCount < TOTAL_QUESTIONS || submitting || guestSubmitting}>
+                {(submitting || guestSubmitting) ? 'Submitting...' : 'Submit Assessment'}
                 <ClipboardCheck className="h-4 w-4 ml-2" />
               </Button>
             ) : (
@@ -308,8 +359,8 @@ const Assessment = () => {
     );
   }
 
-  // ── No Result Yet ─────────────────────────────────────────────────────────
-  if (!latestResult) {
+  // ── No Result Yet ─────────────────────────────────────────────────
+  if (!activeResult) {
     return (
       <PageLayout title="Assessment">
         <div className="max-w-xl mx-auto">
@@ -318,10 +369,13 @@ const Assessment = () => {
               <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
                 <Brain className="h-8 w-8 text-primary" />
               </div>
-              <h2 className="text-xl font-semibold">Complete your Assessment to personalize your experience</h2>
+              <h2 className="text-xl font-semibold">Discover Your Career Profile</h2>
               <p className="text-muted-foreground text-sm max-w-md mx-auto">
                 Answer 45 questions across Personality, Skills Preference, and Work Interest to discover your RIASEC career profile and unlock personalized recommendations.
               </p>
+              {isGuest && (
+                <p className="text-xs text-primary font-medium">✨ No sign-up required — take it free right now</p>
+              )}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
                 {SECTION_INTROS.map(s => {
                   const Icon = s.icon;
@@ -345,15 +399,14 @@ const Assessment = () => {
     );
   }
 
-  // ── Results View ──────────────────────────────────────────────────────────
-  const riasecChartData = Object.entries(latestResult.work_interest_score_json)
+  // ── Results View ──────────────────────────────────────────────────
+  const riasecChartData = Object.entries(activeResult.work_interest_score_json)
     .map(([key, value]) => ({
       name: RIASEC_LABELS[key] || key,
       score: value as number,
     }))
     .sort((a, b) => b.score - a.score);
 
-  // Personality radar data (q1–q15, keys like "q1" → values 1–5, normalized to 0–100)
   const personalityKeys = [
     { label: 'Leadership', qIds: [1, 7, 14] },
     { label: 'Independence', qIds: [2, 8] },
@@ -364,13 +417,12 @@ const Assessment = () => {
   ];
 
   const personalityRadar = personalityKeys.map(({ label, qIds }) => {
-    const vals = qIds.map(id => (latestResult.personality_score_json as Record<string, number>)[`q${id}`] || 0);
+    const vals = qIds.map(id => (activeResult.personality_score_json as Record<string, number>)[`q${id}`] || 0);
     const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
     return { axis: label, value: Math.round((avg / 5) * 100) };
   });
 
-  // Skills bar data (q16–q30)
-  const skillsMap: { label: string; qIds: number[] }[] = [
+  const skillsMap = [
     { label: 'Writing', qIds: [16] },
     { label: 'Data', qIds: [17, 24] },
     { label: 'Tech', qIds: [18, 28] },
@@ -383,7 +435,7 @@ const Assessment = () => {
   ];
 
   const skillsChartData = skillsMap.map(({ label, qIds }) => {
-    const vals = qIds.map(id => (latestResult.skills_score_json as Record<string, number>)[`q${id}`] || 0);
+    const vals = qIds.map(id => (activeResult.skills_score_json as Record<string, number>)[`q${id}`] || 0);
     const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
     return { name: label, score: Math.round((avg / 5) * 100) };
   }).sort((a, b) => b.score - a.score);
@@ -391,30 +443,47 @@ const Assessment = () => {
   return (
     <PageLayout title="Assessment">
       <div className="space-y-6">
+        {/* Guest sign-up banner */}
+        {isGuest && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <LogIn className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium text-sm">Sign up to save your results</p>
+                    <p className="text-xs text-muted-foreground">Create a free account to save your assessment, get career recommendations, and track your progress.</p>
+                  </div>
+                </div>
+                <Button size="sm" onClick={() => navigate('/', { state: { openAuth: true } })}>
+                  Create Account <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
             <Calendar className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              Last taken on {format(new Date(latestResult.completed_at), 'MMMM d, yyyy')}
+              {isGuest ? 'Completed just now' : `Last taken on ${format(new Date(activeResult.completed_at), 'MMMM d, yyyy')}`}
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            {!canRetake() && daysUntilRetake > 0 && (
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-1.5">
-                <Clock className="h-3.5 w-3.5" />
-                <span>{daysUntilRetake} day{daysUntilRetake !== 1 ? 's' : ''} until retake</span>
-              </div>
-            )}
-            <Button
-              variant="outline"
-              onClick={handleStartAssessment}
-              disabled={!canRetake()}
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Retake Assessment
-            </Button>
-          </div>
+          {!isGuest && (
+            <div className="flex items-center gap-3">
+              {!canRetake() && daysUntilRetake > 0 && (
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>{daysUntilRetake} day{daysUntilRetake !== 1 ? 's' : ''} until retake</span>
+                </div>
+              )}
+              <Button variant="outline" onClick={handleStartAssessment} disabled={!canRetake()}>
+                <RotateCcw className="h-4 w-4 mr-2" /> Retake Assessment
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Top 3 Interests */}
@@ -427,7 +496,7 @@ const Assessment = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[latestResult.primary_interest, latestResult.secondary_interest, latestResult.tertiary_interest].map((interest, i) => {
+              {[activeResult.primary_interest, activeResult.secondary_interest, activeResult.tertiary_interest].map((interest, i) => {
                 if (!interest) return null;
                 const key = Object.entries(RIASEC_LABELS).find(([, v]) => v === interest)?.[0] || '';
                 return (
@@ -436,9 +505,7 @@ const Assessment = () => {
                       <Badge variant={i === 0 ? 'default' : 'secondary'}>#{i + 1}</Badge>
                       <span className="font-semibold">{interest}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {RIASEC_DESCRIPTIONS[key] || ''}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{RIASEC_DESCRIPTIONS[key] || ''}</p>
                   </div>
                 );
               })}
@@ -446,7 +513,7 @@ const Assessment = () => {
           </CardContent>
         </Card>
 
-        {/* Work Interest (RIASEC) Chart */}
+        {/* RIASEC Chart */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -467,11 +534,7 @@ const Assessment = () => {
                   />
                   <Bar dataKey="score" radius={[6, 6, 0, 0]}>
                     {riasecChartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={SECTION_COLORS[entry.name] || 'hsl(var(--primary))'}
-                        opacity={index < 3 ? 1 : 0.45}
-                      />
+                      <Cell key={`cell-${index}`} fill={SECTION_COLORS[entry.name] || 'hsl(var(--primary))'} opacity={index < 3 ? 1 : 0.45} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -480,14 +543,12 @@ const Assessment = () => {
           </CardContent>
         </Card>
 
-        {/* Personality Radar + Skills Bar — side by side */}
+        {/* Personality + Skills */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Personality Radar */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
-                <User className="h-4 w-4 text-primary" />
-                Personality Profile
+                <User className="h-4 w-4 text-primary" /> Personality Profile
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -495,55 +556,28 @@ const Assessment = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={personalityRadar} cx="50%" cy="50%" outerRadius="70%">
                     <PolarGrid stroke="hsl(var(--border))" />
-                    <PolarAngleAxis
-                      dataKey="axis"
-                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                    />
-                    <Radar
-                      name="Personality"
-                      dataKey="value"
-                      stroke="hsl(var(--primary))"
-                      fill="hsl(var(--primary))"
-                      fillOpacity={0.15}
-                      strokeWidth={2}
-                    />
+                    <PolarAngleAxis dataKey="axis" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <Radar name="Personality" dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={2} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
-              <p className="text-xs text-muted-foreground text-center mt-1">
-                Scores aggregated from personality questions (1–15)
-              </p>
+              <p className="text-xs text-muted-foreground text-center mt-1">Scores aggregated from personality questions (1–15)</p>
             </CardContent>
           </Card>
 
-          {/* Skills Bar Chart */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
-                <Zap className="h-4 w-4 text-accent" />
-                Skills Preference
+                <Zap className="h-4 w-4 text-accent" /> Skills Preference
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={skillsChartData}
-                    layout="vertical"
-                    margin={{ top: 0, right: 20, left: 0, bottom: 0 }}
-                  >
+                  <BarChart data={skillsChartData} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                    <XAxis
-                      type="number"
-                      domain={[0, 100]}
-                      tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      width={90}
-                      tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                    />
+                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                     <Tooltip
                       formatter={(value: number) => [`${value}%`, 'Score']}
                       contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
@@ -552,9 +586,7 @@ const Assessment = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <p className="text-xs text-muted-foreground text-center mt-1">
-                Scores aggregated from skills questions (16–30)
-              </p>
+              <p className="text-xs text-muted-foreground text-center mt-1">Scores aggregated from skills questions (16–30)</p>
             </CardContent>
           </Card>
         </div>
@@ -563,14 +595,15 @@ const Assessment = () => {
         <CareerRecommendations
           recommendations={recommendations}
           clusterInsight={clusterInsight}
-          primaryInterest={latestResult.primary_interest}
-          secondaryInterest={latestResult.secondary_interest}
-          tertiaryInterest={latestResult.tertiary_interest}
+          primaryInterest={activeResult.primary_interest}
+          secondaryInterest={activeResult.secondary_interest}
+          tertiaryInterest={activeResult.tertiary_interest}
           loading={careersLoading}
+          isGuest={isGuest || false}
         />
 
-        {/* History */}
-        {allResults.length > 1 && (
+        {/* History (authenticated only) */}
+        {!isGuest && allResults.length > 1 && (
           <Card>
             <CardHeader>
               <CardTitle>Assessment History</CardTitle>
@@ -580,9 +613,7 @@ const Assessment = () => {
                 {allResults.map((r, i) => (
                   <div key={r.id} className="flex items-center justify-between p-3 rounded-lg border">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground">
-                        {format(new Date(r.completed_at), 'MMM d, yyyy')}
-                      </span>
+                      <span className="text-sm text-muted-foreground">{format(new Date(r.completed_at), 'MMM d, yyyy')}</span>
                       {i === 0 && <Badge>Latest</Badge>}
                     </div>
                     <div className="flex gap-2">
@@ -593,6 +624,21 @@ const Assessment = () => {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Guest bottom CTA */}
+        {isGuest && (
+          <Card className="border-primary/30 bg-primary/5 text-center">
+            <CardContent className="pt-6 pb-6 space-y-3">
+              <h3 className="font-semibold text-lg">Ready to take the next step?</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                Create a free account to save your results, build your CV, practice interviews, and apply to jobs.
+              </p>
+              <Button size="lg" onClick={() => navigate('/', { state: { openAuth: true } })}>
+                Create Free Account <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
             </CardContent>
           </Card>
         )}
