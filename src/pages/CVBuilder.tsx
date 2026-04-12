@@ -368,7 +368,7 @@ const CVBuilder = () => {
               ] as const).map(tab => (
                 <TabsTrigger key={tab.value} value={tab.value} className="flex-1 min-w-[80px] gap-1.5">
                   {tab.label}
-                  {tab.filled && <CheckCircle2 className="h-3 w-3 text-green-500" />}
+                  {tab.filled && <CheckCircle2 className="h-3 w-3 text-primary" />}
                 </TabsTrigger>
               ))}
             </TabsList>
