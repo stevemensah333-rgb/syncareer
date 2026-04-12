@@ -1,42 +1,24 @@
-import { Brain, FileText, Mic, Target, FolderSearch, BarChart3 } from "lucide-react";
+import { Brain, FileText, Mic } from "lucide-react";
 import AnimatedSection from "./AnimatedSection";
 
 const features = [
   {
     icon: Brain,
-    title: "AI Career Recommendations",
-    description: "Our 45-question RIASEC assessment maps your personality to high-fit career paths with actionable next steps.",
+    title: "Career Assessment",
+    description: "Take a 45-question RIASEC assessment and get matched to careers that fit your personality, skills, and interests.",
     accent: "text-primary bg-primary/10",
   },
   {
     icon: FileText,
-    title: "CV Optimization",
-    description: "Build ATS-friendly resumes with AI suggestions for stronger bullet points and quantified achievements.",
+    title: "CV Builder",
+    description: "Build a professional, ATS-friendly CV that passes screening filters and gets you callbacks from employers.",
     accent: "text-secondary bg-secondary/10",
   },
   {
     icon: Mic,
-    title: "Interview Simulation",
-    description: "Practice role-specific interviews with SynAssist and get structured, constructive feedback instantly.",
+    title: "Interview Simulator",
+    description: "Practice realistic voice interviews with SynAssist and get structured feedback to walk into your interview confident.",
     accent: "text-accent bg-accent/10",
-  },
-  {
-    icon: Target,
-    title: "Skills Gap Detection",
-    description: "Identify exactly which skills you need and get course recommendations to close the gap.",
-    accent: "text-warning bg-warning/10",
-  },
-  {
-    icon: FolderSearch,
-    title: "Portfolio Analysis",
-    description: "Get AI-powered feedback on your projects to present them professionally to employers.",
-    accent: "text-success bg-success/10",
-  },
-  {
-    icon: BarChart3,
-    title: "Career Analytics",
-    description: "Track your progress with real-time scores across interviews, skills, and career readiness.",
-    accent: "text-primary bg-primary/10",
   },
 ];
 
@@ -45,16 +27,16 @@ export default function SolutionSection() {
     <section id="features" className="py-24 bg-muted/50">
       <div className="container mx-auto px-6">
         <AnimatedSection className="text-center mb-16 max-w-2xl mx-auto">
-          <p className="text-sm font-medium text-primary mb-3 uppercase tracking-[0.2em]">The Solution</p>
+          <p className="text-sm font-medium text-primary mb-3 uppercase tracking-[0.2em]">What You Get</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Everything you need to launch your career
+            Three tools to get you hired
           </h2>
           <p className="text-muted-foreground text-lg">
-            Syncareer replaces guesswork with data-driven, AI-powered career infrastructure.
+            No fluff. Just the tools students actually need to land their first role.
           </p>
         </AnimatedSection>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
+        <div className="grid sm:grid-cols-3 gap-5 max-w-5xl mx-auto">
           {features.map((feature, i) => (
             <AnimatedSection key={feature.title} delay={i * 0.08}>
               <div className="group rounded-2xl p-6 h-full border border-border bg-card hover:border-primary/20 hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300">
