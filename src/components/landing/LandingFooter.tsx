@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import syncareerLogo from "@/assets/syncareer-logo.png";
 
 export default function LandingFooter() {
