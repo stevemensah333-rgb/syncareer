@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { passphrase, action, user_id, tier } = body;
+    const { passphrase, action, user_id, tier, role_action } = body;
 
     // Validate passphrase
     const adminPassphrase = Deno.env.get('ADMIN_PASSPHRASE');
@@ -51,6 +51,14 @@ Deno.serve(async (req) => {
 
       if (authError) throw authError;
 
+      // Fetch all admin roles
+      const { data: adminRoles, error: rolesError } = await supabaseAdmin
+        .from('user_roles')
+        .select('user_id, role')
+        .eq('role', 'admin');
+
+      if (rolesError) throw rolesError;
+
       const emailMap: Record<string, string> = {};
       authUsers.forEach((u: any) => {
         emailMap[u.id] = u.email ?? '';
@@ -61,6 +69,8 @@ Deno.serve(async (req) => {
         subMap[s.user_id] = s;
       });
 
+      const adminSet = new Set((adminRoles ?? []).map((r: any) => r.user_id));
+
       const users = (profiles ?? []).map((p: any) => ({
         id: p.id,
         full_name: p.full_name,
@@ -69,6 +79,7 @@ Deno.serve(async (req) => {
         email: emailMap[p.id] ?? '',
         created_at: p.created_at,
         subscription: subMap[p.id] ?? null,
+        is_admin: adminSet.has(p.id),
       }));
 
       return new Response(JSON.stringify({ users }), {
@@ -115,6 +126,47 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true, subscription: data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // ── SET ADMIN ROLE ───────────────────────────────────────────────────────
+    if (action === 'set_role') {
+      if (!user_id || !role_action) {
+        return new Response(JSON.stringify({ error: 'Missing user_id or role_action' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (!['grant', 'revoke'].includes(role_action)) {
+        return new Response(JSON.stringify({ error: 'Invalid role_action. Use "grant" or "revoke".' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (role_action === 'grant') {
+        const { error } = await supabaseAdmin
+          .from('user_roles')
+          .upsert({ user_id, role: 'admin' }, { onConflict: 'user_id,role' });
+
+        if (error) throw error;
+
+        return new Response(JSON.stringify({ success: true, is_admin: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } else {
+        const { error } = await supabaseAdmin
+          .from('user_roles')
+          .delete()
+          .eq('user_id', user_id)
+          .eq('role', 'admin');
+
+        if (error) throw error;
+
+        return new Response(JSON.stringify({ success: true, is_admin: false }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     return new Response(JSON.stringify({ error: 'Unknown action' }), {
