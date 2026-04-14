@@ -45,7 +45,7 @@ export default function LandingFooter() {
             © {new Date().getFullYear()} Syncareer. All rights reserved.
           </p>
           <div className="flex items-center gap-3 text-muted-foreground">
-            <
+            <a
               href="https://www.tiktok.com/@syncareer?_r=1&_t=ZS-943Wv7vHgCT"
               target="_blank"
               rel="noopener noreferrer"
