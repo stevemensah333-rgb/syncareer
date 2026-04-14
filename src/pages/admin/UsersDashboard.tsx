@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Lock, Users, Crown, UserCheck, RefreshCw } from 'lucide-react';
+import { Search, Lock, Users, Crown, UserCheck, RefreshCw, Shield, ShieldOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -18,6 +18,7 @@ interface UserRow {
   user_type: string | null;
   email: string;
   created_at: string;
+  is_admin: boolean;
   subscription: {
     tier: string;
     status: string;
@@ -36,6 +37,7 @@ const UsersDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [togglingRoleId, setTogglingRoleId] = useState<string | null>(null);
 
   const storedPassphrase = React.useRef('');
 
@@ -104,6 +106,37 @@ const UsersDashboard = () => {
     }
 
     setTogglingId(null);
+  };
+
+  const handleToggleAdmin = async (user: UserRow) => {
+    const newAction = user.is_admin ? 'revoke' : 'grant';
+    setTogglingRoleId(user.id);
+
+    const { data, error } = await supabase.functions.invoke('admin-users', {
+      body: {
+        passphrase: storedPassphrase.current,
+        action: 'set_role',
+        user_id: user.id,
+        role_action: newAction,
+      },
+    });
+
+    if (error || data?.error) {
+      toast.error('Failed to update admin role.');
+    } else {
+      toast.success(
+        newAction === 'grant'
+          ? `${user.full_name || user.email} is now an admin.`
+          : `${user.full_name || user.email} is no longer an admin.`
+      );
+      setUsers(prev =>
+        prev.map(u =>
+          u.id === user.id ? { ...u, is_admin: data.is_admin } : u
+        )
+      );
+    }
+
+    setTogglingRoleId(null);
   };
 
   const filteredUsers = useMemo(() => {
