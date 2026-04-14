@@ -280,12 +280,13 @@ const UsersDashboard = () => {
                     <TableHead>Tier</TableHead>
                     <TableHead>Period End</TableHead>
                     <TableHead className="text-center">Premium Access</TableHead>
+                    <TableHead className="text-center">Admin</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
                         {loading ? 'Loading users...' : 'No users found.'}
                       </TableCell>
                     </TableRow>
@@ -293,16 +294,22 @@ const UsersDashboard = () => {
                     filteredUsers.map(user => {
                       const isPremium = user.subscription?.tier === 'premium';
                       const isToggling = togglingId === user.id;
+                      const isTogglingRole = togglingRoleId === user.id;
 
                       return (
                         <TableRow key={user.id}>
                           <TableCell>
-                            <div>
-                              <p className="font-medium text-sm text-foreground">
-                                {user.full_name || '—'}
-                              </p>
-                              {user.username && (
-                                <p className="text-xs text-muted-foreground">@{user.username}</p>
+                            <div className="flex items-center gap-1.5">
+                              <div>
+                                <p className="font-medium text-sm text-foreground">
+                                  {user.full_name || '—'}
+                                </p>
+                                {user.username && (
+                                  <p className="text-xs text-muted-foreground">@{user.username}</p>
+                                )}
+                              </div>
+                              {user.is_admin && (
+                                <Shield className="h-3.5 w-3.5 text-primary shrink-0" />
                               )}
                             </div>
                           </TableCell>
@@ -351,6 +358,31 @@ const UsersDashboard = () => {
                               {isToggling && (
                                 <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                               )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                variant={user.is_admin ? 'destructive' : 'outline'}
+                                size="sm"
+                                className="h-7 text-xs gap-1"
+                                disabled={isTogglingRole}
+                                onClick={() => handleToggleAdmin(user)}
+                              >
+                                {isTogglingRole ? (
+                                  <RefreshCw className="h-3 w-3 animate-spin" />
+                                ) : user.is_admin ? (
+                                  <>
+                                    <ShieldOff className="h-3 w-3" />
+                                    Remove
+                                  </>
+                                ) : (
+                                  <>
+                                    <Shield className="h-3 w-3" />
+                                    Make Admin
+                                  </>
+                                )}
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
