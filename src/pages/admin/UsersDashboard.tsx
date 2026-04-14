@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Lock, Users, Crown, UserCheck, RefreshCw } from 'lucide-react';
+import { Search, Lock, Users, Crown, UserCheck, RefreshCw, Shield, ShieldOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -18,6 +18,7 @@ interface UserRow {
   user_type: string | null;
   email: string;
   created_at: string;
+  is_admin: boolean;
   subscription: {
     tier: string;
     status: string;
@@ -36,6 +37,7 @@ const UsersDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [togglingRoleId, setTogglingRoleId] = useState<string | null>(null);
 
   const storedPassphrase = React.useRef('');
 
@@ -104,6 +106,37 @@ const UsersDashboard = () => {
     }
 
     setTogglingId(null);
+  };
+
+  const handleToggleAdmin = async (user: UserRow) => {
+    const newAction = user.is_admin ? 'revoke' : 'grant';
+    setTogglingRoleId(user.id);
+
+    const { data, error } = await supabase.functions.invoke('admin-users', {
+      body: {
+        passphrase: storedPassphrase.current,
+        action: 'set_role',
+        user_id: user.id,
+        role_action: newAction,
+      },
+    });
+
+    if (error || data?.error) {
+      toast.error('Failed to update admin role.');
+    } else {
+      toast.success(
+        newAction === 'grant'
+          ? `${user.full_name || user.email} is now an admin.`
+          : `${user.full_name || user.email} is no longer an admin.`
+      );
+      setUsers(prev =>
+        prev.map(u =>
+          u.id === user.id ? { ...u, is_admin: data.is_admin } : u
+        )
+      );
+    }
+
+    setTogglingRoleId(null);
   };
 
   const filteredUsers = useMemo(() => {
@@ -247,12 +280,13 @@ const UsersDashboard = () => {
                     <TableHead>Tier</TableHead>
                     <TableHead>Period End</TableHead>
                     <TableHead className="text-center">Premium Access</TableHead>
+                    <TableHead className="text-center">Admin</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
                         {loading ? 'Loading users...' : 'No users found.'}
                       </TableCell>
                     </TableRow>
@@ -260,16 +294,22 @@ const UsersDashboard = () => {
                     filteredUsers.map(user => {
                       const isPremium = user.subscription?.tier === 'premium';
                       const isToggling = togglingId === user.id;
+                      const isTogglingRole = togglingRoleId === user.id;
 
                       return (
                         <TableRow key={user.id}>
                           <TableCell>
-                            <div>
-                              <p className="font-medium text-sm text-foreground">
-                                {user.full_name || '—'}
-                              </p>
-                              {user.username && (
-                                <p className="text-xs text-muted-foreground">@{user.username}</p>
+                            <div className="flex items-center gap-1.5">
+                              <div>
+                                <p className="font-medium text-sm text-foreground">
+                                  {user.full_name || '—'}
+                                </p>
+                                {user.username && (
+                                  <p className="text-xs text-muted-foreground">@{user.username}</p>
+                                )}
+                              </div>
+                              {user.is_admin && (
+                                <Shield className="h-3.5 w-3.5 text-primary shrink-0" />
                               )}
                             </div>
                           </TableCell>
@@ -318,6 +358,31 @@ const UsersDashboard = () => {
                               {isToggling && (
                                 <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                               )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                variant={user.is_admin ? 'destructive' : 'outline'}
+                                size="sm"
+                                className="h-7 text-xs gap-1"
+                                disabled={isTogglingRole}
+                                onClick={() => handleToggleAdmin(user)}
+                              >
+                                {isTogglingRole ? (
+                                  <RefreshCw className="h-3 w-3 animate-spin" />
+                                ) : user.is_admin ? (
+                                  <>
+                                    <ShieldOff className="h-3 w-3" />
+                                    Remove
+                                  </>
+                                ) : (
+                                  <>
+                                    <Shield className="h-3 w-3" />
+                                    Make Admin
+                                  </>
+                                )}
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
