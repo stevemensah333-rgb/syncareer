@@ -1,94 +1,41 @@
 
 
-## Plan: Two-Way Employer-Student Visibility
+## Plan: Admin Access Menu Item + Admin Role Management
 
 ### Problem
-1. **Employer viewing applicant**: The `PublicPortfolio` page only shows basic profile, projects, and endorsements — missing school, LinkedIn, and skills from `user_skills`.
-2. **Student viewing employer**: The "Learn More" dialog on Opportunities only shows job details — no employer/company information.
+1. The "Admin?" footer link was removed, but there's no way for admins to reach the admin dashboard from the UI
+2. Only one admin exists (Stephen Mensah), and there's no way to add more admins without direct database access
 
 ### Changes
 
-#### 1. Enrich PublicPortfolio with student details
+#### 1. Add "Admin Dashboard" to account dropdown (`Navbar.tsx`)
+- Add a `useEffect` that queries `user_roles` for the current user's admin role
+- When `isAdmin` is true, show an "Admin Dashboard" menu item with a Shield icon in the avatar dropdown menu
+- Links to `/admin/feedback`
 
-**File**: `src/pages/PublicPortfolio.tsx`
+#### 2. Add admin user management to the Users Dashboard (`UsersDashboard.tsx`)
+- On the existing admin Users page, add a column or action to promote/demote users to admin
+- This calls the `admin-users` Edge Function with a new `set_role` action
+- Only existing admins can do this (protected by AdminRoute + passphrase)
 
-- Fetch `student_details` (school, major, degree_type) for the viewed user
-- Fetch `user_skills` (skill_name, proficiency, category) for the viewed user
-- Fetch `linkedin_url` from `profiles`
-- Display new sections in the profile header:
-  - School, major, degree, expected completion
-  - LinkedIn link (if available)
-  - Skills with proficiency badges (separate from endorsements)
+#### 3. Update `admin-users` Edge Function
+- Add a `set_role` action that inserts/deletes rows in `user_roles` for the `admin` role
+- Uses service role key to bypass RLS
 
-**RLS Note**: `student_details` currently only allows users to view their own rows. We need a new SELECT policy so employers can view student details of their applicants (similar to the existing `profiles` policy "Employers can view applicant profiles").
+### How to access the admin dashboard after this change
+1. Sign in with an admin account
+2. Click your avatar (top right)
+3. Click "Admin Dashboard"
+4. Enter the passphrase on the admin page
 
-#### 2. Add RLS policy for student_details and user_skills
-
-**Migration**: Add two new RLS policies:
-
-```sql
--- Employers can view student details for their applicants
-CREATE POLICY "Employers can view applicant student details"
-ON public.student_details FOR SELECT TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM job_applications ja
-    JOIN job_postings jp ON ja.job_id = jp.id
-    WHERE ja.applicant_id = student_details.user_id
-      AND jp.employer_id = auth.uid()
-  )
-);
-
--- Employers can view applicant skills
-CREATE POLICY "Employers can view applicant skills"
-ON public.user_skills FOR SELECT TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM job_applications ja
-    JOIN job_postings jp ON ja.job_id = jp.id
-    WHERE ja.applicant_id = user_skills.user_id
-      AND jp.employer_id = auth.uid()
-  )
-);
-```
-
-#### 3. Add employer info to "Learn More" dialog on Opportunities
-
-**File**: `src/pages/Markets.tsx`
-
-- When a student clicks "Learn More", fetch `employer_details` (company_name, industry, company_location, company_size, company_website, company_description) using the job's `employer_id`
-- Display a "About the Company" section in the dialog above the job description
-- Show: company name, industry, location, size, website link, description
-
-**RLS Note**: `employer_details` currently only allows `user_id = auth.uid()`. We need a new SELECT policy so authenticated users can view employer details for active job postings.
-
-#### 4. Add RLS policy for employer_details (public view for active jobs)
-
-**Migration**:
-
-```sql
--- Anyone authenticated can view employer details if employer has active jobs
-CREATE POLICY "Users can view employer details for active jobs"
-ON public.employer_details FOR SELECT TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM job_postings
-    WHERE job_postings.employer_id = employer_details.user_id
-      AND job_postings.status = 'active'
-  )
-);
-```
+### How to add another admin
+1. Go to Admin Dashboard → Users
+2. Find the user and click "Make Admin" (or "Remove Admin")
 
 ### Files modified
-
 | File | Change |
 |------|--------|
-| `src/pages/PublicPortfolio.tsx` | Add student details, skills, LinkedIn to profile view |
-| `src/pages/Markets.tsx` | Add "About the Company" section in Learn More dialog |
-| Migration SQL | 3 new RLS policies (student_details, user_skills, employer_details) |
-
-### What stays unchanged
-- Applicant Tracker navigation (already links to `/portfolio/:id`)
-- Existing portfolio projects and endorsements display
-- All existing RLS policies
+| `src/components/layout/Navbar.tsx` | Add admin menu item in dropdown |
+| `src/pages/admin/UsersDashboard.tsx` | Add promote/demote admin action |
+| `supabase/functions/admin-users/index.ts` | Add `set_role` action |
 
