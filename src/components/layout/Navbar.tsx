@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Briefcase, Users, LogOut, MessageCircle, Menu, HelpCircle, Phone, Mail, CreditCard, Sparkles, Shield } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Badge } from '@/components/ui/badge';
-import syncareerLogo from '@/assets/syncareer-logo.png';
+import syncareerLogo from '@/assets/syncareer-logo.svg';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
@@ -90,7 +90,7 @@ export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
           <div className="flex items-center gap-2 lg:gap-6">
             
             <div className="flex items-center gap-2">
-              <img src={syncareerLogo} alt="Syncareer" className="h-8 w-auto object-contain" />
+              <img src={syncareerLogo} alt="Syncareer" className="h-10 w-auto object-contain" />
               <h1 className="text-lg font-semibold tracking-tight lg:text-xl">Syncareer</h1>
             </div>
             

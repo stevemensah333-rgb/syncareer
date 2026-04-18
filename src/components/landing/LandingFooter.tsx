@@ -1,4 +1,4 @@
-import syncareerLogo from "@/assets/syncareer-logo.png";
+import syncareerLogo from "@/assets/syncareer-logo.svg";
 
 export default function LandingFooter() {
   return (
@@ -7,7 +7,7 @@ export default function LandingFooter() {
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <img src={syncareerLogo} alt="Syncareer" className="h-7 w-auto object-contain" />
+              <img src={syncareerLogo} alt="Syncareer" className="h-9 w-auto object-contain" />
               <span className="text-lg font-semibold text-foreground">Syncareer</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">

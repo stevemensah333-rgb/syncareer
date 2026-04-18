@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LogOut, MessageSquare, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import syncareerLogo from '@/assets/syncareer-logo.png';
+import syncareerLogo from '@/assets/syncareer-logo.svg';
 import { cn } from '@/lib/utils';
 
 interface AdminLayoutProps {
@@ -31,7 +31,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
         <div className="container mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <img src={syncareerLogo} alt="Syncareer" className="h-6 w-auto object-contain" />
+              <img src={syncareerLogo} alt="Syncareer" className="h-8 w-auto object-contain" />
               <span className="text-sm font-semibold text-foreground">Syncareer</span>
               <span className="text-muted-foreground mx-1">·</span>
               <span className="text-sm text-muted-foreground">Admin</span>
