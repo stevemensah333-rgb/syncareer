@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { WhatsAppShareButton } from "@/components/shared/WhatsAppShareButton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
-import syncareerLogo from "@/assets/syncareer-logo.png";
+import syncareerLogo from "@/assets/syncareer-logo.svg";
 
 interface LandingHeaderProps {
   onSignIn: () => void;
@@ -17,7 +17,7 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <img src={syncareerLogo} alt="Syncareer" className="h-8 w-auto object-contain" />
+          <img src={syncareerLogo} alt="Syncareer" className="h-10 w-auto object-contain" />
           <span className="hidden sm:inline text-xl font-bold text-foreground tracking-tight">Syncareer</span>
         </div>
         <nav className="hidden md:flex items-center gap-8">
