@@ -1,41 +1,25 @@
 
+## Plan: Replace Syncareer logo with new transparent SVG
 
-## Plan: Admin Access Menu Item + Admin Role Management
-
-### Problem
-1. The "Admin?" footer link was removed, but there's no way for admins to reach the admin dashboard from the UI
-2. Only one admin exists (Stephen Mensah), and there's no way to add more admins without direct database access
-
-### Changes
-
-#### 1. Add "Admin Dashboard" to account dropdown (`Navbar.tsx`)
-- Add a `useEffect` that queries `user_roles` for the current user's admin role
-- When `isAdmin` is true, show an "Admin Dashboard" menu item with a Shield icon in the avatar dropdown menu
-- Links to `/admin/feedback`
-
-#### 2. Add admin user management to the Users Dashboard (`UsersDashboard.tsx`)
-- On the existing admin Users page, add a column or action to promote/demote users to admin
-- This calls the `admin-users` Edge Function with a new `set_role` action
-- Only existing admins can do this (protected by AdminRoute + passphrase)
-
-#### 3. Update `admin-users` Edge Function
-- Add a `set_role` action that inserts/deletes rows in `user_roles` for the `admin` role
-- Uses service role key to bypass RLS
-
-### How to access the admin dashboard after this change
-1. Sign in with an admin account
-2. Click your avatar (top right)
-3. Click "Admin Dashboard"
-4. Enter the passphrase on the admin page
-
-### How to add another admin
-1. Go to Admin Dashboard → Users
-2. Find the user and click "Make Admin" (or "Remove Admin")
+### Steps
+1. Copy `user-uploads://Untitled_design_1.svg` to `src/assets/syncareer-logo.svg`.
+2. Update all imports of the old PNG logo to point to the new SVG. Files using `@/assets/syncareer-logo.png`:
+   - `src/components/landing/LandingHeader.tsx`
+   - `src/components/landing/LandingFooter.tsx`
+   - `src/components/layout/Navbar.tsx`
+   - Plus any other matches found via search (Sidebar, layouts, etc.) — will grep before editing.
+3. Adjust sizing: SVG renders crisply at any size, so heights stay similar but slightly larger where the logo is the focal point.
+   - Landing header: `h-8` → `h-10`
+   - Landing footer: `h-7` → `h-9`
+   - Navbar: `h-8` → `h-10`
+   - Anywhere else: bump by ~1 step for visual parity
+4. Leave the old `syncareer-logo.png` file in place (no breakage if other untracked references exist) but all active imports will switch to the SVG.
 
 ### Files modified
 | File | Change |
 |------|--------|
-| `src/components/layout/Navbar.tsx` | Add admin menu item in dropdown |
-| `src/pages/admin/UsersDashboard.tsx` | Add promote/demote admin action |
-| `supabase/functions/admin-users/index.ts` | Add `set_role` action |
-
+| `src/assets/syncareer-logo.svg` | New asset (copied from upload) |
+| `src/components/landing/LandingHeader.tsx` | Import SVG, bump size to `h-10` |
+| `src/components/landing/LandingFooter.tsx` | Import SVG, bump size to `h-9` |
+| `src/components/layout/Navbar.tsx` | Import SVG, bump size to `h-10` |
+| Any other logo usages found | Switch import + size tweak |
