@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Lock, Users, Crown, UserCheck, RefreshCw, Shield, ShieldOff } from 'lucide-react';
+import { Search, Users, Crown, UserCheck, RefreshCw, Shield, ShieldOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -28,50 +28,26 @@ interface UserRow {
 }
 
 const UsersDashboard = () => {
-  const [passphrase, setPassphrase] = useState('');
-  const [authorized, setAuthorized] = useState(false);
-  const [authError, setAuthError] = useState('');
-  const [authLoading, setAuthLoading] = useState(false);
-
   const [users, setUsers] = useState<UserRow[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [togglingRoleId, setTogglingRoleId] = useState<string | null>(null);
 
-  const storedPassphrase = React.useRef('');
-
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthLoading(true);
-    setAuthError('');
-
-    const { data, error } = await supabase.functions.invoke('admin-users', {
-      body: { passphrase, action: 'list' },
-    });
-
-    if (error || data?.error) {
-      setAuthError('Incorrect passphrase.');
-      setAuthLoading(false);
-      return;
-    }
-
-    storedPassphrase.current = passphrase;
-    setAuthorized(true);
-    setUsers(data?.users ?? []);
-    setAuthLoading(false);
-  };
-
   const fetchUsers = async () => {
     setLoading(true);
     const { data, error } = await supabase.functions.invoke('admin-users', {
-      body: { passphrase: storedPassphrase.current, action: 'list' },
+      body: { action: 'list' },
     });
     if (!error && !data?.error) {
       setUsers(data?.users ?? []);
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleTogglePremium = async (user: UserRow) => {
     const currentTier = user.subscription?.tier ?? 'free';
@@ -80,7 +56,6 @@ const UsersDashboard = () => {
 
     const { data, error } = await supabase.functions.invoke('admin-users', {
       body: {
-        passphrase: storedPassphrase.current,
         action: 'set_tier',
         user_id: user.id,
         tier: newTier,
@@ -114,7 +89,6 @@ const UsersDashboard = () => {
 
     const { data, error } = await supabase.functions.invoke('admin-users', {
       body: {
-        passphrase: storedPassphrase.current,
         action: 'set_role',
         user_id: user.id,
         role_action: newAction,
@@ -156,38 +130,6 @@ const UsersDashboard = () => {
     const students = users.filter(u => u.user_type === 'student').length;
     return { total, premium, students, free: total - premium };
   }, [users]);
-
-  if (!authorized) {
-    return (
-      <AdminLayout title="Admin Access">
-        <div className="flex items-center justify-center h-[60vh]">
-          <Card className="w-full max-w-sm">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-base">Enter Passphrase</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAuth} className="space-y-4">
-                <Input
-                  type="password"
-                  placeholder="Admin passphrase"
-                  value={passphrase}
-                  onChange={e => setPassphrase(e.target.value)}
-                  autoFocus
-                />
-                {authError && <p className="text-xs text-destructive">{authError}</p>}
-                <Button type="submit" className="w-full" disabled={authLoading}>
-                  {authLoading ? 'Verifying...' : 'Access Dashboard'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </AdminLayout>
-    );
-  }
 
   return (
     <AdminLayout title="User Management">

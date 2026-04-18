@@ -11,23 +11,52 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    const { passphrase, action, user_id, tier, role_action } = body;
-
-    // Validate passphrase
-    const adminPassphrase = Deno.env.get('ADMIN_PASSPHRASE');
-    if (!adminPassphrase || passphrase !== adminPassphrase) {
+    // ── AUTH: validate JWT and require admin role ───────────────────────────
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Use service role to bypass RLS
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } },
+    );
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const callerId = claimsData.claims.sub as string;
+
+    // Use service role to bypass RLS for admin operations
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
+
+    // Verify admin role server-side via has_role()
+    const { data: isAdmin, error: roleError } = await supabaseAdmin.rpc('has_role', {
+      _user_id: callerId,
+      _role: 'admin',
+    });
+    if (roleError || !isAdmin) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const { action, user_id, tier, role_action } = body ?? {};
 
     // ── LIST USERS ───────────────────────────────────────────────────────────
     if (!action || action === 'list') {
@@ -82,6 +111,7 @@ Deno.serve(async (req) => {
         is_admin: adminSet.has(p.id),
       }));
 
+      console.log(`[admin-users] caller=${callerId} listed ${users.length} users`);
       return new Response(JSON.stringify({ users }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -123,6 +153,7 @@ Deno.serve(async (req) => {
 
       if (error) throw error;
 
+      console.log(`[admin-users] caller=${callerId} set tier user=${user_id} tier=${tier}`);
       return new Response(JSON.stringify({ success: true, subscription: data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -151,10 +182,19 @@ Deno.serve(async (req) => {
 
         if (error) throw error;
 
+        console.log(`[admin-users] caller=${callerId} GRANTED admin to user=${user_id}`);
         return new Response(JSON.stringify({ success: true, is_admin: true }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } else {
+        // Prevent self-demotion to avoid lock-out
+        if (user_id === callerId) {
+          return new Response(JSON.stringify({ error: 'You cannot revoke your own admin role.' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
         const { error } = await supabaseAdmin
           .from('user_roles')
           .delete()
@@ -163,6 +203,7 @@ Deno.serve(async (req) => {
 
         if (error) throw error;
 
+        console.log(`[admin-users] caller=${callerId} REVOKED admin from user=${user_id}`);
         return new Response(JSON.stringify({ success: true, is_admin: false }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
