@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Lock, Users, Crown, UserCheck, RefreshCw, Shield, ShieldOff } from 'lucide-react';
+import { Search, Users, Crown, UserCheck, RefreshCw, Shield, ShieldOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -28,50 +28,26 @@ interface UserRow {
 }
 
 const UsersDashboard = () => {
-  const [passphrase, setPassphrase] = useState('');
-  const [authorized, setAuthorized] = useState(false);
-  const [authError, setAuthError] = useState('');
-  const [authLoading, setAuthLoading] = useState(false);
-
   const [users, setUsers] = useState<UserRow[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [togglingRoleId, setTogglingRoleId] = useState<string | null>(null);
 
-  const storedPassphrase = React.useRef('');
-
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthLoading(true);
-    setAuthError('');
-
-    const { data, error } = await supabase.functions.invoke('admin-users', {
-      body: { passphrase, action: 'list' },
-    });
-
-    if (error || data?.error) {
-      setAuthError('Incorrect passphrase.');
-      setAuthLoading(false);
-      return;
-    }
-
-    storedPassphrase.current = passphrase;
-    setAuthorized(true);
-    setUsers(data?.users ?? []);
-    setAuthLoading(false);
-  };
-
   const fetchUsers = async () => {
     setLoading(true);
     const { data, error } = await supabase.functions.invoke('admin-users', {
-      body: { passphrase: storedPassphrase.current, action: 'list' },
+      body: { action: 'list' },
     });
     if (!error && !data?.error) {
       setUsers(data?.users ?? []);
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleTogglePremium = async (user: UserRow) => {
     const currentTier = user.subscription?.tier ?? 'free';
@@ -80,7 +56,6 @@ const UsersDashboard = () => {
 
     const { data, error } = await supabase.functions.invoke('admin-users', {
       body: {
-        passphrase: storedPassphrase.current,
         action: 'set_tier',
         user_id: user.id,
         tier: newTier,
@@ -114,7 +89,6 @@ const UsersDashboard = () => {
 
     const { data, error } = await supabase.functions.invoke('admin-users', {
       body: {
-        passphrase: storedPassphrase.current,
         action: 'set_role',
         user_id: user.id,
         role_action: newAction,

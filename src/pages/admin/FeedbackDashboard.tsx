@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { ThumbsUp, ThumbsDown, MessageSquare, TrendingUp, Filter, Search, Trash2, Lock } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, MessageSquare, TrendingUp, Filter, Search, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface FeedbackRow {
@@ -27,11 +27,8 @@ const FEATURE_LABELS: Record<string, string> = {
 };
 
 const FeedbackDashboard = () => {
-  const [passphrase, setPassphrase] = useState('');
-  const [authorized, setAuthorized] = useState(false);
-  const [authError, setAuthError] = useState('');
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [featureFilter, setFeatureFilter] = useState<string>('all');
@@ -39,31 +36,11 @@ const FeedbackDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setAuthError('');
-
-    const { data, error: fnError } = await supabase.functions.invoke('admin-feedback', {
-      body: { passphrase, feature_filter: 'all', date_range: '30' },
-    });
-
-    if (fnError || data?.error) {
-      setAuthError('Incorrect passphrase.');
-      setLoading(false);
-      return;
-    }
-
-    setAuthorized(true);
-    setFeedback((data?.data as FeedbackRow[]) || []);
-    setLoading(false);
-  };
-
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
       await supabase.functions.invoke('admin-feedback', {
-        body: { passphrase, action: 'delete', feedback_id: id },
+        body: { action: 'delete', feedback_id: id },
       });
       setFeedback(prev => prev.filter(f => f.id !== id));
     } catch (err) {
@@ -74,14 +51,13 @@ const FeedbackDashboard = () => {
   };
 
   useEffect(() => {
-    if (!authorized) return;
     const fetchFeedback = async () => {
       setLoading(true);
       setError(null);
 
       try {
         const { data, error: fnError } = await supabase.functions.invoke('admin-feedback', {
-          body: { passphrase, feature_filter: featureFilter, date_range: dateRange },
+          body: { feature_filter: featureFilter, date_range: dateRange },
         });
 
         if (fnError) throw fnError;
@@ -96,7 +72,7 @@ const FeedbackDashboard = () => {
     };
 
     fetchFeedback();
-  }, [featureFilter, dateRange, authorized]);
+  }, [featureFilter, dateRange]);
 
   const stats = useMemo(() => {
     const total = feedback.length;
@@ -152,38 +128,6 @@ const FeedbackDashboard = () => {
     { name: 'Positive', value: stats.positive, color: 'hsl(142, 71%, 45%)' },
     { name: 'Negative', value: stats.negative, color: 'hsl(0, 84%, 60%)' },
   ];
-
-  if (!authorized) {
-    return (
-      <AdminLayout title="Admin Access">
-        <div className="flex items-center justify-center h-[60vh]">
-          <Card className="w-full max-w-sm">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-base">Enter Passphrase</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAuth} className="space-y-4">
-                <Input
-                  type="password"
-                  placeholder="Admin passphrase"
-                  value={passphrase}
-                  onChange={e => setPassphrase(e.target.value)}
-                  autoFocus
-                />
-                {authError && <p className="text-xs text-destructive">{authError}</p>}
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Verifying...' : 'Access Dashboard'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </AdminLayout>
-    );
-  }
 
   if (loading) {
     return (
