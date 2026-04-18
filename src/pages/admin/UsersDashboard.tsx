@@ -131,38 +131,6 @@ const UsersDashboard = () => {
     return { total, premium, students, free: total - premium };
   }, [users]);
 
-  if (!authorized) {
-    return (
-      <AdminLayout title="Admin Access">
-        <div className="flex items-center justify-center h-[60vh]">
-          <Card className="w-full max-w-sm">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-base">Enter Passphrase</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAuth} className="space-y-4">
-                <Input
-                  type="password"
-                  placeholder="Admin passphrase"
-                  value={passphrase}
-                  onChange={e => setPassphrase(e.target.value)}
-                  autoFocus
-                />
-                {authError && <p className="text-xs text-destructive">{authError}</p>}
-                <Button type="submit" className="w-full" disabled={authLoading}>
-                  {authLoading ? 'Verifying...' : 'Access Dashboard'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout title="User Management">
       <div className="space-y-6">
