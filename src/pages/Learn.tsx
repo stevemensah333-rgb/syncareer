@@ -116,10 +116,30 @@ const useDynamicSkills = (major: string | null) => {
 const Learn = () => {
   const { studentDetails, loading } = useUserProfile();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const major = studentDetails?.major || null;
   const readiness = useCareerReadiness(major);
   const { dynamicSkills, loading: dynamicLoading } = useDynamicSkills(major);
   const { aiCourses, loading: aiCoursesLoading, fetchAICourses, fetched: aiCoursesFetched } = useAICourses(major);
+
+  const focusParam = searchParams.get('focus');
+  const focusedSkills = useMemo(
+    () =>
+      focusParam
+        ? focusParam.split(',').map(s => decodeURIComponent(s).trim()).filter(Boolean)
+        : [],
+    [focusParam]
+  );
+  const focusedSet = useMemo(
+    () => new Set(focusedSkills.map(s => s.toLowerCase())),
+    [focusedSkills]
+  );
+
+  const clearFocus = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('focus');
+    setSearchParams(next, { replace: true });
+  };
 
   const [streak, setStreak] = useState<LearningStreak | null>(null);
   const [streakLoading, setStreakLoading] = useState(true);
