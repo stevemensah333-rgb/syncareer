@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Flame, CheckCircle, BookOpen, Target, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
+import { Flame, CheckCircle, BookOpen, Target, ArrowRight, Sparkles, Loader2, X } from 'lucide-react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { getCareerSkills } from '@/utils/careerSkillFramework';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,8 +14,8 @@ import ReadinessRadar from '@/components/learn/ReadinessRadar';
 import PillarCards from '@/components/learn/PillarCards';
 import SkillGapCard, { type SkillCourse } from '@/components/learn/SkillGapCard';
 import SavedCoursesSection from '@/components/learn/SavedCoursesSection';
-import { useCareerReadiness, type CourseProgress } from '@/hooks/useCareerReadiness';
-import { useNavigate } from 'react-router-dom';
+import { useCareerReadiness, type CourseProgress, type SkillReadiness } from '@/hooks/useCareerReadiness';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface LearningStreak {
   current_streak: number;
