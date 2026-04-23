@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Flame, CheckCircle, BookOpen, Target, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
+import { Flame, CheckCircle, BookOpen, Target, ArrowRight, Sparkles, Loader2, X } from 'lucide-react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { getCareerSkills } from '@/utils/careerSkillFramework';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,8 +14,8 @@ import ReadinessRadar from '@/components/learn/ReadinessRadar';
 import PillarCards from '@/components/learn/PillarCards';
 import SkillGapCard, { type SkillCourse } from '@/components/learn/SkillGapCard';
 import SavedCoursesSection from '@/components/learn/SavedCoursesSection';
-import { useCareerReadiness, type CourseProgress } from '@/hooks/useCareerReadiness';
-import { useNavigate } from 'react-router-dom';
+import { useCareerReadiness, type CourseProgress, type SkillReadiness } from '@/hooks/useCareerReadiness';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface LearningStreak {
   current_streak: number;
@@ -116,10 +116,30 @@ const useDynamicSkills = (major: string | null) => {
 const Learn = () => {
   const { studentDetails, loading } = useUserProfile();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const major = studentDetails?.major || null;
   const readiness = useCareerReadiness(major);
   const { dynamicSkills, loading: dynamicLoading } = useDynamicSkills(major);
   const { aiCourses, loading: aiCoursesLoading, fetchAICourses, fetched: aiCoursesFetched } = useAICourses(major);
+
+  const focusParam = searchParams.get('focus');
+  const focusedSkills = useMemo(
+    () =>
+      focusParam
+        ? focusParam.split(',').map(s => decodeURIComponent(s).trim()).filter(Boolean)
+        : [],
+    [focusParam]
+  );
+  const focusedSet = useMemo(
+    () => new Set(focusedSkills.map(s => s.toLowerCase())),
+    [focusedSkills]
+  );
+
+  const clearFocus = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('focus');
+    setSearchParams(next, { replace: true });
+  };
 
   const [streak, setStreak] = useState<LearningStreak | null>(null);
   const [streakLoading, setStreakLoading] = useState(true);
@@ -298,14 +318,72 @@ const Learn = () => {
             </Card>
           )}
 
-          {hasSkills && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Skill Gaps & Resources</h3>
-              {readiness.skillGaps.map((skill) => (
-                <SkillGapCard key={skill.skillName} skill={skill} courses={getCoursesFor(skill.skillName)} savedCourses={readiness.savedCourses} onSaveCourse={(course) => handleSaveCourse(course, skill.skillName)} onUnsaveCourse={(ct) => handleUnsaveCourse(ct, skill.skillName)} onValidateCourse={(course) => handleValidateCourse(course, skill.skillName)} validating={quizLoading} />
-              ))}
-            </div>
+          {/* Focus banner from CV scan */}
+          {focusedSkills.length > 0 && (
+            <Card className="border-primary/40 bg-primary/5">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      Focused from your CV
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {focusedSkills.map(s => (
+                        <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={clearFocus} className="shrink-0 h-7 gap-1 text-xs">
+                    <X className="h-3 w-3" /> Clear
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
+
+          {(hasSkills || focusedSkills.length > 0) && (() => {
+            // Build the list: focused (in framework or synthesized) first, then the rest
+            const existingNames = new Set(readiness.skillGaps.map(s => s.skillName.toLowerCase()));
+            const synthesized: SkillReadiness[] = focusedSkills
+              .filter(name => !existingNames.has(name.toLowerCase()))
+              .map(name => ({
+                skillName: name,
+                mastery: 0,
+                proficiency: 'beginner',
+                gap: 100,
+              }));
+            const merged = [...readiness.skillGaps, ...synthesized];
+            const sorted = [...merged].sort((a, b) => {
+              const af = focusedSet.has(a.skillName.toLowerCase()) ? 0 : 1;
+              const bf = focusedSet.has(b.skillName.toLowerCase()) ? 0 : 1;
+              if (af !== bf) return af - bf;
+              return a.mastery - b.mastery;
+            });
+
+            return (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Skill Gaps & Resources</h3>
+                {sorted.map((skill) => {
+                  const isFocused = focusedSet.has(skill.skillName.toLowerCase());
+                  return (
+                    <SkillGapCard
+                      key={skill.skillName}
+                      skill={skill}
+                      courses={getCoursesFor(skill.skillName)}
+                      savedCourses={readiness.savedCourses}
+                      onSaveCourse={(course) => handleSaveCourse(course, skill.skillName)}
+                      onUnsaveCourse={(ct) => handleUnsaveCourse(ct, skill.skillName)}
+                      onValidateCourse={(course) => handleValidateCourse(course, skill.skillName)}
+                      validating={quizLoading}
+                      defaultExpanded={isFocused || skill.mastery < 50}
+                      highlighted={isFocused}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           <SavedCoursesSection courses={readiness.savedCourses} onValidateCourse={handleValidateSavedCourse} onUnsaveCourse={handleUnsaveCourse} validating={quizLoading} />
 

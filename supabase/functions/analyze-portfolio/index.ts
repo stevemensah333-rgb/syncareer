@@ -120,17 +120,19 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are an expert career advisor and portfolio reviewer for South Africa. Analyze the provided CV and portfolio content thoroughly.
+    const systemPrompt = `You are an expert career advisor and portfolio reviewer. Analyze the provided CV and portfolio content thoroughly.
 
 Your analysis must cover:
 1. **Strengths**: Key strengths and standout skills
 2. **Areas for Improvement**: Specific areas that need work
 3. **Skills Gap Analysis**: Missing skills that are in demand
 4. **Project Quality**: Assessment of portfolio projects
-5. **Market Fit**: How well the profile fits current SA job market
+5. **Market Fit**: How well the profile fits the candidate's target job market
 6. **Actionable Recommendations**: Specific steps to improve
 
-Be constructive, specific, and practical in your advice. Focus on the South African job market context.`;
+When analysing a CV, ALWAYS extract structured personal info, education, and experience entries into the dedicated fields (extractedPersonal, extractedEducation, extractedExperience) so the data can be used to pre-fill a CV builder. Only populate fields you are confident are present in the document — leave unknown values as empty strings/arrays.
+
+Be constructive, specific, and practical in your advice.`;
 
     // Build user message parts - supports both text and binary document input
     const userMessageParts: Array<{ type: string; text?: string; image_url?: { url: string } }> = [];
@@ -227,9 +229,52 @@ Be constructive, specific, and practical in your advice. Focus on the South Afri
                     type: "array",
                     items: { type: "string" },
                     description: "Key skills the candidate should develop to improve employability"
+                  },
+                  extractedPersonal: {
+                    type: "object",
+                    properties: {
+                      firstName: { type: "string" },
+                      lastName: { type: "string" },
+                      email: { type: "string" },
+                      phone: { type: "string" },
+                      linkedIn: { type: "string" },
+                      nationality: { type: "string" }
+                    },
+                    required: ["firstName", "lastName", "email", "phone", "linkedIn", "nationality"],
+                    additionalProperties: false,
+                    description: "Personal info extracted from the CV. Use empty string for unknown values."
+                  },
+                  extractedEducation: {
+                    type: "object",
+                    properties: {
+                      university: { type: "string" },
+                      degree: { type: "string" },
+                      location: { type: "string" },
+                      graduationDate: { type: "string" },
+                      gpa: { type: "string" }
+                    },
+                    required: ["university", "degree", "location", "graduationDate", "gpa"],
+                    additionalProperties: false,
+                    description: "Most recent / highest education entry. Use empty string for unknown values."
+                  },
+                  extractedExperience: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        company: { type: "string" },
+                        role: { type: "string" },
+                        location: { type: "string" },
+                        date: { type: "string" },
+                        bullets: { type: "array", items: { type: "string" } }
+                      },
+                      required: ["company", "role", "location", "date", "bullets"],
+                      additionalProperties: false
+                    },
+                    description: "Work experience entries extracted from the CV."
                   }
                 },
-                required: ["analysis", "extractedSkills", "experienceSummary", "scores", "suggestedRoles", "missingSkills"],
+                required: ["analysis", "extractedSkills", "experienceSummary", "scores", "suggestedRoles", "missingSkills", "extractedPersonal", "extractedEducation", "extractedExperience"],
                 additionalProperties: false
               }
             }
@@ -278,6 +323,9 @@ Be constructive, specific, and practical in your advice. Focus on the South Afri
             scores: structured.scores || null,
             suggestedRoles: structured.suggestedRoles || [],
             missingSkills: structured.missingSkills || [],
+            extractedPersonal: structured.extractedPersonal || null,
+            extractedEducation: structured.extractedEducation || null,
+            extractedExperience: structured.extractedExperience || [],
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -298,6 +346,9 @@ Be constructive, specific, and practical in your advice. Focus on the South Afri
         scores: null,
         suggestedRoles: [],
         missingSkills: [],
+        extractedPersonal: null,
+        extractedEducation: null,
+        extractedExperience: [],
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

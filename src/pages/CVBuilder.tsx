@@ -3,7 +3,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Download, Eye, Sparkles, Save, FileText, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { Download, Eye, Sparkles, Save, FileText, MessageCircle, CheckCircle2, Upload } from 'lucide-react';
 import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
 import { toast } from 'sonner';
 import { CVFormPersonal } from '@/components/cv-builder/CVFormPersonal';
@@ -15,7 +15,10 @@ import { CVFormSkills } from '@/components/cv-builder/CVFormSkills';
 import { CVPreview } from '@/components/cv-builder/CVPreview';
 import { CVAIAssistant } from '@/components/cv-builder/CVAIAssistant';
 import { CVStrengthScore } from '@/components/cv-builder/CVStrengthScore';
+import { CVUploadDialog } from '@/components/cv-builder/CVUploadDialog';
+import { CVSkillGapPanel } from '@/components/cv-builder/CVSkillGapPanel';
 import { useCVStrengthScore } from '@/hooks/useCVStrengthScore';
+import { useCVAnalysis } from '@/hooks/useCVAnalysis';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { supabase } from '@/integrations/supabase/client';
@@ -107,6 +110,8 @@ const CVBuilder = () => {
   const previewRef = useRef<HTMLDivElement>(null);
   const strengthResult = useCVStrengthScore(cvData);
   const feedbackModal = useFeedbackModal('cv_builder');
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const cvAnalysis = useCVAnalysis();
 
   // Auto-load saved CV on mount
   useEffect(() => {
@@ -330,7 +335,14 @@ const CVBuilder = () => {
               <FileText className="h-6 w-6 text-primary" />
               <h2 className="text-xl font-semibold">Build Your CV</h2>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                variant="outline"
+                onClick={() => setUploadOpen(true)}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Existing CV
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowPreview(!showPreview)}
@@ -419,9 +431,12 @@ const CVBuilder = () => {
           </Tabs>
         </div>
 
-        {/* Sidebar: Score + AI Assistant */}
+        {/* Sidebar: Score + Skill Gap + AI Assistant */}
         <div className="space-y-6">
           <CVStrengthScore result={strengthResult} />
+          {cvAnalysis.result && (
+            <CVSkillGapPanel result={cvAnalysis.result} />
+          )}
           <CVAIAssistant
             cvData={cvData}
             activeSection={activeTab}
@@ -458,6 +473,17 @@ const CVBuilder = () => {
         isOpen={feedbackModal.isOpen}
         onSubmit={feedbackModal.submitFeedback}
         onDismiss={feedbackModal.dismiss}
+      />
+
+      {/* CV Upload Dialog */}
+      <CVUploadDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        status={cvAnalysis.status}
+        error={cvAnalysis.error}
+        onAnalyze={cvAnalysis.analyzeFile}
+        onApply={() => cvAnalysis.applyToCVData(setCVData)}
+        onReset={cvAnalysis.reset}
       />
     </PageLayout>
   );
