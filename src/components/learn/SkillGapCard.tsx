@@ -22,6 +22,8 @@ interface SkillGapCardProps {
   onUnsaveCourse: (courseTitle: string) => void;
   onValidateCourse: (course: SkillCourse) => void;
   validating: boolean;
+  defaultExpanded?: boolean;
+  highlighted?: boolean;
 }
 
 const difficultyColor: Record<string, string> = {
@@ -32,8 +34,9 @@ const difficultyColor: Record<string, string> = {
 
 const SkillGapCard: React.FC<SkillGapCardProps> = ({
   skill, courses, savedCourses, onSaveCourse, onUnsaveCourse, onValidateCourse, validating,
+  defaultExpanded, highlighted,
 }) => {
-  const [expanded, setExpanded] = useState(skill.mastery < 50);
+  const [expanded, setExpanded] = useState(defaultExpanded ?? skill.mastery < 50);
 
   const isSaved = (courseTitle: string) =>
     savedCourses.some(c => c.course_title === courseTitle && c.skill_name === skill.skillName);
@@ -42,7 +45,7 @@ const SkillGapCard: React.FC<SkillGapCardProps> = ({
     savedCourses.some(c => c.course_title === courseTitle && c.skill_name === skill.skillName && c.status === 'completed');
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={`overflow-hidden ${highlighted ? 'border-primary ring-1 ring-primary/30' : ''}`}>
       <CardContent className="p-0">
         {/* Skill Header */}
         <button
