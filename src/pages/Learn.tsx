@@ -318,14 +318,72 @@ const Learn = () => {
             </Card>
           )}
 
-          {hasSkills && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Skill Gaps & Resources</h3>
-              {readiness.skillGaps.map((skill) => (
-                <SkillGapCard key={skill.skillName} skill={skill} courses={getCoursesFor(skill.skillName)} savedCourses={readiness.savedCourses} onSaveCourse={(course) => handleSaveCourse(course, skill.skillName)} onUnsaveCourse={(ct) => handleUnsaveCourse(ct, skill.skillName)} onValidateCourse={(course) => handleValidateCourse(course, skill.skillName)} validating={quizLoading} />
-              ))}
-            </div>
+          {/* Focus banner from CV scan */}
+          {focusedSkills.length > 0 && (
+            <Card className="border-primary/40 bg-primary/5">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      Focused from your CV
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {focusedSkills.map(s => (
+                        <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={clearFocus} className="shrink-0 h-7 gap-1 text-xs">
+                    <X className="h-3 w-3" /> Clear
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
+
+          {(hasSkills || focusedSkills.length > 0) && (() => {
+            // Build the list: focused (in framework or synthesized) first, then the rest
+            const existingNames = new Set(readiness.skillGaps.map(s => s.skillName.toLowerCase()));
+            const synthesized: SkillReadiness[] = focusedSkills
+              .filter(name => !existingNames.has(name.toLowerCase()))
+              .map(name => ({
+                skillName: name,
+                mastery: 0,
+                proficiency: 'beginner',
+                gap: 100,
+              }));
+            const merged = [...readiness.skillGaps, ...synthesized];
+            const sorted = [...merged].sort((a, b) => {
+              const af = focusedSet.has(a.skillName.toLowerCase()) ? 0 : 1;
+              const bf = focusedSet.has(b.skillName.toLowerCase()) ? 0 : 1;
+              if (af !== bf) return af - bf;
+              return a.mastery - b.mastery;
+            });
+
+            return (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Skill Gaps & Resources</h3>
+                {sorted.map((skill) => {
+                  const isFocused = focusedSet.has(skill.skillName.toLowerCase());
+                  return (
+                    <SkillGapCard
+                      key={skill.skillName}
+                      skill={skill}
+                      courses={getCoursesFor(skill.skillName)}
+                      savedCourses={readiness.savedCourses}
+                      onSaveCourse={(course) => handleSaveCourse(course, skill.skillName)}
+                      onUnsaveCourse={(ct) => handleUnsaveCourse(ct, skill.skillName)}
+                      onValidateCourse={(course) => handleValidateCourse(course, skill.skillName)}
+                      validating={quizLoading}
+                      defaultExpanded={isFocused || skill.mastery < 50}
+                      highlighted={isFocused}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           <SavedCoursesSection courses={readiness.savedCourses} onValidateCourse={handleValidateSavedCourse} onUnsaveCourse={handleUnsaveCourse} validating={quizLoading} />
 
