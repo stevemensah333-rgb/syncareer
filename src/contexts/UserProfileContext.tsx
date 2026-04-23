@@ -73,14 +73,15 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
 
       const userId = session.user.id;
 
-      // Fetch profile and both role-specific details in parallel
+      // Fetch profile and both role-specific details in parallel.
+      // Use maybeSingle() so missing role rows (new users mid-onboarding) don't throw 406s.
       const [profileResult, studentResult, employerResult] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).single(),
-        supabase.from('student_details').select('*').eq('user_id', userId).single(),
-        supabase.from('employer_details').select('*').eq('user_id', userId).single(),
+        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+        supabase.from('student_details').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('employer_details').select('*').eq('user_id', userId).maybeSingle(),
       ]);
 
-      if (profileResult.error && profileResult.error.code !== 'PGRST116') {
+      if (profileResult.error) {
         console.error('Error fetching profile:', profileResult.error);
       }
 
