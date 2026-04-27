@@ -1,0 +1,93 @@
+{
+  "javascript": [
+    { "title": "JavaScript Algorithms and Data Structures", "provider": "freeCodeCamp", "url": "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/", "description": "300+ hour certification covering ES6, regex, debugging, and OOP." },
+    { "title": "The Odin Project — Full Stack JavaScript", "provider": "The Odin Project", "url": "https://www.theodinproject.com/paths/full-stack-javascript", "description": "Project-based open-source curriculum, completely free." },
+    { "title": "JavaScript Guide", "provider": "MDN Web Docs", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide", "description": "The authoritative reference and tutorial maintained by Mozilla." }
+  ],
+  "python": [
+    { "title": "CS50's Introduction to Programming with Python", "provider": "Harvard / edX (audit free)", "url": "https://cs50.harvard.edu/python/", "description": "Harvard's full Python course — free to audit, no certificate fee." },
+    { "title": "Scientific Computing with Python", "provider": "freeCodeCamp", "url": "https://www.freecodecamp.org/learn/scientific-computing-with-python/", "description": "Free certification covering Python fundamentals and projects." },
+    { "title": "Google's Python Class", "provider": "Google for Developers", "url": "https://developers.google.com/edu/python", "description": "Free class for people with a little programming experience." }
+  ],
+  "data analysis": [
+    { "title": "Data Analysis with Python", "provider": "freeCodeCamp", "url": "https://www.freecodecamp.org/learn/data-analysis-with-python/", "description": "Pandas, NumPy, Matplotlib, and Seaborn with hands-on projects." },
+    { "title": "Statistics and Probability", "provider": "Khan Academy", "url": "https://www.khanacademy.org/math/statistics-probability", "description": "Free foundational stats — essential for data analysis." },
+    { "title": "Google Data Analytics — Free Resources", "provider": "Google Career Certificates", "url": "https://grow.google/certificates/data-analytics/", "description": "Free preview content and learning materials." }
+  ],
+  "data science": [
+    { "title": "Machine Learning Specialization (audit)", "provider": "Coursera (Andrew Ng, free audit)", "url": "https://www.coursera.org/specializations/machine-learning-introduction", "description": "Audit for free — only pay if you want a certificate." },
+    { "title": "Kaggle Learn", "provider": "Kaggle", "url": "https://www.kaggle.com/learn", "description": "Free hands-on micro-courses in Python, ML, SQL, and deep learning." }
+  ],
+  "marketing": [
+    { "title": "Inbound Marketing Certification", "provider": "HubSpot Academy", "url": "https://academy.hubspot.com/courses/inbound-marketing", "description": "Free certificate course — globally recognized." },
+    { "title": "Fundamentals of Digital Marketing", "provider": "Google Digital Garage", "url": "https://learndigital.withgoogle.com/digitalgarage/course/digital-marketing", "description": "Free 40-hour certified course from Google." },
+    { "title": "Meta Blueprint — Free Courses", "provider": "Meta", "url": "https://www.facebook.com/business/learn", "description": "Free social media marketing courses from Meta." }
+  ],
+  "digital marketing": [
+    { "title": "Fundamentals of Digital Marketing", "provider": "Google Digital Garage", "url": "https://learndigital.withgoogle.com/digitalgarage/course/digital-marketing", "description": "Free 40-hour certified course from Google." },
+    { "title": "SEO Certification Course", "provider": "HubSpot Academy", "url": "https://academy.hubspot.com/courses/seo-training", "description": "Free certificate in search engine optimization." }
+  ],
+  "communication": [
+    { "title": "Improving Communication Skills", "provider": "Coursera (Wharton, free audit)", "url": "https://www.coursera.org/learn/wharton-communication-skills", "description": "Audit for free — Wharton-quality teaching." },
+    { "title": "TED Masterclass — Public Speaking", "provider": "TED", "url": "https://masterclass.ted.com/", "description": "Free public speaking foundations from TED." }
+  ],
+  "public speaking": [
+    { "title": "TED Masterclass", "provider": "TED", "url": "https://masterclass.ted.com/", "description": "Free public speaking course from TED." },
+    { "title": "Toastmasters Pathways — Free Resources", "provider": "Toastmasters International", "url": "https://www.toastmasters.org/resources", "description": "Free guides and resources for speakers." }
+  ],
+  "leadership": [
+    { "title": "Leading People and Teams", "provider": "Coursera (Michigan, free audit)", "url": "https://www.coursera.org/specializations/leading-teams", "description": "Free audit of a top university leadership program." },
+    { "title": "MindTools — Leadership Skills", "provider": "MindTools", "url": "https://www.mindtools.com/pages/main/newMN_LDR.htm", "description": "Free articles and frameworks on leadership essentials." }
+  ],
+  "project management": [
+    { "title": "Google Project Management — Free Resources", "provider": "Google Career Certificates", "url": "https://grow.google/certificates/project-management/", "description": "Free preview content from Google's PM certificate." },
+    { "title": "PM Fundamentals", "provider": "OpenLearn (Open University)", "url": "https://www.open.edu/openlearn/money-business/leadership-management/project-management-the-start-the-project-journey/content-section-0", "description": "Free university-level project management course." }
+  ],
+  "excel": [
+    { "title": "Excel Crash Course", "provider": "Corporate Finance Institute", "url": "https://corporatefinanceinstitute.com/resources/excel/free-excel-crash-course/", "description": "Free Excel training used by analysts worldwide." },
+    { "title": "Microsoft Excel Help & Learning", "provider": "Microsoft", "url": "https://support.microsoft.com/en-us/excel", "description": "Official free Excel tutorials from Microsoft." }
+  ],
+  "sql": [
+    { "title": "Relational Database (SQL)", "provider": "freeCodeCamp", "url": "https://www.freecodecamp.org/learn/relational-database/", "description": "Free SQL certification with hands-on projects." },
+    { "title": "SQLBolt — Interactive SQL Tutorial", "provider": "SQLBolt", "url": "https://sqlbolt.com/", "description": "Free interactive lessons covering SQL from basics to advanced." }
+  ],
+  "web development": [
+    { "title": "Responsive Web Design", "provider": "freeCodeCamp", "url": "https://www.freecodecamp.org/learn/2022/responsive-web-design/", "description": "Free 300-hour certification — HTML, CSS, accessibility." },
+    { "title": "Foundations Path", "provider": "The Odin Project", "url": "https://www.theodinproject.com/paths/foundations/courses/foundations", "description": "Free, project-based intro to web development." }
+  ],
+  "design": [
+    { "title": "Google UX Design — Free Resources", "provider": "Google Career Certificates", "url": "https://grow.google/certificates/ux-design/", "description": "Free preview content from Google's UX certificate." },
+    { "title": "Design Better — Library", "provider": "InVision", "url": "https://www.designbetter.co/", "description": "Free books and podcasts on product design." }
+  ],
+  "ux design": [
+    { "title": "Google UX Design — Free Resources", "provider": "Google Career Certificates", "url": "https://grow.google/certificates/ux-design/", "description": "Free preview content from Google's UX certificate." },
+    { "title": "Interaction Design Foundation — Free Articles", "provider": "IxDF", "url": "https://www.interaction-design.org/literature", "description": "Hundreds of free design articles and references." }
+  ],
+  "accounting": [
+    { "title": "Accounting Fundamentals", "provider": "Corporate Finance Institute", "url": "https://corporatefinanceinstitute.com/resources/accounting/accounting-fundamentals/", "description": "Free intro to financial accounting concepts." },
+    { "title": "Introduction to Financial Accounting (audit)", "provider": "Coursera (Wharton, free audit)", "url": "https://www.coursera.org/learn/wharton-accounting", "description": "Audit Wharton's accounting course for free." }
+  ],
+  "finance": [
+    { "title": "Introduction to Corporate Finance (audit)", "provider": "Coursera (Wharton, free audit)", "url": "https://www.coursera.org/learn/wharton-finance", "description": "Free audit of Wharton's intro finance course." },
+    { "title": "Khan Academy — Finance and Capital Markets", "provider": "Khan Academy", "url": "https://www.khanacademy.org/economics-finance-domain/core-finance", "description": "Free comprehensive finance fundamentals." }
+  ],
+  "machine learning": [
+    { "title": "Machine Learning Specialization (audit)", "provider": "Coursera (Andrew Ng, free audit)", "url": "https://www.coursera.org/specializations/machine-learning-introduction", "description": "Andrew Ng's flagship ML course — free to audit." },
+    { "title": "Kaggle Learn — Intro to ML", "provider": "Kaggle", "url": "https://www.kaggle.com/learn/intro-to-machine-learning", "description": "Free hands-on intro using real datasets." }
+  ],
+  "ai": [
+    { "title": "Elements of AI", "provider": "University of Helsinki", "url": "https://www.elementsofai.com/", "description": "Free intro to AI for non-technical learners." },
+    { "title": "Deep Learning Specialization (audit)", "provider": "Coursera (Andrew Ng, free audit)", "url": "https://www.coursera.org/specializations/deep-learning", "description": "Free audit of the deep learning specialization." }
+  ],
+  "writing": [
+    { "title": "Grammar and Punctuation (audit)", "provider": "Coursera (UC Irvine, free audit)", "url": "https://www.coursera.org/learn/grammar-punctuation", "description": "Free audit of a university writing course." },
+    { "title": "Purdue OWL Writing Lab", "provider": "Purdue University", "url": "https://owl.purdue.edu/owl/general_writing/index.html", "description": "Free comprehensive writing reference." }
+  ],
+  "research": [
+    { "title": "Understanding Research Methods (audit)", "provider": "Coursera (London, free audit)", "url": "https://www.coursera.org/learn/research-methods", "description": "Free audit covering academic and applied research." }
+  ],
+  "law": [
+    { "title": "Introduction to American Law (audit)", "provider": "Coursera (Penn, free audit)", "url": "https://www.coursera.org/specializations/american-law", "description": "Audit a Penn law specialization for free." },
+    { "title": "Harvard Law — Free Online Courses", "provider": "Harvard Law School", "url": "https://hls.harvard.edu/dept/academics/free-online-courses/", "description": "Selection of free Harvard Law materials." }
+  ]
+}
