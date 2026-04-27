@@ -436,6 +436,33 @@ const Learn = () => {
       </div>
 
       <ModuleQuizDialog open={quizOpen} onOpenChange={setQuizOpen} questions={quizQuestions} loading={quizLoading} pathTitle={`${major} Career Readiness`} moduleNumber={1} skillName={activeSkill} onPass={handleQuizPass} onRetry={handleQuizRetry} />
+
+      <YouTubePlayerDialog
+        open={youtubeDialogOpen}
+        onOpenChange={setYoutubeDialogOpen}
+        videoId={activeYouTube?.videoId || null}
+        title={activeYouTube?.title || ''}
+        channel={activeYouTube?.channel || ''}
+        duration={activeYouTube?.durationLabel || ''}
+        marking={quizLoading}
+        onMarkComplete={() => {
+          if (!activeYouTube) return;
+          setYoutubeDialogOpen(false);
+          const targetSkill = readiness.skillGaps.find(s => s.mastery < 100) || readiness.skillGaps[0];
+          if (!targetSkill) return;
+          handleValidateCourse(
+            {
+              title: activeYouTube.title,
+              provider: `YouTube · ${activeYouTube.channel}`,
+              url: activeYouTube.url,
+              difficulty: 'Beginner',
+              estimatedImpact: 15,
+              duration: activeYouTube.durationLabel,
+            },
+            targetSkill.skillName,
+          );
+        }}
+      />
     </PageLayout>
   );
 };
