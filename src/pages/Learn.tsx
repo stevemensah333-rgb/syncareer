@@ -14,7 +14,9 @@ import ReadinessRadar from '@/components/learn/ReadinessRadar';
 import PillarCards from '@/components/learn/PillarCards';
 import SkillGapCard, { type SkillCourse } from '@/components/learn/SkillGapCard';
 import SavedCoursesSection from '@/components/learn/SavedCoursesSection';
+import YouTubePlayerDialog from '@/components/learn/YouTubePlayerDialog';
 import { useCareerReadiness, type CourseProgress, type SkillReadiness } from '@/hooks/useCareerReadiness';
+import { useFreeResources, type YouTubeResource } from '@/hooks/useFreeResources';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface LearningStreak {
