@@ -371,11 +371,16 @@ const Learn = () => {
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Skill Gaps & Resources</h3>
                 {sorted.map((skill) => {
                   const isFocused = focusedSet.has(skill.skillName.toLowerCase());
+                  const freeEntry = freeResources.getEntry(skill.skillName);
                   return (
                     <SkillGapCard
                       key={skill.skillName}
                       skill={skill}
                       courses={getCoursesFor(skill.skillName)}
+                      freeResources={freeEntry.data}
+                      freeLoading={freeEntry.loading}
+                      onRequestFreeResources={() => freeResources.fetchFor(skill.skillName)}
+                      onPlayYouTube={(v) => { setActiveYouTube(v); setYoutubeDialogOpen(true); }}
                       savedCourses={readiness.savedCourses}
                       onSaveCourse={(course) => handleSaveCourse(course, skill.skillName)}
                       onUnsaveCourse={(ct) => handleUnsaveCourse(ct, skill.skillName)}
