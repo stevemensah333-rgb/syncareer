@@ -1,98 +1,146 @@
+## Plan: Hybrid free-content learning model in the Learn tab
 
+Replace the current Coursera/Udemy/edX-only course suggestions with a **two-tier system**:
 
-## Plan: CV Builder → Learn Integration (close the skill-gap loop)
+1. **Free Path (default, primary)** — YouTube videos + curated free platforms (freeCodeCamp, Khan Academy, MIT OpenCourseWare, CS50, The Odin Project, Codecademy free tier, Google Digital Garage, HubSpot Academy, etc.)
+2. **Premium Path (optional, collapsed)** — Coursera/edX/Udemy as upgrade pathway for students who want certificates
 
-Wire the existing `analyze-portfolio` Edge Function into the CV Builder UI, then surface a tight "skills you have vs. skills you need" panel that deep-links to Learn for each missing skill. No new tab, no new page — strengthen the Guided Journey spine.
+This eliminates paywall friction for the Ghana/West Africa audience while keeping the existing skill-validation loop intact.
+
+---
 
 ### What the user will see
 
-**In CV Builder (`/cv-builder`):**
-
-1. A new **"Upload Existing CV"** button next to *Preview / Save / Download PDF* (top right of the form). Accepts PDF or DOCX, max 5 MB.
-2. While analyzing: an inline progress card replaces the form area showing "Reading your CV…" with a spinner.
-3. After analysis completes:
-   - Form tabs auto-fill with extracted Personal, Education, Experience, Projects, and Skills (toast: *"CV analyzed — review and edit each section"*).
-   - The CV Strength Score in the sidebar updates from the AI-returned `scores.overall`.
-4. A new **"Skill Gap Analysis"** card appears in the sidebar, *below* the Strength Score and *above* the AI Assistant. It shows:
-   - **Roles you fit**: 3–5 chips from `suggestedRoles` (e.g. *Junior Data Analyst*, *Marketing Associate*).
-   - **Skills to develop**: up to 6 chips from `missingSkills`. Each chip is clickable.
-   - A primary button: **"Close these gaps in Learn →"** that navigates to `/learn?focus=<skill1>,<skill2>,...`.
-
-**In Learn (`/learn`):**
-
-5. When `?focus=` is present in the URL, a new banner appears at the top of the page:
-   > "Based on your CV, focus on these skills: [chip] [chip] [chip]" — with a *Clear focus* link.
-6. The "Skill Gaps & Resources" section reorders so focused skills come first, and each focused skill card auto-expands.
-7. If a focused skill isn't already in the user's career framework, it's still injected as a temporary card so the user always sees the courses for what their CV said they were missing.
-
-### Files to add
-
-| File | Purpose |
-|------|---------|
-| `src/components/cv-builder/CVUploadDialog.tsx` | Dialog with drag-drop file picker, file validation (PDF/DOCX, ≤5 MB), base64 conversion, `analyze-portfolio` invocation, error handling. |
-| `src/components/cv-builder/CVSkillGapPanel.tsx` | Sidebar card rendering `suggestedRoles` chips + `missingSkills` chips + the *Close these gaps in Learn* CTA. |
-| `src/hooks/useCVAnalysis.ts` | Manages analysis state (`idle / uploading / analyzing / done / error`), holds the structured response from `analyze-portfolio`, and exposes `analyzeFile(file)` + `applyToCVData(setCVData)`. |
-
-### Files to modify
-
-| File | Change |
-|------|--------|
-| `src/pages/CVBuilder.tsx` | Add **Upload Existing CV** button → opens `CVUploadDialog`. On success, call `applyToCVData(setCVData)` to merge AI-extracted fields into existing CV state (don't overwrite non-empty user fields). Render `<CVSkillGapPanel />` in the sidebar when analysis result exists. |
-| `src/pages/Learn.tsx` | Read `?focus=` from `useSearchParams`. Inject focused skills into the rendered list, auto-expand their `SkillGapCard`s, render a dismissible "Focused from your CV" banner. |
-| `src/components/learn/SkillGapCard.tsx` | Accept optional `defaultExpanded` prop (so focused skills open automatically). |
-
-### How extracted data merges into the CV form
-
-The `analyze-portfolio` response includes free-form analysis text and structured `extractedSkills`, `experienceSummary`, `scores`, `suggestedRoles`, `missingSkills`. Since the function does **not** currently return structured `personal/education/experience/projects` blocks, we will:
-
-- **Skills**: merge `extractedSkills[].name` into `cvData.skills` (dedupe, keep user's existing).
-- **Experience summary**: surface `experienceSummary.keyAchievements` as a *suggested bullets* hint inside the AI Assistant sidebar — user clicks to insert into the active Experience entry.
-- **Personal / Education / Experience details**: the function would need a small extension to return these structured. We will extend `analyze-portfolio` to add `extractedPersonal`, `extractedEducation`, and `extractedExperience` to the tool schema (additive, backward-compatible), and merge them into `cvData` only where current fields are empty.
-- **Strength Score**: feed `scores.overall` into the sidebar score card alongside the existing `useCVStrengthScore` heuristic (show whichever is more recent / both as "AI score" + "Heuristic score").
-
-### Edge function change (`supabase/functions/analyze-portfolio/index.ts`)
-
-Add three optional properties to the existing `analyze_portfolio` tool schema:
-
-- `extractedPersonal`: `{ firstName, lastName, email, phone, linkedIn, nationality }`
-- `extractedEducation`: `{ university, degree, location, graduationDate, gpa }`
-- `extractedExperience`: `[{ company, role, location, date, bullets[] }]`
-
-These are additive — existing callers keep working. Update the system prompt to instruct the model to populate them when confident.
-
-### Loop, end-to-end
+Each skill gap card in `Learn` will now show two clearly-labeled tabs/sections:
 
 ```text
-Upload CV (PDF/DOCX)
-   │
-   ▼
-analyze-portfolio (Edge fn, Gemini-2.5-flash, tool calling)
-   │
-   ├─► Auto-fill CV form tabs (where empty)
-   ├─► Update Strength Score
-   ├─► Sidebar: "Roles you fit" + "Skills to develop"
-   │
-   └─► [Close these gaps in Learn →]
-            │
-            ▼
-       /learn?focus=skill1,skill2,skill3
-            │
-            ├─► Banner: "Focused from your CV"
-            ├─► Focused skills sorted to top, auto-expanded
-            └─► Existing course recommendation + validation flow
+┌─ Communication Skills ──────────────────── 35% mastery ─┐
+│                                                          │
+│  [ Free Path ]  [ Premium Path ]                         │
+│                                                          │
+│  ▶ Public Speaking Masterclass                           │
+│    YouTube · TEDx · 12 min · Free                        │
+│    [ Watch ] [ Save ] [ Mark Complete ]                  │
+│                                                          │
+│  ▶ Effective Communication for Professionals             │
+│    freeCodeCamp · 2h video · Free                        │
+│    [ Watch ] [ Save ] [ Mark Complete ]                  │
+│                                                          │
+│  ─ Want a certificate? ──────────────────                │
+│  [ See premium options ▾ ]                               │
+└──────────────────────────────────────────────────────────┘
 ```
 
-### Guardrails
+When the user clicks "Watch" on a YouTube item, it opens an **embedded player in a dialog** (not a new tab), so they stay inside Syncareer. They can mark complete and trigger the validation quiz right after watching.
 
-- **File limits**: 5 MB max, PDF / DOCX / DOC only, validated client-side before base64 encoding.
-- **Don't clobber user input**: merge logic only fills empty fields; existing entries are preserved.
-- **Auth**: `analyze-portfolio` already enforces JWT — no additional changes.
-- **Cost / abuse**: a single CV upload per session is sufficient; we'll show a "Re-analyze" link rather than auto-running on every form change.
-- **Failure modes**: if the AI returns no structured skills (fallback path in the Edge fn), the dialog shows the raw analysis text and the user can dismiss without changes — CV form stays untouched.
+Existing behavior preserved:
+- Save / Unsave / Mark Complete → triggers `generate-module-quiz` → updates mastery
+- Saved Courses section still works
+- Streak tracking still works
 
-### Out of scope (for this change)
+### Source strategy (no scraping needed)
 
-- No Skills tab in the sidebar (per earlier conversation: integration > new tab).
-- No retraining of the Strength Score formula — we display the AI score alongside, not as a replacement.
-- No changes to Portfolio, Assessment, or the Skill Graph schema.
+We use **YouTube Data API v3 search** server-side (free tier: 10,000 units/day = ~100 searches; more than enough). This is cleaner, more reliable, and fully ToS-compliant compared to scraping.
 
+For non-YouTube free platforms, we use a **curated source registry** (hand-maintained JSON in the edge function) mapping skill keywords → known free course URLs from trusted providers. This is faster, higher-quality, and avoids scraping fragility. Examples:
+- `JavaScript` → freeCodeCamp JS course, The Odin Project, MDN tutorials
+- `Python` → CS50P (Harvard, free), freeCodeCamp Python, Google's Python Class
+- `Marketing` → HubSpot Academy, Google Digital Garage, Meta Blueprint free
+- `Data Analysis` → Khan Academy Statistics, Google Data Analytics free preview
+
+Firecrawl is **not** needed for this — it would be overkill and slower.
+
+### Trust & quality filters for YouTube
+
+To avoid recommending low-quality videos:
+- Filter by minimum view count (≥ 50k)
+- Filter by minimum duration (≥ 5 min — excludes shorts/clickbait)
+- Whitelist of high-quality channels gets priority boost: `freeCodeCamp.org`, `CS50`, `Fireship`, `Traversy Media`, `The Net Ninja`, `Khan Academy`, `MIT OpenCourseWare`, `TED-Ed`, `HubSpot`, `Google Career Certificates`, `Coursera` (their own free YouTube content), `Crash Course`, `3Blue1Brown`
+- Sort by relevance, then by view count
+
+---
+
+### Technical changes
+
+**1. New edge function: `suggest-free-resources`**
+Replaces calls to `suggest-courses` for the free path. Takes `{ skillName, careerPath, major }` and returns:
+```ts
+{
+  youtube: [{ title, channel, videoId, duration, viewCount, thumbnailUrl, url }],
+  curated: [{ title, provider, url, description, isFree: true }]
+}
+```
+- Calls YouTube Data API v3 (`search.list` + `videos.list` for stats)
+- Looks up curated registry for the skill
+- Caches per-(skill, career_path) for 7 days in a new `cached_free_resources` table to stay under YouTube quota
+
+**2. Update existing `suggest-courses` edge function**
+Becomes the "premium path" — already returns Coursera/Udemy/edX. No change to its logic, just relabeled in UI as optional.
+
+**3. New component: `YouTubePlayerDialog.tsx`**
+- Wraps `<iframe src="youtube.com/embed/{videoId}" />` in a shadcn Dialog
+- Shows title, channel, duration above the player
+- "Mark as Watched" button that triggers existing validation flow
+
+**4. Update `SkillGapCard.tsx`**
+- Add tab switcher: `[Free Path] [Premium Path]`
+- Free path renders YouTube items + curated items with new layout
+- Premium path renders existing Coursera/Udemy/edX cards (collapsed by default with "See premium options" disclosure)
+- Wire YouTube items to open `YouTubePlayerDialog` instead of external link
+
+**5. Update `useAICourses` hook in `Learn.tsx`**
+- Rename to `useSkillResources`
+- Fetch both free + premium in parallel: one call to `suggest-free-resources`, one to existing `suggest-courses`
+- Return `{ freeResources, premiumCourses }` shape
+
+**6. New table: `cached_free_resources`**
+```sql
+CREATE TABLE public.cached_free_resources (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  skill_name text NOT NULL,
+  career_path text NOT NULL,
+  payload jsonb NOT NULL,  -- { youtube: [...], curated: [...] }
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz DEFAULT (now() + interval '7 days'),
+  UNIQUE (skill_name, career_path)
+);
+ALTER TABLE public.cached_free_resources ENABLE ROW LEVEL SECURITY;
+-- Read-only for authenticated users (cache is shared across users by design)
+CREATE POLICY "Authenticated users can read cache"
+  ON public.cached_free_resources FOR SELECT
+  TO authenticated USING (true);
+```
+Edge function uses the service role key to write to it.
+
+**7. Curated registry**
+Store as `supabase/functions/suggest-free-resources/curated.json` — easy to update without redeploys to other functions. Initial seed covers the top 25 majors × 3-5 free resources each.
+
+**8. Save/validate compatibility**
+The existing `user_course_progress` table already supports any URL/title. YouTube videos are saved as `course_title = video title`, `course_url = youtube URL`, `provider = 'YouTube · {channel}'`. No schema change needed.
+
+### Required secret
+
+`YOUTUBE_API_KEY` — free Google Cloud key, takes ~3 minutes to create at console.cloud.google.com → enable YouTube Data API v3 → create API key. I'll request it via the secrets tool when we start implementation.
+
+### Out of scope
+
+- No scraping of YouTube (uses official API)
+- No video transcription / AI summarization (could be a v2)
+- No changes to mastery quiz logic — same `generate-module-quiz` flow
+- No removal of premium courses — they stay as opt-in upgrade path
+- No changes to CV scanner integration — still feeds skill gaps the same way
+
+### Why this beats pure scraping
+
+- **YouTube API is free at our scale** — 10k units/day ≥ 100 searches; with 7-day cache per skill, we'll use < 5% of quota even at thousands of users
+- **No anti-bot risk** — official API, won't break
+- **Faster** — direct API < 200ms vs scraping > 2s
+- **Better metadata** — view counts, durations, channel info come baked in for quality filtering
+- **freeCodeCamp etc. are handled via curated registry** — more accurate than scraping their site
+
+### Cost impact
+
+- YouTube API: $0
+- Lovable AI usage: unchanged (same `generate-module-quiz` calls)
+- Supabase: negligible (one tiny cache table)
+- **Net: zero added cost, removes paywall friction for students**
