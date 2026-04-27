@@ -146,6 +146,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cached_free_resources: {
+        Row: {
+          career_path: string
+          created_at: string
+          expires_at: string
+          id: string
+          payload: Json
+          skill_name: string
+        }
+        Insert: {
+          career_path: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payload: Json
+          skill_name: string
+        }
+        Update: {
+          career_path?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payload?: Json
+          skill_name?: string
+        }
+        Relationships: []
+      }
       career_guidance_sessions: {
         Row: {
           confidence_score: number | null

@@ -14,7 +14,9 @@ import ReadinessRadar from '@/components/learn/ReadinessRadar';
 import PillarCards from '@/components/learn/PillarCards';
 import SkillGapCard, { type SkillCourse } from '@/components/learn/SkillGapCard';
 import SavedCoursesSection from '@/components/learn/SavedCoursesSection';
+import YouTubePlayerDialog from '@/components/learn/YouTubePlayerDialog';
 import { useCareerReadiness, type CourseProgress, type SkillReadiness } from '@/hooks/useCareerReadiness';
+import { useFreeResources, type YouTubeResource } from '@/hooks/useFreeResources';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface LearningStreak {
@@ -121,6 +123,9 @@ const Learn = () => {
   const readiness = useCareerReadiness(major);
   const { dynamicSkills, loading: dynamicLoading } = useDynamicSkills(major);
   const { aiCourses, loading: aiCoursesLoading, fetchAICourses, fetched: aiCoursesFetched } = useAICourses(major);
+  const freeResources = useFreeResources(major);
+  const [activeYouTube, setActiveYouTube] = useState<YouTubeResource | null>(null);
+  const [youtubeDialogOpen, setYoutubeDialogOpen] = useState(false);
 
   const focusParam = searchParams.get('focus');
   const focusedSkills = useMemo(
@@ -366,11 +371,16 @@ const Learn = () => {
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Skill Gaps & Resources</h3>
                 {sorted.map((skill) => {
                   const isFocused = focusedSet.has(skill.skillName.toLowerCase());
+                  const freeEntry = freeResources.getEntry(skill.skillName);
                   return (
                     <SkillGapCard
                       key={skill.skillName}
                       skill={skill}
                       courses={getCoursesFor(skill.skillName)}
+                      freeResources={freeEntry.data}
+                      freeLoading={freeEntry.loading}
+                      onRequestFreeResources={() => freeResources.fetchFor(skill.skillName)}
+                      onPlayYouTube={(v) => { setActiveYouTube(v); setYoutubeDialogOpen(true); }}
                       savedCourses={readiness.savedCourses}
                       onSaveCourse={(course) => handleSaveCourse(course, skill.skillName)}
                       onUnsaveCourse={(ct) => handleUnsaveCourse(ct, skill.skillName)}
@@ -426,6 +436,33 @@ const Learn = () => {
       </div>
 
       <ModuleQuizDialog open={quizOpen} onOpenChange={setQuizOpen} questions={quizQuestions} loading={quizLoading} pathTitle={`${major} Career Readiness`} moduleNumber={1} skillName={activeSkill} onPass={handleQuizPass} onRetry={handleQuizRetry} />
+
+      <YouTubePlayerDialog
+        open={youtubeDialogOpen}
+        onOpenChange={setYoutubeDialogOpen}
+        videoId={activeYouTube?.videoId || null}
+        title={activeYouTube?.title || ''}
+        channel={activeYouTube?.channel || ''}
+        duration={activeYouTube?.durationLabel || ''}
+        marking={quizLoading}
+        onMarkComplete={() => {
+          if (!activeYouTube) return;
+          setYoutubeDialogOpen(false);
+          const targetSkill = readiness.skillGaps.find(s => s.mastery < 100) || readiness.skillGaps[0];
+          if (!targetSkill) return;
+          handleValidateCourse(
+            {
+              title: activeYouTube.title,
+              provider: `YouTube · ${activeYouTube.channel}`,
+              url: activeYouTube.url,
+              difficulty: 'Beginner',
+              estimatedImpact: 15,
+              duration: activeYouTube.durationLabel,
+            },
+            targetSkill.skillName,
+          );
+        }}
+      />
     </PageLayout>
   );
 };
