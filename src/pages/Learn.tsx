@@ -123,6 +123,9 @@ const Learn = () => {
   const readiness = useCareerReadiness(major);
   const { dynamicSkills, loading: dynamicLoading } = useDynamicSkills(major);
   const { aiCourses, loading: aiCoursesLoading, fetchAICourses, fetched: aiCoursesFetched } = useAICourses(major);
+  const freeResources = useFreeResources(major);
+  const [activeYouTube, setActiveYouTube] = useState<YouTubeResource | null>(null);
+  const [youtubeDialogOpen, setYoutubeDialogOpen] = useState(false);
 
   const focusParam = searchParams.get('focus');
   const focusedSkills = useMemo(
