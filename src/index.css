@@ -54,6 +54,12 @@
     --sidebar-accent-foreground: 220 14% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 181 100% 40%;
+
+    /* Landing page (Keitimas-inspired) — scoped, do not affect app theme */
+    --landing-cream: 38 35% 95%;
+    --landing-cream-deep: 36 30% 90%;
+    --landing-amber: 22 78% 55%;
+    --landing-ink: 28 18% 12%;
   }
 
   .dark {

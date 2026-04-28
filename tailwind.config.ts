@@ -21,8 +21,13 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: ['Inter var', 'sans-serif'],
+				serif: ['"Instrument Serif"', 'Georgia', 'serif'],
 			},
 			colors: {
+				'landing-cream': 'hsl(var(--landing-cream))',
+				'landing-cream-deep': 'hsl(var(--landing-cream-deep))',
+				'landing-amber': 'hsl(var(--landing-amber))',
+				'landing-ink': 'hsl(var(--landing-ink))',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

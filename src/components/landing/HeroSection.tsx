@@ -1,80 +1,83 @@
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import landingHero from "@/assets/landing-hero.jpg";
 
 interface HeroSectionProps {
   onSignUp: () => void;
-  onWatchVideo?: () => void;
 }
 
 export default function HeroSection({ onSignUp }: HeroSectionProps) {
   const navigate = useNavigate();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-20">
-      <div className="container mx-auto px-6 relative z-10 text-center max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.08] tracking-tight mb-6">
-            Discover Your Career Path,{" "}
-            <span className="relative inline-block">
-              <span className="text-primary">Build Your CV</span>
-              <motion.span
-                className="absolute -inset-x-4 -inset-y-2 bg-primary/10 rounded-lg -z-10"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-                style={{ transformOrigin: "left" }}
-              />
-            </span>
-            , Ace the Interview
-          </h1>
-          <p className="text-base sm:text-lg text-white/70 leading-relaxed mb-6 max-w-2xl mx-auto">
-            Take a free 5-minute career assessment and get matched to real career paths — no sign-up needed.
-          </p>
-
-          {/* Stats bar */}
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-10 text-sm text-white/50">
-            <span>2,400+ assessments taken</span>
-            <span className="hidden sm:inline">·</span>
-            <span>12+ universities</span>
-            <span className="hidden sm:inline">·</span>
-            <span>100% free to start</span>
-          </div>
-
-          <div className="flex flex-wrap justify-center items-center gap-4">
-            <Button
-              size="lg"
-              onClick={() => navigate('/assessment')}
-              className="rounded-full px-10 h-14 text-base font-semibold gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              Take Free Assessment
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-            <button
-              onClick={onSignUp}
-              className="text-sm text-white/60 hover:text-white underline underline-offset-4 transition-colors"
-            >
-              or create an account
-            </button>
-          </div>
-        </motion.div>
+    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
+      {/* Photographic backdrop — hero only */}
+      <div className="absolute inset-0 -z-10">
+        <img
+          src={landingHero}
+          alt=""
+          width={1920}
+          height={1080}
+          fetchPriority="high"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60" />
       </div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
-      >
-        <div className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-        </div>
-      </motion.div>
+      <div className="relative z-10 container mx-auto px-6 text-center max-w-5xl pt-24 pb-16">
+        <motion.h1
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="font-serif text-white text-5xl sm:text-6xl md:text-7xl lg:text-[7.5rem] leading-[1.02] tracking-tight"
+        >
+          From Uncertainty
+          <br />
+          <span className="italic">to Career Clarity</span>
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.25 }}
+          className="mt-8 text-base sm:text-lg text-white/80 max-w-xl mx-auto"
+        >
+          A free 5-minute assessment, an ATS-ready CV, and AI interview practice — all in one place.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.45 }}
+          className="mt-10 flex flex-wrap justify-center items-center gap-3"
+        >
+          <button
+            onClick={() => navigate('/assessment')}
+            className="rounded-full px-7 h-12 text-sm font-medium bg-landing-ink text-white hover:bg-black transition-colors shadow-lg"
+          >
+            Start your journey
+          </button>
+          <button
+            onClick={onSignUp}
+            className="rounded-full px-7 h-12 text-sm font-medium bg-white text-landing-ink hover:bg-white/90 transition-colors shadow-lg"
+          >
+            Create account
+          </button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.7 }}
+          className="mt-10 flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-white/55 uppercase tracking-[0.2em]"
+        >
+          <span>2,400+ assessments</span>
+          <span className="hidden sm:inline">·</span>
+          <span>12+ universities</span>
+          <span className="hidden sm:inline">·</span>
+          <span>100% free to start</span>
+        </motion.div>
+      </div>
     </section>
   );
 }
