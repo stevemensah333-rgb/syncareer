@@ -1,146 +1,77 @@
-## Plan: Hybrid free-content learning model in the Learn tab
+## Redesign the Syncareer landing page in the Keitimas/Framer aesthetic
 
-Replace the current Coursera/Udemy/edX-only course suggestions with a **two-tier system**:
+I scrolled through the full Framer template — homepage and `/about` — and captured every recurring pattern. The site is built from a small set of reusable "blocks" stacked on cream sections, bookended by a dark photographic hero and a dark photographic CTA. Here's everything I'm porting.
 
-1. **Free Path (default, primary)** — YouTube videos + curated free platforms (freeCodeCamp, Khan Academy, MIT OpenCourseWare, CS50, The Odin Project, Codecademy free tier, Google Digital Garage, HubSpot Academy, etc.)
-2. **Premium Path (optional, collapsed)** — Coursera/edX/Udemy as upgrade pathway for students who want certificates
+### Building blocks observed (will recreate all of them)
 
-This eliminates paywall friction for the Ghana/West Africa audience while keeping the existing skill-validation loop intact.
+1. **Floating pill nav** — centered, dark capsule with small icons + labels, sits over hero
+2. **Photographic hero** — full-bleed warm image (mountains/forest), giant **serif** headline (very tight tracking), small subhead, two pill CTAs (solid black + white outlined)
+3. **Page intro section** — cream background, hairline column dividers, left column = serif H2, right column = body copy, stat row underneath with **orange-accented serif numerals** (10, 500, 92%) over small uppercase labels
+4. **"Why Choose" grid** — cream section, centered serif H2, then 2×3 grid of cards: tiny orange numeral (001-006) → serif title → body copy, hairline dividers between cells
+5. **Two-column feature list** — cream section, centered serif H2, image on left, right column = stacked feature rows (small icon + serif title + 1-line body), separated by whitespace
+6. **Process section** (4 numbered steps) — same hairline-divider treatment as the "Why" grid but in a 4-column row
+7. **Services / image cards** — 3 stacked image-led cards (image, serif title, 1-line copy)
+8. **Success Stories carousel** — testimonial cards: portrait, big serif quote, two columns "Challenge / Solution", name + role
+9. **Final CTA** — same dark photographic background as hero, smaller serif headline + single black pill button
+10. **Footer** — dark, two-row: left = "Email me at" + address, right = nav links in serif; bottom row = copyright + privacy
 
----
+### What changes in the code
 
-### What the user will see
+**Foundation**
+- Add **Instrument Serif** (free, Google Fonts) — perfect match for the Keitimas headline font. Wired as `font-serif` in `tailwind.config.ts`.
+- Add a warm cream token (`--landing-cream`) and a soft warm-orange accent (`--landing-amber`) scoped to landing components only — does **not** touch in-app dark/light tokens or your teal brand color. Teal stays the brand accent on CTAs; warm amber is used only for the small numerals (001, 002, stats) to match the editorial vibe.
+- Add `Instrument Serif` link to `index.html`.
 
-Each skill gap card in `Learn` will now show two clearly-labeled tabs/sections:
+**Components rebuilt** (all in `src/components/landing/`)
+- `LandingBackground.tsx` → split: hero gets a photographic dark image with subtle vignette; sections below use cream. No more 70% black overlay over the whole page.
+- `LandingHeader.tsx` → centered floating dark pill nav with small lucide icons (Home / Sparkles for Assessment / Tag for Pricing / LogIn for Sign In)
+- `HeroSection.tsx` → giant serif headline, small white subhead, two pill CTAs (solid black "Take Free Assessment" + white-outlined "Sign in"), kept stats line underneath
+- `HowItWorksSection.tsx` → "Process" treatment: 4 numbered hairline-divider columns (Assess → Build CV → Practice → Apply)
+- `SolutionSection.tsx` → restyled as the **"Why Syncareer?" 2×3 grid** with amber numerals 001-006 (six reasons: AI Career Match, ATS-Ready CV, Voice Interview Prep, Real Job Listings, Skill Gap Closing, Mentor Access)
+- New `FeatureSpotlightSection.tsx` → two-column "image left + feature list right" block, headline "Real Tools, Real Outcomes", three rows (Career Discovery / CV Builder / Interview Simulator)
+- New `IntroStatsSection.tsx` → the `/about`-style intro with serif H2 left, body right, stats row (e.g. "2,400+ assessments · 12+ universities · 94% completion")
+- New `SuccessStoriesSection.tsx` → testimonial carousel built on your existing shadcn `carousel`: 3 student stories, each with portrait, serif quote, Challenge/Solution two-column body, name + university
+- `FinalCTASection.tsx` → recolored: dark photographic block with serif headline "Start your career journey today" + single black pill CTA
+- `LandingFooter.tsx` → dark footer matching Keitimas: left email, right serif nav, bottom copyright + privacy
+- Keep `AnimatedSection.tsx` exactly as is (already perfect for fade-on-scroll)
+- Drop `VideoDemoSection` from the page composition (you don't have a demo video). Component file stays in repo, just not imported.
 
+**Page composition** (`src/pages/Landing.tsx`)
 ```text
-┌─ Communication Skills ──────────────────── 35% mastery ─┐
-│                                                          │
-│  [ Free Path ]  [ Premium Path ]                         │
-│                                                          │
-│  ▶ Public Speaking Masterclass                           │
-│    YouTube · TEDx · 12 min · Free                        │
-│    [ Watch ] [ Save ] [ Mark Complete ]                  │
-│                                                          │
-│  ▶ Effective Communication for Professionals             │
-│    freeCodeCamp · 2h video · Free                        │
-│    [ Watch ] [ Save ] [ Mark Complete ]                  │
-│                                                          │
-│  ─ Want a certificate? ──────────────────                │
-│  [ See premium options ▾ ]                               │
-└──────────────────────────────────────────────────────────┘
+LandingHeader (floating pill, sits over hero)
+HeroSection                 ← dark photographic
+IntroStatsSection           ← cream, serif H2 + stats
+HowItWorksSection           ← cream, 4-step Process
+SolutionSection             ← cream, "Why Syncareer" 2×3 grid
+FeatureSpotlightSection     ← cream, image + feature list
+SuccessStoriesSection       ← cream, testimonial carousel
+SocialProofSection          ← cream, university logos (kept)
+FinalCTASection             ← dark photographic
+LandingFooter               ← dark
 ```
 
-When the user clicks "Watch" on a YouTube item, it opens an **embedded player in a dialog** (not a new tab), so they stay inside Syncareer. They can mark complete and trigger the validation quiz right after watching.
+### One decision needed (image direction)
 
-Existing behavior preserved:
-- Save / Unsave / Mark Complete → triggers `generate-module-quiz` → updates mastery
-- Saved Courses section still works
-- Streak tracking still works
+The Keitimas hero leans hard on a **single beautiful warm photograph**. Pick what Syncareer's hero photo should be:
 
-### Source strategy (no scraping needed)
+- **A. Sunlit campus / student with laptop** — warm, human, on-brand for students. Sourced from Unsplash, saved to `src/assets/landing-hero.jpg`. Strongest emotional pull.
+- **B. Warm landscape (mountains/sunrise)** — closest match to Keitimas, abstract enough to dodge "stocky" feel, easy to tint warm.
+- **C. Soft abstract gradient** — cream→amber→teal gradient with grain texture, no photo. Most "premium SaaS", zero copyright concerns, fastest.
 
-We use **YouTube Data API v3 search** server-side (free tier: 10,000 units/day = ~100 searches; more than enough). This is cleaner, more reliable, and fully ToS-compliant compared to scraping.
-
-For non-YouTube free platforms, we use a **curated source registry** (hand-maintained JSON in the edge function) mapping skill keywords → known free course URLs from trusted providers. This is faster, higher-quality, and avoids scraping fragility. Examples:
-- `JavaScript` → freeCodeCamp JS course, The Odin Project, MDN tutorials
-- `Python` → CS50P (Harvard, free), freeCodeCamp Python, Google's Python Class
-- `Marketing` → HubSpot Academy, Google Digital Garage, Meta Blueprint free
-- `Data Analysis` → Khan Academy Statistics, Google Data Analytics free preview
-
-Firecrawl is **not** needed for this — it would be overkill and slower.
-
-### Trust & quality filters for YouTube
-
-To avoid recommending low-quality videos:
-- Filter by minimum view count (≥ 50k)
-- Filter by minimum duration (≥ 5 min — excludes shorts/clickbait)
-- Whitelist of high-quality channels gets priority boost: `freeCodeCamp.org`, `CS50`, `Fireship`, `Traversy Media`, `The Net Ninja`, `Khan Academy`, `MIT OpenCourseWare`, `TED-Ed`, `HubSpot`, `Google Career Certificates`, `Coursera` (their own free YouTube content), `Crash Course`, `3Blue1Brown`
-- Sort by relevance, then by view count
-
----
-
-### Technical changes
-
-**1. New edge function: `suggest-free-resources`**
-Replaces calls to `suggest-courses` for the free path. Takes `{ skillName, careerPath, major }` and returns:
-```ts
-{
-  youtube: [{ title, channel, videoId, duration, viewCount, thumbnailUrl, url }],
-  curated: [{ title, provider, url, description, isFree: true }]
-}
-```
-- Calls YouTube Data API v3 (`search.list` + `videos.list` for stats)
-- Looks up curated registry for the skill
-- Caches per-(skill, career_path) for 7 days in a new `cached_free_resources` table to stay under YouTube quota
-
-**2. Update existing `suggest-courses` edge function**
-Becomes the "premium path" — already returns Coursera/Udemy/edX. No change to its logic, just relabeled in UI as optional.
-
-**3. New component: `YouTubePlayerDialog.tsx`**
-- Wraps `<iframe src="youtube.com/embed/{videoId}" />` in a shadcn Dialog
-- Shows title, channel, duration above the player
-- "Mark as Watched" button that triggers existing validation flow
-
-**4. Update `SkillGapCard.tsx`**
-- Add tab switcher: `[Free Path] [Premium Path]`
-- Free path renders YouTube items + curated items with new layout
-- Premium path renders existing Coursera/Udemy/edX cards (collapsed by default with "See premium options" disclosure)
-- Wire YouTube items to open `YouTubePlayerDialog` instead of external link
-
-**5. Update `useAICourses` hook in `Learn.tsx`**
-- Rename to `useSkillResources`
-- Fetch both free + premium in parallel: one call to `suggest-free-resources`, one to existing `suggest-courses`
-- Return `{ freeResources, premiumCourses }` shape
-
-**6. New table: `cached_free_resources`**
-```sql
-CREATE TABLE public.cached_free_resources (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  skill_name text NOT NULL,
-  career_path text NOT NULL,
-  payload jsonb NOT NULL,  -- { youtube: [...], curated: [...] }
-  created_at timestamptz DEFAULT now(),
-  expires_at timestamptz DEFAULT (now() + interval '7 days'),
-  UNIQUE (skill_name, career_path)
-);
-ALTER TABLE public.cached_free_resources ENABLE ROW LEVEL SECURITY;
--- Read-only for authenticated users (cache is shared across users by design)
-CREATE POLICY "Authenticated users can read cache"
-  ON public.cached_free_resources FOR SELECT
-  TO authenticated USING (true);
-```
-Edge function uses the service role key to write to it.
-
-**7. Curated registry**
-Store as `supabase/functions/suggest-free-resources/curated.json` — easy to update without redeploys to other functions. Initial seed covers the top 25 majors × 3-5 free resources each.
-
-**8. Save/validate compatibility**
-The existing `user_course_progress` table already supports any URL/title. YouTube videos are saved as `course_title = video title`, `course_url = youtube URL`, `provider = 'YouTube · {channel}'`. No schema change needed.
-
-### Required secret
-
-`YOUTUBE_API_KEY` — free Google Cloud key, takes ~3 minutes to create at console.cloud.google.com → enable YouTube Data API v3 → create API key. I'll request it via the secrets tool when we start implementation.
+If you don't pick, I'll go with **A** (sunlit student) since Syncareer is explicitly student-focused and a face in the hero converts better than a landscape on a SaaS site. We can swap via Visual Edits in 10 seconds if you don't like it.
 
 ### Out of scope
 
-- No scraping of YouTube (uses official API)
-- No video transcription / AI summarization (could be a v2)
-- No changes to mastery quiz logic — same `generate-module-quiz` flow
-- No removal of premium courses — they stay as opt-in upgrade path
-- No changes to CV scanner integration — still feeds skill gaps the same way
+- No changes to in-app pages (Dashboard, CV Builder, Learn, etc.) — landing only.
+- No new routes, no auth changes, no nav restructuring.
+- Brand teal stays as the primary action color in-app; on the landing page it's used only sparingly (one underline on a hero word + outlined button hover) to keep the editorial Keitimas feel intact.
 
-### Why this beats pure scraping
+### Technical notes
 
-- **YouTube API is free at our scale** — 10k units/day ≥ 100 searches; with 7-day cache per skill, we'll use < 5% of quota even at thousands of users
-- **No anti-bot risk** — official API, won't break
-- **Faster** — direct API < 200ms vs scraping > 2s
-- **Better metadata** — view counts, durations, channel info come baked in for quality filtering
-- **freeCodeCamp etc. are handled via curated registry** — more accurate than scraping their site
+- 6 files edited, 3 new section components, 1 new font, 1 hero image asset.
+- All sections use existing `AnimatedSection` for scroll-in motion.
+- Carousel uses existing shadcn `carousel` (already installed).
+- Mobile: pill nav collapses to a single hamburger button (kept simple — Keitimas itself just hides nav on mobile).
+- Lighthouse-friendly: hero image lazy-loaded with `fetchpriority="high"`, font preconnected.
 
-### Cost impact
-
-- YouTube API: $0
-- Lovable AI usage: unchanged (same `generate-module-quiz` calls)
-- Supabase: negligible (one tiny cache table)
-- **Net: zero added cost, removes paywall friction for students**
+One shot, one approval needed (image choice A/B/C — defaulting to A if you say "go").
