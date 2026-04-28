@@ -1,50 +1,30 @@
-import { UserPlus, Sparkles, Rocket } from "lucide-react";
 import AnimatedSection from "./AnimatedSection";
 
 const steps = [
-  {
-    icon: UserPlus,
-    step: "01",
-    title: "Create Your Profile",
-    description: "Sign up and complete a quick assessment so our AI understands your strengths and goals.",
-  },
-  {
-    icon: Sparkles,
-    step: "02",
-    title: "Get AI Insights",
-    description: "Receive personalized career recommendations, CV feedback, and skill gap analysis.",
-  },
-  {
-    icon: Rocket,
-    step: "03",
-    title: "Take Action",
-    description: "Practice interviews, build your portfolio, and apply with confidence.",
-  },
+  { n: "01", title: "Assess", body: "5-minute RIASEC + skills diagnostic. Discover careers that actually fit you." },
+  { n: "02", title: "Build CV", body: "AI-powered, ATS-ready CV. Quantified achievements, clean one-page format." },
+  { n: "03", title: "Practice", body: "Voice interviews with SynAssist. Structured, role-specific questions and feedback." },
+  { n: "04", title: "Apply", body: "Real job listings from Ghana and beyond. Track every application in one place." },
 ];
 
 export default function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="py-24 bg-background">
-      <div className="container mx-auto px-6">
-        <AnimatedSection className="text-center mb-16 max-w-2xl mx-auto">
-          <p className="text-sm font-medium text-primary mb-3 uppercase tracking-[0.2em]">How It Works</p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Three steps to career clarity
+    <section id="how-it-works" className="bg-landing-cream py-24 md:py-32 border-t border-landing-ink/10">
+      <div className="container mx-auto px-6 max-w-6xl">
+        <AnimatedSection>
+          <p className="text-xs uppercase tracking-[0.3em] text-landing-ink/50 mb-6">Process</p>
+          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-landing-ink tracking-tight max-w-3xl">
+            Four steps from confused to confident.
           </h2>
         </AnimatedSection>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto relative">
-          <div className="hidden md:block absolute top-16 left-[16.5%] right-[16.5%] h-px bg-border" />
-
-          {steps.map((item, i) => (
-            <AnimatedSection key={item.step} delay={i * 0.15}>
-              <div className="text-center relative">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center mx-auto mb-5 relative z-10 bg-background">
-                  <item.icon className="h-6 w-6 text-primary" />
-                </div>
-                <span className="text-xs font-bold text-primary/60 uppercase tracking-widest mb-2 block">{item.step}</span>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">{item.description}</p>
+        <div className="mt-16 md:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-landing-ink/10">
+          {steps.map((s, i) => (
+            <AnimatedSection key={s.n} delay={i * 0.1} className="bg-landing-cream">
+              <div className="p-8 md:p-10 h-full">
+                <div className="font-serif text-landing-amber text-lg mb-4">{s.n}</div>
+                <h3 className="font-serif text-2xl md:text-3xl text-landing-ink mb-4 leading-tight">{s.title}</h3>
+                <p className="text-sm text-landing-ink/65 leading-relaxed">{s.body}</p>
               </div>
             </AnimatedSection>
           ))}

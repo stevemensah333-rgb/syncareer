@@ -6,10 +6,11 @@ import AuthDialog from "@/components/auth/AuthDialog";
 import LandingBackground from "@/components/landing/LandingBackground";
 import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
+import IntroStatsSection from "@/components/landing/IntroStatsSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import SolutionSection from "@/components/landing/SolutionSection";
-import VideoDemoSection from "@/components/landing/VideoDemoSection";
-import SocialProofSection from "@/components/landing/SocialProofSection";
+import FeatureSpotlightSection from "@/components/landing/FeatureSpotlightSection";
+import SuccessStoriesSection from "@/components/landing/SuccessStoriesSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 
@@ -30,7 +31,7 @@ export default function Landing() {
           .select('user_type, onboarding_completed')
           .eq('id', session.user.id)
           .maybeSingle();
-        
+
         if (profile) {
           if (!profile.onboarding_completed) {
             navigate('/onboarding');
@@ -47,18 +48,19 @@ export default function Landing() {
   const openSignUp = () => { setAuthMode('signup'); setAuthOpen(true); };
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative font-sans">
       <LandingBackground />
-      <div className="relative z-10">
-        <LandingHeader onSignIn={openSignIn} onSignUp={openSignUp} />
+      <LandingHeader onSignIn={openSignIn} onSignUp={openSignUp} />
+      <main>
         <HeroSection onSignUp={openSignUp} />
+        <IntroStatsSection />
         <HowItWorksSection />
         <SolutionSection />
-        <VideoDemoSection />
-        <SocialProofSection />
+        <FeatureSpotlightSection />
+        <SuccessStoriesSection />
         <FinalCTASection />
-        <LandingFooter />
-      </div>
+      </main>
+      <LandingFooter />
 
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} defaultMode={authMode} />
     </div>
