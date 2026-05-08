@@ -166,7 +166,7 @@ const MyCompany = () => {
               <Edit className="h-4 w-4 mr-2" />
               Edit Company
             </Button>
-            <Button size="sm" className="rounded-full px-5" asChild>
+            <Button size="sm" className="rounded-full px-5" asChild data-tour="employer-post-job">
               <Link to="/post-job">
                 <Plus className="h-4 w-4 mr-2" />
                 Post Job
@@ -298,13 +298,13 @@ const MyCompany = () => {
                     <span className="text-sm">Post a new job</span>
                   </Link>
                 </Button>
-                <Button variant="outline" className="justify-start h-auto py-2.5" asChild>
+                <Button variant="outline" className="justify-start h-auto py-2.5" asChild data-tour="employer-applicants">
                   <Link to="/applicants">
                     <Users className="h-4 w-4 mr-2 text-primary" />
                     <span className="text-sm">Review applicants</span>
                   </Link>
                 </Button>
-                <Button variant="outline" className="justify-start h-auto py-2.5" asChild>
+                <Button variant="outline" className="justify-start h-auto py-2.5" asChild data-tour="employer-search-talent">
                   <Link to="/hire-ai">
                     <Sparkles className="h-4 w-4 mr-2 text-primary" />
                     <span className="text-sm">Find talent with AI</span>

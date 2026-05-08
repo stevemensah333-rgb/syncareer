@@ -229,6 +229,15 @@ const Dashboard = () => {
               {getStartedSteps.map((step) => (
                 <div
                   key={step.label}
+                  data-tour={
+                    step.href === '/assessment'
+                      ? 'student-assessment'
+                      : step.href === '/cv-builder'
+                      ? 'student-cv'
+                      : step.href === '/interview-simulator'
+                      ? 'student-interview'
+                      : undefined
+                  }
                   className="flex items-center gap-3 p-3 rounded-lg border bg-background cursor-pointer hover:border-primary/30 hover:shadow-sm transition-all group"
                   onClick={() => navigate(step.href)}
                 >

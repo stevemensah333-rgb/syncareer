@@ -1314,6 +1314,7 @@ export type Database = {
           linkedin_url: string | null
           onboarding_completed: boolean | null
           referral_code: string | null
+          tour_completed: boolean | null
           updated_at: string | null
           user_type: string | null
           username: string | null
@@ -1327,6 +1328,7 @@ export type Database = {
           linkedin_url?: string | null
           onboarding_completed?: boolean | null
           referral_code?: string | null
+          tour_completed?: boolean | null
           updated_at?: string | null
           user_type?: string | null
           username?: string | null
@@ -1340,6 +1342,7 @@ export type Database = {
           linkedin_url?: string | null
           onboarding_completed?: boolean | null
           referral_code?: string | null
+          tour_completed?: boolean | null
           updated_at?: string | null
           user_type?: string | null
           username?: string | null

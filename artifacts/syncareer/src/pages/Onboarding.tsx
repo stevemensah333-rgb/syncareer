@@ -277,17 +277,34 @@ const Onboarding = () => {
     setLoading(true);
 
     try {
-      // Update profile with user type
-      const { error: profileError } = await supabase
+      // Update profile with user type. Reset tour_completed so the post-
+      // onboarding quick tour shows once on the role home route. If the
+      // tour_completed column hasn't been migrated yet, retry without it.
+      let { error: profileError } = await supabase
         .from('profiles')
         .upsert(
           {
             id: userId,
             user_type: userType,
             onboarding_completed: true,
+            tour_completed: false,
           },
           { onConflict: 'id' }
         );
+
+      if (profileError) {
+        const fallback = await supabase
+          .from('profiles')
+          .upsert(
+            {
+              id: userId,
+              user_type: userType,
+              onboarding_completed: true,
+            },
+            { onConflict: 'id' }
+          );
+        profileError = fallback.error;
+      }
 
       if (profileError) throw profileError;
 

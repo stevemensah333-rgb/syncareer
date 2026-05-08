@@ -29,6 +29,7 @@ interface UserProfile {
   avatar_url: string | null;
   bio: string | null;
   onboarding_completed: boolean;
+  tour_completed: boolean | null;
   user_type: string | null;
 }
 

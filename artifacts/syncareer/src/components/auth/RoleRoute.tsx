@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
+import { QuickTour, getStepsForRole } from '@/components/onboarding/QuickTour';
 
 type UserRole = 'student' | 'employer' | 'career_counsellor';
 
@@ -28,7 +29,7 @@ export function getHomeRouteForRole(role: string | null): string {
  * If the user's role doesn't match, they are redirected to their correct dashboard.
  */
 const RoleRoute = ({ children, allowedRoles }: RoleRouteProps) => {
-  const { profile, loading } = useUserProfile();
+  const { profile, loading, refreshProfile } = useUserProfile();
   const location = useLocation();
 
   // Still loading profile - show nothing (ProtectedRoute already shows spinner)
@@ -52,17 +53,61 @@ const RoleRoute = ({ children, allowedRoles }: RoleRouteProps) => {
     return <Navigate to="/onboarding" replace />;
   }
 
+  const tour = (
+    <HomeRouteTour
+      role={userRole}
+      userId={profile.id}
+      pathname={location.pathname}
+      tourCompleted={profile.tour_completed}
+      onCompleted={refreshProfile}
+    />
+  );
+
   // If role is not allowed for this route, redirect to user's correct home
   if (!allowedRoles.includes(userRole)) {
     const correctHome = getHomeRouteForRole(userRole);
     // Avoid redirect loop
     if (location.pathname === correctHome) {
-      return <>{children}</>;
+      return (
+        <>
+          {children}
+          {tour}
+        </>
+      );
     }
     return <Navigate to={correctHome} replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {tour}
+    </>
+  );
 };
+
+function HomeRouteTour({
+  role,
+  userId,
+  pathname,
+  tourCompleted,
+  onCompleted,
+}: {
+  role: UserRole;
+  userId: string;
+  pathname: string;
+  tourCompleted: boolean | null | undefined;
+  onCompleted: () => void;
+}) {
+  if (pathname !== getHomeRouteForRole(role)) return null;
+  return (
+    <QuickTour
+      userId={userId}
+      steps={getStepsForRole(role)}
+      profileTourCompleted={tourCompleted}
+      onCompleted={onCompleted}
+    />
+  );
+}
 
 export default RoleRoute;

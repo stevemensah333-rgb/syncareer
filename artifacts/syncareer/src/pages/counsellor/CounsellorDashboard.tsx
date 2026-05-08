@@ -251,6 +251,7 @@ const CounsellorDashboard = () => {
                   size="sm"
                   onClick={() => setIsEditing(!isEditing)}
                   className="rounded-full px-5"
+                  data-tour="counsellor-edit"
                 >
                   {isEditing ? <X className="h-4 w-4 mr-1" /> : <Edit2 className="h-4 w-4 mr-1" />}
                   {isEditing ? 'Cancel' : 'Edit Profile'}
@@ -270,7 +271,7 @@ const CounsellorDashboard = () => {
                   <Calendar className="h-4 w-4" />
                   {bookings.length} Sessions
                 </Badge>
-                <Badge variant="outline" className="flex items-center gap-1 px-3 py-1">
+                <Badge variant="outline" className="flex items-center gap-1 px-3 py-1" data-tour="counsellor-price">
                   <DollarSign className="h-4 w-4" />
                   ${counsellorDetails.hiring_price}/session
                 </Badge>
@@ -286,7 +287,7 @@ const CounsellorDashboard = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Bio & Specialization */}
           <AnimatedSection delay={0.08} y={20}>
-          <Card>
+          <Card data-tour="counsellor-bio">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
