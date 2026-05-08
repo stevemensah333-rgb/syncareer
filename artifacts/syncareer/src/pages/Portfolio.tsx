@@ -13,6 +13,7 @@ import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface Project {
   id: string;
@@ -165,6 +166,7 @@ const Portfolio = () => {
       <div className="mb-2">
         <CachedDataIndicator hasData={projects.length > 0} />
       </div>
+      <AnimatedSection y={20}>
       <div className="flex items-center justify-between mb-6 -mt-2">
         <div className="flex items-center gap-1 border-b border-border w-full pb-0">
           <Link
@@ -182,9 +184,11 @@ const Portfolio = () => {
           </Link>
         </div>
       </div>
+      </AnimatedSection>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          <AnimatedSection delay={0.08} y={20}>
           <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -199,7 +203,9 @@ const Portfolio = () => {
               </div>
             </CardContent>
           </Card>
+          </AnimatedSection>
 
+          <AnimatedSection delay={0.12} y={20}>
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -223,7 +229,9 @@ const Portfolio = () => {
               </div>
             </CardContent>
           </Card>
+          </AnimatedSection>
 
+          <AnimatedSection delay={0.16} y={20}>
           {projects.length === 0 ? (
             <Card>
               <CardContent className="pt-6 text-center">
@@ -298,12 +306,16 @@ const Portfolio = () => {
               ))}
             </div>
           )}
+          </AnimatedSection>
         </div>
 
         <div className="space-y-6">
+          <AnimatedSection delay={0.2} y={20}>
           <ProfileSummaryCard />
+          </AnimatedSection>
 
           {/* Portfolio Completeness */}
+          <AnimatedSection delay={0.24} y={20}>
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Portfolio Completeness</CardTitle>
@@ -323,8 +335,10 @@ const Portfolio = () => {
               </div>
             </CardContent>
           </Card>
+          </AnimatedSection>
 
           {/* Skills Distribution */}
+          <AnimatedSection delay={0.28} y={20}>
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Skills in Portfolio</CardTitle>
@@ -350,8 +364,10 @@ const Portfolio = () => {
               )}
             </CardContent>
           </Card>
+          </AnimatedSection>
 
           {/* Share Portfolio */}
+          <AnimatedSection delay={0.32} y={20}>
           <Card className="bg-primary text-primary-foreground">
             <CardContent className="pt-6 space-y-3">
               <h3 className="font-bold text-center">Share Your Portfolio</h3>
@@ -375,6 +391,7 @@ const Portfolio = () => {
               </div>
             </CardContent>
           </Card>
+          </AnimatedSection>
         </div>
       </div>
     </PageLayout>

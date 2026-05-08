@@ -27,6 +27,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import SubscriptionManager from '@/components/subscription/SubscriptionManager';
 import { SecuritySection } from '@/components/settings/SecuritySection';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 type SettingsSection = 'profile' | 'account' | 'notifications' | 'security' | 'regional' | 'preferences' | 'subscription';
 
@@ -183,7 +184,7 @@ const Settings = () => {
   return (
     <PageLayout title={t('settings.title')}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
+        <AnimatedSection y={20} className="lg:col-span-1">
           <div className="bg-card rounded-lg p-6 shadow">
             <h2 className="text-xl font-semibold mb-4">{t('settings.title')}</h2>
             <nav className="space-y-2">
@@ -254,9 +255,9 @@ const Settings = () => {
               )}
             </nav>
           </div>
-        </div>
+        </AnimatedSection>
         
-        <div className="lg:col-span-2">
+        <AnimatedSection delay={0.08} y={20} className="lg:col-span-2">
           {activeSection === 'profile' && (
             <div className="bg-card rounded-lg p-6 shadow">
               <ProfileSection />
@@ -586,7 +587,7 @@ const Settings = () => {
               </div>
             )}
           </div>
-        </div>
+        </AnimatedSection>
       </div>
     </PageLayout>
     );

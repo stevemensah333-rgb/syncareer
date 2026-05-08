@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useOutcomeTracking } from '@/hooks/useOutcomeTracking';
 import { format } from 'date-fns';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface InterviewSession {
   id: string;
@@ -264,6 +265,7 @@ const ApplicationTracker = () => {
           <OfflineEmptyState />
         )}
         {/* Stats Overview */}
+        <AnimatedSection y={20}>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
           {['all', 'pending', 'reviewing', 'interview', 'offered', 'hired', 'rejected'].map(status => (
             <Card 
@@ -278,8 +280,10 @@ const ApplicationTracker = () => {
             </Card>
           ))}
         </div>
+        </AnimatedSection>
 
         {/* Search */}
+        <AnimatedSection delay={0.08} y={20}>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -289,8 +293,10 @@ const ApplicationTracker = () => {
             className="pl-10"
           />
         </div>
+        </AnimatedSection>
 
         {/* Applications List */}
+        <AnimatedSection delay={0.12} y={20}>
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -433,7 +439,9 @@ const ApplicationTracker = () => {
             )}
           </CardContent>
         </Card>
+        </AnimatedSection>
         {/* Counsellor Sessions */}
+        <AnimatedSection delay={0.16} y={20}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -519,6 +527,7 @@ const ApplicationTracker = () => {
             )}
           </CardContent>
         </Card>
+        </AnimatedSection>
       </div>
 
       {selectedBookingForRating && (

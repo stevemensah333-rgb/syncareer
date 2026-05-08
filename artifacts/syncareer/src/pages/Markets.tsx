@@ -10,6 +10,7 @@ import { useUserProfile } from '@/contexts/UserProfileContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useOutcomeTracking } from '@/hooks/useOutcomeTracking';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface JobPosting {
   id: string;
@@ -375,7 +376,8 @@ const Opportunities = () => {
   return (
     <PageLayout title="Opportunities">
       <Tabs defaultValue="full-time" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <AnimatedSection y={20}>
+          <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="full-time">
             Full-time ({getJobsByType('full-time').length})
           </TabsTrigger>
@@ -388,9 +390,11 @@ const Opportunities = () => {
           <TabsTrigger value="remote">
             Remote ({getJobsByType('remote').length})
           </TabsTrigger>
-        </TabsList>
+          </TabsList>
+        </AnimatedSection>
 
         {/* Header Card */}
+        <AnimatedSection delay={0.08} y={20}>
         <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -406,6 +410,7 @@ const Opportunities = () => {
             </div>
           </CardContent>
         </Card>
+        </AnimatedSection>
 
         <TabsContent value="full-time" className="space-y-4">
           {renderJobList('full-time')}
