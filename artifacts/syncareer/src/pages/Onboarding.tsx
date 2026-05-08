@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -321,26 +320,48 @@ const Onboarding = () => {
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
-        <Card className="w-full max-w-2xl p-8 shadow-xl">
-          <div className="text-center text-muted-foreground">Loading...</div>
-        </Card>
-      </div>
+      <OnboardingShell eyebrow="Setting things up" title="One moment" italicWord="moment" subtitle="">
+        <div className="text-center text-foreground/60">Loading...</div>
+      </OnboardingShell>
     );
   }
 
+  const shellProps =
+    userType === 'student'
+      ? {
+          eyebrow: 'A few details',
+          title: 'Tell us about your studies',
+          italicWord: 'studies',
+          subtitle: 'We use this to tailor recommendations, courses, and roles to your field.',
+        }
+      : userType === 'employer'
+      ? {
+          eyebrow: 'Your organisation',
+          title: 'Tell us about your company',
+          italicWord: 'company',
+          subtitle: 'A short profile helps candidates trust your roles before they apply.',
+        }
+      : userType === 'career_counsellor'
+      ? {
+          eyebrow: 'Counsellor profile',
+          title: 'Set up your practice',
+          italicWord: 'practice',
+          subtitle: 'How students will reach you when they book a session.',
+        }
+      : {
+          eyebrow: 'Welcome to Syncareer',
+          title: 'Choose how you want to start',
+          italicWord: 'start',
+          subtitle: 'Pick the role that best fits you — you can always change details later.',
+        };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl p-8 shadow-xl">
+    <OnboardingShell {...shellProps}>
+      <div className="bg-white/95 backdrop-blur rounded-3xl shadow-[0_20px_60px_-30px_rgba(20,20,20,0.25)] ring-1 ring-black/[0.04] p-6 sm:p-10">
 
         {userType === 'student' && (
           <div className="space-y-6">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-foreground">Academic Details</h1>
-              <p className="text-muted-foreground mt-2">Help us tailor content to your field of study</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label>Major / Field of Study *</Label>
                 <Select value={major} onValueChange={setMajor}>
@@ -410,9 +431,9 @@ const Onboarding = () => {
               </div>
             </div>
 
-            <div className="flex justify-end mt-8">
-              <Button onClick={handleSubmit} disabled={loading || !major || !degreeType} className="px-8">
-                {loading ? 'Saving...' : 'Complete Setup'}
+            <div className="flex justify-end pt-2">
+              <Button onClick={handleSubmit} disabled={loading || !major || !degreeType} className="rounded-full px-8 h-12 bg-foreground text-background hover:bg-foreground/90">
+                {loading ? 'Saving...' : 'Complete setup'}
               </Button>
             </div>
           </div>
@@ -420,12 +441,7 @@ const Onboarding = () => {
 
         {userType === 'employer' && (
           <div className="space-y-6">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-foreground">Company Details</h1>
-              <p className="text-muted-foreground mt-2">Tell us about your organization</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label>Company Name *</Label>
                 <Input
@@ -485,9 +501,9 @@ const Onboarding = () => {
               </div>
             </div>
 
-            <div className="flex justify-end mt-8">
-              <Button onClick={handleSubmit} disabled={loading || !companyName} className="px-8">
-                {loading ? 'Saving...' : 'Complete Setup'}
+            <div className="flex justify-end pt-2">
+              <Button onClick={handleSubmit} disabled={loading || !companyName} className="rounded-full px-8 h-12 bg-foreground text-background hover:bg-foreground/90">
+                {loading ? 'Saving...' : 'Complete setup'}
               </Button>
             </div>
           </div>
@@ -495,12 +511,7 @@ const Onboarding = () => {
 
         {userType === 'career_counsellor' && (
           <div className="space-y-6">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-foreground">Counsellor Details</h1>
-              <p className="text-muted-foreground mt-2">Set up your counsellor profile</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 mt-8">
+            <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
                 <Label>Full Name *</Label>
                 <Input
@@ -542,49 +553,95 @@ const Onboarding = () => {
                 </div>
               </div>
 
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-foreground/60">
                 Your phone number will be visible to clients who book sessions with you.
                 You can update your bio, specialization, and hiring price after completing setup.
               </p>
             </div>
 
-            <div className="flex justify-end mt-8">
-              <Button onClick={handleSubmit} disabled={loading || !counsellorFullName || !countryCode || !phoneNumber} className="px-8">
-                {loading ? 'Saving...' : 'Complete Setup'}
+            <div className="flex justify-end pt-2">
+              <Button onClick={handleSubmit} disabled={loading || !counsellorFullName || !countryCode || !phoneNumber} className="rounded-full px-8 h-12 bg-foreground text-background hover:bg-foreground/90">
+                {loading ? 'Saving...' : 'Complete setup'}
               </Button>
             </div>
           </div>
         )}
 
         {!userType && !initialLoading && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-foreground">Welcome to Syncareer</h1>
-              <p className="text-muted-foreground mt-2">Select your account type to get started</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-              {[
-                { value: 'student', label: 'Student', description: 'Discover careers, build your CV, and prepare for interviews' },
-                { value: 'employer', label: 'Employer', description: 'Post jobs, find talent, and manage hiring' },
-                { value: 'career_counsellor', label: 'Career Counsellor', description: 'Guide students and manage counselling sessions' },
-              ].map((role) => (
-                <button
-                  key={role.value}
-                  onClick={() => setUserType(role.value)}
-                  className="p-6 rounded-lg border-2 border-border hover:border-primary text-left transition-colors space-y-2"
-                >
-                  <h3 className="font-semibold text-lg text-foreground">{role.label}</h3>
-                  <p className="text-sm text-muted-foreground">{role.description}</p>
-                </button>
-              ))}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { value: 'student', label: 'Student', description: 'Discover careers, build your CV, and prepare for interviews' },
+              { value: 'employer', label: 'Employer', description: 'Post jobs, find talent, and manage hiring' },
+              { value: 'career_counsellor', label: 'Career Counsellor', description: 'Guide students and manage counselling sessions' },
+            ].map((role) => (
+              <button
+                key={role.value}
+                onClick={() => setUserType(role.value)}
+                className="group p-6 rounded-2xl bg-white ring-1 ring-black/[0.06] hover:ring-primary/40 hover:shadow-[0_12px_32px_-20px_rgba(20,20,20,0.25)] text-left transition-all space-y-2"
+              >
+                <h3 className="font-serif text-2xl font-normal text-foreground tracking-[-0.01em]">{role.label}</h3>
+                <p className="text-sm text-foreground/60 leading-relaxed">{role.description}</p>
+                <span className="inline-flex items-center gap-1 pt-2 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  Continue →
+                </span>
+              </button>
+            ))}
           </div>
         )}
 
-      </Card>
-    </div>
+      </div>
+    </OnboardingShell>
   );
 };
+
+function OnboardingShell({
+  eyebrow,
+  title,
+  italicWord,
+  subtitle,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  italicWord: string;
+  subtitle: string;
+  children: React.ReactNode;
+}) {
+  const titleParts = title.split(italicWord);
+  return (
+    <div
+      className="relative min-h-screen flex items-start sm:items-center justify-center px-4 py-12 overflow-hidden"
+      style={{ backgroundColor: 'hsl(var(--landing-cream))' }}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full blur-3xl"
+        style={{ backgroundColor: 'hsl(var(--landing-amber) / 0.18)' }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-40 -right-40 h-[32rem] w-[32rem] rounded-full blur-3xl"
+        style={{ backgroundColor: 'hsl(var(--primary) / 0.07)' }}
+      />
+      <div className="relative z-10 w-full max-w-2xl flex flex-col items-center">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-3.5 py-1.5 text-[11px] font-medium text-foreground/70 shadow-sm ring-1 ring-black/[0.04] mb-6">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          {eyebrow}
+        </span>
+        <h1 className="font-serif text-4xl sm:text-5xl font-normal leading-[1.05] tracking-[-0.02em] text-foreground text-center">
+          {titleParts[0]}
+          <span className="italic text-primary">{italicWord}</span>
+          {titleParts[1]}
+        </h1>
+        {subtitle && (
+          <p className="mt-4 max-w-md text-center text-foreground/60 text-sm sm:text-base leading-relaxed">
+            {subtitle}
+          </p>
+        )}
+        <div className="mt-10 w-full">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 export default Onboarding;
