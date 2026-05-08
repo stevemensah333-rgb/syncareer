@@ -9,13 +9,18 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+  },
 });
 
 // ── Clerk auth compatibility shim ──────────────────────────────────────────
-// Clerk owns authentication. These globals are set by <AuthBridge> in App.tsx
-// so that supabase.auth.getSession / getUser return the Clerk session instead.
-// All other supabase calls (from, rpc, storage) remain unchanged.
+// Clerk owns authentication. <AuthBridge> in App.tsx calls setClerkSession()
+// on every auth state change to keep the Clerk token current here.
+//
+// - supabase.auth.getSession/getUser are patched to return the Clerk session
+//   so that all existing files using those helpers work without modification.
+// - setClerkSession() also updates the Supabase client's Authorization header
+//   so that supabase.from(...) queries carry the Clerk JWT, enabling Supabase
+//   RLS policies that verify Clerk JWTs (via Supabase JWT template setting).
 
 type ClerkUser = {
   id: string;
@@ -30,21 +35,39 @@ let _clerkToken: string | null = null;
 export function setClerkSession(user: ClerkUser | null, token: string | null) {
   _clerkUser = user;
   _clerkToken = token;
+
+  // Propagate the Clerk JWT into the Supabase client's Authorization header
+  // so that supabase.from(...) queries are authenticated under the signed-in user.
+  // @ts-ignore — accessing internal rest client headers
+  const restHeaders = (supabase as any).rest?.headers;
+  if (restHeaders) {
+    if (token) {
+      restHeaders['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete restHeaders['Authorization'];
+    }
+  }
+
+  // Update realtime auth if realtime is initialised
+  try {
+    if (token) {
+      (supabase as any).realtime?.setAuth(token);
+    } else {
+      (supabase as any).realtime?.setAuth(null);
+    }
+  } catch {
+    // realtime not yet initialised — safe to ignore
+  }
 }
 
-const _originalGetSession = supabase.auth.getSession.bind(supabase.auth);
-const _originalGetUser = supabase.auth.getUser.bind(supabase.auth);
-const _originalOnAuthStateChange = supabase.auth.onAuthStateChange.bind(supabase.auth);
-const _originalSignOut = supabase.auth.signOut.bind(supabase.auth);
-
-// @ts-ignore — patching the bound method
+// @ts-ignore — patch getSession to return Clerk session
 supabase.auth.getSession = async () => {
-  if (_clerkUser) {
+  if (_clerkUser && _clerkToken) {
     return {
       data: {
         session: {
           user: _clerkUser,
-          access_token: _clerkToken ?? '',
+          access_token: _clerkToken,
         } as any,
       },
       error: null,
@@ -53,7 +76,7 @@ supabase.auth.getSession = async () => {
   return { data: { session: null }, error: null };
 };
 
-// @ts-ignore
+// @ts-ignore — patch getUser to return Clerk user
 supabase.auth.getUser = async () => {
   if (_clerkUser) {
     return { data: { user: _clerkUser as any }, error: null };
@@ -61,12 +84,13 @@ supabase.auth.getUser = async () => {
   return { data: { user: null }, error: null };
 };
 
-// @ts-ignore — no-op: Clerk owns the auth state changes
+// @ts-ignore — no-op: Clerk owns auth state changes; onAuthStateChange callers will simply not fire
 supabase.auth.onAuthStateChange = (_callback: any) => {
   return { data: { subscription: { unsubscribe: () => {} } } };
 };
 
 // @ts-ignore — sign-out is handled by Clerk's useClerk().signOut()
 supabase.auth.signOut = async () => {
+  setClerkSession(null, null);
   return { error: null };
 };

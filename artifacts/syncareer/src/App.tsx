@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ClerkProvider, SignIn, SignUp, useAuth, useUser, useClerk } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, useAuth, useUser } from "@clerk/react";
 import { shadcn } from "@clerk/themes";
 import { UserProfileProvider } from "./contexts/UserProfileContext";
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
@@ -156,22 +156,10 @@ function AuthBridge() {
   return null;
 }
 
-// Sign-out shim — Navbar calls supabase.auth.signOut(), we intercept via Clerk
-function SignOutHandler() {
-  const { signOut } = useClerk();
-  useEffect(() => {
-    // Patch the supabase signOut to call Clerk's signOut
-    // @ts-ignore
-    window.__clerkSignOut = () => signOut({ redirectUrl: basePath || "/" });
-  }, [signOut]);
-  return null;
-}
-
 const AppContent = () => (
   <GlobalErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthBridge />
-      <SignOutHandler />
       <UserProfileProvider>
         <TooltipProvider>
           <Toaster />
