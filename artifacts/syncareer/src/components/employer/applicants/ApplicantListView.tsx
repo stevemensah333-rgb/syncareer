@@ -22,7 +22,9 @@ export function ApplicantListView({ applications, onUpdateStatus, onScheduleInte
         <CardContent className="pt-6">
           <div className="text-center py-10">
             <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">No applications yet</p>
+            <p className="font-serif text-2xl font-normal tracking-[-0.02em]">
+              No applications <em className="italic font-normal">yet</em>
+            </p>
             <p className="text-xs text-muted-foreground mt-1">Applications to your job posts will appear here.</p>
           </div>
         </CardContent>

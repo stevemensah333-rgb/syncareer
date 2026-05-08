@@ -28,7 +28,7 @@ export function ChatInput({ value, onChange, onSend, isLoading, disabled = false
         disabled={isLoading || disabled}
         className="flex-1"
       />
-      <Button onClick={onSend} disabled={isLoading || disabled || !value.trim()}>
+      <Button onClick={onSend} disabled={isLoading || disabled || !value.trim()} className="rounded-full px-5">
         <Send className="w-4 h-4" />
       </Button>
     </div>

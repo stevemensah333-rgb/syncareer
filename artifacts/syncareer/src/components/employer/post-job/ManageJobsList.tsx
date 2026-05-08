@@ -39,7 +39,7 @@ export function ManageJobsList({ jobs, loading, onToggleStatus, onDelete }: Mana
   if (loading) {
     return (
       <Card>
-        <CardHeader><CardTitle>Your Job Posts</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">Your job <em className="italic font-normal">posts</em></CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)}
         </CardContent>
@@ -50,7 +50,7 @@ export function ManageJobsList({ jobs, loading, onToggleStatus, onDelete }: Mana
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Your Job Posts</CardTitle>
+        <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">Your job <em className="italic font-normal">posts</em></CardTitle>
       </CardHeader>
       <CardContent>
         {jobs.length === 0 ? (
@@ -104,7 +104,7 @@ export function ManageJobsList({ jobs, loading, onToggleStatus, onDelete }: Mana
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-xs h-8"
+                      className="text-xs h-8 rounded-full px-3"
                       onClick={() => onToggleStatus(job.id, job.status)}
                     >
                       {job.status === 'active' ? 'Close' : 'Reopen'}

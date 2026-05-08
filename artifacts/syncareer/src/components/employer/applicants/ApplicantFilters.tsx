@@ -21,6 +21,11 @@ export function ApplicantFilters({
 }: ApplicantFiltersProps) {
   return (
     <div className="space-y-4">
+      <div>
+        <h2 className="font-serif text-2xl md:text-3xl font-normal tracking-[-0.02em]">
+          Pipeline <em className="italic font-normal">overview</em>
+        </h2>
+      </div>
       {/* Stage counts */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {PIPELINE_STAGES.map((stage) => (

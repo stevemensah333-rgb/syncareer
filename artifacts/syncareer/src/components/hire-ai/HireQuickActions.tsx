@@ -21,7 +21,7 @@ export function HireQuickActions({ onSelect, disabled }: HireQuickActionsProps) 
           key={action.label}
           variant="outline"
           size="sm"
-          className="justify-start gap-2 h-auto py-2 text-xs"
+          className="justify-start gap-2 h-auto py-2 text-xs rounded-full px-4"
           onClick={() => onSelect(action.prompt)}
           disabled={disabled}
         >

@@ -132,6 +132,14 @@ Always be professional, data-driven, and focused on helping employers make infor
       <div className="h-[calc(100vh-12rem)] flex gap-4">
         {/* Main chat area */}
         <Card className="flex-1 flex flex-col p-4 bg-card">
+          <div className="pb-3 mb-2 border-b border-border/40">
+            <h2 className="font-serif text-2xl font-normal tracking-[-0.02em]">
+              Your hiring <em className="italic font-normal">conversation</em>
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Ask about candidates, job descriptions, or market insights.
+            </p>
+          </div>
           <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
             <div className="space-y-4">
               {messages.map((msg, idx) => (
@@ -143,7 +151,9 @@ Always be professional, data-driven, and focused on helping employers make infor
 
           {showQuickActions && (
             <div className="mb-2 mt-2">
-              <p className="text-xs text-muted-foreground mb-2">Quick actions</p>
+              <p className="font-serif text-base font-normal tracking-[-0.01em] mb-2">
+                Quick <em className="italic font-normal">actions</em>
+              </p>
               <HireQuickActions onSelect={(prompt) => handleSend(prompt)} disabled={isLoading} />
             </div>
           )}

@@ -258,7 +258,7 @@ const PostJob = () => {
                   variant="outline"
                   onClick={goBack}
                   disabled={step === 0}
-                  className={cn(step === 0 && "invisible")}
+                  className={cn("rounded-full px-5", step === 0 && "invisible")}
                 >
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   Back
@@ -266,12 +266,12 @@ const PostJob = () => {
 
                 <div className="flex gap-2">
                   {step < STEPS.length - 1 ? (
-                    <Button onClick={goNext}>
+                    <Button onClick={goNext} className="rounded-full px-6">
                       Next
                       <ArrowRight className="h-4 w-4 ml-1" />
                     </Button>
                   ) : (
-                    <Button onClick={handlePostJob} disabled={submitting}>
+                    <Button onClick={handlePostJob} disabled={submitting} className="rounded-full px-6">
                       {submitting ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />

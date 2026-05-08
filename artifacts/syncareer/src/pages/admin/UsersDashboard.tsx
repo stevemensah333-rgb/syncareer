@@ -186,7 +186,9 @@ const UsersDashboard = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-3">
-              <CardTitle className="text-base">All Users</CardTitle>
+              <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
+                All <em className="italic font-normal">users</em>
+              </CardTitle>
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -202,7 +204,7 @@ const UsersDashboard = () => {
                   size="sm"
                   onClick={fetchUsers}
                   disabled={loading}
-                  className="gap-1.5"
+                  className="gap-1.5 rounded-full px-4"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
                   Refresh
@@ -307,7 +309,7 @@ const UsersDashboard = () => {
                               <Button
                                 variant={user.is_admin ? 'destructive' : 'outline'}
                                 size="sm"
-                                className="h-7 text-xs gap-1"
+                                className="h-7 text-xs gap-1 rounded-full px-3"
                                 disabled={isTogglingRole}
                                 onClick={() => handleToggleAdmin(user)}
                               >

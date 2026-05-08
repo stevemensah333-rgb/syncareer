@@ -67,9 +67,19 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
       </header>
 
       {/* Page Content */}
-      <main className="container mx-auto px-6 py-8">
-        <h1 className="text-xl font-semibold text-foreground mb-6">{title}</h1>
-        {children}
+      <main>
+        {title && (
+          <div className="bg-landing-cream/60 border-b border-border/40">
+            <div className="container mx-auto px-6 py-8">
+              <h1 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em] text-foreground">
+                {title}
+              </h1>
+            </div>
+          </div>
+        )}
+        <div className="container mx-auto px-6 py-8">
+          {children}
+        </div>
       </main>
     </div>
   );

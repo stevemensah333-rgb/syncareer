@@ -230,7 +230,9 @@ const FeedbackDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Feedback by Feature</CardTitle>
+              <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
+                Feedback by <em className="italic font-normal">feature</em>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {featureBreakdown.length > 0 ? (
@@ -254,7 +256,9 @@ const FeedbackDashboard = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Overall Sentiment</CardTitle>
+              <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
+                Overall <em className="italic font-normal">sentiment</em>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {stats.total > 0 ? (
@@ -280,7 +284,9 @@ const FeedbackDashboard = () => {
         {topKeywords.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Top Complaint Keywords</CardTitle>
+              <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
+                Top complaint <em className="italic font-normal">keywords</em>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
@@ -297,7 +303,9 @@ const FeedbackDashboard = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Recent Comments</CardTitle>
+              <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
+                Recent <em className="italic font-normal">comments</em>
+              </CardTitle>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input

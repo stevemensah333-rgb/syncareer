@@ -13,9 +13,9 @@ export function InterviewsView({ interviews }: InterviewsViewProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Calendar className="h-4 w-4" />
-          Scheduled Interviews
+        <CardTitle className="flex items-center gap-2 font-serif text-2xl font-normal tracking-[-0.02em]">
+          <Calendar className="h-5 w-5" />
+          Scheduled <em className="italic font-normal">interviews</em>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -47,7 +47,7 @@ export function InterviewsView({ interviews }: InterviewsViewProps) {
                     {interview.status}
                   </Badge>
                   {interview.meeting_link && (
-                    <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
+                    <Button size="sm" variant="outline" className="h-7 text-xs rounded-full px-3" asChild>
                       <a href={interview.meeting_link} target="_blank" rel="noopener noreferrer">
                         <Video className="h-3 w-3 mr-1" />
                         Join

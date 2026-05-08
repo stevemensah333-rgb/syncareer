@@ -108,14 +108,14 @@ export function TalentRecommendationsPanel() {
       {/* Pool Stats */}
       <Card className="border-border">
         <CardHeader className="p-3 pb-1">
-          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center justify-between">
+          <CardTitle className="font-serif text-base font-normal tracking-[-0.01em] flex items-center justify-between">
             <span className="flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5" /> Talent Pool
+              <Users className="w-3.5 h-3.5" /> Talent <em className="italic font-normal">pool</em>
             </span>
             <Button
               variant="ghost"
               size="icon"
-              className="h-5 w-5"
+              className="h-5 w-5 rounded-full"
               onClick={fetchRecommendations}
               disabled={loading}
             >
@@ -142,8 +142,8 @@ export function TalentRecommendationsPanel() {
       {data.recommended_candidates.length > 0 && (
         <Card className="border-border">
           <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-              <Star className="w-3.5 h-3.5" /> Top Matches
+            <CardTitle className="font-serif text-base font-normal tracking-[-0.01em] flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5" /> Top <em className="italic font-normal">matches</em>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-1 space-y-2.5">
@@ -172,8 +172,8 @@ export function TalentRecommendationsPanel() {
       {data.market_insights && (
         <Card className="border-border">
           <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-              <Lightbulb className="w-3.5 h-3.5" /> Market Insights
+            <CardTitle className="font-serif text-base font-normal tracking-[-0.01em] flex items-center gap-1.5">
+              <Lightbulb className="w-3.5 h-3.5" /> Market <em className="italic font-normal">insights</em>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-1 space-y-2">

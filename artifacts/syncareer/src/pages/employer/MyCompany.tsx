@@ -152,19 +152,19 @@ const MyCompany = () => {
         {/* Welcome Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold">
-              {greeting()}, {profile?.full_name?.split(' ')[0] || 'there'}
+            <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em] leading-tight">
+              {greeting()}, <em className="italic font-normal">{profile?.full_name?.split(' ')[0] || 'there'}</em>
             </h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-1">
               {employerDetails?.company_name || 'Set up your company profile to get started'}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
+            <Button variant="outline" size="sm" className="rounded-full px-5" onClick={() => setIsEditDialogOpen(true)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Company
             </Button>
-            <Button size="sm" asChild>
+            <Button size="sm" className="rounded-full px-5" asChild>
               <Link to="/post-job">
                 <Plus className="h-4 w-4 mr-2" />
                 Post Job
@@ -186,7 +186,7 @@ const MyCompany = () => {
                   <p className="text-xs text-muted-foreground">A complete profile helps attract better candidates.</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
+              <Button variant="outline" size="sm" className="rounded-full px-5" onClick={() => setIsEditDialogOpen(true)}>
                 Complete
               </Button>
             </CardContent>
@@ -223,8 +223,10 @@ const MyCompany = () => {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-base font-semibold">Recent Applications</CardTitle>
-                <Button variant="ghost" size="sm" asChild>
+                <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
+                  Recent <em className="italic font-normal">applications</em>
+                </CardTitle>
+                <Button variant="ghost" size="sm" className="rounded-full" asChild>
                   <Link to="/applicants" className="text-xs">
                     View all <ArrowRight className="h-3 w-3 ml-1" />
                   </Link>
@@ -240,7 +242,7 @@ const MyCompany = () => {
                     <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
                     <p className="text-sm text-muted-foreground">No applications yet</p>
                     <p className="text-xs text-muted-foreground mt-1">Post a job to start receiving candidates.</p>
-                    <Button size="sm" className="mt-4" asChild>
+                    <Button size="sm" className="mt-4 rounded-full px-5" asChild>
                       <Link to="/post-job">
                         <Plus className="h-4 w-4 mr-1" />
                         Post a Job
@@ -277,7 +279,9 @@ const MyCompany = () => {
             {/* Quick Actions */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
+                <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
+                  Quick <em className="italic font-normal">actions</em>
+                </CardTitle>
               </CardHeader>
               <CardContent className="grid gap-2">
                 <Button variant="outline" className="justify-start h-auto py-2.5" asChild>
@@ -304,9 +308,9 @@ const MyCompany = () => {
             {/* Hiring Pipeline */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <TrendingUp className="h-4 w-4" />
-                  Hiring Pipeline
+                <CardTitle className="flex items-center gap-2 font-serif text-2xl font-normal tracking-[-0.02em]">
+                  <TrendingUp className="h-5 w-5" />
+                  Hiring <em className="italic font-normal">pipeline</em>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -377,7 +381,7 @@ const MyCompany = () => {
                       </div>
                     )}
                   </div>
-                  <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => setIsEditDialogOpen(true)}>
+                  <Button variant="ghost" size="sm" className="w-full text-xs rounded-full" onClick={() => setIsEditDialogOpen(true)}>
                     <Edit className="h-3 w-3 mr-1" />
                     Edit Profile
                   </Button>
