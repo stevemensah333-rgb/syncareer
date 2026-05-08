@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import landingHero from "@/assets/landing-hero.jpg";
 
 interface HeroSectionProps {
   onSignUp: () => void;
@@ -10,76 +10,56 @@ export default function HeroSection({ onSignUp }: HeroSectionProps) {
   const navigate = useNavigate();
 
   return (
-    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-background">
-      {/* Subtle radial accent in brand color */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(60% 50% at 50% 0%, hsl(var(--primary) / 0.08) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.35]"
-        style={{
-          backgroundImage:
-            "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
-          maskImage:
-            "radial-gradient(ellipse 60% 60% at 50% 40%, black 40%, transparent 80%)",
-        }}
-      />
+    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
+      {/* Photographic backdrop — hero only */}
+      <div className="absolute inset-0 -z-10">
+        <img
+          src={landingHero}
+          alt=""
+          width={1920}
+          height={1080}
+          fetchPriority="high"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60" />
+      </div>
 
-      <div className="relative z-10 container mx-auto px-6 text-center max-w-4xl pt-28 pb-20">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground mb-8"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          AI career platform · Built for African graduates
-        </motion.div>
-
+      <div className="relative z-10 container mx-auto px-6 text-center max-w-5xl pt-24 pb-16">
         <motion.h1
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="font-sans text-foreground text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.05] tracking-tight"
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="font-serif text-white text-5xl sm:text-6xl md:text-7xl lg:text-[7.5rem] leading-[1.02] tracking-tight"
         >
-          From uncertainty
+          From Uncertainty
           <br />
-          to <span className="text-primary">career clarity.</span>
+          <span className="italic">to Career Clarity</span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+          transition={{ duration: 0.8, delay: 0.25 }}
+          className="mt-8 text-base sm:text-lg text-white/80 max-w-xl mx-auto"
         >
-          A free 5-minute career assessment, an ATS-ready CV builder, and AI interview
-          practice — all in one workspace built to get you hired.
+          A free 5-minute assessment, an ATS-ready CV, and AI interview practice — all in one place.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.35 }}
+          transition={{ duration: 0.8, delay: 0.45 }}
           className="mt-10 flex flex-wrap justify-center items-center gap-3"
         >
           <button
             onClick={() => navigate('/assessment')}
-            className="group inline-flex items-center gap-2 rounded-lg px-5 h-11 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+            className="rounded-full px-7 h-12 text-sm font-medium bg-landing-ink text-white hover:bg-black transition-colors shadow-lg"
           >
-            Start free assessment
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            Start your journey
           </button>
           <button
             onClick={onSignUp}
-            className="inline-flex items-center rounded-lg px-5 h-11 text-sm font-medium bg-card text-foreground border border-border hover:bg-muted transition-colors"
+            className="rounded-full px-7 h-12 text-sm font-medium bg-white text-landing-ink hover:bg-white/90 transition-colors shadow-lg"
           >
             Create account
           </button>
@@ -88,12 +68,14 @@ export default function HeroSection({ onSignUp }: HeroSectionProps) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.55 }}
-          className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground"
+          transition={{ duration: 1, delay: 0.7 }}
+          className="mt-10 flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-white/55 uppercase tracking-[0.2em]"
         >
-          <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> No credit card</span>
-          <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> 2,400+ students</span>
-          <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> 12+ universities</span>
+          <span>2,400+ assessments</span>
+          <span className="hidden sm:inline">·</span>
+          <span>12+ universities</span>
+          <span className="hidden sm:inline">·</span>
+          <span>100% free to start</span>
         </motion.div>
       </div>
     </section>

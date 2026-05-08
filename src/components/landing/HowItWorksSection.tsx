@@ -2,31 +2,29 @@ import AnimatedSection from "./AnimatedSection";
 
 const steps = [
   { n: "01", title: "Assess", body: "5-minute RIASEC + skills diagnostic. Discover careers that actually fit you." },
-  { n: "02", title: "Build CV", body: "AI-powered, ATS-ready CV. Quantified achievements in a clean one-page format." },
+  { n: "02", title: "Build CV", body: "AI-powered, ATS-ready CV. Quantified achievements, clean one-page format." },
   { n: "03", title: "Practice", body: "Voice interviews with SynAssist. Structured, role-specific questions and feedback." },
   { n: "04", title: "Apply", body: "Real job listings from Ghana and beyond. Track every application in one place." },
 ];
 
 export default function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="bg-muted/40 py-20 md:py-28 border-t border-border">
+    <section id="how-it-works" className="bg-landing-cream py-24 md:py-32 border-t border-landing-ink/10">
       <div className="container mx-auto px-6 max-w-6xl">
-        <AnimatedSection className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-wider text-primary mb-4">How it works</p>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight text-foreground tracking-tight">
+        <AnimatedSection>
+          <p className="text-xs uppercase tracking-[0.3em] text-landing-ink/50 mb-6">Process</p>
+          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-landing-ink tracking-tight max-w-3xl">
             Four steps from confused to confident.
           </h2>
         </AnimatedSection>
 
-        <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mt-16 md:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-landing-ink/10">
           {steps.map((s, i) => (
-            <AnimatedSection key={s.n} delay={i * 0.08}>
-              <div className="h-full rounded-xl border border-border bg-card p-6 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                <div className="inline-flex items-center justify-center h-8 w-8 rounded-md bg-primary/10 text-primary text-sm font-semibold mb-4">
-                  {s.n}
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{s.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{s.body}</p>
+            <AnimatedSection key={s.n} delay={i * 0.1} className="bg-landing-cream">
+              <div className="p-8 md:p-10 h-full">
+                <div className="font-serif text-landing-amber text-lg mb-4">{s.n}</div>
+                <h3 className="font-serif text-2xl md:text-3xl text-landing-ink mb-4 leading-tight">{s.title}</h3>
+                <p className="text-sm text-landing-ink/65 leading-relaxed">{s.body}</p>
               </div>
             </AnimatedSection>
           ))}
