@@ -23,6 +23,12 @@ const steps = [
   },
 ];
 
+/**
+ * Editorial four-step section. Each step occupies a tall row; its numeral
+ * uses `position: sticky` so it pins to the viewport while the prose
+ * scrolls past, then releases as the next step takes over. Pure CSS — no
+ * scroll-jacking library.
+ */
 export default function HowItWorksSection() {
   return (
     <section id="how-it-works" className="relative py-24 md:py-32">
@@ -31,51 +37,37 @@ export default function HowItWorksSection() {
           <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-5">
             How it works
           </p>
-          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-foreground tracking-[-0.01em]">
-            Reach your goals in <em>four steps.</em>
+          <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight">
+            Reach your goals in four steps.
           </h2>
         </AnimatedSection>
 
-        {/* Editorial pinned list: oversized numerals on the left stay sticky
-            while the prose on the right scrolls past. */}
-        <div className="grid lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] gap-10 lg:gap-20">
-          {/* Sticky numeral column */}
-          <div className="hidden lg:block">
-            <div className="sticky top-32 space-y-1">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-6">
-                Four chapters
-              </p>
-              <p className="font-serif text-foreground/30 text-6xl leading-none">
-                The journey
-              </p>
-            </div>
-          </div>
+        {/* Each step is a tall row with a sticky numeral column on the left */}
+        <div>
+          {steps.map((s, i) => (
+            <div
+              key={s.n}
+              className="relative grid grid-cols-[auto_1fr] gap-6 md:gap-12 border-t border-foreground/10 first:border-t-0 lg:min-h-[60vh] py-10 md:py-16"
+            >
+              {/* Sticky oversized serif numeral — per the brief */}
+              <div className="self-start lg:sticky lg:top-32">
+                <div className="font-serif text-foreground/25 text-6xl md:text-8xl lg:text-9xl leading-none tabular-nums">
+                  {s.n}
+                </div>
+              </div>
 
-          {/* Step list — each row is tall enough that the numeral column
-              feels pinned while you scroll through. */}
-          <div>
-            {steps.map((s, i) => (
-              <AnimatedSection
-                key={s.n}
-                delay={i * 0.05}
-                className="border-t border-foreground/10 first:border-t-0"
-              >
-                <div className="grid grid-cols-[auto_1fr] gap-6 md:gap-10 py-10 md:py-14">
-                  <div className="font-serif text-foreground/25 text-5xl md:text-7xl leading-none tabular-nums">
-                    {s.n}
-                  </div>
-                  <div className="pt-1 md:pt-3">
-                    <h3 className="font-serif text-2xl md:text-3xl text-foreground mb-3 leading-tight">
-                      {s.title}
-                    </h3>
-                    <p className="text-base text-foreground/65 leading-relaxed max-w-lg">
-                      {s.body}
-                    </p>
-                  </div>
+              <AnimatedSection delay={i * 0.04} className="self-center">
+                <div className="max-w-xl">
+                  <h3 className="font-sans text-2xl md:text-3xl font-semibold text-foreground mb-4 leading-tight tracking-tight">
+                    {s.title}
+                  </h3>
+                  <p className="text-base md:text-lg text-foreground/65 leading-relaxed">
+                    {s.body}
+                  </p>
                 </div>
               </AnimatedSection>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

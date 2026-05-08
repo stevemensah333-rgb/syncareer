@@ -9,8 +9,8 @@ export default function FinalCTASection() {
     <section className="relative py-24 md:py-36">
       <div className="container mx-auto px-6 max-w-4xl text-center">
         <AnimatedSection>
-          <h2 className="font-serif text-4xl md:text-6xl lg:text-7xl leading-[1.02] text-foreground tracking-[-0.02em]">
-            Start your career <em>journey today.</em>
+          <h2 className="font-sans text-4xl md:text-5xl lg:text-6xl font-semibold leading-[1.05] text-foreground tracking-tight">
+            Start your career journey today.
           </h2>
         </AnimatedSection>
 

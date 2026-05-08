@@ -5,7 +5,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Home, Sparkles, Tag, LogIn, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import syncareerLogo from "@/assets/syncareer-logo.svg";
-import InstallButton from "@/components/InstallButton";
 
 interface LandingHeaderProps {
   onSignIn: () => void;
@@ -71,7 +70,6 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
             <NavItem icon={Sparkles} label="Assessment" onClick={() => navigate("/assessment")} />
             <NavItem icon={Tag} label="Pricing" onClick={() => navigate("/pricing")} />
             <NavItem icon={LogIn} label="Sign in" onClick={onSignIn} />
-            <InstallButton />
           </nav>
           <button
             className="sm:hidden flex items-center justify-center h-8 w-8 rounded-full text-white/85 hover:bg-white/10"

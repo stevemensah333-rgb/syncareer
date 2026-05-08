@@ -36,7 +36,7 @@ export default function FeatureSpotlightSection() {
                   Career Readiness
                 </p>
                 <div className="mt-2 flex items-baseline gap-3">
-                  <span className="font-serif text-3xl text-foreground">
+                  <span className="font-sans text-2xl font-semibold text-foreground tracking-tight">
                     78%
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded-md bg-primary/10 text-primary font-medium">
@@ -55,8 +55,8 @@ export default function FeatureSpotlightSection() {
               <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-5">
                 Real tools
               </p>
-              <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-foreground tracking-[-0.01em] mb-10">
-                Calm tools, <em>real outcomes.</em>
+              <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight mb-10">
+                Calm tools, real outcomes.
               </h2>
             </AnimatedSection>
 
@@ -64,7 +64,7 @@ export default function FeatureSpotlightSection() {
               {highlights.map((f, i) => (
                 <AnimatedSection key={f.title} delay={i * 0.08}>
                   <div className="border-t border-foreground/10 pt-6">
-                    <h3 className="font-serif text-xl md:text-2xl text-foreground mb-2 leading-tight">
+                    <h3 className="font-sans text-lg md:text-xl font-semibold text-foreground mb-2 leading-snug tracking-tight">
                       {f.title}
                     </h3>
                     <p className="text-base text-foreground/65 leading-relaxed max-w-md">

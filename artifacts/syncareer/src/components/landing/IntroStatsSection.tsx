@@ -18,8 +18,8 @@ export default function IntroStatsSection() {
 
         <div className="grid md:grid-cols-2 gap-10 md:gap-20 items-start">
           <AnimatedSection>
-            <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-foreground tracking-[-0.01em]">
-              For students who want a real career, <em>not a guess.</em>
+            <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight">
+              For students who want a real career, not a guess.
             </h2>
           </AnimatedSection>
           <AnimatedSection delay={0.1}>
@@ -36,7 +36,7 @@ export default function IntroStatsSection() {
           <div className="mt-20 grid grid-cols-3 gap-4 md:gap-12 border-t border-foreground/10 pt-12">
             {stats.map((s) => (
               <div key={s.label}>
-                <div className="font-serif text-4xl md:text-6xl text-foreground tracking-[-0.02em] leading-none">
+                <div className="font-sans text-4xl md:text-5xl font-semibold text-foreground tracking-tight leading-none">
                   {s.value}
                 </div>
                 <div className="mt-3 text-xs md:text-sm text-foreground/55">

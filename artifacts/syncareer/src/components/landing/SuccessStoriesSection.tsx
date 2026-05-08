@@ -39,8 +39,8 @@ export default function SuccessStoriesSection() {
           <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-5">
             Success stories
           </p>
-          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-foreground tracking-[-0.01em]">
-            Students who <em>broke through.</em>
+          <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight">
+            Students who broke through.
           </h2>
         </AnimatedSection>
       </div>
@@ -73,7 +73,7 @@ export default function SuccessStoriesSection() {
                     }}
                   />
                   <blockquote className="absolute inset-x-5 bottom-5 text-white">
-                    <p className="font-serif text-lg md:text-xl leading-snug">
+                    <p className="font-sans text-base md:text-lg font-medium leading-snug">
                       &ldquo;{s.quote}&rdquo;
                     </p>
                   </blockquote>

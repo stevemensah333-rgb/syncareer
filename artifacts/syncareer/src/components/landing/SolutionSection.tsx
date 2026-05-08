@@ -38,8 +38,8 @@ export default function SolutionSection() {
           <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-5">
             What you get
           </p>
-          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-foreground tracking-[-0.01em]">
-            Everything you need to <em>land your first role.</em>
+          <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight">
+            Everything you need to land your first role.
           </h2>
         </AnimatedSection>
 
@@ -68,7 +68,7 @@ export default function SolutionSection() {
                   </div>
                 </div>
                 <div className="pt-5 px-1">
-                  <h3 className="font-serif text-2xl md:text-[1.65rem] leading-tight text-foreground mb-2">
+                  <h3 className="font-sans text-xl md:text-2xl font-semibold leading-snug text-foreground mb-2 tracking-tight">
                     {s.title}
                   </h3>
                   <p className="text-sm text-foreground/65 leading-relaxed">

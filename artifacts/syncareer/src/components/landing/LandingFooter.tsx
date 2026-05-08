@@ -7,10 +7,10 @@ export default function LandingFooter() {
   return (
     <footer className="relative border-t border-foreground/10">
       <div className="container mx-auto px-6 pt-20 pb-10 max-w-6xl">
-        {/* Oversized editorial wordmark */}
+        {/* Editorial wordmark */}
         <div className="flex items-center gap-3 mb-14">
           <img src={syncareerLogo} alt="" className="h-10 w-10" />
-          <span className="font-serif text-5xl md:text-7xl tracking-[-0.02em] text-foreground leading-none">
+          <span className="font-sans text-3xl md:text-4xl font-semibold tracking-tight text-foreground leading-none">
             Syncareer
           </span>
         </div>
