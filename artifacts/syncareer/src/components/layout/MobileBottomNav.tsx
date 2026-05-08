@@ -1,0 +1,135 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { useUserProfile } from '@/contexts/UserProfileContext';
+import {
+  ClipboardList, Star, GraduationCap, Sparkles, Settings,
+  Building2, FileText, Users, TrendingUp, Calendar,
+  MoreHorizontal, LineChart
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+interface NavTab {
+  title: string;
+  icon: React.ElementType;
+  href: string;
+}
+
+const studentTabs: NavTab[] = [
+  { title: 'Assessment', icon: ClipboardList, href: '/assessment' },
+  { title: 'Learn', icon: GraduationCap, href: '/learn' },
+  { title: 'SynAI', icon: Sparkles, href: '/ai-coach' },
+];
+
+const studentMoreItems: NavTab[] = [
+  { title: 'Opportunities', icon: TrendingUp, href: '/opportunities' },
+  { title: 'Portfolio', icon: Star, href: '/portfolio' },
+  { title: 'CV Builder', icon: FileText, href: '/cv-builder' },
+  { title: 'Applications', icon: ClipboardList, href: '/applications' },
+  { title: 'Interview Prep', icon: ClipboardList, href: '/interview-simulator' },
+  
+  { title: 'Settings', icon: Settings, href: '/settings' },
+];
+
+const employerTabs: NavTab[] = [
+  { title: 'Dashboard', icon: Building2, href: '/my-company' },
+  { title: 'Post Job', icon: FileText, href: '/post-job' },
+  { title: 'Applicants', icon: Users, href: '/applicants' },
+];
+
+const employerMoreItems: NavTab[] = [
+  { title: 'Hire with AI', icon: Users, href: '/hire-ai' },
+  { title: 'Settings', icon: Settings, href: '/settings' },
+];
+
+const counsellorTabs: NavTab[] = [
+  { title: 'Portfolio', icon: Users, href: '/counsellor-dashboard' },
+  { title: 'Availability', icon: Calendar, href: '/counsellor-availability' },
+  { title: 'Sessions', icon: ClipboardList, href: '/counsellor-sessions' },
+  { title: 'Settings', icon: Settings, href: '/settings' },
+];
+
+export function MobileBottomNav() {
+  const location = useLocation();
+  const { profile } = useUserProfile();
+  const userType = profile?.user_type;
+
+  let tabs: NavTab[];
+  let moreItems: NavTab[] | null;
+
+  if (userType === 'employer') {
+    tabs = employerTabs;
+    moreItems = employerMoreItems;
+  } else if (userType === 'career_counsellor') {
+    tabs = counsellorTabs;
+    moreItems = null; // 4 items, no overflow
+  } else {
+    tabs = studentTabs;
+    moreItems = studentMoreItems;
+  }
+
+  const isMoreActive = moreItems?.some(item => location.pathname === item.href) ?? false;
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-sm border-t border-border md:hidden">
+      <div className="flex items-center justify-around h-14 px-1 safe-area-bottom">
+        {tabs.map((tab) => {
+          const isActive = location.pathname === tab.href;
+          return (
+            <Link
+              key={tab.href}
+              to={tab.href}
+              className={cn(
+                "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 rounded-lg transition-colors",
+                isActive ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <tab.icon className={cn("h-5 w-5", isActive && "text-primary")} />
+              <span className="text-[10px] font-medium leading-tight">{tab.title}</span>
+            </Link>
+          );
+        })}
+
+        {moreItems && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(
+                  "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 rounded-lg transition-colors",
+                  isMoreActive ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                <MoreHorizontal className={cn("h-5 w-5", isMoreActive && "text-primary")} />
+                <span className="text-[10px] font-medium leading-tight">More</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="top" className="w-48 mb-2 bg-popover z-50">
+              {moreItems.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <DropdownMenuItem key={item.href} asChild>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        "flex items-center gap-2 cursor-pointer",
+                        isActive && "text-primary font-medium"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.title}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+    </nav>
+  );
+}
