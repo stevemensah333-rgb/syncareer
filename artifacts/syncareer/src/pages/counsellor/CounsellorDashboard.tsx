@@ -230,7 +230,9 @@ const CounsellorDashboard = () => {
             <div className="flex-1 pt-4 md:pt-8">
               <div className="flex items-start justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold">{counsellorDetails.full_name}</h1>
+                  <h1 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em] leading-tight">
+                    {counsellorDetails.full_name}
+                  </h1>
                   <p className="text-muted-foreground flex items-center gap-1 mt-1">
                     <Phone className="h-4 w-4" />
                     {counsellorDetails.country_code} {counsellorDetails.phone_number}
@@ -246,6 +248,7 @@ const CounsellorDashboard = () => {
                   variant={isEditing ? "outline" : "default"}
                   size="sm"
                   onClick={() => setIsEditing(!isEditing)}
+                  className="rounded-full px-5"
                 >
                   {isEditing ? <X className="h-4 w-4 mr-1" /> : <Edit2 className="h-4 w-4 mr-1" />}
                   {isEditing ? 'Cancel' : 'Edit Profile'}
@@ -325,7 +328,7 @@ const CounsellorDashboard = () => {
                       />
                     </div>
                   </div>
-                  <Button onClick={handleSaveProfile} className="w-full">
+                  <Button onClick={handleSaveProfile} className="w-full rounded-full">
                     <Save className="h-4 w-4 mr-2" />
                     Save Changes
                   </Button>

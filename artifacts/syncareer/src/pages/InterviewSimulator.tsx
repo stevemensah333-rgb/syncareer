@@ -195,16 +195,18 @@ const InterviewSimulator = () => {
     <PageLayout title="Interview Simulator">
       {step === 'setup' && (
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header */}
-          <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center" aria-hidden="true">
+          {/* Header — editorial */}
+          <Card className="bg-landing-cream border-primary/20 overflow-hidden">
+            <CardContent className="pt-8 pb-8">
+              <div className="flex items-center gap-5">
+                <div className="h-16 w-16 rounded-full bg-primary/15 flex items-center justify-center shrink-0" aria-hidden="true">
                   <Mic className="h-8 w-8 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">AI Voice Interview</h2>
-                  <p className="text-muted-foreground">
+                  <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em] leading-tight">
+                    AI <span className="italic text-primary">voice</span> interview
+                  </h2>
+                  <p className="text-muted-foreground mt-1">
                     Practice with a realistic AI interviewer using voice conversation
                   </p>
                 </div>
@@ -333,7 +335,7 @@ const InterviewSimulator = () => {
                   )}
 
                   <Button
-                    className="w-full"
+                    className="w-full rounded-full"
                     size="lg"
                     onClick={isPremium ? startInterview : () => navigate('/pricing')}
                     aria-label="Start voice interview session"

@@ -92,8 +92,16 @@ export function CounsellorLayout({ children, title }: CounsellorLayoutProps) {
           </div>
         )}
         <main id="main-content" className={cn("flex-1 transition-all duration-300", !isMobile && (isCollapsed ? "ml-16" : "ml-60"), isMobile && "pb-16")}>
+          {title && (
+            <div className="bg-landing-cream/60 border-b border-border/40">
+              <div className="max-w-[1200px] mx-auto px-4 lg:px-6 py-8">
+                <h1 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em] text-foreground">
+                  {title}
+                </h1>
+              </div>
+            </div>
+          )}
           <div className="max-w-[1200px] mx-auto p-4 lg:p-6">
-            {title && <h1 className="text-2xl font-bold mb-6">{title}</h1>}
             {children}
           </div>
         </main>

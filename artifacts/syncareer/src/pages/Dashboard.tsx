@@ -128,10 +128,16 @@ const Dashboard = () => {
   return (
     <StudentLayout title="">
       <div className="space-y-6">
-        {/* Greeting Header */}
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold">
-            {fullName ? `Welcome back, ${fullName}` : 'Welcome back'}
+        {/* Greeting Header — editorial */}
+        <div className="space-y-2">
+          <h1 className="font-serif text-4xl md:text-5xl font-normal leading-[1.05] tracking-[-0.02em] text-foreground">
+            {fullName ? (
+              <>
+                Welcome back, <span className="italic text-primary">{fullName}</span>
+              </>
+            ) : (
+              <>Welcome <span className="italic text-primary">back</span></>
+            )}
           </h1>
           {major && (
             <p className="text-sm text-muted-foreground">
@@ -276,7 +282,7 @@ const Dashboard = () => {
                   <TrendingUp className="h-4 w-4 text-primary" />
                   Recent Job Matches
                 </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/opportunities')} className="text-xs h-8">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/opportunities')} className="text-xs h-8 rounded-full">
                   View all <ArrowRight className="h-3 w-3 ml-1" />
                 </Button>
               </div>

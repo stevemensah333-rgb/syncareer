@@ -321,10 +321,10 @@ const Assessment = () => {
               </div>
               <div className="space-y-1">
                 <Badge variant="secondary" className="text-xs mb-2">Questions {intro.questionRange}</Badge>
-                <h2 className="text-xl font-semibold">{intro.title}</h2>
+                <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em]">{intro.title}</h2>
               </div>
               <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">{intro.description}</p>
-              <Button size="lg" onClick={handleIntroNext} className="mt-2">
+              <Button size="lg" onClick={handleIntroNext} className="mt-2 rounded-full px-6">
                 Begin Section <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </CardContent>
@@ -390,7 +390,7 @@ const Assessment = () => {
           )}
 
           <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={handlePrev} disabled={currentPage === 0}>
+            <Button variant="outline" onClick={handlePrev} disabled={currentPage === 0} className="rounded-full px-5">
               <ArrowLeft className="h-4 w-4 mr-2" /> Previous
             </Button>
             {isLastPage ? (
@@ -404,6 +404,7 @@ const Assessment = () => {
                     (!isOnline && !isGuest && pendingOfflineSubmit)
                   }
                   title={!isOnline && !isGuest ? 'Saved locally — submits when you reconnect' : undefined}
+                  className="rounded-full px-6"
                 >
                   {(submitting || guestSubmitting)
                     ? 'Submitting...'
@@ -423,7 +424,7 @@ const Assessment = () => {
                 )}
               </div>
             ) : (
-              <Button onClick={handleNext} disabled={!allCurrentAnswered}>
+              <Button onClick={handleNext} disabled={!allCurrentAnswered} className="rounded-full px-6">
                 Next <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             )}
@@ -443,7 +444,9 @@ const Assessment = () => {
               <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
                 <Brain className="h-8 w-8 text-primary" />
               </div>
-              <h2 className="text-xl font-semibold">Discover Your Career Profile</h2>
+              <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em]">
+                Discover your <span className="italic text-primary">career profile</span>
+              </h2>
               <p className="text-muted-foreground text-sm max-w-md mx-auto">
                 Answer 45 questions across Personality, Skills Preference, and Work Interest to discover your RIASEC career profile and unlock personalized recommendations.
               </p>
@@ -463,7 +466,7 @@ const Assessment = () => {
                   );
                 })}
               </div>
-              <Button size="lg" onClick={handleStartAssessment}>
+              <Button size="lg" onClick={handleStartAssessment} className="rounded-full px-6">
                 Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </CardContent>
@@ -529,7 +532,7 @@ const Assessment = () => {
                     <p className="text-xs text-muted-foreground">Create a free account to save your assessment, get career recommendations, and track your progress.</p>
                   </div>
                 </div>
-                <Button size="sm" onClick={() => navigate('/', { state: { openAuth: true } })}>
+                <Button size="sm" onClick={() => navigate('/', { state: { openAuth: true } })} className="rounded-full px-5">
                   Create Account <ArrowRight className="h-3.5 w-3.5 ml-1" />
                 </Button>
               </div>
@@ -553,7 +556,7 @@ const Assessment = () => {
                   <span>{daysUntilRetake} day{daysUntilRetake !== 1 ? 's' : ''} until retake</span>
                 </div>
               )}
-              <Button variant="outline" onClick={handleStartAssessment} disabled={!canRetake()}>
+              <Button variant="outline" onClick={handleStartAssessment} disabled={!canRetake()} className="rounded-full px-5">
                 <RotateCcw className="h-4 w-4 mr-2" /> Retake Assessment
               </Button>
             </div>
@@ -704,13 +707,15 @@ const Assessment = () => {
 
         {/* Guest bottom CTA */}
         {isGuest && (
-          <Card className="border-primary/30 bg-primary/5 text-center">
-            <CardContent className="pt-6 pb-6 space-y-3">
-              <h3 className="font-semibold text-lg">Ready to take the next step?</h3>
+          <Card className="border-primary/30 bg-landing-cream text-center">
+            <CardContent className="pt-8 pb-8 space-y-3">
+              <h3 className="font-serif text-2xl md:text-3xl font-normal tracking-[-0.02em]">
+                Ready for the <span className="italic text-primary">next step?</span>
+              </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 Create a free account to save your results, build your CV, practice interviews, and apply to jobs.
               </p>
-              <Button size="lg" onClick={() => navigate('/', { state: { openAuth: true } })}>
+              <Button size="lg" onClick={() => navigate('/', { state: { openAuth: true } })} className="rounded-full px-6">
                 Create Free Account <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </CardContent>

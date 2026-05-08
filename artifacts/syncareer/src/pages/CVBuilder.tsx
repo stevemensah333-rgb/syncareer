@@ -367,15 +367,18 @@ const CVBuilder = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form Section */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
               <FileText className="h-6 w-6 text-primary" />
-              <h2 className="text-xl font-semibold">Build Your CV</h2>
+              <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em]">
+                Build your <span className="italic text-primary">CV</span>
+              </h2>
             </div>
             <div className="flex gap-2 flex-wrap">
               <Button
                 variant="outline"
                 onClick={() => setUploadOpen(true)}
+                className="rounded-full px-5"
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Upload Existing CV
@@ -383,6 +386,7 @@ const CVBuilder = () => {
               <Button
                 variant="outline"
                 onClick={() => setShowPreview(!showPreview)}
+                className="rounded-full px-5"
               >
                 <Eye className="h-4 w-4 mr-2" />
                 {showPreview ? 'Hide Preview' : 'Preview'}
@@ -393,6 +397,7 @@ const CVBuilder = () => {
                   onClick={handleSaveCV}
                   disabled={isSaving || !isOnline}
                   title={!isOnline ? 'Saved locally — will sync when online' : undefined}
+                  className="rounded-full px-5"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {isSaving
@@ -412,6 +417,7 @@ const CVBuilder = () => {
               <Button
                 onClick={handleDownloadPDF}
                 disabled={isGeneratingPDF}
+                className="rounded-full px-5"
               >
                 <Download className="h-4 w-4 mr-2" />
                 {isGeneratingPDF ? 'Generating...' : 'Download PDF'}
