@@ -21,31 +21,34 @@ export default function FeatureSpotlightSection() {
     <section className="relative py-24 md:py-32">
       <div className="container mx-auto px-6 max-w-6xl">
         <div className="grid lg:grid-cols-2 gap-14 lg:gap-24 items-center">
-          {/* Editorial photo paired with the prose */}
+          {/* Onboarding demo video — browser-chrome framing for editorial feel */}
           <AnimatedSection>
-            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
-              <img
-                src="/landing/feature-cv.png"
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              <div className="absolute inset-x-6 bottom-6 rounded-xl bg-white/90 backdrop-blur px-5 py-4 ring-1 ring-black/[0.04]">
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-foreground/50">
-                  Career Readiness
-                </p>
-                <div className="mt-2 flex items-baseline gap-3">
-                  <span className="font-sans text-2xl font-semibold text-foreground tracking-tight">
-                    78%
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded-md bg-primary/10 text-primary font-medium">
-                    +12 this week
-                  </span>
+            <div className="rounded-2xl overflow-hidden border border-border bg-card shadow-2xl shadow-black/10">
+              <div className="flex items-center gap-2 px-4 py-3 bg-muted border-b border-border">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-destructive/60" />
+                  <div className="w-3 h-3 rounded-full bg-warning/60" />
+                  <div className="w-3 h-3 rounded-full bg-success/60" />
                 </div>
-                <div className="mt-3 h-1.5 rounded-full bg-foreground/10 overflow-hidden">
-                  <div className="h-full w-[78%] rounded-full bg-primary" />
+                <div className="flex-1 mx-4">
+                  <div className="bg-background rounded-md px-3 py-1.5 text-xs text-muted-foreground max-w-md mx-auto text-center">
+                    syncareer.app
+                  </div>
                 </div>
+              </div>
+              <div className="relative aspect-video bg-foreground/5">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                >
+                  <source
+                    src="https://fsorkxlcasekndigezlx.supabase.co/storage/v1/object/public/videos/demo-video.mp4"
+                    type="video/mp4"
+                  />
+                </video>
               </div>
             </div>
           </AnimatedSection>
