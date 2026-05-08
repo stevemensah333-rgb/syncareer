@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useAuth } from '@clerk/react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineDraft } from '@/hooks/useOfflineDraft';
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -142,11 +143,12 @@ const Assessment = () => {
   const [showIntro, setShowIntro] = useState<string | null>(null);
   const [guestSubmitting, setGuestSubmitting] = useState(false);
   const isOnline = useOnlineStatus();
+  const { userId: clerkUserId } = useAuth();
   const assessmentDraft = useOfflineDraft<{
     answers: Record<number, number>;
     currentPage: number;
     takingAssessment: boolean;
-  }>('assessment', null);
+  }>('assessment', clerkUserId);
   const [pendingOfflineSubmit, setPendingOfflineSubmit] = useState(false);
 
   // Hydrate from offline draft on first mount

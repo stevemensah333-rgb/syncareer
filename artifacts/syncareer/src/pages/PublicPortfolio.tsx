@@ -199,7 +199,11 @@ export default function PublicPortfolio() {
   return (
     <PageLayout title={`${displayName}'s Portfolio`}>
       <div className="max-w-5xl mx-auto">
-        <div className="mb-2"><CachedDataIndicator hasData={true} /></div>
+        <div className="mb-2">
+          <CachedDataIndicator
+            hasData={projects.length > 0 || endorsements.length > 0}
+          />
+        </div>
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2 mb-4">
           <ArrowLeft className="h-4 w-4" />
           Back

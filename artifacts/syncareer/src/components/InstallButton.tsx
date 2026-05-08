@@ -6,6 +6,11 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+// Safari adds a non-standard `standalone` boolean to navigator on iOS.
+interface NavigatorWithStandalone extends Navigator {
+  standalone?: boolean;
+}
+
 interface InstallButtonProps {
   className?: string;
   label?: string;
@@ -20,11 +25,10 @@ export default function InstallButton({
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    const navWithStandalone = window.navigator as NavigatorWithStandalone;
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      // iOS Safari
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window.navigator as any).standalone === true;
+      navWithStandalone.standalone === true;
     setIsStandalone(standalone);
 
     const handler = (e: Event) => {

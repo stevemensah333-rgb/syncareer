@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useOfflineDraft } from '@/hooks/useOfflineDraft';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,14 +43,33 @@ const InterviewSimulator = () => {
   const [step, setStep] = useState<'setup' | 'interview'>('setup');
   const [sessionLength, setSessionLength] = useState<SessionLength>('standard');
   const feedbackModal = useFeedbackModal('interview_simulator');
-  const [config, setConfig] = useState<InterviewSetupConfig>({
-    jobRole: '',
-    industry: '',
-    difficulty: 'intermediate',
-    interviewType: 'mixed',
-    resumeText: '',
-    jobDescription: '',
-  });
+  const { userId: clerkUserId } = useAuth();
+  const setupDraft = useOfflineDraft<InterviewSetupConfig>(
+    'interview-setup',
+    clerkUserId,
+  );
+  const [config, setConfigRaw] = useState<InterviewSetupConfig>(
+    () =>
+      setupDraft.draft || {
+        jobRole: '',
+        industry: '',
+        difficulty: 'intermediate',
+        interviewType: 'mixed',
+        resumeText: '',
+        jobDescription: '',
+      },
+  );
+  // Persist setup form to localStorage so it survives reload / offline.
+  const setConfig: typeof setConfigRaw = (updater) => {
+    setConfigRaw((prev) => {
+      const next =
+        typeof updater === 'function'
+          ? (updater as (p: InterviewSetupConfig) => InterviewSetupConfig)(prev)
+          : updater;
+      setupDraft.saveDraft(next);
+      return next;
+    });
+  };
 
   // Dynamic pre-fill from assessment results + saved CV
   useEffect(() => {

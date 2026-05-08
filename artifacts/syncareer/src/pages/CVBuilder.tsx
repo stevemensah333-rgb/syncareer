@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useAuth } from '@clerk/react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineDraft } from '@/hooks/useOfflineDraft';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -115,8 +116,9 @@ const CVBuilder = () => {
   const [uploadOpen, setUploadOpen] = useState(false);
   const cvAnalysis = useCVAnalysis();
   const isOnline = useOnlineStatus();
+  const { userId: clerkUserId } = useAuth();
   const [pendingSync, setPendingSync] = useState(false);
-  const offlineDraft = useOfflineDraft<CVData>('cv-builder', null);
+  const offlineDraft = useOfflineDraft<CVData>('cv-builder', clerkUserId);
 
   // Wrap setCVData so every change writes through to the offline draft.
   const setCVData: typeof setCVDataRaw = (updater) => {

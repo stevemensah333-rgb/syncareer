@@ -75,9 +75,27 @@ export default defineConfig({
       workbox: {
         navigateFallback: `${basePath.replace(/\/$/, "")}/offline.html`,
         navigateFallbackDenylist: [/^\/api\//, /^\/sign-in/, /^\/sign-up/],
+        // Precache the entire built app shell (HTML/JS/CSS/icons/fonts) so the
+        // app boots offline even on first navigation after install.
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webp,jpg,jpeg}"],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          // App-shell HTML / JS / CSS — NetworkFirst so users see fresh deploys
+          // when online but still load instantly from cache when offline.
+          {
+            urlPattern: ({ request, sameOrigin }) =>
+              sameOrigin &&
+              (request.destination === "document" ||
+                request.destination === "script" ||
+                request.destination === "style"),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "app-shell",
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           // Auth & writes — never cache
           {
             urlPattern: ({ url }) =>
