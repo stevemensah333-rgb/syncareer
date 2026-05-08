@@ -148,6 +148,20 @@ const Onboarding = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [firstName, setFirstName] = useState<string>('');
+
+  const welcomeStorageKey = (uid: string) => `syncareer:onboarding-welcome-seen:${uid}`;
+  const dismissWelcome = () => {
+    if (userId) {
+      try {
+        localStorage.setItem(welcomeStorageKey(userId), '1');
+      } catch {
+        // ignore storage errors (private mode, quota, etc.)
+      }
+    }
+    setShowWelcome(false);
+  };
 
   // User type from signup (no longer selected here)
   const [userType, setUserType] = useState<string>('');
@@ -189,10 +203,20 @@ const Onboarding = () => {
       }
       setUserId(session.user.id);
 
+      // Show welcome only on first visit per user (persisted in localStorage)
+      try {
+        const seen = localStorage.getItem(welcomeStorageKey(session.user.id));
+        if (!seen) setShowWelcome(true);
+      } catch {
+        setShowWelcome(true);
+      }
+
       // Pre-fill counsellor name from auth metadata
       const userFullName = session.user.user_metadata?.full_name;
       if (userFullName) {
         setCounsellorFullName(userFullName);
+        const first = String(userFullName).trim().split(/\s+/)[0];
+        if (first) setFirstName(first);
       }
 
       // Get user type from profile (set during signup)
@@ -322,6 +346,58 @@ const Onboarding = () => {
     return (
       <OnboardingShell eyebrow="Setting things up" title="One moment" italicWord="moment" subtitle="">
         <div className="text-center text-foreground/60">Loading...</div>
+      </OnboardingShell>
+    );
+  }
+
+  if (showWelcome) {
+    const greetingName = firstName ? `, ${firstName}` : '';
+    const benefits =
+      userType === 'employer'
+        ? [
+            'Post roles and reach vetted African graduates',
+            'Search talent by skill, field, and location',
+            'Manage applicants from one simple dashboard',
+          ]
+        : userType === 'career_counsellor'
+        ? [
+            'Set up your practice and accept bookings',
+            'Run sessions with built-in scheduling',
+            'Build your reputation through ratings',
+          ]
+        : [
+            'A 5-minute assessment to surface careers that fit',
+            'An ATS-ready CV and an AI interview coach',
+            'Real jobs, mentors, and a community to grow with',
+          ];
+
+    return (
+      <OnboardingShell
+        eyebrow="Welcome to Syncareer"
+        title={`Glad you're here${greetingName}`}
+        italicWord="here"
+        subtitle="Take a moment — here's what's waiting for you on the other side of setup."
+      >
+        <div className="bg-white/95 backdrop-blur rounded-3xl shadow-[0_20px_60px_-30px_rgba(20,20,20,0.25)] ring-1 ring-black/[0.04] p-6 sm:p-10">
+          <ul className="space-y-5">
+            {benefits.map((b, i) => (
+              <li key={i} className="flex items-start gap-4">
+                <span className="mt-1 flex h-7 w-7 flex-none items-center justify-center rounded-full bg-primary/10 font-serif text-sm text-primary">
+                  {i + 1}
+                </span>
+                <span className="text-foreground/80 leading-relaxed text-base">{b}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="flex justify-end pt-8">
+            <Button
+              onClick={dismissWelcome}
+              className="rounded-full px-8 h-12 bg-foreground text-background hover:bg-foreground/90"
+            >
+              Let's go
+            </Button>
+          </div>
+        </div>
       </OnboardingShell>
     );
   }
