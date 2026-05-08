@@ -74,7 +74,13 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: `${basePath.replace(/\/$/, "")}/offline.html`,
-        navigateFallbackDenylist: [/^\/api\//, /^\/sign-in/, /^\/sign-up/],
+        navigateFallbackDenylist: [
+          // Match these segments anywhere in the path so they work whether the
+          // app is mounted at "/" or under a basePath like "/syncareer/".
+          /\/api\//,
+          /\/sign-in(\/|$)/,
+          /\/sign-up(\/|$)/,
+        ],
         // Precache the entire built app shell (HTML/JS/CSS/icons/fonts) so the
         // app boots offline even on first navigation after install.
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webp,jpg,jpeg}"],

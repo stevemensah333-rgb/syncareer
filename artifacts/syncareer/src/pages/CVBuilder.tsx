@@ -141,6 +141,9 @@ const CVBuilder = () => {
         const draftLoaded = !!offlineDraft.draft;
         if (offlineDraft.draft) {
           setCVDataRaw(offlineDraft.draft);
+          // A hydrated local draft is unsynced work — surface "Sync now" so the
+          // user can push it to the cloud as soon as they're back online.
+          setPendingSync(true);
         }
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) { setIsLoadingCV(false); return; }
