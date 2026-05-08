@@ -1,36 +1,85 @@
 import AnimatedSection from "./AnimatedSection";
-import { Sparkles, FileCheck2, Mic, Briefcase, GraduationCap, Users } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const reasons = [
-  { icon: Sparkles, title: "AI Career Match", body: "RIASEC + skills + interests cross-referenced with 25+ career paths to surface roles you'll actually thrive in." },
-  { icon: FileCheck2, title: "ATS-Ready CV", body: "Templates engineered to pass screening filters used by real recruiters across Africa and beyond." },
-  { icon: Mic, title: "Voice Interview Prep", body: "Practice with SynAssist using role-specific questions and get structured, deterministic feedback." },
-  { icon: Briefcase, title: "Real Job Listings", body: "Curated entry-level openings from Jobberman, BrightSpire, and direct employer postings on Syncareer." },
-  { icon: GraduationCap, title: "Skill Gap Closing", body: "Free YouTube and curated learning paths matched to the exact skills your target role requires." },
-  { icon: Users, title: "Mentor Access", body: "Book sessions with vetted career counsellors who understand the local job market." },
+const services = [
+  {
+    image: "/landing/feature-cv.png",
+    eyebrow: "Career Assessment",
+    title: "Find a path that actually fits.",
+    body: "RIASEC + skills + interests cross-referenced with 25+ career paths so the recommendation feels obvious, not generic.",
+    href: "/assessment",
+    cta: "Take the assessment",
+  },
+  {
+    image: "/landing/feature-interview.png",
+    eyebrow: "CV Builder",
+    title: "An ATS-ready CV in minutes.",
+    body: "Templates engineered to pass screening filters, with a built-in score that tells you exactly what to tighten.",
+    href: "/cv-builder",
+    cta: "Open the builder",
+  },
+  {
+    image: "/landing/feature-counsellor.png",
+    eyebrow: "Interview Practice",
+    title: "Walk in already rehearsed.",
+    body: "Voice interviews with SynAssist. Role-specific prompts, calm pacing, and feedback you can act on the same day.",
+    href: "/interview-simulator",
+    cta: "Practice now",
+  },
 ];
 
 export default function SolutionSection() {
+  const navigate = useNavigate();
   return (
-    <section id="features" className="bg-background py-20 md:py-28 border-t border-border">
+    <section id="features" className="relative py-24 md:py-32">
       <div className="container mx-auto px-6 max-w-6xl">
-        <AnimatedSection className="max-w-2xl mb-14">
-          <p className="text-xs font-medium uppercase tracking-wider text-primary mb-4">Why Syncareer</p>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight text-foreground tracking-tight">
-            Everything you need to land your first role.
+        <AnimatedSection className="max-w-3xl mb-16 md:mb-20">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-5">
+            What you get
+          </p>
+          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-foreground tracking-[-0.01em]">
+            Everything you need to <em>land your first role.</em>
           </h2>
         </AnimatedSection>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {reasons.map((r, i) => (
-            <AnimatedSection key={r.title} delay={(i % 3) * 0.08}>
-              <div className="h-full rounded-xl border border-border bg-card p-6 hover:border-primary/30 hover:shadow-md transition-all">
-                <div className="inline-flex items-center justify-center h-9 w-9 rounded-md bg-primary/10 text-primary mb-4">
-                  <r.icon className="h-4 w-4" />
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          {services.map((s, i) => (
+            <AnimatedSection key={s.title} delay={(i % 3) * 0.08}>
+              <button
+                onClick={() => navigate(s.href)}
+                className="group block w-full text-left h-full"
+              >
+                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted">
+                  <img
+                    src={s.image}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                  />
+                  <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
+                    <span className="inline-flex items-center rounded-full bg-white/85 backdrop-blur px-3 py-1 text-[11px] font-medium text-foreground/80 ring-1 ring-black/[0.04]">
+                      {s.eyebrow}
+                    </span>
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-foreground transition-transform duration-300 group-hover:rotate-45">
+                      <ArrowUpRight className="h-4 w-4" />
+                    </span>
+                  </div>
                 </div>
-                <h3 className="text-base font-semibold text-foreground mb-2">{r.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{r.body}</p>
-              </div>
+                <div className="pt-5 px-1">
+                  <h3 className="font-serif text-2xl md:text-[1.65rem] leading-tight text-foreground mb-2">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm text-foreground/65 leading-relaxed">
+                    {s.body}
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                    {s.cta}
+                    <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </span>
+                </div>
+              </button>
             </AnimatedSection>
           ))}
         </div>

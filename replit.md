@@ -19,6 +19,7 @@ AI-powered career platform for African graduates — career assessments, CV buil
 
 ## Where things live
 
+- `artifacts/syncareer/public/landing/` — editorial hero + service photos used by the landing page
 - `artifacts/syncareer/` — React frontend (main app)
 - `artifacts/api-server/` — Express API server
 - `artifacts/syncareer/src/integrations/supabase/client.ts` — Supabase client + Clerk auth shim

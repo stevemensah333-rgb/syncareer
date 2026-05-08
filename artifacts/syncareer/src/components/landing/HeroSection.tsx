@@ -1,99 +1,157 @@
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface HeroSectionProps {
   onSignUp: () => void;
 }
 
+const HEADLINE_LINES: string[][] = [
+  ["From", "uncertainty"],
+  ["to", "career", "clarity."],
+];
+
+const EASE = [0.22, 1, 0.36, 1] as const;
+
 export default function HeroSection({ onSignUp }: HeroSectionProps) {
   const navigate = useNavigate();
+  const reduce = useReducedMotion();
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // Slow parallax on the hero photo as the user scrolls down.
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+  const photoY = useTransform(scrollYProgress, [0, 1], ["0%", "-12%"]);
+  const photoScale = useTransform(scrollYProgress, [0, 1], [1.05, 1.12]);
+
+  // Per-word stagger animation for the headline.
+  let wordIndex = 0;
 
   return (
-    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-background">
-      {/* Subtle radial accent in brand color */}
-      <div
+    <section
+      ref={sectionRef}
+      className="relative isolate min-h-[100svh] flex items-center justify-center overflow-hidden"
+    >
+      {/* Full-bleed hero photo with slow parallax */}
+      <motion.div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(60% 50% at 50% 0%, hsl(var(--primary) / 0.08) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.35]"
-        style={{
-          backgroundImage:
-            "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
-          maskImage:
-            "radial-gradient(ellipse 60% 60% at 50% 40%, black 40%, transparent 80%)",
-        }}
-      />
+        className="absolute inset-0 -z-10"
+        style={reduce ? undefined : { y: photoY, scale: photoScale }}
+      >
+        <img
+          src="/landing/hero-graduate.png"
+          alt=""
+          loading="eager"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
+        {/* Cream wash so the editorial type stays legible */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, hsl(var(--landing-cream) / 0.55) 0%, hsl(var(--landing-cream) / 0.35) 40%, hsl(var(--landing-cream) / 0.85) 100%)",
+          }}
+        />
+      </motion.div>
 
-      <div className="relative z-10 container mx-auto px-6 text-center max-w-4xl pt-28 pb-20">
+      <div className="relative z-10 container mx-auto px-6 text-center max-w-5xl pt-32 pb-24">
+        {/* Floating eyebrow badge */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: reduce ? 0 : 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground mb-8"
+          transition={{ duration: 0.6, ease: EASE }}
+          className="inline-flex"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          AI career platform · Built for African graduates
+          <motion.div
+            animate={
+              reduce
+                ? undefined
+                : { y: [0, -6, 0] }
+            }
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-3.5 py-1.5 text-[11px] font-medium text-foreground/70 shadow-sm ring-1 ring-black/[0.04] mb-10"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            For African graduates · Built with care
+          </motion.div>
         </motion.div>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="font-sans text-foreground text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.05] tracking-tight"
-        >
-          From uncertainty
-          <br />
-          to <span className="text-primary">career clarity.</span>
-        </motion.h1>
+        {/* Editorial serif headline, per-word stagger */}
+        <h1 className="font-serif text-foreground text-5xl sm:text-6xl md:text-7xl lg:text-[8rem] font-normal leading-[0.98] tracking-[-0.02em]">
+          {HEADLINE_LINES.map((line, lineIdx) => (
+            <span
+              key={lineIdx}
+              className="block"
+              style={{
+                fontStyle: lineIdx === 1 ? "italic" : "normal",
+              }}
+            >
+              {line.map((word) => {
+                const i = wordIndex++;
+                return (
+                  <motion.span
+                    key={`${lineIdx}-${i}`}
+                    initial={{ opacity: 0, y: reduce ? 0 : "0.4em" }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.8,
+                      delay: 0.15 + i * 0.08,
+                      ease: EASE,
+                    }}
+                    className="inline-block mr-[0.22em] last:mr-0"
+                  >
+                    {word === "clarity." ? (
+                      <span className="text-primary">{word}</span>
+                    ) : (
+                      word
+                    )}
+                  </motion.span>
+                );
+              })}
+            </span>
+          ))}
+        </h1>
 
+        {/* Sub-copy */}
         <motion.p
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: reduce ? 0 : 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+          transition={{ duration: 0.7, delay: 0.7, ease: EASE }}
+          className="mx-auto mt-8 max-w-xl text-base sm:text-lg text-foreground/70 leading-relaxed"
         >
-          A free 5-minute career assessment, an ATS-ready CV builder, and AI interview
-          practice — all in one workspace built to get you hired.
+          A free 5-minute career assessment, an ATS-ready CV builder, and AI
+          interview practice — built to get you hired.
         </motion.p>
 
+        {/* Pill CTAs */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: reduce ? 0 : 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.35 }}
+          transition={{ duration: 0.7, delay: 0.85, ease: EASE }}
           className="mt-10 flex flex-wrap justify-center items-center gap-3"
         >
           <button
-            onClick={() => navigate('/assessment')}
-            className="group inline-flex items-center gap-2 rounded-lg px-5 h-11 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+            onClick={() => navigate("/assessment")}
+            className="group inline-flex items-center gap-2 rounded-full px-6 h-12 text-sm font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors shadow-sm"
           >
             Start free assessment
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
           <button
             onClick={onSignUp}
-            className="inline-flex items-center rounded-lg px-5 h-11 text-sm font-medium bg-card text-foreground border border-border hover:bg-muted transition-colors"
+            className="inline-flex items-center rounded-full px-6 h-12 text-sm font-medium bg-white/85 backdrop-blur text-foreground hover:bg-white transition-colors ring-1 ring-black/[0.06]"
           >
             Create account
           </button>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.55 }}
-          className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground"
-        >
-          <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> No credit card</span>
-          <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> 2,400+ students</span>
-          <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> 12+ universities</span>
         </motion.div>
       </div>
     </section>
