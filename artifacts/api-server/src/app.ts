@@ -36,20 +36,32 @@ app.use(
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
 const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : undefined;
+  ? new Set(process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim().replace(/\/$/, '')))
+  : null;
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(cors({
   credentials: true,
-  origin: allowedOrigins
-    ? (origin, cb) => {
-        if (!origin || allowedOrigins.some(o => origin.startsWith(o))) {
-          cb(null, true);
-        } else {
-          cb(new Error(`Origin ${origin} not allowed by CORS`));
-        }
-      }
-    : true,
+  origin: (origin, cb) => {
+    // Same-origin or server-to-server requests (no Origin header)
+    if (!origin) return cb(null, !isProduction);
+
+    // Normalize: strip trailing slash
+    const normalizedOrigin = origin.replace(/\/$/, '');
+
+    if (!allowedOrigins) {
+      // No allowlist configured: open in dev, deny in production
+      return cb(isProduction ? new Error('CORS: no allowlist configured') : null, !isProduction);
+    }
+
+    // Exact match only — no startsWith to prevent subdomain spoofing
+    if (allowedOrigins.has(normalizedOrigin)) {
+      return cb(null, true);
+    }
+
+    return cb(new Error(`CORS: origin ${origin} not allowed`));
+  },
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
