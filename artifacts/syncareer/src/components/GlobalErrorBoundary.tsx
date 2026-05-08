@@ -1,5 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -9,6 +8,8 @@ interface State {
   hasError: boolean;
   error: Error | null;
 }
+
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export class GlobalErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
@@ -28,31 +29,58 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     window.location.reload();
   };
 
+  handleHome = () => {
+    window.location.href = `${basePath}/`;
+  };
+
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-6" role="alert">
-          <div className="max-w-md w-full text-center space-y-6">
-            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-              <AlertTriangle className="h-8 w-8 text-destructive" aria-hidden="true" />
+        <div
+          role="alert"
+          className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden"
+          style={{ backgroundColor: "hsl(var(--landing-cream))" }}
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full blur-3xl"
+            style={{ backgroundColor: "hsl(var(--landing-amber) / 0.18)" }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-40 -right-40 h-[32rem] w-[32rem] rounded-full blur-3xl"
+            style={{ backgroundColor: "hsl(var(--primary) / 0.07)" }}
+          />
+          <div className="relative z-10 w-full max-w-md flex flex-col items-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-3.5 py-1.5 text-[11px] font-medium text-foreground/70 shadow-sm ring-1 ring-black/[0.04] mb-6">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Unexpected hiccup
+            </span>
+            <h1 className="font-serif text-4xl sm:text-5xl font-normal leading-[1.05] tracking-[-0.02em] text-foreground text-center">
+              Something{" "}
+              <span className="italic text-primary">went sideways</span>
+            </h1>
+            <p className="mt-4 max-w-sm text-center text-foreground/60 text-sm sm:text-base leading-relaxed">
+              An unexpected error tripped us up. Your data is safe — give the page a reload and you should be right back to it.
+            </p>
+            <div className="mt-10 w-full flex flex-col items-center gap-3">
+              <button
+                onClick={this.handleReload}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background shadow-sm transition-colors hover:bg-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 w-full sm:w-auto sm:min-w-[220px]"
+              >
+                Reload page
+              </button>
+              <button
+                onClick={this.handleHome}
+                className="inline-flex h-11 items-center justify-center rounded-full px-6 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+              >
+                Back to home
+              </button>
             </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-foreground">Something went wrong</h1>
-              <p className="text-muted-foreground">
-                An unexpected error occurred. Your data is safe — try reloading the page.
-              </p>
-            </div>
-            <button
-              onClick={this.handleReload}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <RefreshCw className="h-4 w-4" aria-hidden="true" />
-              Reload Page
-            </button>
             {import.meta.env.DEV && this.state.error && (
-              <details className="text-left mt-4 p-4 rounded-lg bg-muted text-sm">
-                <summary className="cursor-pointer font-medium text-muted-foreground">
-                  Error Details
+              <details className="text-left mt-8 w-full p-4 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-black/[0.04] text-sm">
+                <summary className="cursor-pointer font-medium text-foreground/70">
+                  Error details
                 </summary>
                 <pre className="mt-2 whitespace-pre-wrap text-destructive text-xs overflow-auto max-h-48">
                   {this.state.error.message}
