@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ClerkProvider, SignIn, SignUp, useAuth, useUser } from "@clerk/react";
 import { shadcn } from "@clerk/themes";
 import { UserProfileProvider } from "./contexts/UserProfileContext";
@@ -163,27 +163,104 @@ function AuthShell({
   );
 }
 
+type AuthCopy = {
+  eyebrow: string;
+  title: string;
+  italicWord: string;
+  subtitle: string;
+};
+
+function getSignInCopy(pathname: string): AuthCopy {
+  const sub = pathname.replace(`${basePath}/sign-in`, "").replace(/^\//, "").split("/")[0];
+  if (sub === "factor-two" || sub === "factor-one" && pathname.includes("totp")) {
+    return {
+      eyebrow: "One more check",
+      title: "Confirm it's really you",
+      italicWord: "really you",
+      subtitle: "Enter the code from your authenticator app or backup device to finish signing in.",
+    };
+  }
+  if (sub === "reset-password" || sub === "reset-password-success") {
+    return {
+      eyebrow: "Almost there",
+      title: "Choose a new password",
+      italicWord: "new password",
+      subtitle: "Pick something memorable — you'll use it next time you sign in to Syncareer.",
+    };
+  }
+  if (sub === "forgot-password") {
+    return {
+      eyebrow: "No worries",
+      title: "Reset your password",
+      italicWord: "your password",
+      subtitle: "Tell us the email on your account and we'll send a code to get you back in.",
+    };
+  }
+  if (sub === "factor-one") {
+    return {
+      eyebrow: "Check your inbox",
+      title: "Enter the code we sent",
+      italicWord: "code we sent",
+      subtitle: "We just emailed you a one-time code to confirm it's you.",
+    };
+  }
+  return {
+    eyebrow: "Welcome back",
+    title: "Sign in to keep going",
+    italicWord: "keep going",
+    subtitle: "Pick up where you left off — your assessments, CV, and saved roles are waiting.",
+  };
+}
+
+function getSignUpCopy(pathname: string): AuthCopy {
+  const sub = pathname.replace(`${basePath}/sign-up`, "").replace(/^\//, "").split("/")[0];
+  if (sub === "verify-email-address") {
+    return {
+      eyebrow: "Check your inbox",
+      title: "Confirm your email",
+      italicWord: "your email",
+      subtitle: "We just sent a one-time code — pop it in below to finish setting up your account.",
+    };
+  }
+  if (sub === "verify-phone-number") {
+    return {
+      eyebrow: "Quick check",
+      title: "Confirm your number",
+      italicWord: "your number",
+      subtitle: "We sent a code by SMS — enter it below to verify your phone.",
+    };
+  }
+  if (sub === "continue") {
+    return {
+      eyebrow: "Almost done",
+      title: "A few more details",
+      italicWord: "more details",
+      subtitle: "Just a couple of things to finish setting up your Syncareer account.",
+    };
+  }
+  return {
+    eyebrow: "For African graduates",
+    title: "Start your career story",
+    italicWord: "career story",
+    subtitle: "Take the free assessment, build an ATS-ready CV, and practise interviews — all in one place.",
+  };
+}
+
 function SignInPage() {
+  const { pathname } = useLocation();
+  const copy = getSignInCopy(pathname);
   return (
-    <AuthShell
-      eyebrow="Welcome back"
-      title="Sign in to keep going"
-      italicWord="keep going"
-      subtitle="Pick up where you left off — your assessments, CV, and saved roles are waiting."
-    >
+    <AuthShell {...copy}>
       <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
     </AuthShell>
   );
 }
 
 function SignUpPage() {
+  const { pathname } = useLocation();
+  const copy = getSignUpCopy(pathname);
   return (
-    <AuthShell
-      eyebrow="For African graduates"
-      title="Start your career story"
-      italicWord="career story"
-      subtitle="Take the free assessment, build an ATS-ready CV, and practise interviews — all in one place."
-    >
+    <AuthShell {...copy}>
       <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
     </AuthShell>
   );
