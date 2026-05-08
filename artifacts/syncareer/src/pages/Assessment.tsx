@@ -394,20 +394,34 @@ const Assessment = () => {
               <ArrowLeft className="h-4 w-4 mr-2" /> Previous
             </Button>
             {isLastPage ? (
-              <Button
-                onClick={handleSubmit}
-                disabled={answeredCount < TOTAL_QUESTIONS || submitting || guestSubmitting}
-                title={!isOnline && !isGuest ? 'Will submit automatically when you reconnect' : undefined}
-              >
-                {pendingOfflineSubmit
-                  ? 'Will submit when online'
-                  : (submitting || guestSubmitting)
+              <div className="flex flex-col items-end gap-1">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={
+                    answeredCount < TOTAL_QUESTIONS ||
+                    submitting ||
+                    guestSubmitting ||
+                    (!isOnline && !isGuest && !pendingOfflineSubmit)
+                  }
+                  title={!isOnline && !isGuest ? 'Saved locally — submits when you reconnect' : undefined}
+                >
+                  {(submitting || guestSubmitting)
                     ? 'Submitting...'
-                    : !isOnline && !isGuest
-                      ? 'Submit when online'
-                      : 'Submit Assessment'}
-                <ClipboardCheck className="h-4 w-4 ml-2" />
-              </Button>
+                    : pendingOfflineSubmit && isOnline
+                      ? 'Sync now'
+                      : pendingOfflineSubmit
+                        ? 'Will submit when online'
+                        : !isOnline && !isGuest
+                          ? 'Saved locally'
+                          : 'Submit Assessment'}
+                  <ClipboardCheck className="h-4 w-4 ml-2" />
+                </Button>
+                {!isOnline && !isGuest && (
+                  <span className="text-[11px] text-muted-foreground">
+                    Saved locally — submits when you reconnect
+                  </span>
+                )}
+              </div>
             ) : (
               <Button onClick={handleNext} disabled={!allCurrentAnswered}>
                 Next <ArrowRight className="h-4 w-4 ml-2" />

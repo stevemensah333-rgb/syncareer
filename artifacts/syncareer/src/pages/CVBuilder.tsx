@@ -384,21 +384,28 @@ const CVBuilder = () => {
                 <Eye className="h-4 w-4 mr-2" />
                 {showPreview ? 'Hide Preview' : 'Preview'}
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleSaveCV}
-                disabled={isSaving}
-                title={!isOnline ? 'Saved locally — will sync when online' : undefined}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {isSaving
-                  ? 'Saving...'
-                  : !isOnline
-                    ? 'Saved locally'
-                    : pendingSync && offlineDraft.lastSavedAt
-                      ? 'Sync now'
-                      : 'Save'}
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                <Button
+                  variant="outline"
+                  onClick={handleSaveCV}
+                  disabled={isSaving || !isOnline}
+                  title={!isOnline ? 'Saved locally — will sync when online' : undefined}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSaving
+                    ? 'Saving...'
+                    : !isOnline
+                      ? 'Saved locally'
+                      : pendingSync && offlineDraft.lastSavedAt
+                        ? 'Sync now'
+                        : 'Save'}
+                </Button>
+                {!isOnline && (
+                  <span className="text-[11px] text-muted-foreground">
+                    Saved locally — will sync when online
+                  </span>
+                )}
+              </div>
               <Button
                 onClick={handleDownloadPDF}
                 disabled={isGeneratingPDF}
