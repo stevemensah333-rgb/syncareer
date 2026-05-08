@@ -4,13 +4,15 @@ import { useAuth } from '@clerk/react';
 import { supabase } from '@/integrations/supabase/client';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
 import { useUserProfile } from '@/contexts/UserProfileContext';
+import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 
 interface AdminRouteProps {
   children: React.ReactNode;
 }
 
 const AdminRoute = ({ children }: AdminRouteProps) => {
-  const { userId, isLoaded } = useAuth();
+  const { isLoaded } = useAuth();
+  const supabaseUserId = useSupabaseUserId();
   const { profile } = useUserProfile();
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -19,14 +21,14 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
     if (!isLoaded) return;
     const checkAdmin = async () => {
       try {
-        if (!userId) {
+        if (!supabaseUserId) {
           setChecking(false);
           return;
         }
         const { data } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', userId)
+          .eq('user_id', supabaseUserId)
           .eq('role', 'admin')
           .maybeSingle();
         setIsAdmin(!!data);
@@ -37,7 +39,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
       }
     };
     checkAdmin();
-  }, [isLoaded, userId]);
+  }, [isLoaded, supabaseUserId]);
 
   if (checking) {
     return (
