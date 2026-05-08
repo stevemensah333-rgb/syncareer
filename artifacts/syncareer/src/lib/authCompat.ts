@@ -56,7 +56,9 @@ export async function getCompatSession(): Promise<{ data: { session: CompatSessi
   };
 }
 
-export async function getCompatUser(): Promise<{ data: { user: CompatSession['user'] | null } }> {
+type CompatUser = NonNullable<CompatSession>['user'];
+
+export async function getCompatUser(): Promise<{ data: { user: CompatUser | null } }> {
   const { data: { session } } = await getCompatSession();
   return { data: { user: session?.user ?? null } };
 }

@@ -113,11 +113,13 @@ export default function PublicPortfolio() {
 
       setProjects((projectsRes.data || []).map(p => ({
         ...p,
+        tags: p.tags ?? [],
+        is_verified: p.is_verified ?? false,
         avgRating: reviewsByProject[p.id]
           ? reviewsByProject[p.id].reduce((a, b) => a + b, 0) / reviewsByProject[p.id].length
           : 0,
-        reviewCount: reviewsByProject[p.id]?.length || 0,
-      })));
+        reviewCount: reviewsByProject[p.id]?.length ?? 0,
+      })) as any);
 
       // Endorsements
       const endorsementCounts: Record<string, number> = {};
@@ -289,7 +291,7 @@ export default function PublicPortfolio() {
                       <div className="flex items-start justify-between">
                         <div className="text-4xl mb-2">{getProjectEmoji(project.tags)}</div>
                         <div className="flex items-center gap-2">
-                          {project.reviewCount > 0 && (
+                          {(project.reviewCount ?? 0) > 0 && (
                             <div className="flex items-center gap-1 text-sm">
                               <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                               <span className="font-medium">{project.avgRating?.toFixed(1)}</span>

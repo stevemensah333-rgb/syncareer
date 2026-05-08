@@ -98,7 +98,7 @@ const ApplicationTracker = () => {
             .single() as any) as { data: { full_name: string; meeting_link: string | null } | null };
           return { ...b, counsellor: cd };
         }));
-        setCounsellorBookings(enriched);
+        setCounsellorBookings(enriched as any);
       }
     } catch (err) {
       console.error('Error fetching counsellor bookings:', err);

@@ -87,7 +87,7 @@ export function useNotificationPreferences() {
 
         const { error: updateError } = await supabase
           .from('notification_preferences')
-          .update({ [key]: value })
+          .update({ [key]: value } as any)
           .eq('user_id', session.user.id);
 
         if (updateError) throw updateError;

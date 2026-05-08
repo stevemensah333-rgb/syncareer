@@ -111,7 +111,7 @@ const AskCounsellorDialog: React.FC<AskCounsellorDialogProps> = ({ open, onOpenC
             const { data: reviews } = await supabase
               .from('counsellor_reviews')
               .select('rating')
-              .eq('counsellor_id', counsellor.id);
+              .eq('counsellor_id', counsellor.id as string);
 
             const ratings = reviews || [];
             const averageRating = ratings.length > 0

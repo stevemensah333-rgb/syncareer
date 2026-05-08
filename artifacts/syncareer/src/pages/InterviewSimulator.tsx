@@ -68,8 +68,8 @@ const InterviewSimulator = () => {
       if (assessment?.primary_interest) {
         setConfig(prev => ({
           ...prev,
-          jobRole: prev.jobRole || assessment.primary_interest,
-          industry: prev.industry || assessment.primary_interest,
+          jobRole: prev.jobRole || assessment.primary_interest || '',
+          industry: prev.industry || assessment.primary_interest || '',
         }));
       } else if (studentDetails?.major) {
         // Fallback: use major as a rough guide

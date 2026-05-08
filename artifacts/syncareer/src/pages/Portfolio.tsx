@@ -66,7 +66,7 @@ const Portfolio = () => {
         .order('created_at', { ascending: false });
 
       if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
+      setProjects((projectsData || []) as any);
     } catch (error) {
       console.error('Error fetching portfolio data:', error);
       toast.error('Failed to load portfolio');

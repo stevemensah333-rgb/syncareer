@@ -1,44 +1,62 @@
-# [Project name]
+# Syncareer
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+AI-powered career platform for African graduates — career assessments, CV builder, interview practice, job matching, and counsellor marketplace.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/syncareer run dev` — run the frontend (port from $PORT env)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
 - `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Frontend: React + Vite, Tailwind CSS v3, react-router-dom
+- Auth: Clerk (`@clerk/react`)
+- DB: Supabase (PostgreSQL) via `@supabase/supabase-js`
+- API: Express 5 (port 8080) with Clerk proxy middleware
+- Payments: Paystack (`VITE_PAYSTACK_PUBLIC_KEY`)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/syncareer/` — React frontend (main app)
+- `artifacts/api-server/` — Express API server
+- `artifacts/syncareer/src/integrations/supabase/client.ts` — Supabase client + Clerk auth shim
+- `artifacts/syncareer/src/App.tsx` — Router, ClerkProvider, AuthBridge, sign-in/sign-up pages
+- `artifacts/syncareer/src/contexts/UserProfileContext.tsx` — user profile state
+- `artifacts/syncareer/src/components/auth/` — ProtectedRoute, AdminRoute, RoleRoute, AuthDialog
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **Clerk auth shim**: `supabase.auth.getSession/getUser/onAuthStateChange/signOut` are monkey-patched in `client.ts` via `setClerkSession()` so all 40+ files using Supabase auth work without individual changes.
+- **AuthBridge component**: Lives in App.tsx, syncs Clerk session state into the shim on every render so the supabase client always has a fresh token.
+- **Supabase database kept as-is**: Only auth is replaced by Clerk; all DB queries still go through `supabase.from(...)`.
+- **AuthDialog redirects**: The old modal auth dialog now redirects to `/sign-in` or `/sign-up` (Clerk-hosted pages) instead of rendering a form.
+- **SecuritySection uses Clerk's openUserProfile()**: Password and 2FA management is delegated to Clerk's built-in user profile modal.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Career assessment (5-minute quiz → career path recommendations)
+- ATS-ready CV builder
+- AI interview simulator
+- Portfolio showcase with peer ratings
+- Counsellor marketplace (booking, sessions, ratings)
+- Employer dashboard (job posts, talent search)
+- Admin dashboard
+- Referral system, notification preferences, multilingual (i18n)
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Keep Supabase for database and edge functions; only auth is via Clerk
+- Maintain Lovable ↔ GitHub ↔ Replit sync
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_CLERK_PROXY_URL` must be set as secrets
+- `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` must be set as secrets
+- The Clerk proxy is wired at `artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts`
+- Vite dev server caches env vars at startup — restart workflow after adding new secrets
+- `lib/authCompat.ts` and `lib/clerkAuth.ts` exist but are unused — safe to delete later
 
 ## Pointers
 
