@@ -23,6 +23,7 @@ const PublicPortfolio = lazy(() => import("./pages/PublicPortfolio"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
+const SignedOut = lazy(() => import("./pages/SignedOut"));
 
 // Student pages
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -314,6 +315,7 @@ const AppContent = () => (
               <Route path="/reset-password" element={<Navigate to="/sign-in" replace />} />
               <Route path="/sign-in/*" element={<SignInPage />} />
               <Route path="/sign-up/*" element={<SignUpPage />} />
+              <Route path="/signed-out" element={<SignedOut />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/subscription-success" element={<SubscriptionSuccess />} />
               <Route path="/portfolio/:userId" element={<PublicPortfolio />} />
@@ -416,6 +418,7 @@ const App = () => (
       appearance={clerkAppearance}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
+      afterSignOutUrl={`${basePath}/signed-out`}
     >
       <AppContent />
     </ClerkProvider>
