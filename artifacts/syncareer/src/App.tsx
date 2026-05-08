@@ -9,6 +9,7 @@ import { shadcn } from "@clerk/themes";
 import { UserProfileProvider } from "./contexts/UserProfileContext";
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { LoadingFallback } from "./components/LoadingFallback";
+import OfflineBanner from "./components/OfflineBanner";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import RoleRoute from "./components/auth/RoleRoute";
 import AdminRoute from "./components/auth/AdminRoute";
@@ -160,6 +161,7 @@ const AppContent = () => (
   <GlobalErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthBridge />
+      <OfflineBanner />
       <UserProfileProvider>
         <TooltipProvider>
           <Toaster />

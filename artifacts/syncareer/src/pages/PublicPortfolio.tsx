@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import CachedDataIndicator from '@/components/CachedDataIndicator';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -197,6 +199,7 @@ export default function PublicPortfolio() {
   return (
     <PageLayout title={`${displayName}'s Portfolio`}>
       <div className="max-w-5xl mx-auto">
+        <div className="mb-2"><CachedDataIndicator hasData={true} /></div>
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2 mb-4">
           <ArrowLeft className="h-4 w-4" />
           Back

@@ -49,6 +49,20 @@ AI-powered career platform for African graduates — career assessments, CV buil
 - Keep Supabase for database and edge functions; only auth is via Clerk
 - Maintain Lovable ↔ GitHub ↔ Replit sync
 
+## PWA / Offline
+
+- `vite-plugin-pwa` (generateSW) is configured in `artifacts/syncareer/vite.config.ts`.
+- Service worker is only registered in production builds (`devOptions.enabled: false`).
+- Auth (Clerk) and any non-GET request use `NetworkOnly`. Supabase REST GETs use `NetworkFirst` (24h, 200 entries).
+- Offline UX:
+  - `src/components/OfflineBanner.tsx` — top banner + "back online" toast (mounted in `App.tsx`).
+  - `src/components/InstallButton.tsx` — beforeinstallprompt; auto-hides when standalone (in landing nav).
+  - `src/components/CachedDataIndicator.tsx` — "Showing cached data" pill + `OfflineEmptyState`.
+  - `src/hooks/useOnlineStatus.ts`, `src/hooks/useOfflineDraft.ts` — drafts persisted to localStorage (debounced).
+- Pages with offline draft persistence: `CVBuilder.tsx`, `Assessment.tsx`. Assessment auto-syncs queued submission when reconnected. Interview simulator gates "Start" when offline.
+- `public/offline.html` is the navigateFallback for unreachable routes.
+- Icons: `public/pwa-192x192.png`, `public/pwa-512x512.png` (existing).
+
 ## Gotchas
 
 - `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_CLERK_PROXY_URL` must be set as secrets

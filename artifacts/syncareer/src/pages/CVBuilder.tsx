@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useOfflineDraft } from '@/hooks/useOfflineDraft';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -101,7 +103,7 @@ const initialCVData: CVData = {
 };
 
 const CVBuilder = () => {
-  const [cvData, setCVData] = useState<CVData>(initialCVData);
+  const [cvData, setCVDataRaw] = useState<CVData>(initialCVData);
   const [activeTab, setActiveTab] = useState('personal');
   const [showPreview, setShowPreview] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -112,13 +114,36 @@ const CVBuilder = () => {
   const feedbackModal = useFeedbackModal('cv_builder');
   const [uploadOpen, setUploadOpen] = useState(false);
   const cvAnalysis = useCVAnalysis();
+  const isOnline = useOnlineStatus();
+  const [pendingSync, setPendingSync] = useState(false);
+  const offlineDraft = useOfflineDraft<CVData>('cv-builder', null);
 
-  // Auto-load saved CV on mount
+  // Wrap setCVData so every change writes through to the offline draft.
+  const setCVData: typeof setCVDataRaw = (updater) => {
+    setCVDataRaw((prev) => {
+      const next =
+        typeof updater === 'function'
+          ? (updater as (p: CVData) => CVData)(prev)
+          : updater;
+      offlineDraft.saveDraft(next);
+      setPendingSync(true);
+      return next;
+    });
+  };
+
+  // Auto-load saved CV on mount — prefer offline draft if it's newer than cloud copy
   useEffect(() => {
     const loadSavedCV = async () => {
       try {
+        // Hydrate from offline draft immediately so the form is usable while we fetch
+        const draftLoaded = !!offlineDraft.draft;
+        if (offlineDraft.draft) {
+          setCVDataRaw(offlineDraft.draft);
+        }
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) { setIsLoadingCV(false); return; }
+        // If we already have a local draft, don't let the cloud fetch clobber it.
+        if (draftLoaded) { setIsLoadingCV(false); return; }
 
         const { data: resume } = await supabase
           .from('resumes')
@@ -230,6 +255,10 @@ const CVBuilder = () => {
   };
 
   const handleSaveCV = async () => {
+    if (!isOnline) {
+      toast.info("You're offline — your CV is saved locally and will sync when you reconnect.");
+      return;
+    }
     setIsSaving(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -354,9 +383,16 @@ const CVBuilder = () => {
                 variant="outline"
                 onClick={handleSaveCV}
                 disabled={isSaving}
+                title={!isOnline ? 'Saved locally — will sync when online' : undefined}
               >
                 <Save className="h-4 w-4 mr-2" />
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving
+                  ? 'Saving...'
+                  : !isOnline
+                    ? 'Saved locally'
+                    : pendingSync && offlineDraft.lastSavedAt
+                      ? 'Sync now'
+                      : 'Save'}
               </Button>
               <Button
                 onClick={handleDownloadPDF}

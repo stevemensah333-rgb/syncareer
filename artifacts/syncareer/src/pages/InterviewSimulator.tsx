@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -152,9 +153,14 @@ const InterviewSimulator = () => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
+  const isOnline = useOnlineStatus();
   const startInterview = () => {
     if (!config.jobRole.trim()) {
       toast.error('Please enter a job role');
+      return;
+    }
+    if (!isOnline) {
+      toast.error("AI voice interview needs internet — reconnect to start a session.");
       return;
     }
     setStep('interview');
