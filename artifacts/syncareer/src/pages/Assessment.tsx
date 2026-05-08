@@ -401,7 +401,7 @@ const Assessment = () => {
                     answeredCount < TOTAL_QUESTIONS ||
                     submitting ||
                     guestSubmitting ||
-                    (!isOnline && !isGuest && !pendingOfflineSubmit)
+                    (!isOnline && !isGuest && pendingOfflineSubmit)
                   }
                   title={!isOnline && !isGuest ? 'Saved locally — submits when you reconnect' : undefined}
                 >

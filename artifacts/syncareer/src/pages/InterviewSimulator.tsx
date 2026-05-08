@@ -184,7 +184,7 @@ const InterviewSimulator = () => {
     if (!isOnline) {
       // No internet → drop into the static, offline-friendly practice flow.
       // AI voice + scored feedback require the network and stay disabled.
-      toast.info("You're offline — starting text-only practice with cached questions. AI feedback resumes when you reconnect.");
+      toast.info("You're offline — starting text-only practice with cached questions. AI feedback is unavailable until you reconnect.");
       setStep('offline-practice');
       return;
     }
