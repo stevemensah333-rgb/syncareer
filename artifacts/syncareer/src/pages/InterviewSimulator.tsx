@@ -484,6 +484,39 @@ const InterviewSimulator = () => {
             questionCount={
               SESSION_OPTIONS.find((o) => o.value === sessionLength)?.questions ?? 10
             }
+            userId={clerkUserId}
+            onSync={async (draft) => {
+              try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                  toast.error('Sign in to sync your practice session.');
+                  return false;
+                }
+                const transcript = draft.questions.map((q) => ({
+                  question: q.question,
+                  category: q.category,
+                  answer: draft.notes[q.id] || '',
+                }));
+                const { error } = await supabase.from('mock_interviews').insert([
+                  {
+                    user_id: user.id,
+                    job_role: draft.jobRole || 'General',
+                    industry: config.industry || null,
+                    difficulty: config.difficulty,
+                    status: 'completed',
+                    transcript,
+                  },
+                ] as never);
+                if (error) throw error;
+                toast.success('Practice session synced.');
+                queryClient.invalidateQueries({ queryKey: ['mock_interviews_history'] });
+                return true;
+              } catch (err) {
+                console.error('Sync failed:', err);
+                toast.error('Could not sync — try again in a moment.');
+                return false;
+              }
+            }}
             onEnd={() => setStep('setup')}
           />
         </div>
