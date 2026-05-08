@@ -9,17 +9,7 @@ export type FeatureKey =
   | 'career_assessment'
   | 'job_application'
   | 'analytics_realtime'
-  | 'ai_personalized_recommendation'
-  // Legacy aliases kept for compatibility
-  | 'ai_coach_basic'
-  | 'ai_coach_unlimited'
-  | 'interview_basic'
-  | 'interview_advanced'
-  | 'cv_basic'
-  | 'cv_advanced'
-  | 'analytics_monthly'
-  | 'portfolio_basic'
-  | 'portfolio_advanced';
+  | 'ai_personalized_recommendation';
 
 // ─── Quantified Free Tier Limits ─────────────────────────────────────────
 export const FREE_LIMITS: Record<string, { limit: number; period: 'monthly' | 'total' | 'active'; label: string }> = {
@@ -33,20 +23,13 @@ export const FREE_LIMITS: Record<string, { limit: number; period: 'monthly' | 't
   ai_personalized_recommendation: { limit: 0,  period: 'total',   label: 'Personalized AI recommendations' },
 };
 
-// ─── Legacy compat ────────────────────────────────────────────────────────
-export const FREE_AI_COACH_MONTHLY_LIMIT = 5;
-
 const PREMIUM_FEATURES: FeatureKey[] = [
   'analytics_realtime',
   'ai_personalized_recommendation',
 ];
 
 export function isPremiumFeature(key: FeatureKey): boolean {
-  // Hard premium-only features
-  if (PREMIUM_FEATURES.includes(key)) return true;
-  // Legacy
-  const legacyPremium: FeatureKey[] = ['ai_coach_unlimited', 'interview_advanced', 'cv_advanced', 'portfolio_advanced'];
-  return legacyPremium.includes(key);
+  return PREMIUM_FEATURES.includes(key);
 }
 
 export function hasAccess(featureKey: FeatureKey, isPremium: boolean): boolean {
@@ -94,30 +77,6 @@ export async function getMonthlyUsage(userId: string, featureKey: string): Promi
   return data?.usage_count ?? 0;
 }
 
-// Legacy helpers kept for compatibility
-export async function getAICoachUsageThisMonth(userId: string): Promise<number> {
-  return getMonthlyUsage(userId, 'ai_coach_session');
-}
-
-export async function incrementAICoachUsage(userId: string): Promise<number> {
-  // Delegate to server-side edge function to avoid double-counting
-  await checkFeatureAccessServer('ai_coach_session', true);
-  return getAICoachUsageThisMonth(userId);
-}
-
-export async function canUseAICoach(
-  userId: string,
-  isPremium: boolean
-): Promise<{ allowed: boolean; used: number; limit: number }> {
-  if (isPremium) return { allowed: true, used: 0, limit: Infinity };
-  const used = await getAICoachUsageThisMonth(userId);
-  return {
-    allowed: used < FREE_AI_COACH_MONTHLY_LIMIT,
-    used,
-    limit: FREE_AI_COACH_MONTHLY_LIMIT,
-  };
-}
-
 // ─── Human-readable labels ────────────────────────────────────────────────
 export const FEATURE_LABELS: Record<string, string> = {
   portfolio_upload: 'Portfolio Projects',
@@ -128,16 +87,6 @@ export const FEATURE_LABELS: Record<string, string> = {
   job_application: 'Active Job Applications',
   analytics_realtime: 'Real-Time Analytics',
   ai_personalized_recommendation: 'Personalized AI Recommendations',
-  // legacy
-  ai_coach_basic: 'AI Coach (Basic)',
-  ai_coach_unlimited: 'AI Coach (Unlimited)',
-  interview_basic: 'Interview Simulator (Basic)',
-  interview_advanced: 'Interview Simulator (Advanced)',
-  cv_basic: 'CV Builder (Essential)',
-  cv_advanced: 'CV Builder (All Features)',
-  analytics_monthly: 'Monthly Analytics',
-  portfolio_basic: 'Portfolio (Basic)',
-  portfolio_advanced: 'Portfolio Analytics',
 };
 
 export const FEATURE_UPGRADE_BENEFITS: Record<string, string[]> = {
@@ -151,30 +100,4 @@ export const FEATURE_UPGRADE_BENEFITS: Record<string, string[]> = {
     'RIASEC-aligned opportunity discovery',
     'Personalized skill gap analysis',
   ],
-  ai_coach_unlimited: [
-    'Unlimited AI coaching sessions per month',
-    'Priority response quality',
-    'Personalized career roadmaps',
-  ],
-  interview_advanced: [
-    'Voice interview mode',
-    'Industry-specific question banks',
-    'Detailed scoring and feedback',
-  ],
-  cv_advanced: [
-    'AI-powered CV optimization',
-    'ATS score analysis',
-    'Multiple template formats',
-  ],
-  portfolio_advanced: [
-    'Advanced portfolio analytics',
-    'Engagement and view tracking',
-    'AI-generated portfolio summary',
-  ],
-  // no-upgrade features
-  ai_coach_basic: [],
-  interview_basic: [],
-  cv_basic: [],
-  analytics_monthly: [],
-  portfolio_basic: [],
 };

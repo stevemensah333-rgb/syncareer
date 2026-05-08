@@ -4,10 +4,9 @@ import type { SubscriptionData } from '@/services/subscriptionService';
 import { getUserSubscription, isPremiumUser } from '@/services/subscriptionService';
 import {
   hasAccess,
-  canUseAICoach,
-  getAICoachUsageThisMonth,
+  getMonthlyUsage,
+  FREE_LIMITS,
   type FeatureKey,
-  FREE_AI_COACH_MONTHLY_LIMIT,
 } from '@/lib/featureAccess';
 
 export function useSubscription() {
@@ -91,8 +90,9 @@ export function useAICoachAccess() {
       setUsageLoading(false);
       return;
     }
-    const result = await canUseAICoach(user.id, isPremium);
-    setUsageData(result);
+    const limit = FREE_LIMITS.ai_coach_session.limit;
+    const used = await getMonthlyUsage(user.id, 'ai_coach_session');
+    setUsageData({ used, limit, allowed: used < limit });
     setUsageLoading(false);
   }, [isPremium]);
 

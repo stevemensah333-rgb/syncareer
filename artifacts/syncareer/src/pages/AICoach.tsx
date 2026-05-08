@@ -11,12 +11,11 @@ import { TypingIndicator } from "@/components/ai-coach/TypingIndicator";
 import { QuickActions } from "@/components/ai-coach/QuickActions";
 import { CareerInsightsPanel } from "@/components/ai-coach/CareerInsightsPanel";
 import { useAICoachAccess } from "@/hooks/useSubscription";
-import { incrementAICoachUsage } from "@/lib/featureAccess";
+import { checkFeatureAccessServer, FREE_LIMITS } from "@/lib/featureAccess";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, AlertCircle } from "lucide-react";
-import { FREE_AI_COACH_MONTHLY_LIMIT } from "@/lib/featureAccess";
 import { useUserContext } from "@/hooks/useUserContext";
 
 type Message = { role: "user" | "assistant"; content: string };
@@ -81,7 +80,7 @@ export default function AICoach() {
 
       // Track usage for free users
       if (!isPremium && session.user) {
-        await incrementAICoachUsage(session.user.id);
+        await checkFeatureAccessServer('ai_coach_session', true);
         refetchUsage?.();
       }
 
@@ -154,7 +153,7 @@ export default function AICoach() {
     if (!accessLoading && !isPremium && !allowed) {
       toast({
         title: "Monthly limit reached",
-        description: `Free plan allows ${FREE_AI_COACH_MONTHLY_LIMIT} sessions/month. Upgrade to Premium for unlimited access.`,
+        description: `Free plan allows ${FREE_LIMITS.ai_coach_session.limit} sessions/month. Upgrade to Premium for unlimited access.`,
         variant: "destructive",
       });
       return;
