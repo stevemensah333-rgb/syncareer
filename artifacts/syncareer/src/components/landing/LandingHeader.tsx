@@ -55,7 +55,6 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
               ? "rgba(0,0,0,0.92)"
               : "rgba(0,0,0,0.85)",
             backdropFilter: scrolled ? "blur(28px)" : "blur(14px)",
-            WebkitBackdropFilter: scrolled ? "blur(28px)" : "blur(14px)",
           }}
           transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           className="flex items-center gap-1 pl-2 pr-2 py-1.5 rounded-full border border-white/10 shadow-lg"
