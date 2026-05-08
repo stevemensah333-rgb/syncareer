@@ -59,28 +59,15 @@ export function setClerkSession(user: ClerkUser | null, token: string | null) {
   }
   _clerkToken = token;
 
-  // Propagate the Clerk JWT into the Supabase client's Authorization header
-  // so that supabase.from(...) queries are authenticated under the signed-in user.
-  // @ts-ignore — accessing internal rest client headers
-  const restHeaders = (supabase as any).rest?.headers;
-  if (restHeaders) {
-    if (token) {
-      restHeaders['Authorization'] = `Bearer ${token}`;
-    } else {
-      delete restHeaders['Authorization'];
-    }
-  }
-
-  // Update realtime auth if realtime is initialised
-  try {
-    if (token) {
-      (supabase as any).realtime?.setAuth(token);
-    } else {
-      (supabase as any).realtime?.setAuth(null);
-    }
-  } catch {
-    // realtime not yet initialised — safe to ignore
-  }
+  // NOTE: We deliberately do NOT inject the Clerk JWT into the Supabase
+  // client's Authorization header. The Supabase project is not configured
+  // to trust Clerk-issued JWTs (no third-party auth integration / JWT
+  // template), so passing the raw Clerk token causes every /rest/v1/*
+  // request to fail with 401 / PGRST301 ("No suitable key or wrong key
+  // type"). Leaving the header alone means supabase-js falls back to the
+  // anon key, which is accepted; user-owned writes that require RLS to
+  // identify the caller are routed through the API server instead
+  // (see /api/onboarding) using the Supabase service role.
 }
 
 // @ts-ignore — patch getSession to return Clerk session

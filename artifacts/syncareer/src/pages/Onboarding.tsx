@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/react';
 import { supabase } from '@/integrations/supabase/client';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
 import { Button } from '@/components/ui/button';
@@ -145,6 +146,7 @@ const years = Array.from({ length: 20 }, (_, i) => currentYear - 10 + i);
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -277,75 +279,55 @@ const Onboarding = () => {
     setLoading(true);
 
     try {
-      // Update profile with user type. Reset tour_completed so the post-
-      // onboarding quick tour shows once on the role home route. If the
-      // tour_completed column hasn't been migrated yet, retry without it.
-      let { error: profileError } = await supabase
-        .from('profiles')
-        .upsert(
-          {
-            id: userId,
-            user_type: userType,
-            onboarding_completed: true,
-            tour_completed: false,
-          },
-          { onConflict: 'id' }
-        );
+      // The Supabase project is not configured to trust Clerk-issued JWTs,
+      // so direct supabase.from('profiles').upsert(...) calls are rejected
+      // with PGRST301 / 401 for brand-new users. Route the onboarding write
+      // through our API server, which verifies the Clerk session and uses
+      // the Supabase service role to perform the upsert.
+      const details =
+        userType === 'student'
+          ? {
+              yearOfAdmission,
+              expectedCompletion,
+              major,
+              school,
+              degreeType,
+            }
+          : userType === 'employer'
+          ? {
+              companyName,
+              companyLocation,
+              industry,
+              companySize,
+              jobTitle,
+            }
+          : {
+              fullName: counsellorFullName,
+              countryCode,
+              phoneNumber,
+            };
 
-      if (profileError) {
-        const fallback = await supabase
-          .from('profiles')
-          .upsert(
-            {
-              id: userId,
-              user_type: userType,
-              onboarding_completed: true,
-            },
-            { onConflict: 'id' }
-          );
-        profileError = fallback.error;
-      }
+      const token = await getToken();
+      const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
+      const response = await fetch(`${apiBase}/api/onboarding`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ userType, details }),
+      });
 
-      if (profileError) throw profileError;
-
-      // Insert role-specific details
-      if (userType === 'student') {
-        const { error: studentError } = await supabase
-          .from('student_details')
-          .upsert({
-            user_id: userId,
-            year_of_admission: yearOfAdmission ? parseInt(yearOfAdmission) : null,
-            expected_completion: expectedCompletion ? parseInt(expectedCompletion) : null,
-            major,
-            school: school || null,
-            degree_type: degreeType,
-          }, { onConflict: 'user_id' });
-
-        if (studentError) throw studentError;
-      } else if (userType === 'employer') {
-        const { error: employerError } = await supabase
-          .from('employer_details')
-          .upsert({
-            user_id: userId,
-            company_name: companyName,
-            company_location: companyLocation || null,
-            industry: industry || null,
-            company_size: companySize || null,
-            job_title: jobTitle || null,
-          }, { onConflict: 'user_id' });
-
-        if (employerError) throw employerError;
-      } else if (userType === 'career_counsellor') {
-        const { error: counsellorError } = await supabase
-          .from('counsellor_details')
-          .upsert({
-            user_id: userId,
-            full_name: counsellorFullName.trim(),
-            country_code: countryCode,
-            phone_number: phoneNumber.trim(),
-          }, { onConflict: 'user_id' });
-
-        if (counsellorError) throw counsellorError;
+      if (!response.ok) {
+        let message = 'Failed to complete setup';
+        try {
+          const data = await response.json();
+          if (data?.error) message = data.error;
+        } catch {
+          // ignore parse errors
+        }
+        throw new Error(message);
       }
 
       toast.success('Profile setup complete!');
