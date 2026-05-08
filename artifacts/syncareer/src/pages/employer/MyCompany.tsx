@@ -15,6 +15,7 @@ import { useUserProfile } from '@/contexts/UserProfileContext';
 import { EditCompanyDialog } from '@/components/employer/EditCompanyDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface DashboardStats {
   activeJobPosts: number;
@@ -150,6 +151,7 @@ const MyCompany = () => {
     <PageLayout title="Dashboard">
       <div className="space-y-6">
         {/* Welcome Header */}
+        <AnimatedSection y={20}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em] leading-tight">
@@ -172,9 +174,11 @@ const MyCompany = () => {
             </Button>
           </div>
         </div>
+        </AnimatedSection>
 
         {/* Profile Completion Nudge */}
         {!profileComplete && (
+          <AnimatedSection delay={0.06} y={20}>
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -191,9 +195,11 @@ const MyCompany = () => {
               </Button>
             </CardContent>
           </Card>
+          </AnimatedSection>
         )}
 
         {/* Metrics Row */}
+        <AnimatedSection delay={0.1} y={20}>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Active Jobs', value: stats.activeJobPosts, icon: Briefcase, href: '/post-job' },
@@ -217,10 +223,11 @@ const MyCompany = () => {
             </Link>
           ))}
         </div>
+        </AnimatedSection>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent Applications */}
-          <div className="lg:col-span-2">
+          <AnimatedSection delay={0.14} y={20} className="lg:col-span-2">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
@@ -272,11 +279,12 @@ const MyCompany = () => {
                 )}
               </CardContent>
             </Card>
-          </div>
+          </AnimatedSection>
 
           {/* Sidebar: Pipeline + Quick Actions */}
           <div className="space-y-6">
             {/* Quick Actions */}
+            <AnimatedSection delay={0.18} y={20}>
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
@@ -304,8 +312,10 @@ const MyCompany = () => {
                 </Button>
               </CardContent>
             </Card>
+            </AnimatedSection>
 
             {/* Hiring Pipeline */}
+            <AnimatedSection delay={0.22} y={20}>
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 font-serif text-2xl font-normal tracking-[-0.02em]">
@@ -340,9 +350,11 @@ const MyCompany = () => {
                 )}
               </CardContent>
             </Card>
+            </AnimatedSection>
 
             {/* Company Snapshot */}
             {employerDetails?.company_name && (
+              <AnimatedSection delay={0.26} y={20}>
               <Card>
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-3">
@@ -387,6 +399,7 @@ const MyCompany = () => {
                   </Button>
                 </CardContent>
               </Card>
+              </AnimatedSection>
             )}
           </div>
         </div>

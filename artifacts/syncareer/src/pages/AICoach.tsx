@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, AlertCircle } from "lucide-react";
 import { useUserContext } from "@/hooks/useUserContext";
+import AnimatedSection from "@/components/landing/AnimatedSection";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -174,6 +175,7 @@ export default function AICoach() {
     <PageLayout title="SynAI">
       <div className="h-[calc(100vh-12rem)] flex gap-4">
         {/* Main chat area */}
+        <AnimatedSection y={20} className="flex-1 flex">
         <Card className="flex-1 flex flex-col p-4 bg-card overflow-hidden">
           {/* Usage banner for free users */}
           {isLimited && (
@@ -225,11 +227,14 @@ export default function AICoach() {
             disabled={!accessLoading && !isPremium && !allowed}
           />
         </Card>
+        </AnimatedSection>
 
         {/* Career insights sidebar */}
-        <div className="hidden lg:flex flex-col w-72 shrink-0 gap-3 overflow-y-auto">
-          <CareerInsightsPanel />
-        </div>
+        <AnimatedSection delay={0.08} y={20} className="hidden lg:flex w-72 shrink-0">
+          <div className="flex flex-col w-full gap-3 overflow-y-auto">
+            <CareerInsightsPanel />
+          </div>
+        </AnimatedSection>
       </div>
     </PageLayout>
   );

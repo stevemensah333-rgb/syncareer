@@ -13,6 +13,7 @@ import { PipelineView } from '@/components/employer/applicants/PipelineView';
 import { ApplicantListView } from '@/components/employer/applicants/ApplicantListView';
 import { InterviewsView } from '@/components/employer/applicants/InterviewsView';
 import { ScheduleInterviewDialog } from '@/components/employer/applicants/ScheduleInterviewDialog';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 const ApplicantTracker = () => {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -171,15 +172,18 @@ const ApplicantTracker = () => {
   return (
     <PageLayout title="Applicant Tracker">
       <div className="space-y-5">
-        <ApplicantFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedJob={selectedJob}
-          onJobChange={setSelectedJob}
-          uniqueJobs={uniqueJobs}
-          stageCounts={stageCounts}
-        />
+        <AnimatedSection y={20}>
+          <ApplicantFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedJob={selectedJob}
+            onJobChange={setSelectedJob}
+            uniqueJobs={uniqueJobs}
+            stageCounts={stageCounts}
+          />
+        </AnimatedSection>
 
+        <AnimatedSection delay={0.08} y={20}>
         <Tabs defaultValue="pipeline" className="space-y-4">
           <TabsList>
             <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
@@ -207,6 +211,7 @@ const ApplicantTracker = () => {
             <InterviewsView interviews={interviews} />
           </TabsContent>
         </Tabs>
+        </AnimatedSection>
 
         <ScheduleInterviewDialog
           open={scheduleDialogOpen}

@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { ImageCropper } from '@/components/profile/ImageCropper';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface CounsellorDetails {
   id: string;
@@ -210,6 +211,7 @@ const CounsellorDashboard = () => {
   return (
     <CounsellorLayout title="My Portfolio">
       {/* Header Section - Portfolio Style */}
+      <AnimatedSection y={20}>
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-r from-primary/20 to-primary/5 h-32" />
         <CardContent className="relative pt-0">
@@ -277,11 +279,13 @@ const CounsellorDashboard = () => {
           </div>
         </CardContent>
       </Card>
+      </AnimatedSection>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Bio & Specialization */}
+          <AnimatedSection delay={0.08} y={20}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -348,8 +352,10 @@ const CounsellorDashboard = () => {
               )}
             </CardContent>
           </Card>
+          </AnimatedSection>
 
           {/* Reviews */}
+          <AnimatedSection delay={0.12} y={20}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -386,11 +392,13 @@ const CounsellorDashboard = () => {
               )}
             </CardContent>
           </Card>
+          </AnimatedSection>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Earnings Card */}
+          <AnimatedSection delay={0.08} y={20}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -423,8 +431,10 @@ const CounsellorDashboard = () => {
               )}
             </CardContent>
           </Card>
+          </AnimatedSection>
 
           {/* Quick Stats */}
+          <AnimatedSection delay={0.12} y={20}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -459,8 +469,10 @@ const CounsellorDashboard = () => {
               </div>
             </CardContent>
           </Card>
+          </AnimatedSection>
 
           {/* Recent Bookings */}
+          <AnimatedSection delay={0.16} y={20}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -488,6 +500,7 @@ const CounsellorDashboard = () => {
               )}
             </CardContent>
           </Card>
+          </AnimatedSection>
         </div>
       </div>
 

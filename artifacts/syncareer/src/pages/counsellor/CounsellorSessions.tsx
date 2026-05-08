@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { SessionsManager } from '@/components/counsellor/SessionsManager';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card } from '@/components/ui/card';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 const CounsellorSessions = () => {
   const [counsellorId, setCounsellorId] = useState<string | null>(null);
@@ -55,7 +56,9 @@ const CounsellorSessions = () => {
 
   return (
     <PageLayout title="Manage Sessions">
-      <SessionsManager counsellorId={counsellorId} />
+      <AnimatedSection y={20}>
+        <SessionsManager counsellorId={counsellorId} />
+      </AnimatedSection>
     </PageLayout>
   );
 };

@@ -9,6 +9,7 @@ import { ChatInput } from "@/components/ai-coach/ChatInput";
 import { TypingIndicator } from "@/components/ai-coach/TypingIndicator";
 import { TalentRecommendationsPanel } from "@/components/hire-ai/TalentRecommendationsPanel";
 import { HireQuickActions } from "@/components/hire-ai/HireQuickActions";
+import AnimatedSection from "@/components/landing/AnimatedSection";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -131,6 +132,7 @@ Always be professional, data-driven, and focused on helping employers make infor
     <PageLayout title="Hire with AI">
       <div className="h-[calc(100vh-12rem)] flex gap-4">
         {/* Main chat area */}
+        <AnimatedSection y={20} className="flex-1 flex">
         <Card className="flex-1 flex flex-col p-4 bg-card">
           <div className="pb-3 mb-2 border-b border-border/40">
             <h2 className="font-serif text-2xl font-normal tracking-[-0.02em]">
@@ -165,11 +167,14 @@ Always be professional, data-driven, and focused on helping employers make infor
             isLoading={isLoading}
           />
         </Card>
+        </AnimatedSection>
 
         {/* Talent insights sidebar - hidden on mobile */}
-        <div className="hidden lg:flex flex-col w-72 shrink-0 gap-3 overflow-y-auto">
-          <TalentRecommendationsPanel />
-        </div>
+        <AnimatedSection delay={0.08} y={20} className="hidden lg:flex w-72 shrink-0">
+          <div className="flex flex-col w-full gap-3 overflow-y-auto">
+            <TalentRecommendationsPanel />
+          </div>
+        </AnimatedSection>
       </div>
     </PageLayout>
   );

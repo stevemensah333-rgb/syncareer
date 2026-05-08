@@ -18,6 +18,7 @@ import YouTubePlayerDialog from '@/components/learn/YouTubePlayerDialog';
 import { useCareerReadiness, type CourseProgress, type SkillReadiness } from '@/hooks/useCareerReadiness';
 import { useFreeResources, type YouTubeResource } from '@/hooks/useFreeResources';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface LearningStreak {
   current_streak: number;
@@ -276,9 +277,12 @@ const Learn = () => {
     <PageLayout title="Career Readiness">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <ReadinessOverview score={readiness.overallScore} level={readiness.level} careerPath={`${major} Career Path`} />
+          <AnimatedSection y={20}>
+            <ReadinessOverview score={readiness.overallScore} level={readiness.level} careerPath={`${major} Career Path`} />
+          </AnimatedSection>
 
           {/* Focus This Week */}
+          <AnimatedSection delay={0.08} y={20}>
           <Card className="border-primary/30 bg-primary/5">
             <CardContent className="pt-5 pb-4">
               <div className="flex items-start gap-4">
@@ -301,8 +305,11 @@ const Learn = () => {
               </div>
             </CardContent>
           </Card>
+          </AnimatedSection>
 
-          <PillarCards pillars={readiness.pillars} />
+          <AnimatedSection delay={0.12} y={20}>
+            <PillarCards pillars={readiness.pillars} />
+          </AnimatedSection>
 
           {/* AI Course CTA */}
           {!aiCoursesFetched && hasSkills && (
@@ -403,8 +410,11 @@ const Learn = () => {
         </div>
 
         <div className="space-y-6">
-          <ReadinessRadar data={readiness.radarData} />
+          <AnimatedSection y={20}>
+            <ReadinessRadar data={readiness.radarData} />
+          </AnimatedSection>
 
+          <AnimatedSection delay={0.08} y={20}>
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -422,7 +432,9 @@ const Learn = () => {
               )}
             </CardContent>
           </Card>
+          </AnimatedSection>
 
+          <AnimatedSection delay={0.12} y={20}>
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Quick Stats</CardTitle></CardHeader>
             <CardContent className="space-y-2">
@@ -432,6 +444,7 @@ const Learn = () => {
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Courses Validated</span><span className="font-medium">{readiness.savedCourses.filter(c => c.status === 'completed').length}</span></div>
             </CardContent>
           </Card>
+          </AnimatedSection>
         </div>
       </div>
 

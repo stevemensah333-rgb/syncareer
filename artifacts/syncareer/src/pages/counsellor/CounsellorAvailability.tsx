@@ -5,6 +5,7 @@ import { Calendar, Clock, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AvailabilityCalendar } from '@/components/counsellor/AvailabilityCalendar';
 import { PageLayout } from '@/components/layout/PageLayout';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 const CounsellorAvailability = () => {
   const [counsellorId, setCounsellorId] = useState<string | null>(null);
@@ -58,8 +59,11 @@ const CounsellorAvailability = () => {
   return (
     <PageLayout title="Manage Availability">
       <div className="space-y-6">
-        <AvailabilityCalendar counsellorId={counsellorId} />
-        
+        <AnimatedSection y={20}>
+          <AvailabilityCalendar counsellorId={counsellorId} />
+        </AnimatedSection>
+
+        <AnimatedSection delay={0.08} y={20}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -93,6 +97,7 @@ const CounsellorAvailability = () => {
             </div>
           </CardContent>
         </Card>
+        </AnimatedSection>
       </div>
     </PageLayout>
   );

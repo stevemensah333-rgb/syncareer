@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Search, Users, Crown, UserCheck, RefreshCw, Shield, ShieldOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface UserRow {
   id: string;
@@ -135,6 +136,7 @@ const UsersDashboard = () => {
     <AdminLayout title="User Management">
       <div className="space-y-6">
         {/* Stats */}
+        <AnimatedSection y={20}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
@@ -181,8 +183,10 @@ const UsersDashboard = () => {
             </CardContent>
           </Card>
         </div>
+        </AnimatedSection>
 
         {/* Table */}
+        <AnimatedSection delay={0.08} y={20}>
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-3">
@@ -338,6 +342,7 @@ const UsersDashboard = () => {
             </div>
           </CardContent>
         </Card>
+        </AnimatedSection>
       </div>
     </AdminLayout>
   );

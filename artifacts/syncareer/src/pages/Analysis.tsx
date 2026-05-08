@@ -11,6 +11,7 @@ import { useMarketIntelligence } from '@/hooks/useMarketIntelligence';
 import { MarketOverviewTab } from '@/components/analysis/MarketOverviewTab';
 import { CareerOutlookTab } from '@/components/analysis/CareerOutlookTab';
 import { Link } from 'react-router-dom';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 const REGIONS = [
   { value: 'global', label: 'Global' },
@@ -83,6 +84,7 @@ const Analysis = () => {
         </div>
 
         {/* Intelligence Header */}
+        <AnimatedSection y={20}>
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
           <CardContent className="pt-5 pb-5">
             <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -148,6 +150,7 @@ const Analysis = () => {
             </div>
           </CardContent>
         </Card>
+        </AnimatedSection>
 
         {/* Error State */}
         {error && !loading && (
@@ -197,6 +200,7 @@ const Analysis = () => {
 
         {/* Main Content */}
         {data && !loading && (
+          <AnimatedSection delay={0.08} y={20}>
           <Tabs defaultValue="overview">
             <TabsList className="mb-6 print:hidden">
               <TabsTrigger value="overview" className="gap-1.5">
@@ -217,6 +221,7 @@ const Analysis = () => {
               <CareerOutlookTab data={data} />
             </TabsContent>
           </Tabs>
+          </AnimatedSection>
         )}
       </div>
     </PageLayout>

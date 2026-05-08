@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { ThumbsUp, ThumbsDown, MessageSquare, TrendingUp, Filter, Search, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface FeedbackRow {
   id: string;
@@ -152,6 +153,7 @@ const FeedbackDashboard = () => {
   return (
     <AdminLayout title="Feedback Dashboard">
       <div className="space-y-6">
+        <AnimatedSection y={20}>
         <div className="flex flex-wrap gap-3 items-center">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
@@ -179,7 +181,9 @@ const FeedbackDashboard = () => {
             </SelectContent>
           </Select>
         </div>
+        </AnimatedSection>
 
+        <AnimatedSection delay={0.06} y={20}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
@@ -226,8 +230,10 @@ const FeedbackDashboard = () => {
             </CardContent>
           </Card>
         </div>
+        </AnimatedSection>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AnimatedSection delay={0.1} y={20}>
           <Card>
             <CardHeader>
               <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
@@ -253,7 +259,9 @@ const FeedbackDashboard = () => {
               )}
             </CardContent>
           </Card>
+          </AnimatedSection>
 
+          <AnimatedSection delay={0.14} y={20}>
           <Card>
             <CardHeader>
               <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
@@ -279,9 +287,11 @@ const FeedbackDashboard = () => {
               )}
             </CardContent>
           </Card>
+          </AnimatedSection>
         </div>
 
         {topKeywords.length > 0 && (
+          <AnimatedSection delay={0.18} y={20}>
           <Card>
             <CardHeader>
               <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
@@ -298,8 +308,10 @@ const FeedbackDashboard = () => {
               </div>
             </CardContent>
           </Card>
+          </AnimatedSection>
         )}
 
+        <AnimatedSection delay={0.22} y={20}>
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -356,6 +368,7 @@ const FeedbackDashboard = () => {
             )}
           </CardContent>
         </Card>
+        </AnimatedSection>
       </div>
     </AdminLayout>
   );

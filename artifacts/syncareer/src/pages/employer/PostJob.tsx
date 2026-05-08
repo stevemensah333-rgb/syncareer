@@ -13,6 +13,7 @@ import { JobFormDescription } from '@/components/employer/post-job/JobFormDescri
 import { JobFormSkills } from '@/components/employer/post-job/JobFormSkills';
 import { JobFormReview } from '@/components/employer/post-job/JobFormReview';
 import { ManageJobsList } from '@/components/employer/post-job/ManageJobsList';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface JobPosting {
   id: string;
@@ -195,6 +196,7 @@ const PostJob = () => {
         </TabsList>
 
         <TabsContent value="create">
+          <AnimatedSection y={20}>
           <Card>
             {/* Step Indicator */}
             <CardHeader className="pb-4">
@@ -289,15 +291,18 @@ const PostJob = () => {
               </div>
             </CardContent>
           </Card>
+          </AnimatedSection>
         </TabsContent>
 
         <TabsContent value="manage">
+          <AnimatedSection y={20}>
           <ManageJobsList
             jobs={postedJobs}
             loading={loading}
             onToggleStatus={handleToggleStatus}
             onDelete={handleDeleteJob}
           />
+          </AnimatedSection>
         </TabsContent>
       </Tabs>
     </PageLayout>
