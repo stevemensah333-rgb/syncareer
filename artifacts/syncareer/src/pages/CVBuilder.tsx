@@ -26,6 +26,7 @@ import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { supabase } from '@/integrations/supabase/client';
 import html2pdf from 'html2pdf.js';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 export interface CVData {
   personal: {
@@ -367,6 +368,7 @@ const CVBuilder = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form Section */}
         <div className="lg:col-span-2 space-y-6">
+          <AnimatedSection y={20}>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <FileText className="h-6 w-6 text-primary" />
@@ -424,7 +426,9 @@ const CVBuilder = () => {
               </Button>
             </div>
           </div>
+          </AnimatedSection>
 
+          <AnimatedSection delay={0.08} y={20}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="flex w-full overflow-x-auto">
               {([
@@ -486,10 +490,11 @@ const CVBuilder = () => {
               />
             </TabsContent>
           </Tabs>
+          </AnimatedSection>
         </div>
 
         {/* Sidebar: Score + Skill Gap + AI Assistant */}
-        <div className="space-y-6">
+        <AnimatedSection delay={0.12} y={20} className="space-y-6">
           <CVStrengthScore result={strengthResult} />
           {cvAnalysis.result && (
             <CVSkillGapPanel result={cvAnalysis.result} />
@@ -499,7 +504,7 @@ const CVBuilder = () => {
             activeSection={activeTab}
             onSuggestion={handleAISuggestion}
           />
-        </div>
+        </AnimatedSection>
       </div>
       )}
       {/* CV Preview Modal/Section */}

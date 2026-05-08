@@ -29,6 +29,7 @@ import { ASSESSMENT_QUESTIONS, LIKERT_OPTIONS, RIASEC_LABELS, RIASEC_DESCRIPTION
 import CareerRecommendations from '@/components/assessment/CareerRecommendations';
 import { format, differenceInDays } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 const QUESTIONS_PER_PAGE = 5;
 const TOTAL_QUESTIONS = 45;
@@ -439,6 +440,7 @@ const Assessment = () => {
     return (
       <PageLayout title="Assessment">
         <div className="max-w-xl mx-auto">
+          <AnimatedSection y={20}>
           <Card className="text-center">
             <CardContent className="pt-8 pb-8 space-y-4">
               <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
@@ -471,6 +473,7 @@ const Assessment = () => {
               </Button>
             </CardContent>
           </Card>
+          </AnimatedSection>
         </div>
       </PageLayout>
     );
@@ -541,6 +544,7 @@ const Assessment = () => {
         )}
 
         {/* Header */}
+        <AnimatedSection y={20}>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
             <Calendar className="h-5 w-5 text-muted-foreground" />
@@ -562,8 +566,10 @@ const Assessment = () => {
             </div>
           )}
         </div>
+        </AnimatedSection>
 
         {/* Top 3 Interests */}
+        <AnimatedSection delay={0.08} y={20}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -589,8 +595,10 @@ const Assessment = () => {
             </div>
           </CardContent>
         </Card>
+        </AnimatedSection>
 
         {/* RIASEC Chart */}
+        <AnimatedSection delay={0.12} y={20}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -619,8 +627,10 @@ const Assessment = () => {
             </div>
           </CardContent>
         </Card>
+        </AnimatedSection>
 
         {/* Personality + Skills */}
+        <AnimatedSection delay={0.16} y={20}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader className="pb-2">
@@ -667,8 +677,10 @@ const Assessment = () => {
             </CardContent>
           </Card>
         </div>
+        </AnimatedSection>
 
         {/* Career Recommendations */}
+        <AnimatedSection delay={0.2} y={20}>
         <CareerRecommendations
           recommendations={recommendations}
           clusterInsight={clusterInsight}
@@ -678,6 +690,7 @@ const Assessment = () => {
           loading={careersLoading}
           isGuest={isGuest || false}
         />
+        </AnimatedSection>
 
         {/* History (authenticated only) */}
         {!isGuest && allResults.length > 1 && (

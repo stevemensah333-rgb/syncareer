@@ -11,6 +11,7 @@ import { useCareerReadiness } from '@/hooks/useCareerReadiness';
 import { GuidedJourney } from '@/components/assessment/GuidedJourney';
 import { ReferralCard } from '@/components/referral/ReferralCard';
 import { UniversityInsightsCard } from '@/components/dashboard/UniversityInsightsCard';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface JobMatch {
   id: string;
@@ -129,25 +130,28 @@ const Dashboard = () => {
     <StudentLayout title="">
       <div className="space-y-6">
         {/* Greeting Header — editorial */}
-        <div className="space-y-2">
-          <h1 className="font-serif text-4xl md:text-5xl font-normal leading-[1.05] tracking-[-0.02em] text-foreground">
-            {fullName ? (
-              <>
-                Welcome back, <span className="italic text-primary">{fullName}</span>
-              </>
-            ) : (
-              <>Welcome <span className="italic text-primary">back</span></>
+        <AnimatedSection y={20}>
+          <div className="space-y-2">
+            <h1 className="font-serif text-4xl md:text-5xl font-normal leading-[1.05] tracking-[-0.02em] text-foreground">
+              {fullName ? (
+                <>
+                  Welcome back, <span className="italic text-primary">{fullName}</span>
+                </>
+              ) : (
+                <>Welcome <span className="italic text-primary">back</span></>
+              )}
+            </h1>
+            {major && (
+              <p className="text-sm text-muted-foreground">
+                {major} {university ? `· ${university}` : ''}
+              </p>
             )}
-          </h1>
-          {major && (
-            <p className="text-sm text-muted-foreground">
-              {major} {university ? `· ${university}` : ''}
-            </p>
-          )}
-        </div>
+          </div>
+        </AnimatedSection>
 
         {/* Career Readiness Hero */}
         {!readiness.loading && major && (
+          <AnimatedSection delay={0.08} y={20}>
           <Card className="overflow-hidden">
             <CardContent className="p-0">
               <div className="flex items-stretch">
@@ -203,10 +207,12 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+          </AnimatedSection>
         )}
 
         {/* Getting Started — shown for new users */}
         {isNewUser && !loading && (
+          <AnimatedSection delay={0.12} y={20}>
           <Card className="border-primary/20">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
@@ -238,9 +244,11 @@ const Dashboard = () => {
               ))}
             </CardContent>
           </Card>
+          </AnimatedSection>
         )}
 
         {/* Stat Cards */}
+        <AnimatedSection delay={0.16} y={20}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {statCards.map((stat) => (
             <Card
@@ -265,14 +273,18 @@ const Dashboard = () => {
             </Card>
           ))}
         </div>
+        </AnimatedSection>
 
         {/* Guided Journey */}
-        <GuidedJourney
-          topCareerTitle={topCareer?.title}
-          topCareerIndustry={topCareer?.industry}
-        />
+        <AnimatedSection delay={0.2} y={20}>
+          <GuidedJourney
+            topCareerTitle={topCareer?.title}
+            topCareerIndustry={topCareer?.industry}
+          />
+        </AnimatedSection>
 
         {/* Two column layout for bottom cards */}
+        <AnimatedSection delay={0.24} y={20}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Job Matches */}
           <Card>
@@ -315,9 +327,12 @@ const Dashboard = () => {
           {/* Referral Card */}
           <ReferralCard />
         </div>
+        </AnimatedSection>
 
         {/* University Insights */}
-        <UniversityInsightsCard university={university} major={major} />
+        <AnimatedSection delay={0.28} y={20}>
+          <UniversityInsightsCard university={university} major={major} />
+        </AnimatedSection>
       </div>
     </StudentLayout>
   );

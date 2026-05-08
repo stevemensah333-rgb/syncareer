@@ -25,6 +25,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import AnimatedSection from '@/components/landing/AnimatedSection';
 
 import type { InterviewSetupConfig } from '@/types/interview';
 
@@ -196,6 +197,7 @@ const InterviewSimulator = () => {
       {step === 'setup' && (
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header — editorial */}
+          <AnimatedSection y={20}>
           <Card className="bg-landing-cream border-primary/20 overflow-hidden">
             <CardContent className="pt-8 pb-8">
               <div className="flex items-center gap-5">
@@ -213,9 +215,11 @@ const InterviewSimulator = () => {
               </div>
             </CardContent>
           </Card>
+          </AnimatedSection>
 
           <div className="max-w-2xl mx-auto space-y-6">
             {/* Setup Form */}
+              <AnimatedSection delay={0.08} y={20}>
               <Card>
                 <CardHeader>
                   <CardTitle>Set Up Your Interview</CardTitle>
@@ -348,9 +352,11 @@ const InterviewSimulator = () => {
                   </Button>
                 </CardContent>
               </Card>
+              </AnimatedSection>
 
               {/* Practice for a real job */}
               {liveJobs && liveJobs.length > 0 && (
+                <AnimatedSection delay={0.12} y={20}>
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -388,9 +394,11 @@ const InterviewSimulator = () => {
                     ))}
                   </CardContent>
                 </Card>
+                </AnimatedSection>
               )}
 
               {/* How it works */}
+              <AnimatedSection delay={0.16} y={20}>
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">How It Works</CardTitle>
@@ -420,9 +428,11 @@ const InterviewSimulator = () => {
                   </ul>
                 </CardContent>
               </Card>
+              </AnimatedSection>
 
               {/* Interview History */}
               {(interviewHistory && interviewHistory.length > 0) && (
+                <AnimatedSection delay={0.2} y={20}>
                 <Card>
                   <CardHeader>
                     <div className="flex items-center gap-2">
@@ -474,6 +484,7 @@ const InterviewSimulator = () => {
                     })}
                   </CardContent>
                 </Card>
+                </AnimatedSection>
               )}
           </div>
         </div>
