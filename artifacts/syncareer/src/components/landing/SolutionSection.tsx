@@ -20,12 +20,20 @@ const services = [
     cta: "Open the builder",
   },
   {
-    image: "/landing/feature-counsellor.png",
-    eyebrow: "Interview Practice",
+    image: "/landing/story-2.png",
+    eyebrow: "Interview Simulator",
     title: "Walk in already rehearsed.",
     body: "Voice interviews with SynAssist. Role-specific prompts, calm pacing, and feedback you can act on the same day.",
     href: "/interview-simulator",
     cta: "Practice now",
+  },
+  {
+    image: "/landing/feature-counsellor.png",
+    eyebrow: "Counsellor Marketplace",
+    title: "Talk to a real career counsellor.",
+    body: "Book a session with a vetted counsellor — one-on-one guidance from people who have walked the path before you.",
+    href: "/counsellors",
+    cta: "Browse counsellors",
   },
 ];
 
@@ -43,9 +51,9 @@ export default function SolutionSection() {
           </h2>
         </AnimatedSection>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid md:grid-cols-2 gap-6 lg:gap-x-10 lg:gap-y-14">
           {services.map((s, i) => (
-            <AnimatedSection key={s.title} delay={(i % 3) * 0.08}>
+            <AnimatedSection key={s.title} delay={(i % 2) * 0.08}>
               <button
                 onClick={() => navigate(s.href)}
                 className="group block w-full text-left h-full"
