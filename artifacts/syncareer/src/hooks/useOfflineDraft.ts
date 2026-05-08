@@ -25,29 +25,39 @@ export function useOfflineDraft<T>(
 ): UseOfflineDraftResult<T> {
   const { debounceMs = 500 } = options;
   const key = storageKey(scope, userId);
-  const [draft, setDraft] = useState<T | null>(() => {
-    if (typeof window === "undefined") return null;
+
+  function readFromStorage(k: string): { data: T | null; ts: number | null } {
+    if (typeof window === "undefined") return { data: null, ts: null };
     try {
-      const raw = window.localStorage.getItem(key);
-      if (!raw) return null;
+      const raw = window.localStorage.getItem(k);
+      if (!raw) return { data: null, ts: null };
       const parsed = JSON.parse(raw) as { data: T; ts: number };
-      return parsed?.data ?? null;
+      return { data: parsed?.data ?? null, ts: parsed?.ts ?? null };
     } catch {
-      return null;
+      return { data: null, ts: null };
     }
-  });
-  const [lastSavedAt, setLastSavedAt] = useState<number | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as { data: T; ts: number };
-      return parsed?.ts ?? null;
-    } catch {
-      return null;
-    }
-  });
+  }
+
+  const initial = readFromStorage(key);
+  const [draft, setDraft] = useState<T | null>(initial.data);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(initial.ts);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastKeyRef = useRef<string>(key);
+
+  // Re-hydrate from localStorage whenever the storage key changes (e.g. when
+  // Clerk's userId loads after initial render and we transition from "anon"
+  // to a real user-scoped key).
+  useEffect(() => {
+    if (lastKeyRef.current === key) return;
+    lastKeyRef.current = key;
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+    const next = readFromStorage(key);
+    setDraft(next.data);
+    setLastSavedAt(next.ts);
+  }, [key]);
 
   const saveDraft = useCallback(
     (data: T) => {
