@@ -31,7 +31,6 @@ AI-powered career platform for African graduates — career assessments, CV buil
 - **Clerk auth shim**: `supabase.auth.getSession/getUser/onAuthStateChange/signOut` are monkey-patched in `client.ts` via `setClerkSession()` so all 40+ files using Supabase auth work without individual changes.
 - **AuthBridge component**: Lives in App.tsx, syncs Clerk session state into the shim on every render so the supabase client always has a fresh token.
 - **Supabase database kept as-is**: Only auth is replaced by Clerk; all DB queries still go through `supabase.from(...)`.
-- **AuthDialog redirects**: The old modal auth dialog now redirects to `/sign-in` or `/sign-up` (Clerk-hosted pages) instead of rendering a form.
 - **SecuritySection uses Clerk's openUserProfile()**: Password and 2FA management is delegated to Clerk's built-in user profile modal.
 
 ## Product
@@ -56,7 +55,6 @@ AI-powered career platform for African graduates — career assessments, CV buil
 - `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` must be set as secrets
 - The Clerk proxy is wired at `artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts`
 - Vite dev server caches env vars at startup — restart workflow after adding new secrets
-- `lib/authCompat.ts` and `lib/clerkAuth.ts` exist but are unused — safe to delete later
 
 ## Pointers
 
