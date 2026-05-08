@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import CachedDataIndicator from '@/components/CachedDataIndicator';
+import CachedDataIndicator, { OfflineEmptyState } from '@/components/CachedDataIndicator';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,6 +62,7 @@ export default function PublicPortfolio() {
   const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [loading, setLoading] = useState(true);
+  const isOnline = useOnlineStatus();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -191,7 +192,16 @@ export default function PublicPortfolio() {
     );
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    if (!isOnline) {
+      return (
+        <PageLayout title="Portfolio">
+          <OfflineEmptyState message="This portfolio needs internet the first time. Reconnect to load it." />
+        </PageLayout>
+      );
+    }
+    return null;
+  }
 
   const displayName = profile.full_name || profile.username || 'Anonymous';
   const totalEndorsements = endorsements.reduce((sum, e) => sum + e.count, 0);

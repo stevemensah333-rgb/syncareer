@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineDraft } from '@/hooks/useOfflineDraft';
+import OfflinePracticeMode from '@/components/OfflinePracticeMode';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,7 @@ const InterviewSimulator = () => {
   const { isPremium } = useSubscription();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [step, setStep] = useState<'setup' | 'interview'>('setup');
+  const [step, setStep] = useState<'setup' | 'interview' | 'offline-practice'>('setup');
   const [sessionLength, setSessionLength] = useState<SessionLength>('standard');
   const feedbackModal = useFeedbackModal('interview_simulator');
   const { userId: clerkUserId } = useAuth();
@@ -181,7 +182,10 @@ const InterviewSimulator = () => {
       return;
     }
     if (!isOnline) {
-      toast.error("AI voice interview needs internet — reconnect to start a session.");
+      // No internet → drop into the static, offline-friendly practice flow.
+      // AI voice + scored feedback require the network and stay disabled.
+      toast.info("You're offline — starting text-only practice with cached questions. AI feedback resumes when you reconnect.");
+      setStep('offline-practice');
       return;
     }
     setStep('interview');
@@ -470,6 +474,18 @@ const InterviewSimulator = () => {
                 </Card>
               )}
           </div>
+        </div>
+      )}
+
+      {step === 'offline-practice' && (
+        <div className="max-w-3xl mx-auto">
+          <OfflinePracticeMode
+            jobRole={config.jobRole}
+            questionCount={
+              SESSION_OPTIONS.find((o) => o.value === sessionLength)?.questions ?? 10
+            }
+            onEnd={() => setStep('setup')}
+          />
         </div>
       )}
 
