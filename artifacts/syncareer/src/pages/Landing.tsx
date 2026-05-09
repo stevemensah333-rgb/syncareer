@@ -23,11 +23,11 @@ export default function Landing() {
   useEffect(() => {
     // Set SEO metadata
     setMetaTags({
-      title: 'Syncareer - AI-Powered Career Platform for African Graduates',
-      description: 'Get an ATS-ready CV, practice interviews with AI, and find jobs tailored to your skills. All for free.',
-      keywords: 'career, assessment, CV builder, interview practice, jobs, African graduates',
-      ogTitle: 'Syncareer - Your Career Companion',
-      ogDescription: 'AI-powered career platform for African graduates. Assessment, CV builder, interview practice, and job matching.',
+      title: 'Syncareer - Career Development Platform for African Graduates',
+      description: 'Build an ATS-ready CV, practice interviews with AI, get career assessment, and connect with career counsellors. Discover the path that fits you.',
+      keywords: 'career development, assessment, CV builder, interview practice, career counselling, African graduates',
+      ogTitle: 'Syncareer - Your Career Development Platform',
+      ogDescription: 'AI-powered career development platform for African graduates. Assessment, CV builder, interview practice, and career counselling.',
       ogImage: 'https://syncareer.com/og-image.png',
       ogUrl: 'https://syncareer.com',
       canonical: 'https://syncareer.com',
@@ -47,7 +47,7 @@ export default function Landing() {
 
     setApplicationSchema({
       name: 'Syncareer',
-      description: 'AI-powered career development platform for African graduates',
+      description: 'AI-powered career development and counselling platform for African graduates. Build your CV, practice interviews, get career assessment, and connect with vetted counsellors.',
       url: 'https://syncareer.com',
       image: 'https://syncareer.com/app-preview.png',
       applicationCategory: 'EducationalApplication',
