@@ -2,7 +2,6 @@
 import React from 'react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { StudentLayout } from '@/components/layout/StudentLayout';
-import { EmployerLayout } from '@/components/layout/EmployerLayout';
 import { CounsellorLayout } from '@/components/layout/CounsellorLayout';
 
 interface PageLayoutProps {
@@ -18,10 +17,6 @@ interface PageLayoutProps {
 export function PageLayout({ children, title }: PageLayoutProps) {
   const { profile } = useUserProfile();
   const userType = profile?.user_type;
-
-  if (userType === 'employer') {
-    return <EmployerLayout title={title}>{children}</EmployerLayout>;
-  }
 
   if (userType === 'career_counsellor') {
     return <CounsellorLayout title={title}>{children}</CounsellorLayout>;

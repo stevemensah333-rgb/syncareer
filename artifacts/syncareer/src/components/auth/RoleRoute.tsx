@@ -2,7 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { QuickTour, getStepsForRole } from '@/components/onboarding/QuickTour';
 
-type UserRole = 'student' | 'employer' | 'career_counsellor';
+type UserRole = 'student' | 'career_counsellor';
 
 interface RoleRouteProps {
   children: React.ReactNode;
@@ -12,7 +12,6 @@ interface RoleRouteProps {
 // Maps each role to its default landing page
 const ROLE_HOME_ROUTES: Record<UserRole, string> = {
   student: '/dashboard',
-  employer: '/my-company',
   career_counsellor: '/counsellor-dashboard',
 };
 
