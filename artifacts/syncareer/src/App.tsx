@@ -51,12 +51,6 @@ const UsersDashboard = lazy(() => import("./pages/admin/UsersDashboard"));
 // Shared pages
 const Settings = lazy(() => import("./pages/Settings"));
 
-// Employer pages
-const MyCompany = lazy(() => import("./pages/employer/MyCompany"));
-const PostJob = lazy(() => import("./pages/employer/PostJob"));
-const HireWithAI = lazy(() => import("./pages/employer/HireWithAI"));
-const ApplicantTracker = lazy(() => import("./pages/employer/ApplicantTracker"));
-
 // Counsellor pages
 const CounsellorDashboard = lazy(() => import("./pages/counsellor/CounsellorDashboard"));
 const CounsellorAvailability = lazy(() => import("./pages/counsellor/CounsellorAvailability"));
@@ -160,7 +154,7 @@ const AppContent = () => (
               {/* Shared routes */}
               <Route path="/settings" element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['student', 'employer', 'career_counsellor']}>
+                  <RoleRoute allowedRoles={['student', 'career_counsellor']}>
                     <Settings />
                   </RoleRoute>
                 </ProtectedRoute>
@@ -196,20 +190,6 @@ const AppContent = () => (
               } />
               <Route path="/cv-builder" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><CVBuilder /></RoleRoute></ProtectedRoute>
-              } />
-
-              {/* EMPLOYER-ONLY ROUTES */}
-              <Route path="/my-company" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['employer']}><MyCompany /></RoleRoute></ProtectedRoute>
-              } />
-              <Route path="/post-job" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['employer']}><PostJob /></RoleRoute></ProtectedRoute>
-              } />
-              <Route path="/hire-ai" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['employer']}><HireWithAI /></RoleRoute></ProtectedRoute>
-              } />
-              <Route path="/applicants" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['employer']}><ApplicantTracker /></RoleRoute></ProtectedRoute>
               } />
 
               {/* COUNSELLOR-ONLY ROUTES */}

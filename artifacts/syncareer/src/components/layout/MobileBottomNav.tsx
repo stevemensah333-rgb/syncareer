@@ -4,8 +4,7 @@ import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import {
   ClipboardList, Star, GraduationCap, Sparkles, Settings,
-  Building2, FileText, Users, TrendingUp, Calendar,
-  MoreHorizontal, LineChart
+  TrendingUp, FileText, Calendar, MoreHorizontal
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -36,17 +35,6 @@ const studentMoreItems: NavTab[] = [
   { title: 'Settings', icon: Settings, href: '/settings' },
 ];
 
-const employerTabs: NavTab[] = [
-  { title: 'Dashboard', icon: Building2, href: '/my-company' },
-  { title: 'Post Job', icon: FileText, href: '/post-job' },
-  { title: 'Applicants', icon: Users, href: '/applicants' },
-];
-
-const employerMoreItems: NavTab[] = [
-  { title: 'Hire with AI', icon: Users, href: '/hire-ai' },
-  { title: 'Settings', icon: Settings, href: '/settings' },
-];
-
 const counsellorTabs: NavTab[] = [
   { title: 'Portfolio', icon: Users, href: '/counsellor-dashboard' },
   { title: 'Availability', icon: Calendar, href: '/counsellor-availability' },
@@ -62,10 +50,7 @@ export function MobileBottomNav() {
   let tabs: NavTab[];
   let moreItems: NavTab[] | null;
 
-  if (userType === 'employer') {
-    tabs = employerTabs;
-    moreItems = employerMoreItems;
-  } else if (userType === 'career_counsellor') {
+  if (userType === 'career_counsellor') {
     tabs = counsellorTabs;
     moreItems = null; // 4 items, no overflow
   } else {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Briefcase, Users, LogOut, MessageCircle, Menu, HelpCircle, Phone, Mail, CreditCard, Sparkles, Shield } from 'lucide-react';
+import { User, Users, LogOut, MessageCircle, Menu, HelpCircle, Phone, Mail, CreditCard, Sparkles, Shield } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Badge } from '@/components/ui/badge';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
@@ -46,7 +46,6 @@ export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
   const supabaseUserId = useSupabaseUserId();
   const { signOut } = useClerk();
 
-  const isEmployer = profile?.user_type === 'employer';
   const isCounsellor = profile?.user_type === 'career_counsellor';
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -86,16 +85,7 @@ export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
             
 
             <div className="hidden lg:flex items-center gap-2">
-              {isEmployer ? (
-                // Employer sees "For Employers" button
-                <Button
-                  variant="ghost"
-                  className="text-sm"
-                >
-                  <Briefcase className="h-4 w-4 mr-1" />
-                  For Employers
-                </Button>
-              ) : isCounsellor ? (
+              {isCounsellor ? (
                 // Counsellors see their role indicator
                 <Button
                   variant="ghost"
@@ -131,7 +121,7 @@ export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
           <div className="flex items-center gap-2 sm:gap-4">
 
             {/* Pricing link — students only */}
-            {!isEmployer && !isCounsellor && (
+            {!isCounsellor && (
               <Button
                 variant="ghost"
                 className="text-sm hidden sm:flex"
@@ -143,7 +133,7 @@ export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
             )}
 
             {/* Mobile Ask Counsellor Button - Only for students */}
-            {!isEmployer && !isCounsellor && (
+            {!isCounsellor && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -157,7 +147,7 @@ export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
             <NotificationsDropdown />
 
             {/* Plan badge — students only */}
-            {!isEmployer && !isCounsellor && !subLoading && (
+            {!isCounsellor && !subLoading && (
               isPremium ? (
                 <Badge variant="outline" className="hidden sm:flex items-center gap-1 border-primary/40 text-primary text-xs px-2 py-0.5">
                   <Sparkles className="h-3 w-3" />

@@ -15,7 +15,6 @@ import {
 
 const ROLE_OPTIONS = [
   { value: 'student', label: 'Student / Job seeker' },
-  { value: 'employer', label: 'Employer' },
   { value: 'career_counsellor', label: 'Career counsellor' },
 ];
 
