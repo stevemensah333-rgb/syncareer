@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
-  Users, Calendar, ClipboardList, Settings, ChevronRight, ChevronLeft
+  Users, Calendar, ClipboardList, Settings, ChevronRight, ChevronLeft, UserCheck
 } from 'lucide-react';
 
 interface CounsellorLayoutProps {
@@ -22,6 +22,7 @@ const counsellorNavItems = [
   ]},
   { label: 'Schedule', items: [
     { title: 'Sessions', icon: ClipboardList, href: '/counsellor-sessions' },
+    { title: 'My Clients', icon: UserCheck, href: '/counsellor-clients' },
   ]},
   { label: 'Account', items: [
     { title: 'Settings', icon: Settings, href: '/settings' },

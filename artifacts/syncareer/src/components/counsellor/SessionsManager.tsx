@@ -10,6 +10,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from '@/utils/notifications';
 import { toast } from 'sonner';
+import { SessionMessaging } from '@/components/counsellor/SessionMessaging';
 import {
   Collapsible,
   CollapsibleContent,
@@ -290,10 +291,16 @@ export function SessionsManager({ counsellorId }: SessionsManagerProps) {
                         Contact: {booking.user_contact}
                       </p>
                     </div>
-                    <Button variant="outline" size="sm">
-                      <Video className="h-4 w-4 mr-1" />
-                      Start Session
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="gap-1">
+                        <MessageSquare className="h-4 w-4" />
+                        Message
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Video className="h-4 w-4 mr-1" />
+                        Start Session
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -347,22 +354,35 @@ export function SessionsManager({ counsellorId }: SessionsManagerProps) {
                     </div>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="px-4 pb-4">
-                    <div className="pt-4 space-y-3">
-                      <Textarea
-                        value={notes[session.id] || ''}
-                        onChange={(e) => setNotes(prev => ({ 
-                          ...prev, 
-                          [session.id]: e.target.value 
-                        }))}
-                        placeholder="Add private notes about this session..."
-                        rows={4}
-                      />
-                      <Button 
-                        size="sm" 
-                        onClick={() => saveSessionNotes(session.id)}
-                      >
-                        Save Notes
-                      </Button>
+                    <div className="pt-4 space-y-4">
+                      {/* Session Messaging */}
+                      <div className="border-b pb-4">
+                        <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4" />
+                          Messages with Client
+                        </h4>
+                        <SessionMessaging bookingId={session.id} counsellorId={counsellorId} />
+                      </div>
+
+                      {/* Session Notes */}
+                      <div>
+                        <h4 className="font-medium text-sm mb-2">Session Notes</h4>
+                        <Textarea
+                          value={notes[session.id] || ''}
+                          onChange={(e) => setNotes(prev => ({ 
+                            ...prev, 
+                            [session.id]: e.target.value 
+                          }))}
+                          placeholder="Add private notes about this session..."
+                          rows={4}
+                        />
+                        <Button 
+                          size="sm" 
+                          onClick={() => saveSessionNotes(session.id)}
+                        >
+                          Save Notes
+                        </Button>
+                      </div>
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
