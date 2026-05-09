@@ -102,12 +102,11 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          // Auth & writes — never cache
+          // Auth & writes — never cache. Catches Supabase auth endpoints
+          // (`/auth/v1/...`) so tokens, sessions, and password resets always
+          // hit the network.
           {
-            urlPattern: ({ url }) =>
-              url.hostname.includes("clerk.") ||
-              url.pathname.startsWith("/v1/client") ||
-              url.pathname.includes("/auth/"),
+            urlPattern: ({ url }) => url.pathname.includes("/auth/"),
             handler: "NetworkOnly",
           },
           {

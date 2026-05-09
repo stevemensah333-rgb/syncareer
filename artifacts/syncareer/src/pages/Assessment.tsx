@@ -144,12 +144,12 @@ const Assessment = () => {
   const [showIntro, setShowIntro] = useState<string | null>(null);
   const [guestSubmitting, setGuestSubmitting] = useState(false);
   const isOnline = useOnlineStatus();
-  const { userId: clerkUserId } = useAuth();
+  const { userId } = useAuth();
   const assessmentDraft = useOfflineDraft<{
     answers: Record<number, number>;
     currentPage: number;
     takingAssessment: boolean;
-  }>('assessment', clerkUserId);
+  }>('assessment', userId);
   const [pendingOfflineSubmit, setPendingOfflineSubmit] = useState(false);
 
   // Hydrate from offline draft on first mount

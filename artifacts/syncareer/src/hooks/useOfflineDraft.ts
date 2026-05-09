@@ -45,8 +45,8 @@ export function useOfflineDraft<T>(
   const lastKeyRef = useRef<string>(key);
 
   // Re-hydrate from localStorage whenever the storage key changes (e.g. when
-  // Clerk's userId loads after initial render and we transition from "anon"
-  // to a real user-scoped key).
+  // the Supabase userId loads after initial render and we transition from
+  // "anon" to a real user-scoped key).
   useEffect(() => {
     if (lastKeyRef.current === key) return;
     lastKeyRef.current = key;

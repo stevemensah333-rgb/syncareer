@@ -45,10 +45,10 @@ const InterviewSimulator = () => {
   const [step, setStep] = useState<'setup' | 'interview' | 'offline-practice'>('setup');
   const [sessionLength, setSessionLength] = useState<SessionLength>('standard');
   const feedbackModal = useFeedbackModal('interview_simulator');
-  const { userId: clerkUserId } = useAuth();
+  const { userId } = useAuth();
   const setupDraft = useOfflineDraft<InterviewSetupConfig>(
     'interview-setup',
-    clerkUserId,
+    userId,
   );
   const [config, setConfigRaw] = useState<InterviewSetupConfig>(
     () =>
@@ -497,7 +497,7 @@ const InterviewSimulator = () => {
             questionCount={
               SESSION_OPTIONS.find((o) => o.value === sessionLength)?.questions ?? 10
             }
-            userId={clerkUserId}
+            userId={userId}
             onSync={async (draft) => {
               try {
                 const { data: { user } } = await supabase.auth.getUser();
