@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@clerk/react";
+import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseUserId } from "@/hooks/useSupabaseUserId";
 import { getHomeRouteForRole } from "@/components/auth/RoleRoute";

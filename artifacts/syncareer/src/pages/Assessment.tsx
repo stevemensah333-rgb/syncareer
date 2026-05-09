@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '@/lib/auth';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineDraft } from '@/hooks/useOfflineDraft';
 import { Navigate, useNavigate } from 'react-router-dom';

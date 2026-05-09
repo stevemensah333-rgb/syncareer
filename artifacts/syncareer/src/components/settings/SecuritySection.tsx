@@ -1,44 +1,83 @@
-import React from 'react';
-import { useClerk } from '@clerk/react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Shield, ShieldCheck, ExternalLink } from 'lucide-react';
+import { Shield } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { supabase } from '@/integrations/supabase/client';
 
 export function SecuritySection() {
   const { t } = useTranslation();
-  const { openUserProfile } = useClerk();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success('Password updated');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Failed to update password');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <>
       <h2 className="text-xl font-semibold mb-6">{t('settings.securitySettings')}</h2>
-      <div className="space-y-6">
+      <form onSubmit={handleChangePassword} className="space-y-6 max-w-md">
         <div>
           <h3 className="text-lg font-medium mb-2">{t('settings.changePassword')}</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Password and two-factor authentication are managed through your account security settings.
+            Choose a new password — at least 8 characters.
           </p>
-          <Button variant="outline" onClick={() => openUserProfile()}>
-            <Shield className="h-4 w-4 mr-2" />
-            Manage Password &amp; Security
-            <ExternalLink className="h-3.5 w-3.5 ml-2" />
-          </Button>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="new-password">New password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={8}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="confirm-password">Confirm new password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={8}
+              />
+            </div>
+          </div>
         </div>
-
-        <div className="pt-4 border-t">
-          <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5" />
-            {t('settings.twoFactorAuth')}
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {t('settings.twoFactorAuthDesc')}
-          </p>
-          <Button variant="outline" onClick={() => openUserProfile()}>
-            <Shield className="h-4 w-4 mr-2" />
-            {t('settings.enable2FA')}
-            <ExternalLink className="h-3.5 w-3.5 ml-2" />
-          </Button>
-        </div>
-      </div>
+        <Button type="submit" disabled={saving || !newPassword || !confirmPassword}>
+          <Shield className="h-4 w-4 mr-2" />
+          {saving ? 'Updating…' : 'Update password'}
+        </Button>
+      </form>
     </>
   );
 }

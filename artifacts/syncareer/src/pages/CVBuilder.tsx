@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '@/lib/auth';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useOfflineDraft } from '@/hooks/useOfflineDraft';
 import { PageLayout } from '@/components/layout/PageLayout';

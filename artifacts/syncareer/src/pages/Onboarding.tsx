@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@clerk/react';
 import { supabase } from '@/integrations/supabase/client';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -146,7 +146,7 @@ const years = Array.from({ length: 20 }, (_, i) => currentYear - 10 + i);
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { getToken } = useAuth();
+  const { refreshProfile } = useUserProfile();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -279,60 +279,67 @@ const Onboarding = () => {
     setLoading(true);
 
     try {
-      // The Supabase project is not configured to trust Clerk-issued JWTs,
-      // so direct supabase.from('profiles').upsert(...) calls are rejected
-      // with PGRST301 / 401 for brand-new users. Route the onboarding write
-      // through our API server, which verifies the Clerk session and uses
-      // the Supabase service role to perform the upsert.
-      const details =
-        userType === 'student'
-          ? {
-              yearOfAdmission,
-              expectedCompletion,
-              major,
-              school,
-              degreeType,
-            }
-          : userType === 'employer'
-          ? {
-              companyName,
-              companyLocation,
-              industry,
-              companySize,
-              jobTitle,
-            }
-          : {
-              fullName: counsellorFullName,
-              countryCode,
-              phoneNumber,
-            };
-
-      const token = await getToken();
-      const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
-      const response = await fetch(`${apiBase}/api/onboarding`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ userType, details }),
-      });
-
-      if (!response.ok) {
-        let message = 'Failed to complete setup';
-        try {
-          const data = await response.json();
-          if (data?.error) message = data.error;
-        } catch {
-          // ignore parse errors
-        }
-        throw new Error(message);
+      // Write role-specific details FIRST. Only after they succeed do we set
+      // onboarding_completed=true on the profile, so a partial failure doesn't
+      // route a half-onboarded user into the dashboard.
+      // RLS policies use auth.uid() which now matches the signed-in user's id.
+      if (userType === 'student') {
+        const { error } = await supabase.from('student_details').upsert(
+          {
+            user_id: userId,
+            year_of_admission: yearOfAdmission ? parseInt(yearOfAdmission, 10) : null,
+            expected_completion: expectedCompletion ? parseInt(expectedCompletion, 10) : null,
+            major,
+            school: school || null,
+            degree_type: degreeType,
+          },
+          { onConflict: 'user_id' },
+        );
+        if (error) throw error;
+      } else if (userType === 'employer') {
+        const { error } = await supabase.from('employer_details').upsert(
+          {
+            user_id: userId,
+            company_name: companyName.trim(),
+            company_location: companyLocation || null,
+            industry: industry || null,
+            company_size: companySize || null,
+            job_title: jobTitle || null,
+          },
+          { onConflict: 'user_id' },
+        );
+        if (error) throw error;
+      } else if (userType === 'career_counsellor') {
+        const { error } = await supabase.from('counsellor_details').upsert(
+          {
+            user_id: userId,
+            full_name: counsellorFullName.trim(),
+            country_code: countryCode,
+            phone_number: phoneNumber.trim(),
+          },
+          { onConflict: 'user_id' },
+        );
+        if (error) throw error;
       }
 
+      const profilePayload = {
+        id: userId,
+        user_type: userType,
+        onboarding_completed: true,
+        ...(userType === 'career_counsellor' ? { full_name: counsellorFullName.trim() } : {}),
+      };
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(profilePayload, { onConflict: 'id' });
+      if (profileError) throw profileError;
+
       toast.success('Profile setup complete!');
+      // Refresh the cached profile so RoleRoute sees onboarding_completed=true
+      // and doesn't bounce us back to /onboarding.
+      await refreshProfile();
       const homeRoute = getHomeRouteForRole(userType);
-      navigate(homeRoute);
+      navigate(homeRoute, { replace: true });
     } catch (error: any) {
       console.error('Onboarding error:', error);
       toast.error(error.message || 'Failed to complete setup');

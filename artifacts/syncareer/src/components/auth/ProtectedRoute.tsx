@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/react';
+import { useAuth } from '@/lib/auth';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 

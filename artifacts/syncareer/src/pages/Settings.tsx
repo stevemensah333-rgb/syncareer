@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth, useClerk } from '@clerk/react';
+import { useAuth, useClerk } from '@/lib/auth';
 import { NotificationSettingsPanel } from '@/components/notifications/NotificationSettingsPanel';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';

@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/contexts/UserProfileContext';
-import { useAuth, useClerk } from '@clerk/react';
+import { useAuth, useClerk } from '@/lib/auth';
 import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 import {
   DropdownMenu,
