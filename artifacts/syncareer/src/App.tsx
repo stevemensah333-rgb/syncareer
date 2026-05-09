@@ -58,7 +58,16 @@ const CounsellorDashboard = lazy(() => import("./pages/counsellor/CounsellorDash
 const CounsellorAvailability = lazy(() => import("./pages/counsellor/CounsellorAvailability"));
 const CounsellorSessions = lazy(() => import("./pages/counsellor/CounsellorSessions"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function SignInPage() {
   const { pathname } = useLocation();

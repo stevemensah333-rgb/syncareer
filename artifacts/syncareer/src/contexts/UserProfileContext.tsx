@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
@@ -30,7 +31,9 @@ interface UserProfile {
   avatar_url: string | null;
   bio: string | null;
   onboarding_completed: boolean;
-  tour_completed: boolean | null;
+  // tour_completed is optional because the column may not exist in the live
+  // Supabase schema cache; QuickTour falls back to localStorage when missing.
+  tour_completed?: boolean | null;
   user_type: string | null;
 }
 
@@ -56,71 +59,80 @@ interface UserProfileProviderProps {
   children: ReactNode;
 }
 
+// NOTE: tour_completed is intentionally omitted — the column is missing from
+// the live Supabase schema and PostgREST 42703s on explicit selects of unknown
+// columns (it tolerates missing columns only when using select('*')).
+const PROFILE_COLUMNS =
+  'id, username, full_name, avatar_url, bio, onboarding_completed, user_type';
+const STUDENT_COLUMNS =
+  'year_of_admission, expected_completion, major, school, degree_type';
+const EMPLOYER_COLUMNS =
+  'company_name, company_location, industry, company_size, job_title, company_website, company_email, company_phone, company_description';
+
+export const userProfileKeys = {
+  all: ['user-profile'] as const,
+  bundle: (uid: string) => ['user-profile', uid] as const,
+};
+
+async function fetchProfileBundle(uid: string) {
+  const [profileResult, studentResult, employerResult] = await Promise.all([
+    supabase.from('profiles').select(PROFILE_COLUMNS).eq('id', uid).maybeSingle(),
+    supabase.from('student_details').select(STUDENT_COLUMNS).eq('user_id', uid).maybeSingle(),
+    supabase.from('employer_details').select(EMPLOYER_COLUMNS).eq('user_id', uid).maybeSingle(),
+  ]);
+
+  if (profileResult.error) {
+    console.error('Error fetching profile:', profileResult.error);
+  }
+
+  const profile = (profileResult.data as UserProfile | null) ?? null;
+  const role = profile?.user_type;
+  const studentDetails =
+    role === 'student' ? ((studentResult.data as StudentDetails | null) ?? null) : null;
+  const employerDetails =
+    role === 'employer' ? ((employerResult.data as EmployerDetails | null) ?? null) : null;
+
+  return { profile, studentDetails, employerDetails };
+}
+
 export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ children }) => {
   const { isSignedIn, isLoaded } = useAuth();
   const userId = useSupabaseUserId();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(null);
-  const [employerDetails, setEmployerDetails] = useState<EmployerDetails | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchProfile = async (uid: string) => {
-    try {
-      const [profileResult, studentResult, employerResult] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
-        supabase.from('student_details').select('*').eq('user_id', uid).maybeSingle(),
-        supabase.from('employer_details').select('*').eq('user_id', uid).maybeSingle(),
-      ]);
+  const enabled = isLoaded && isSignedIn && !!userId;
 
-      if (profileResult.error) {
-        console.error('Error fetching profile:', profileResult.error);
-      }
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: userId ? userProfileKeys.bundle(userId) : userProfileKeys.all,
+    queryFn: () => fetchProfileBundle(userId as string),
+    enabled,
+    staleTime: 60_000,
+  });
 
-      if (profileResult.data) {
-        setProfile(profileResult.data as UserProfile);
-        if (profileResult.data.user_type === 'student' && studentResult.data) {
-          setStudentDetails(studentResult.data as StudentDetails);
-          setEmployerDetails(null);
-        } else if (profileResult.data.user_type === 'employer' && employerResult.data) {
-          setEmployerDetails(employerResult.data as EmployerDetails);
-          setStudentDetails(null);
-        } else {
-          setStudentDetails(null);
-          setEmployerDetails(null);
-        }
-      } else {
-        setProfile(null);
-        setStudentDetails(null);
-        setEmployerDetails(null);
-      }
-    } catch (error) {
-      console.error('Error in fetchProfile:', error);
-    } finally {
-      setLoading(false);
+  const value = useMemo<UserProfileContextType>(() => {
+    if (!enabled) {
+      return {
+        profile: null,
+        studentDetails: null,
+        employerDetails: null,
+        loading: !isLoaded,
+        refreshProfile: async () => {},
+      };
     }
-  };
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (!isSignedIn || !userId) {
-      setProfile(null);
-      setStudentDetails(null);
-      setEmployerDetails(null);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    fetchProfile(userId);
-  }, [isLoaded, isSignedIn, userId]);
-
-  const refreshProfile = async () => {
-    if (!userId) return;
-    setLoading(true);
-    await fetchProfile(userId);
-  };
+    return {
+      profile: data?.profile ?? null,
+      studentDetails: data?.studentDetails ?? null,
+      employerDetails: data?.employerDetails ?? null,
+      loading: isLoading || isFetching,
+      refreshProfile: async () => {
+        if (!userId) return;
+        await queryClient.invalidateQueries({ queryKey: userProfileKeys.bundle(userId) });
+      },
+    };
+  }, [enabled, isLoaded, data, isLoading, isFetching, userId, queryClient]);
 
   return (
-    <UserProfileContext.Provider value={{ profile, studentDetails, employerDetails, loading, refreshProfile }}>
+    <UserProfileContext.Provider value={value}>
       {children}
     </UserProfileContext.Provider>
   );

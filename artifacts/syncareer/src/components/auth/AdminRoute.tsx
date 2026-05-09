@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
@@ -10,38 +10,33 @@ interface AdminRouteProps {
   children: React.ReactNode;
 }
 
+const adminCheckKey = (uid: string) => ['user-roles', uid, 'admin'] as const;
+
 const AdminRoute = ({ children }: AdminRouteProps) => {
   const { isLoaded } = useAuth();
   const supabaseUserId = useSupabaseUserId();
   const { profile } = useUserProfile();
-  const [checking, setChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    if (!isLoaded) return;
-    const checkAdmin = async () => {
-      try {
-        if (!supabaseUserId) {
-          setChecking(false);
-          return;
-        }
-        const { data } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', supabaseUserId)
-          .eq('role', 'admin')
-          .maybeSingle();
-        setIsAdmin(!!data);
-      } catch (e) {
-        console.error('Admin check failed:', e);
-      } finally {
-        setChecking(false);
+  const { data: isAdmin, isLoading } = useQuery({
+    queryKey: supabaseUserId ? adminCheckKey(supabaseUserId) : ['user-roles', 'anon'],
+    enabled: isLoaded && !!supabaseUserId,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', supabaseUserId as string)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (error) {
+        console.error('Admin check failed:', error);
+        return false;
       }
-    };
-    checkAdmin();
-  }, [isLoaded, supabaseUserId]);
+      return !!data;
+    },
+  });
 
-  if (checking) {
+  if (!isLoaded || (supabaseUserId && isLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
