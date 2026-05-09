@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/react";
 import { supabase } from "@/integrations/supabase/client";
-import { useSupabaseUserId } from "@/hooks/useSupabaseUserId";
 import { getHomeRouteForRole } from "@/components/auth/RoleRoute";
 import LandingBackground from "@/components/landing/LandingBackground";
 import LandingHeader from "@/components/landing/LandingHeader";
@@ -17,27 +16,26 @@ import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function Landing() {
   const navigate = useNavigate();
-  const { isSignedIn, isLoaded } = useAuth();
-  const supabaseUserId = useSupabaseUserId();
+  const { isSignedIn, isLoaded, userId } = useAuth();
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || !supabaseUserId) return;
+    if (!isLoaded || !isSignedIn || !userId) return;
     const checkProfile = async () => {
       const { data: profile } = await supabase
         .from('profiles')
         .select('user_type, onboarding_completed')
-        .eq('id', supabaseUserId)
+        .eq('id', userId)
         .maybeSingle();
-      // Brand-new users have no profile row yet — send them to onboarding
-      // so they can complete signup.
-      if (!profile || !profile.onboarding_completed) {
-        navigate('/onboarding');
-      } else {
-        navigate(getHomeRouteForRole(profile.user_type || null));
+      if (profile) {
+        if (!profile.onboarding_completed) {
+          navigate('/onboarding');
+        } else {
+          navigate(getHomeRouteForRole(profile.user_type || null));
+        }
       }
     };
     checkProfile();
-  }, [isLoaded, isSignedIn, supabaseUserId, navigate]);
+  }, [isLoaded, isSignedIn, userId, navigate]);
 
   const openSignIn = () => navigate('/sign-in');
   const openSignUp = () => navigate('/sign-up');
