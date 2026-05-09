@@ -47,6 +47,7 @@ const CVBuilder = lazy(() => import("./pages/CVBuilder"));
 // Admin pages
 const FeedbackDashboard = lazy(() => import("./pages/admin/FeedbackDashboard"));
 const UsersDashboard = lazy(() => import("./pages/admin/UsersDashboard"));
+const CredentialReview = lazy(() => import("./pages/admin/CredentialReview"));
 
 // Shared pages
 const Settings = lazy(() => import("./pages/Settings"));
@@ -56,6 +57,7 @@ const CounsellorDashboard = lazy(() => import("./pages/counsellor/CounsellorDash
 const CounsellorAvailability = lazy(() => import("./pages/counsellor/CounsellorAvailability"));
 const CounsellorSessions = lazy(() => import("./pages/counsellor/CounsellorSessions"));
 const CounsellorClients = lazy(() => import("./pages/counsellor/CounsellorClients"));
+const CredentialUpload = lazy(() => import("./pages/counsellor/CredentialUpload"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -206,6 +208,9 @@ const AppContent = () => (
               <Route path="/counsellor-clients" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><CounsellorClients /></RoleRoute></ProtectedRoute>
               } />
+              <Route path="/counsellor/complete-credentials" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><CredentialUpload /></RoleRoute></ProtectedRoute>
+              } />
 
               {/* ADMIN ROUTES */}
               <Route path="/admin/feedback" element={
@@ -213,6 +218,9 @@ const AppContent = () => (
               } />
               <Route path="/admin/users" element={
                 <ProtectedRoute><AdminRoute><UsersDashboard /></AdminRoute></ProtectedRoute>
+              } />
+              <Route path="/admin/credentials" element={
+                <ProtectedRoute><AdminRoute><CredentialReview /></AdminRoute></ProtectedRoute>
               } />
 
               <Route path="*" element={<NotFound />} />
