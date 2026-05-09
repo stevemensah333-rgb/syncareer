@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useAuth, useClerk } from '@clerk/react';
+import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +42,8 @@ export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
   const isMobile = useIsMobile();
   const { profile } = useUserProfile();
   const { isPremium, loading: subLoading } = useSubscription();
-  const { userId, isSignedIn } = useAuth();
+  const { isSignedIn } = useAuth();
+  const supabaseUserId = useSupabaseUserId();
   const { signOut } = useClerk();
 
   const isEmployer = profile?.user_type === 'employer';
@@ -49,18 +51,18 @@ export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!supabaseUserId) return;
     const checkAdmin = async () => {
       const { data } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
+        .eq('user_id', supabaseUserId)
         .eq('role', 'admin')
         .maybeSingle();
       setIsAdmin(!!data);
     };
     checkAdmin();
-  }, [userId]);
+  }, [supabaseUserId]);
 
   const handleSignOut = async () => {
     try {

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@clerk/react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 
 interface StudentDetails {
   year_of_admission: number | null;
@@ -56,7 +57,8 @@ interface UserProfileProviderProps {
 }
 
 export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ children }) => {
-  const { isSignedIn, isLoaded, userId } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
+  const userId = useSupabaseUserId();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(null);
   const [employerDetails, setEmployerDetails] = useState<EmployerDetails | null>(null);
