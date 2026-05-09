@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import * as Sentry from '@sentry/react';
 
 interface Props {
   children: ReactNode;
@@ -23,6 +24,15 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('[GlobalErrorBoundary] Uncaught error:', error, errorInfo);
+    
+    // Capture error in Sentry
+    Sentry.captureException(error, {
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack,
+        },
+      },
+    });
   }
 
   handleReload = () => {
@@ -31,6 +41,11 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   handleHome = () => {
     window.location.href = `${basePath}/`;
+  };
+
+  handleSupport = () => {
+    // Open support page or contact form
+    window.location.href = `${basePath}/support`;
   };
 
   render() {
@@ -70,12 +85,20 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               >
                 Reload page
               </button>
-              <button
-                onClick={this.handleHome}
-                className="inline-flex h-11 items-center justify-center rounded-full px-6 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
-              >
-                Back to home
-              </button>
+              <div className="flex gap-2 flex-wrap justify-center">
+                <button
+                  onClick={this.handleHome}
+                  className="inline-flex h-11 items-center justify-center rounded-full px-6 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+                >
+                  Back to home
+                </button>
+                <button
+                  onClick={this.handleSupport}
+                  className="inline-flex h-11 items-center justify-center rounded-full px-6 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+                >
+                  Contact support
+                </button>
+              </div>
             </div>
             {import.meta.env.DEV && this.state.error && (
               <details className="text-left mt-8 w-full p-4 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-black/[0.04] text-sm">

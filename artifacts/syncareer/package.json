@@ -85,10 +85,13 @@
   },
   "dependencies": {
     "@lovable.dev/cloud-auth-js": "^1.1.2",
+    "@sentry/react": "^10.52.0",
+    "@sentry/tracing": "^7.120.4",
     "@supabase/supabase-js": "^2.105.3",
     "html2pdf.js": "^0.14.0",
     "i18next": "^26.0.10",
     "i18next-browser-languagedetector": "^8.2.1",
+    "posthog-js": "^1.372.10",
     "react-i18next": "^17.0.7",
     "react-image-crop": "^11.0.10",
     "react-router-dom": "^7.15.0",

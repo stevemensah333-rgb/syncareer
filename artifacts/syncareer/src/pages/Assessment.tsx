@@ -5,6 +5,7 @@ import { useOfflineDraft } from '@/hooks/useOfflineDraft';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
+import { setMetaTags, setBreadcrumbSchema } from '@/lib/seo';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -125,6 +126,23 @@ const Assessment = () => {
   const navigate = useNavigate();
   const [isGuest, setIsGuest] = useState<boolean | null>(null); // null = loading
   const [guestResult, setGuestResult] = useState<AssessmentResult | null>(null);
+
+  // Set SEO metadata
+  useEffect(() => {
+    setMetaTags({
+      title: 'Free Career Assessment - Discover Your RIASEC Profile | Syncareer',
+      description: 'Take our comprehensive career assessment to discover your personality, skills, and ideal career paths. Free, no sign-up required.',
+      keywords: 'career assessment, RIASEC, personality test, career test, skills assessment',
+      ogTitle: 'Discover Your Career Profile - Free Assessment',
+      ogDescription: 'Find your ideal career path with our AI-powered RIASEC assessment.',
+      canonical: 'https://syncareer.com/assessment',
+    });
+
+    setBreadcrumbSchema([
+      { name: 'Home', url: 'https://syncareer.com' },
+      { name: 'Assessment', url: 'https://syncareer.com/assessment' },
+    ]);
+  }, []);
 
   // Check auth status
   useEffect(() => {
