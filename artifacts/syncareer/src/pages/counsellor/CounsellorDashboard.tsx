@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { ImageCropper } from '@/components/profile/ImageCropper';
+import { MeetingLinkManager } from '@/components/counsellor/MeetingLinkManager';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 
 interface CounsellorDetails {
@@ -432,6 +433,11 @@ const CounsellorDashboard = () => {
               )}
             </CardContent>
           </Card>
+          </AnimatedSection>
+
+          {/* Meeting Link Manager */}
+          <AnimatedSection delay={0.16} y={20}>
+            <MeetingLinkManager onSave={fetchCounsellorData} />
           </AnimatedSection>
 
           {/* Quick Stats */}

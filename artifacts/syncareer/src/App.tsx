@@ -55,6 +55,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const CounsellorDashboard = lazy(() => import("./pages/counsellor/CounsellorDashboard"));
 const CounsellorAvailability = lazy(() => import("./pages/counsellor/CounsellorAvailability"));
 const CounsellorSessions = lazy(() => import("./pages/counsellor/CounsellorSessions"));
+const CounsellorClients = lazy(() => import("./pages/counsellor/CounsellorClients"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -201,6 +202,9 @@ const AppContent = () => (
               } />
               <Route path="/counsellor-sessions" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><CounsellorSessions /></RoleRoute></ProtectedRoute>
+              } />
+              <Route path="/counsellor-clients" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><CounsellorClients /></RoleRoute></ProtectedRoute>
               } />
 
               {/* ADMIN ROUTES */}
