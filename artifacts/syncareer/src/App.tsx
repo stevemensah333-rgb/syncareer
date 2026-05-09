@@ -236,6 +236,7 @@ const AppContent = () => (
           </Suspense>
           </TourProvider>
         </TooltipProvider>
+        </NotificationProvider>
       </UserProfileProvider>
     </QueryClientProvider>
   </GlobalErrorBoundary>
