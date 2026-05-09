@@ -7,7 +7,8 @@
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
     "build": "vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -43,10 +44,13 @@
     "@replit/vite-plugin-runtime-error-modal": "catalog:",
     "@tailwindcss/typography": "^0.5.15",
     "@tanstack/react-query": "catalog:",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "@vitest/ui": "^4.1.5",
     "@workspace/api-client-react": "workspace:*",
     "autoprefixer": "^10.5.0",
     "class-variance-authority": "catalog:",
@@ -55,6 +59,7 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "catalog:",
+    "happy-dom": "^20.9.0",
     "input-otp": "^1.4.2",
     "lucide-react": "catalog:",
     "next-themes": "^0.4.6",
@@ -73,6 +78,7 @@
     "vaul": "^1.1.2",
     "vite": "catalog:",
     "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^4.1.5",
     "workbox-window": "^7.4.1",
     "wouter": "catalog:",
     "zod": "catalog:"
