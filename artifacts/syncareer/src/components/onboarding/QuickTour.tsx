@@ -252,24 +252,6 @@ const STUDENT_STEPS: TourStep[] = [
   },
 ];
 
-const EMPLOYER_STEPS: TourStep[] = [
-  {
-    selector: '[data-tour="employer-post-job"]',
-    title: 'Post your first role',
-    body: 'Publish a job in minutes and reach vetted African graduates ready to apply.',
-  },
-  {
-    selector: '[data-tour="employer-search-talent"]',
-    title: 'Find talent with AI',
-    body: 'Describe the person you need and let our matcher pull the closest candidates from the pool.',
-  },
-  {
-    selector: '[data-tour="employer-applicants"]',
-    title: 'Manage applicants in one place',
-    body: 'Review, shortlist, and message candidates without juggling spreadsheets or inboxes.',
-  },
-];
-
 const COUNSELLOR_STEPS: TourStep[] = [
   {
     selector: '[data-tour="counsellor-edit"]',
@@ -289,7 +271,6 @@ const COUNSELLOR_STEPS: TourStep[] = [
 ];
 
 export function getStepsForRole(role: string | null | undefined): TourStep[] {
-  if (role === 'employer') return EMPLOYER_STEPS;
   if (role === 'career_counsellor') return COUNSELLOR_STEPS;
   return STUDENT_STEPS;
 }
