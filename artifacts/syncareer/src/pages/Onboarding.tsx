@@ -25,12 +25,6 @@ const studentSchema = z.object({
   degreeType: z.string().min(1, 'Degree type is required'),
 });
 
-const employerSchema = z.object({
-  companyName: z.string().trim().min(1, 'Company name is required').max(200, 'Company name must be less than 200 characters'),
-  companyLocation: z.string().max(200, 'Location must be less than 200 characters').optional(),
-  jobTitle: z.string().max(100, 'Job title must be less than 100 characters').optional(),
-});
-
 const counsellorSchema = z.object({
   fullName: z.string().trim().min(1, 'Full name is required').max(100, 'Name must be less than 100 characters'),
   countryCode: z.string().min(1, 'Country code is required'),
@@ -183,13 +177,6 @@ const Onboarding = () => {
     }
   };
 
-  // Employer fields
-  const [companyName, setCompanyName] = useState<string>('');
-  const [companyLocation, setCompanyLocation] = useState<string>('');
-  const [industry, setIndustry] = useState<string>('');
-  const [companySize, setCompanySize] = useState<string>('');
-  const [jobTitle, setJobTitle] = useState<string>('');
-
   // Counsellor fields
   const [counsellorFullName, setCounsellorFullName] = useState<string>('');
   const [countryCode, setCountryCode] = useState<string>('');
@@ -254,16 +241,6 @@ const Onboarding = () => {
         toast.error(result.error.errors[0].message);
         return;
       }
-    } else if (userType === 'employer') {
-      const result = employerSchema.safeParse({ 
-        companyName: companyName.trim(), 
-        companyLocation: companyLocation || undefined, 
-        jobTitle: jobTitle || undefined 
-      });
-      if (!result.success) {
-        toast.error(result.error.errors[0].message);
-        return;
-      }
     } else if (userType === 'career_counsellor') {
       const result = counsellorSchema.safeParse({
         fullName: counsellorFullName.trim(),
@@ -292,19 +269,6 @@ const Onboarding = () => {
             major,
             school: school || null,
             degree_type: degreeType,
-          },
-          { onConflict: 'user_id' },
-        );
-        if (error) throw error;
-      } else if (userType === 'employer') {
-        const { error } = await supabase.from('employer_details').upsert(
-          {
-            user_id: userId,
-            company_name: companyName.trim(),
-            company_location: companyLocation || null,
-            industry: industry || null,
-            company_size: companySize || null,
-            job_title: jobTitle || null,
           },
           { onConflict: 'user_id' },
         );
@@ -374,13 +338,6 @@ const Onboarding = () => {
           title: 'Tell us about your studies',
           italicWord: 'studies',
           subtitle: 'We use this to tailor recommendations, courses, and roles to your field.',
-        }
-      : userType === 'employer'
-      ? {
-          eyebrow: 'Your organisation',
-          title: 'Tell us about your company',
-          italicWord: 'company',
-          subtitle: 'A short profile helps candidates trust your roles before they apply.',
         }
       : userType === 'career_counsellor'
       ? {
@@ -480,76 +437,6 @@ const Onboarding = () => {
           </div>
         )}
 
-        {userType === 'employer' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label>Company Name *</Label>
-                <Input
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Enter company name"
-                  className="h-12"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Your Job Title</Label>
-                <Input
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  placeholder="e.g., HR Manager"
-                  className="h-12"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Industry</Label>
-                <Select value={industry} onValueChange={setIndustry}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Select industry" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {INDUSTRIES.map((i) => (
-                      <SelectItem key={i} value={i}>{i}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Company Size</Label>
-                <Select value={companySize} onValueChange={setCompanySize}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {COMPANY_SIZES.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label>Company Location</Label>
-                <Input
-                  value={companyLocation}
-                  onChange={(e) => setCompanyLocation(e.target.value)}
-                  placeholder="e.g., Johannesburg, South Africa"
-                  className="h-12"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <Button onClick={handleSubmit} disabled={loading || !companyName} className="rounded-full px-8 h-12 bg-foreground text-background hover:bg-foreground/90">
-                {loading ? 'Saving...' : 'Complete setup'}
-              </Button>
-            </div>
-          </div>
-        )}
-
         {userType === 'career_counsellor' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 gap-6">
@@ -609,10 +496,9 @@ const Onboarding = () => {
         )}
 
         {!userType && !initialLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               { value: 'student', label: 'Student', description: 'Discover careers, build your CV, and prepare for interviews' },
-              { value: 'employer', label: 'Employer', description: 'Post jobs, find talent, and manage hiring' },
               { value: 'career_counsellor', label: 'Career Counsellor', description: 'Guide students and manage counselling sessions' },
             ].map((role) => (
               <button
@@ -697,13 +583,7 @@ function WelcomeScreen({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const greetingName = firstName ? `, ${firstName}` : '';
   const benefits =
-    userType === 'employer'
-      ? [
-          'Post roles and reach vetted African graduates',
-          'Search talent by skill, field, and location',
-          'Manage applicants from one simple dashboard',
-        ]
-      : userType === 'career_counsellor'
+    userType === 'career_counsellor'
       ? [
           'Set up your practice and accept bookings',
           'Run sessions with built-in scheduling',

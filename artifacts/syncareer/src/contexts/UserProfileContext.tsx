@@ -12,18 +12,6 @@ interface StudentDetails {
   degree_type: string;
 }
 
-interface EmployerDetails {
-  company_name: string;
-  company_location: string | null;
-  industry: string | null;
-  company_size: string | null;
-  job_title: string | null;
-  company_website: string | null;
-  company_email: string | null;
-  company_phone: string | null;
-  company_description: string | null;
-}
-
 interface UserProfile {
   id: string;
   username: string | null;
@@ -40,7 +28,7 @@ interface UserProfile {
 interface UserProfileContextType {
   profile: UserProfile | null;
   studentDetails: StudentDetails | null;
-  employerDetails: EmployerDetails | null;
+  employerDetails: null;
   loading: boolean;
   refreshProfile: () => Promise<void>;
 }
@@ -66,8 +54,6 @@ const PROFILE_COLUMNS =
   'id, username, full_name, avatar_url, bio, onboarding_completed, user_type';
 const STUDENT_COLUMNS =
   'year_of_admission, expected_completion, major, school, degree_type';
-const EMPLOYER_COLUMNS =
-  'company_name, company_location, industry, company_size, job_title, company_website, company_email, company_phone, company_description';
 
 export const userProfileKeys = {
   all: ['user-profile'] as const,
@@ -75,10 +61,9 @@ export const userProfileKeys = {
 };
 
 async function fetchProfileBundle(uid: string) {
-  const [profileResult, studentResult, employerResult] = await Promise.all([
+  const [profileResult, studentResult] = await Promise.all([
     supabase.from('profiles').select(PROFILE_COLUMNS).eq('id', uid).maybeSingle(),
     supabase.from('student_details').select(STUDENT_COLUMNS).eq('user_id', uid).maybeSingle(),
-    supabase.from('employer_details').select(EMPLOYER_COLUMNS).eq('user_id', uid).maybeSingle(),
   ]);
 
   if (profileResult.error) {
@@ -89,10 +74,8 @@ async function fetchProfileBundle(uid: string) {
   const role = profile?.user_type;
   const studentDetails =
     role === 'student' ? ((studentResult.data as StudentDetails | null) ?? null) : null;
-  const employerDetails =
-    role === 'employer' ? ((employerResult.data as EmployerDetails | null) ?? null) : null;
 
-  return { profile, studentDetails, employerDetails };
+  return { profile, studentDetails, employerDetails: null as null };
 }
 
 export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ children }) => {
