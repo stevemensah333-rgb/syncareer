@@ -53,7 +53,7 @@ const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 30 }, (_, i) => currentYear - 20 + i);
 
 export function ProfileSection() {
-  const { profile, studentDetails, employerDetails, refreshProfile } = useUserProfile();
+  const { profile, studentDetails, refreshProfile } = useUserProfile();
   const [qualifications, setQualifications] = useState<Qualification[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -209,7 +209,6 @@ export function ProfileSection() {
   const getUserTypeLabel = () => {
     switch (profile?.user_type) {
       case 'student': return 'Student';
-      case 'employer': return 'Employer';
       case 'career_counsellor': return 'Career Counsellor';
       default: return 'User';
     }
@@ -267,43 +266,6 @@ export function ProfileSection() {
                 <div>
                   <span className="text-muted-foreground">Expected Completion:</span>
                   <p className="font-medium">{studentDetails.expected_completion}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {profile?.user_type !== 'student' && employerDetails && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
-              Company Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Company:</span>
-                <p className="font-medium">{employerDetails.company_name}</p>
-              </div>
-              {employerDetails.job_title && (
-                <div>
-                  <span className="text-muted-foreground">Job Title:</span>
-                  <p className="font-medium">{employerDetails.job_title}</p>
-                </div>
-              )}
-              {employerDetails.industry && (
-                <div>
-                  <span className="text-muted-foreground">Industry:</span>
-                  <p className="font-medium">{employerDetails.industry}</p>
-                </div>
-              )}
-              {employerDetails.company_location && (
-                <div>
-                  <span className="text-muted-foreground">Location:</span>
-                  <p className="font-medium">{employerDetails.company_location}</p>
                 </div>
               )}
             </div>
