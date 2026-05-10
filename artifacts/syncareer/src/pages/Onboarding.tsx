@@ -25,12 +25,6 @@ const studentSchema = z.object({
   degreeType: z.string().min(1, 'Degree type is required'),
 });
 
-const employerSchema = z.object({
-  companyName: z.string().trim().min(1, 'Company name is required').max(200, 'Company name must be less than 200 characters'),
-  companyLocation: z.string().max(200, 'Location must be less than 200 characters').optional(),
-  jobTitle: z.string().max(100, 'Job title must be less than 100 characters').optional(),
-});
-
 const counsellorSchema = z.object({
   fullName: z.string().trim().min(1, 'Full name is required').max(100, 'Name must be less than 100 characters'),
   countryCode: z.string().min(1, 'Country code is required'),
