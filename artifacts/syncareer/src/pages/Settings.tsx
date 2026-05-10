@@ -66,7 +66,7 @@ const Settings = () => {
   const [searchParams] = useSearchParams();
   const initialTab = (searchParams.get('tab') as SettingsSection) || 'account';
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialTab);
-  const { profile, studentDetails, employerDetails, loading: profileLoading } = useUserProfile();
+  const { profile, studentDetails, loading: profileLoading } = useUserProfile();
   const isStudentRole = !profile?.user_type || profile.user_type === 'student';
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>('');
@@ -115,7 +115,6 @@ const Settings = () => {
   const getUserTypeLabel = (userType: string | null) => {
     switch (userType) {
       case 'student': return 'Student';
-      case 'employer': return 'Employer / Recruiter';
       case 'career_counsellor': return 'Career Counsellor';
       default: return 'Not specified';
     }
@@ -368,54 +367,6 @@ const Settings = () => {
                               className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
                             />
                           </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {profile?.user_type === 'employer' && employerDetails && (
-                      <div className="pt-4 border-t">
-                        <h3 className="text-lg font-medium mb-4">Company Details</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Company Name</label>
-                            <input 
-                              type="text" 
-                              value={employerDetails.company_name || ''}
-                              readOnly
-                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Company Location</label>
-                            <input 
-                              type="text" 
-                              value={employerDetails.company_location || ''}
-                              readOnly
-                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
-                            />
-                          </div>
-                          {employerDetails.industry && (
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Industry</label>
-                              <input 
-                                type="text" 
-                                value={employerDetails.industry}
-                                readOnly
-                                className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
-                              />
-                            </div>
-                          )}
-                          {employerDetails.job_title && (
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Job Title</label>
-                              <input 
-                                type="text" 
-                                value={employerDetails.job_title}
-                                readOnly
-                                className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
-                              />
-                            </div>
-                          )}
                         </div>
                       </div>
                     )}
