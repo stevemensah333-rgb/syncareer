@@ -1,1 +1,0 @@
-ALTER TABLE public.counsellor_details ADD COLUMN IF NOT EXISTS meeting_link text;
