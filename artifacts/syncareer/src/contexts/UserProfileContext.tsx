@@ -74,7 +74,7 @@ async function fetchProfileBundle(uid: string) {
   const studentDetails =
     role === 'student' ? ((studentResult.data as StudentDetails | null) ?? null) : null;
 
-  return { profile, studentDetails, employerDetails: null as null };
+  return { profile, studentDetails };
 }
 
 export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ children }) => {
