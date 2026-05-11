@@ -15,10 +15,10 @@ paths = [ "/" ]
 localPort = 19713
 
 [services.development]
-run = "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer run dev"
+run = "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer exec vite --config vite.config.ts --host 0.0.0.0"
 
 [services.production]
-build = [ "corepack", "pnpm", "--config.verify-deps-before-run=false", "--filter", "@workspace/syncareer", "run", "build" ]
+build = [ "corepack", "pnpm", "--config.verify-deps-before-run=false", "--filter", "@workspace/syncareer", "exec", "vite", "build", "--config", "vite.config.ts" ]
 publicDir = "artifacts/syncareer/dist/public"
 serve = "static"
 
