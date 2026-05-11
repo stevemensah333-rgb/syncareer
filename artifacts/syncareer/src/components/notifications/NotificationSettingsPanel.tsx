@@ -74,7 +74,6 @@ const ALL_CATEGORY_SETTINGS: { id: keyof NotificationPreferences; label: string;
     id: 'counsellor_bookings',
     label: 'Counsellor Bookings',
     description: 'Booking confirmations and session updates',
-    excludeRoles: ['employer'],
   },
   {
     id: 'system_announcements',
