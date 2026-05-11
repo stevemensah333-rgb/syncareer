@@ -372,7 +372,7 @@ const Portfolio = () => {
             <CardContent className="pt-6 space-y-3">
               <h3 className="font-bold text-center">Share Your Portfolio</h3>
               <p className="text-sm text-center opacity-90">
-                Let employers see your work
+                Let recruiters see your work
               </p>
               <div className="flex gap-2">
                 <Button 
