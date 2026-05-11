@@ -28,7 +28,6 @@ interface UserProfile {
 interface UserProfileContextType {
   profile: UserProfile | null;
   studentDetails: StudentDetails | null;
-  employerDetails: null;
   loading: boolean;
   refreshProfile: () => Promise<void>;
 }
