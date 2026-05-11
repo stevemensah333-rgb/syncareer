@@ -124,7 +124,7 @@ const ApplicationTracker = () => {
 
       if (error) throw error;
 
-      // Interview sessions table was removed with the employer role.
+      // Interview sessions are no longer tracked separately.
       const interviewMap: Record<string, InterviewSession> = {};
 
       setApplications((data || []).map(app => ({
