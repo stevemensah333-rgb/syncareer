@@ -38,7 +38,6 @@ interface Application {
     employment_type: string;
     salary_min: number | null;
     salary_max: number | null;
-    employer_name?: string;
   };
   interview?: InterviewSession;
 }
