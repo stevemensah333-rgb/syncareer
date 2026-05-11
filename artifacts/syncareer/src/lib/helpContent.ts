@@ -78,7 +78,7 @@ export const helpContent: Record<string, { title: string; content: string; docLi
   },
   'profile-completion': {
     title: 'Complete Your Profile',
-    content: 'A complete profile increases your visibility to employers and helps us provide better recommendations.',
+    content: 'A complete profile increases your visibility to recruiters and helps us provide better recommendations.',
     docLink: '/docs/profile',
   },
 };
