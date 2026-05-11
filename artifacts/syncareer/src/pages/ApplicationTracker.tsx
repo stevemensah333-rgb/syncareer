@@ -125,24 +125,8 @@ const ApplicationTracker = () => {
 
       if (error) throw error;
 
-      // Fetch interview sessions for these applications
-      const appIds = (data || []).map(a => a.id);
-      let interviewMap: Record<string, InterviewSession> = {};
-      
-      if (appIds.length > 0) {
-        const { data: interviews } = await supabase
-          .from('interview_sessions')
-          .select('*')
-          .in('application_id', appIds)
-          .order('scheduled_at', { ascending: true });
-
-        if (interviews) {
-          interviews.forEach(iv => {
-            // Keep the latest interview per application
-            interviewMap[iv.application_id] = iv;
-          });
-        }
-      }
+      // Interview sessions table was removed with the employer role.
+      const interviewMap: Record<string, InterviewSession> = {};
 
       setApplications((data || []).map(app => ({
         ...app,
