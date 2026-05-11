@@ -4,11 +4,11 @@
   "license": "MIT",
   "scripts": {
     "preinstall": "true",
-    "build": "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer exec vite build --config vite.config.ts",
-    "build:dev": "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer exec vite build --config vite.config.ts --mode development",
-    "test": "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer exec vitest run",
-    "typecheck": "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer exec tsc -p tsconfig.json --noEmit",
-    "dev": "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer exec vite --config vite.config.ts --host 0.0.0.0"
+    "build": "corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vite build --config vite.config.ts",
+    "build:dev": "corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vite build --config vite.config.ts --mode development",
+    "test": "corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vitest run",
+    "typecheck": "corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec tsc -p tsconfig.json --noEmit",
+    "dev": "corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vite --config vite.config.ts --host 0.0.0.0"
   },
   "private": true,
   "devDependencies": {
