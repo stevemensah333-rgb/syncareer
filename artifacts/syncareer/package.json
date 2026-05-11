@@ -96,6 +96,7 @@
     "react-i18next": "^17.0.7",
     "react-image-crop": "^11.0.10",
     "react-router-dom": "^7.15.0",
+    "tailwindcss-animate": "^1.0.7",
     "uuid": "^14.0.0"
   }
 }
