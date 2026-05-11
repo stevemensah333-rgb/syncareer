@@ -179,7 +179,7 @@ export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
                   <User className="h-4 w-4 mr-2" />
                   Profile
                 </DropdownMenuItem>
-                {!isEmployer && !isCounsellor && (
+                {!isCounsellor && (
                   <DropdownMenuItem onClick={() => navigate('/settings?tab=subscription')} className="cursor-pointer">
                     <CreditCard className="h-4 w-4 mr-2" />
                     Subscription
