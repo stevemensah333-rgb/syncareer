@@ -4,11 +4,11 @@
   "license": "MIT",
   "scripts": {
     "preinstall": "true",
-    "build": "corepack pnpm --filter @workspace/syncareer run build",
-    "build:dev": "corepack pnpm --filter @workspace/syncareer run build:dev",
-    "test": "corepack pnpm --filter @workspace/syncareer run test",
-    "typecheck": "corepack pnpm --filter @workspace/syncareer run typecheck",
-    "dev": "corepack pnpm --filter @workspace/syncareer run dev"
+    "build": "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer run build",
+    "build:dev": "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer run build:dev",
+    "test": "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer run test",
+    "typecheck": "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer run typecheck",
+    "dev": "corepack pnpm --config.verify-deps-before-run=false --filter @workspace/syncareer run dev"
   },
   "private": true,
   "devDependencies": {
