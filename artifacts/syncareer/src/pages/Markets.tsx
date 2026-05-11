@@ -312,7 +312,6 @@ const Opportunities = () => {
               onClick={() => {
                 setSelectedJob(job);
                 setIsDialogOpen(true);
-                setEmployerInfo(null);
               }}
             >
               Learn More
