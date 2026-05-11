@@ -23,7 +23,7 @@ export const helpContent: Record<string, { title: string; content: string; docLi
   },
   'portfolio-projects': {
     title: 'Portfolio Projects',
-    content: 'Showcase your best projects with descriptions, images, and links. Employers love seeing real work samples.',
+    content: 'Showcase your best projects with descriptions, images, and links. Recruiters love seeing real work samples.',
     docLink: '/docs/portfolio/projects',
   },
   'portfolio-skills': {
