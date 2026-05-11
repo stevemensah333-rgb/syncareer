@@ -4,11 +4,11 @@
   "license": "MIT",
   "scripts": {
     "preinstall": "true",
-    "build": "cd artifacts/syncareer && node node_modules/vite/bin/vite.js build",
-    "build:dev": "cd artifacts/syncareer && node node_modules/vite/bin/vite.js build --mode development",
-    "test": "cd artifacts/syncareer && node node_modules/vitest/vitest.mjs run",
-    "typecheck": "cd artifacts/syncareer && node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
-    "dev": "cd artifacts/syncareer && node node_modules/vite/bin/vite.js --host 0.0.0.0"
+    "build": "corepack pnpm --filter @workspace/syncareer run build",
+    "build:dev": "corepack pnpm --filter @workspace/syncareer run build:dev",
+    "test": "corepack pnpm --filter @workspace/syncareer run test",
+    "typecheck": "corepack pnpm --filter @workspace/syncareer run typecheck",
+    "dev": "corepack pnpm --filter @workspace/syncareer run dev"
   },
   "private": true,
   "devDependencies": {
