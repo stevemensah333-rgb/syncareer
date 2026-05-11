@@ -46,8 +46,6 @@ const Opportunities = () => {
   const [selectedJob, setSelectedJob] = useState<JobWithMatch | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [applying, setApplying] = useState(false);
-  const [employerInfo, setEmployerInfo] = useState<EmployerInfo | null>(null);
-  const [loadingEmployer, setLoadingEmployer] = useState(false);
 
   const [userDbSkills, setUserDbSkills] = useState<string[] | null>(null);
 
