@@ -37,14 +37,6 @@ interface JobWithMatch extends JobPosting {
   missingSkills: string[];
 }
 
-interface EmployerInfo {
-  company_name: string;
-  industry: string | null;
-  company_location: string | null;
-  company_size: string | null;
-  company_website: string | null;
-  company_description: string | null;
-}
 
 const Opportunities = () => {
   const { studentDetails, loading: profileLoading } = useUserProfile();
