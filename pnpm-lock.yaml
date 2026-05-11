@@ -162,7 +162,7 @@ importers:
     dependencies:
       tailwindcss-animate:
         specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@4.2.1)
+        version: 1.0.7(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.2))
     devDependencies:
       prettier:
         specifier: ^3.8.1
@@ -420,6 +420,12 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.105.3
         version: 2.105.3
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 5.1.4(vite@7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.2))
+      autoprefixer:
+        specifier: ^10.5.0
+        version: 10.5.0(postcss@8.5.14)
       html2pdf.js:
         specifier: ^0.14.0
         version: 0.14.0
@@ -429,6 +435,9 @@ importers:
       i18next-browser-languagedetector:
         specifier: ^8.2.1
         version: 8.2.1
+      postcss:
+        specifier: ^8.5.14
+        version: 8.5.14
       posthog-js:
         specifier: ^1.372.10
         version: 1.372.10
@@ -441,12 +450,21 @@ importers:
       react-router-dom:
         specifier: ^7.15.0
         version: 7.15.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      tailwindcss:
+        specifier: ^3.4.19
+        version: 3.4.19(tsx@4.21.0)(yaml@2.8.2)
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.2))
       uuid:
         specifier: ^14.0.0
         version: 14.0.0
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.2)
+      vite-plugin-pwa:
+        specifier: ^1.3.0
+        version: 1.3.0(@types/babel__core@7.20.5)(vite@7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.2))(workbox-window@7.4.1)
     devDependencies:
       '@hookform/resolvers':
         specifier: ^3.10.0
@@ -562,18 +580,12 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
-      '@vitejs/plugin-react':
-        specifier: 'catalog:'
-        version: 5.1.4(vite@7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.2))
       '@vitest/ui':
         specifier: ^4.1.5
         version: 4.1.5(vitest@4.1.5)
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
-      autoprefixer:
-        specifier: ^10.5.0
-        version: 10.5.0(postcss@8.5.14)
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -604,9 +616,6 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      postcss:
-        specifier: ^8.5.14
-        version: 8.5.14
       react:
         specifier: 'catalog:'
         version: 19.1.0
@@ -634,21 +643,12 @@ importers:
       tailwind-merge:
         specifier: 'catalog:'
         version: 3.5.0
-      tailwindcss:
-        specifier: ^3.4.19
-        version: 3.4.19(tsx@4.21.0)(yaml@2.8.2)
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      vite:
-        specifier: 'catalog:'
-        version: 7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.2)
-      vite-plugin-pwa:
-        specifier: ^1.3.0
-        version: 1.3.0(@types/babel__core@7.20.5)(vite@7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.2))(workbox-window@7.4.1)
       vitest:
         specifier: ^4.1.5
         version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.3.5)(@vitest/ui@4.1.5)(happy-dom@20.9.0)(vite@7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.2))
