@@ -25,7 +25,7 @@ interface JobPosting {
   requirements: string | null;
   skills: string[] | null;
   created_at: string;
-  employer_id: string;
+  employer_id: string | null;
   source: string;
   source_url: string | null;
   is_external: boolean;
