@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Briefcase, MapPin, Clock, DollarSign, TrendingUp, Building2, CheckCircle2, XCircle, ExternalLink, Globe, Users } from 'lucide-react';
+import { Briefcase, MapPin, Clock, DollarSign, TrendingUp, Building2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { supabase } from '@/integrations/supabase/client';
