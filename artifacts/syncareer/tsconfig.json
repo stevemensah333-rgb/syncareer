@@ -1,8 +1,15 @@
 {
-  "extends": "../../tsconfig.base.json",
   "include": ["src/**/*"],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
+    "isolatedModules": true,
+    "module": "esnext",
+    "noEmitOnError": true,
+    "noImplicitOverride": false,
+    "useUnknownInCatchVariables": true,
+    "skipLibCheck": true,
+    "target": "es2022",
+    "customConditions": ["workspace"],
     "noEmit": true,
     "jsx": "preserve",
     "lib": ["esnext", "dom", "dom.iterable"],
