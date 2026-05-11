@@ -23,7 +23,7 @@ export const helpContent: Record<string, { title: string; content: string; docLi
   },
   'portfolio-projects': {
     title: 'Portfolio Projects',
-    content: 'Showcase your best projects with descriptions, images, and links. Employers love seeing real work samples.',
+    content: 'Showcase your best projects with descriptions, images, and links. Recruiters love seeing real work samples.',
     docLink: '/docs/portfolio/projects',
   },
   'portfolio-skills': {
@@ -78,7 +78,7 @@ export const helpContent: Record<string, { title: string; content: string; docLi
   },
   'profile-completion': {
     title: 'Complete Your Profile',
-    content: 'A complete profile increases your visibility to employers and helps us provide better recommendations.',
+    content: 'A complete profile increases your visibility to recruiters and helps us provide better recommendations.',
     docLink: '/docs/profile',
   },
 };

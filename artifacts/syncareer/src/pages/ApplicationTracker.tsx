@@ -38,7 +38,6 @@ interface Application {
     employment_type: string;
     salary_min: number | null;
     salary_max: number | null;
-    employer_name?: string;
   };
   interview?: InterviewSession;
 }
@@ -125,7 +124,7 @@ const ApplicationTracker = () => {
 
       if (error) throw error;
 
-      // Interview sessions table was removed with the employer role.
+      // Interview sessions are no longer tracked separately.
       const interviewMap: Record<string, InterviewSession> = {};
 
       setApplications((data || []).map(app => ({

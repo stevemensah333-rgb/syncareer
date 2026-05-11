@@ -263,7 +263,7 @@ const Learn = () => {
     const weakest = readiness.skillGaps.find(s => s.mastery < 50);
     if (weakest) return { label: `Improve ${weakest.skillName}`, description: `Your mastery is at ${weakest.mastery}%. Complete a course and validate to level up.`, action: () => {}, icon: Sparkles, hasNav: false };
     if (readiness.interviewScore === 0) return { label: 'Practice an interview', description: 'Simulate a real interview to boost your readiness score.', action: () => navigate('/interview-simulator'), icon: Target, hasNav: true };
-    if (readiness.portfolioCount === 0) return { label: 'Add a project', description: 'Showcase real work to stand out to employers.', action: () => navigate('/portfolio'), icon: Target, hasNav: true };
+    if (readiness.portfolioCount === 0) return { label: 'Add a project', description: 'Showcase real work to stand out to recruiters.', action: () => navigate('/portfolio'), icon: Target, hasNav: true };
     return { label: 'Keep building skills', description: 'You\'re making great progress. Continue validating courses.', action: () => {}, icon: CheckCircle, hasNav: false };
   };
   const focus = getFocusAction();

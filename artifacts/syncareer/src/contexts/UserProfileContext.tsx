@@ -28,7 +28,6 @@ interface UserProfile {
 interface UserProfileContextType {
   profile: UserProfile | null;
   studentDetails: StudentDetails | null;
-  employerDetails: null;
   loading: boolean;
   refreshProfile: () => Promise<void>;
 }
@@ -75,7 +74,7 @@ async function fetchProfileBundle(uid: string) {
   const studentDetails =
     role === 'student' ? ((studentResult.data as StudentDetails | null) ?? null) : null;
 
-  return { profile, studentDetails, employerDetails: null as null };
+  return { profile, studentDetails };
 }
 
 export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ children }) => {
@@ -97,7 +96,6 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
       return {
         profile: null,
         studentDetails: null,
-        employerDetails: null,
         loading: !isLoaded,
         refreshProfile: async () => {},
       };
@@ -105,7 +103,6 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
     return {
       profile: data?.profile ?? null,
       studentDetails: data?.studentDetails ?? null,
-      employerDetails: data?.employerDetails ?? null,
       loading: isLoading || isFetching,
       refreshProfile: async () => {
         if (!userId) return;

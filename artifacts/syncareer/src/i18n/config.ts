@@ -52,7 +52,6 @@ const resources = {
       },
       navbar: {
         forJobSeekers: "For Job Seekers",
-        forEmployers: "For Employers",
         searchPlaceholder: "Search skills, jobs, or people..."
       }
     }
