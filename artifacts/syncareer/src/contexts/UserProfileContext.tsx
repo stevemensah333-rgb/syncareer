@@ -96,7 +96,6 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
       return {
         profile: null,
         studentDetails: null,
-        employerDetails: null,
         loading: !isLoaded,
         refreshProfile: async () => {},
       };
@@ -104,7 +103,6 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
     return {
       profile: data?.profile ?? null,
       studentDetails: data?.studentDetails ?? null,
-      employerDetails: data?.employerDetails ?? null,
       loading: isLoading || isFetching,
       refreshProfile: async () => {
         if (!userId) return;
