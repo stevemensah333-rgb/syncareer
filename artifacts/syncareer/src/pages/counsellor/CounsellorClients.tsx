@@ -43,7 +43,7 @@ interface ClientNote {
 }
 
 export default function CounsellorClients() {
-  const { user } = useAuth();
+  const { userId } = useAuth();
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
