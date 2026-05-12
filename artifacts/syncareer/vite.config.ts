@@ -183,6 +183,11 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   root: path.resolve(import.meta.dirname),
+  // Load VITE_* env vars from the monorepo root .env (managed by Lovable
+  // Cloud) instead of the per-artifact directory, which has no .env file.
+  // Without this, production builds embed `undefined` for VITE_SUPABASE_URL
+  // and the published app crashes with "supabaseUrl is required."
+  envDir: path.resolve(import.meta.dirname, "..", ".."),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
