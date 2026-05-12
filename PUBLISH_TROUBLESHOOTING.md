@@ -45,3 +45,13 @@ corepack pnpm --config.verify-deps-before-run=false \
 - Do not introduce `catalog:` or `workspace:*` specifiers into `artifacts/syncareer/package.json` — that file must stay standalone-publishable with explicit version strings.
 - The publish artifact requires the managed env vars `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_SUPABASE_PROJECT_ID`. They are provided by Lovable Cloud automatically; do not add `.env` to `.gitignore` overrides that strip them.
 - If publishing fails again with `Command "vite" not found`, the first action is always: re-run the install command above and re-check `artifacts/syncareer/node_modules/.bin/vite` exists.
+
+## Realtime channel collision (May 12, 2026)
+
+**Symptom:** `Error: cannot add `postgres_changes` callbacks for realtime:<topic> after `subscribe()`.` crashes pages (e.g. Interview Simulator) via `GlobalErrorBoundary`.
+
+**Cause:** Multiple instances of a hook (`useSubscription`, `useNotifications`) called `supabase.channel('<static-topic>')`. Supabase reuses the same channel object for identical topics — the second `.on()` runs after the first instance already `.subscribe()`-d, which throws.
+
+**Fix:** Use a unique topic per hook instance: `` `<topic>-${useId()}-${Math.random().toString(36).slice(2)}` ``, and null out `channelRef.current` after `removeChannel`.
+
+**Rule:** Any hook that calls `supabase.channel(...)` must generate a unique topic per mount.
