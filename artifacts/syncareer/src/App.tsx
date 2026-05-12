@@ -222,7 +222,6 @@ const AppContent = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          </TourProvider>
         </TooltipProvider>
         </NotificationProvider>
       </UserProfileProvider>
