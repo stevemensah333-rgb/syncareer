@@ -99,10 +99,6 @@ export default function PublicPortfolio() {
       }
       setResolvedUserId(userId);
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      setCurrentUserId(session?.user?.id || null);
-
       // Fetch profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
