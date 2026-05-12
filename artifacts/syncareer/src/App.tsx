@@ -149,6 +149,7 @@ const AppContent = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/subscription-success" element={<SubscriptionSuccess />} />
               <Route path="/portfolio/:userId" element={<PublicPortfolio />} />
+              <Route path="/u/:slug" element={<PublicPortfolio />} />
               <Route path="/terms" element={<TermsAndConditions />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/blog" element={<Blog />} />
