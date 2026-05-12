@@ -1,4 +1,6 @@
-import * as Sentry from '@sentry/react';
+// Lightweight error handling utilities. No external error reporter is wired
+// here — log to the console; future reporting can hook into logErrorToSentry.
+
 
 export type AppErrorType = 'VALIDATION' | 'NETWORK' | 'AUTH' | 'SERVER' | 'UNKNOWN';
 
