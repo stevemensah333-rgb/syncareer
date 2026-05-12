@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 
 import { PrescriptiveActionPlan } from '@/components/analysis/PrescriptiveActionPlan';
+import { AlumniOutcomesCard } from '@/components/analysis/AlumniOutcomesCard';
 
 const REGIONS = [
   { value: 'accra_ghana',     label: 'Accra, Ghana' },
