@@ -365,6 +365,52 @@ const CVBuilder = () => {
         {/* Form Section */}
         <div className="lg:col-span-2 space-y-6">
           <AnimatedSection y={20}>
+          {targetRole && (
+            <div className="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-4">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-primary font-medium">Tailoring CV for</p>
+                  <p className="text-base font-medium text-foreground">
+                    {targetRole}{targetCompany ? ` · ${targetCompany}` : ''}
+                  </p>
+                </div>
+                {targetSkills.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => {
+                      if (!missingTargetSkills.length) {
+                        toast.info('Your CV already lists all required skills.');
+                        return;
+                      }
+                      updateSkills([...cvData.skills, ...missingTargetSkills]);
+                      toast.success(`Added ${missingTargetSkills.length} target skill${missingTargetSkills.length > 1 ? 's' : ''} to your CV.`);
+                    }}
+                  >
+                    {missingTargetSkills.length
+                      ? `Add ${missingTargetSkills.length} missing skill${missingTargetSkills.length > 1 ? 's' : ''}`
+                      : 'All required skills present'}
+                  </Button>
+                )}
+              </div>
+              {targetSkills.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {targetSkills.map(s => {
+                    const present = cvData.skills.some(c => c.toLowerCase() === s.toLowerCase());
+                    return (
+                      <span
+                        key={s}
+                        className={`text-xs px-2 py-0.5 rounded-full border ${present ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}
+                      >
+                        {present ? '✓ ' : '+ '}{s}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <FileText className="h-6 w-6 text-primary" />
