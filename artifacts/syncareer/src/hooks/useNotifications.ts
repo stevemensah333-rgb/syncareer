@@ -40,6 +40,7 @@ export function useNotifications() {
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const instanceId = useId();
 
   const fetchNotifications = useCallback(async () => {
     try {
