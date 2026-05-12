@@ -157,6 +157,7 @@ const Opportunities = () => {
         .from('job_postings')
         .select('*')
         .eq('status', 'active')
+        .eq('is_external', true)
         .order('created_at', { ascending: false });
       if (error) throw error;
       const userSkills = getUserSkills();
