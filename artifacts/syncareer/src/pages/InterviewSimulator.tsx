@@ -21,7 +21,7 @@ import { VoiceInterviewMode } from '@/components/interview/VoiceInterviewMode';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -41,6 +41,7 @@ const InterviewSimulator = () => {
   const { studentDetails } = useUserProfile();
   const { isPremium } = useSubscription();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<'setup' | 'interview' | 'offline-practice'>('setup');
   const [sessionLength, setSessionLength] = useState<SessionLength>('standard');
@@ -131,6 +132,21 @@ const InterviewSimulator = () => {
     };
     prefill();
   }, [studentDetails]);
+
+  // Prefill from query params (?role=&industry=&skills=&jd=) when arriving from Opportunities
+  useEffect(() => {
+    const role = searchParams.get('role');
+    const industry = searchParams.get('industry');
+    const skills = searchParams.get('skills');
+    const jd = searchParams.get('jd');
+    if (!role && !industry && !skills && !jd) return;
+    setConfig(prev => ({
+      ...prev,
+      jobRole: role || prev.jobRole,
+      industry: industry || prev.industry,
+      jobDescription: jd || (skills ? `Required skills: ${skills}` : prev.jobDescription),
+    }));
+  }, [searchParams]);
 
   const { data: interviewHistory, isLoading: historyLoading } = useQuery({
     queryKey: ['mock_interviews_history'],
