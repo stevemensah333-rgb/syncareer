@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { PageLayout } from '@/components/layout/PageLayout';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import logo from '@/assets/syncareer-logo.svg';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Star, ArrowLeft, Github, Globe, Award, MessageSquare, GraduationCap, Linkedin, BookOpen } from 'lucide-react';
+import { Star, Github, Globe, Award, MessageSquare, GraduationCap, Linkedin, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
@@ -181,11 +181,9 @@ export default function PublicPortfolio() {
 
   if (loading) {
     return (
-      <PageLayout title="Portfolio">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      </PageLayout>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
     );
   }
 
@@ -197,12 +195,22 @@ export default function PublicPortfolio() {
   const totalEndorsements = endorsements.reduce((sum, e) => sum + e.count, 0);
 
   return (
-    <PageLayout title={`${displayName}'s Portfolio`}>
-      <div className="max-w-5xl mx-auto">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2 mb-4">
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-background/80 backdrop-blur sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="Syncareer" className="h-7 w-auto" />
+          </Link>
+          <Link
+            to="/auth"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Build your own
+          </Link>
+        </div>
+      </header>
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        <title>{`${displayName}'s Portfolio · Syncareer`}</title>
 
         {/* Profile Header */}
         <Card className="mb-6">
@@ -404,7 +412,7 @@ export default function PublicPortfolio() {
             onRatingSubmitted={fetchData}
           />
         )}
-      </div>
-    </PageLayout>
+      </main>
+    </div>
   );
 }
