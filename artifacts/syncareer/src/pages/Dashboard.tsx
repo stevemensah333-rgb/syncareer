@@ -217,6 +217,24 @@ const Dashboard = () => {
           </AnimatedSection>
         )}
 
+        {/* Next Best Action */}
+        {!loading && (
+          <AnimatedSection delay={0.1} y={20}>
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="p-5 flex flex-col md:flex-row md:items-center gap-4">
+                <div className="flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">Your next best move</p>
+                  <h3 className="text-lg font-semibold mb-1">{nextAction.title}</h3>
+                  <p className="text-sm text-muted-foreground">{nextAction.description}</p>
+                </div>
+                <Button onClick={() => navigate(nextAction.href)} className="shrink-0">
+                  {nextAction.ctaLabel} <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </AnimatedSection>
+        )}
+
         {/* Getting Started — shown for new users */}
         {isNewUser && !loading && (
           <AnimatedSection delay={0.12} y={20}>
