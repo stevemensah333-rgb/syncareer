@@ -1,42 +1,96 @@
-# Plan: Fix false offline banner + stability sweep
+This is a large refactor. I'll ship it in ordered, low-risk passes so the app is buildable after each step. Nothing here changes business logic except where listed (subscription tiers, analytics).
 
-## Problem
-When signing in (especially as counsellor), the "You're offline" banner appears even though the user is online. Network requests in logs confirm the user IS online (200s from Supabase). The cause is `navigator.onLine` returning a false negative — common in iframes / right after auth navigation — and `OfflineBanner` trusting it without verification.
+## Phase 1 — Deletions (safe, biggest wins fast)
 
-## Root cause
-`src/hooks/useOnlineStatus.ts` returns `navigator.onLine` directly. The browser's `onLine` flag is unreliable: it can report `false` in iframes (the Lovable preview is one), during page transitions, or right after a service-worker takeover. Once `wasOffline` flips to `true`, the banner sticks until a real `online` event fires — which never comes if it was never truly offline.
+1. **Repo doc cleanup**
+   - Move all root `*.md` / `*.txt` / `*.sql` planning docs (COUNSELLOR_*, IMPLEMENTATION_*, ERROR_REPORT, LAUNCH_CHECKLIST, PHASE_1_*, QUICK_START, SETUP_GUIDE, URL_GUIDE, VERIFICATION_*, README_FIRST, DATABASE_SCHEMA.sql, etc.) into `/docs/archive/`.
+   - Keep at root: `README.md`, `replit.md`, `PUBLISH_TROUBLESHOOTING.md`.
+2. **Drop unused workspace packages** from `pnpm-workspace.yaml` and delete folders:
+   - `artifacts/api-server/`
+   - `artifacts/mockup-sandbox/`
+   - `artifacts/syncareer-mobile/`
+   - `lib/api-client-react/`, `lib/api-spec/`, `lib/api-zod/`, `lib/db/`
+   - `scripts/` (only contains a hello placeholder)
+3. **Strip Apple OAuth scaffolding** in `src/integrations/lovable/index.ts` (narrow `OAuthProvider` to `"google"`).
 
-## Fix strategy
+## Phase 2 — Analytics consolidation
 
-### 1. Make online detection reliable (primary fix)
-Update `useOnlineStatus` to:
-- Default to `true` (assume online) on first render.
-- Only flip to `false` when an actual fetch probe fails, not on `navigator.onLine` alone.
-- Re-verify with a lightweight HEAD/GET to a known endpoint (Supabase REST root or `/favicon.svg`) before declaring offline.
-- Listen to `online`/`offline` events as hints, but confirm with a probe.
+- Keep **PostHog** (already wired across the app via `analyticsEvents.ts` + `usePageTracking.ts`).
+- Remove **Sentry**: delete `services/sentry.ts`, all imports, `initializeSentry()` from `main.tsx`, and `@sentry/react` from `package.json`.
+- Remove **Web Vitals** wiring (`lib/webVitals.ts`) — PostHog autocaptures performance.
 
-### 2. Stop the banner from latching
-In `OfflineBanner`:
-- Don't set `wasOffline=true` unless we've been offline for >2s (debounce).
-- Auto-clear stale offline state on route change.
+## Phase 3 — Performance budget
 
-### 3. Stability sweep (verify, don't rewrite)
-Read-only verification pass — no changes unless an actual bug is found:
+- **Lazy i18n**: switch `i18n/config.ts` from preloading 10 language bundles to `i18next-http-backend` style dynamic import per language (only `en` eager).
+- **Defer PostHog**: move `initializeAnalytics()` into a `requestIdleCallback` (fallback `setTimeout(_, 2000)`) inside `main.tsx`.
+- Confirm PWA precache stays under 5 MB.
 
-- **Auth/Sign-in (student + counsellor):** confirm `ProtectedRoute` + `RoleRoute` flow, no double-redirect loops, profile loads via `.maybeSingle()`.
-- **Onboarding:** confirm role selection persists `user_type` and `onboarding_completed` correctly for both roles.
-- **Counsellor pages:** Dashboard, Availability, Sessions, Clients, Credential upload — verify each mounts without crash and queries return safely on empty data.
-- **Student pages:** Dashboard, Assessment, CV Builder, Interview Simulator, AI Coach, Opportunities, Portfolio, Applications — verify each mounts.
-- **Realtime hooks:** confirm the previous channel-collision fix is still in place in `useSubscription` and `useNotifications`.
-- **Lazy-loaded routes:** verify Suspense fallback resolves (no infinite spinners).
-- **Error boundary:** confirm `GlobalErrorBoundary` catches and shows recovery UI rather than blank screen.
+## Phase 4 — Offline scope reduction
 
-Any concrete crash or hang found during the sweep will be listed and fixed; the user will be told what was checked vs. what was changed.
+- Keep offline only for: Assessment, Interview practice questions.
+- Delete: `useOfflineDraft.ts` usage in CV Builder, `OfflinePracticeMode.tsx` if unused, `CachedDataIndicator.tsx`.
+- Simplify `OfflineBanner.tsx` to a one-line "Check your connection" toast that only shows after a real failed fetch (already partially done).
 
-## Files to change
-- `artifacts/syncareer/src/hooks/useOnlineStatus.ts` — probe-based detection
-- `artifacts/syncareer/src/components/OfflineBanner.tsx` — debounce offline state, clear on mount
+## Phase 5 — Tour/help removal
+
+- Delete `TourProvider`, `TourOverlay`, `QuickTour.tsx`, `helpContent.ts`, tour analytics events.
+- Replace any "Start tour" CTA with empty-state inline hints already present on each page.
+
+## Phase 6 — Subscription simplification
+
+- Collapse to 2 tiers: **Free** and **Pro**. Remove any intermediate tier logic in `featureAccess.ts`, `subscriptionService.ts`, `SubscriptionManager.tsx`, Pricing page.
+- Keep Paystack integration as-is; only the tier list changes.
+- Edge function `check-subscription-limits` (if present) keeps its current Pro gates; Free becomes the default else branch.
+
+## Phase 7 — Navigation consolidation (4 sections)
+
+New sidebar/mobile-nav structure:
+
+```text
+Home       → /dashboard   (Dashboard, includes Career Readiness + next action)
+Build      → /build       (tabs: CV | Portfolio | Learn)
+Practice   → /practice    (tabs: Interview | AI Coach)
+Apply      → /apply       (tabs: Opportunities | Applications)
+```
+
+- Add 3 new wrapper pages (`Build.tsx`, `Practice.tsx`, `Apply.tsx`) using shadcn `Tabs`. Each tab renders the existing page content extracted into a sub-component.
+- Keep old routes (`/cv-builder`, `/portfolio`, `/learn`, `/interview-simulator`, `/ai-coach`, `/opportunities`, `/applications`) as `<Navigate>` redirects to the new tabbed routes with `?tab=…`.
+- Update `Sidebar`, `MobileBottomNav`, `Onboarding` next-step links, and any `useNavigate` calls to the new paths.
+- Settings, Counsellor routes, Admin routes unchanged.
+
+## Phase 8 — Dashboard "Next Best Action"
+
+- Replace generic Getting Started checklist with a single prominent card driven by a new `useNextBestAction()` hook:
+  - If readiness < 30: "Take the 45-question Career Assessment"
+  - Else if no CV: "Build your CV in 5 minutes"
+  - Else if CV strength < 70: "Add a quantified bullet to your strongest role"
+  - Else if no interview practice in 7d: "Practice 1 behavioural question"
+  - Else if no application in 14d: "Apply to a matched role"
+- Each action deep-links to the precise step.
+
+## Phase 9 — Counsellor focused dashboard
+
+Rebuild `CounsellorDashboard.tsx` with three cards above the fold:
+- **Today's Sessions** (count + list of next 3 with join links)
+- **Pending Notes** (sessions ended >24h ago without notes)
+- **This Month** (sessions completed, clients active, revenue if Paystack data present)
+
+Below: existing client list + availability summary.
+
+## Technical notes
+
+- Each phase is its own commit-equivalent batch; I'll typecheck after each.
+- i18n lazy-load uses i18next's `resources` removed in favour of `import()` per namespace.
+- Tour removal: search-and-delete `<TourProvider>` and `<TourOverlay>` usages, then `rm` the files.
+- Subscription tier collapse: keep DB columns intact; only the UI + access map change. No migration.
+- Old route redirects preserve external links and deep links from emails/notifications.
 
 ## Out of scope
-- Removing offline draft features (CV, Assessment, Interview practice) — they stay; only the false-positive banner is fixed.
-- Backend / RLS changes.
+
+- No DB schema changes.
+- No edge function changes (except removing analytics-server endpoints if any — none found).
+- No visual restyle beyond the new tab wrappers.
+
+## Risk
+
+The nav consolidation (Phase 7) touches the most files. If anything breaks, the redirects will keep old URLs functional while we patch.
