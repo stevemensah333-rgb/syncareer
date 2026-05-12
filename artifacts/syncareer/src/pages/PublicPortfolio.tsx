@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import CachedDataIndicator, { OfflineEmptyState } from '@/components/CachedDataIndicator';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
