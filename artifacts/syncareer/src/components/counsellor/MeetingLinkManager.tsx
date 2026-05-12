@@ -26,7 +26,7 @@ interface MeetingLinkManagerProps {
 }
 
 export function MeetingLinkManager({ onSave }: MeetingLinkManagerProps) {
-  const { user } = useAuth();
+  const { userId } = useAuth();
   const [platform, setPlatform] = useState<MeetingPlatform>('zoom');
   const [link, setLink] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,7 +54,7 @@ export function MeetingLinkManager({ onSave }: MeetingLinkManagerProps) {
           meeting_platform: platform,
           meeting_link: link,
         })
-        .eq('user_id', user?.id);
+        .eq('user_id', userId);
 
       if (updateError) throw updateError;
 

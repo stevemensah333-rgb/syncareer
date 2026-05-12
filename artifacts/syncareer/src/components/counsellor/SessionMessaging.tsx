@@ -14,7 +14,7 @@ interface SessionMessagingProps {
 }
 
 export function SessionMessaging({ bookingId, clientName }: SessionMessagingProps) {
-  const { user } = useAuth();
+  const { userId } = useAuth();
   const { messages, loading, sendMessage, markAsRead } = useSessionMessages(bookingId);
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
@@ -29,19 +29,19 @@ export function SessionMessaging({ bookingId, clientName }: SessionMessagingProp
 
   // Mark as read when component mounts and when new messages arrive
   useEffect(() => {
-    if (user?.id && messages.length > 0) {
-      markAsRead(user.id);
+    if (userId && messages.length > 0) {
+      markAsRead(userId);
     }
-  }, [messages, user?.id, markAsRead]);
+  }, [messages, userId, markAsRead]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!messageText.trim() || !user?.id) return;
+    if (!messageText.trim() || !userId) return;
 
     try {
       setSending(true);
-      await sendMessage(user.id, 'counsellor', messageText.trim());
+      await sendMessage(userId, 'counsellor', messageText.trim());
       setMessageText('');
     } catch (error) {
       console.error('[SessionMessaging] Failed to send message:', error);
