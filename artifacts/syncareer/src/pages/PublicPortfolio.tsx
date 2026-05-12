@@ -5,7 +5,7 @@ import logo from '@/assets/syncareer-logo.svg';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Star, ArrowLeft, Github, Globe, Award, MessageSquare, GraduationCap, Linkedin, BookOpen } from 'lucide-react';
+import { Star, Github, Globe, Award, MessageSquare, GraduationCap, Linkedin, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
