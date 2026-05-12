@@ -135,107 +135,90 @@ const Dashboard = () => {
 
   return (
     <StudentLayout title="">
-      <div className="space-y-6">
-        {/* Greeting Header — editorial */}
-        <AnimatedSection y={20}>
-          <div className="space-y-2">
-            <h1 className="font-serif text-4xl md:text-5xl font-normal leading-[1.05] tracking-[-0.02em] text-foreground">
-              {fullName ? (
-                <>
-                  Welcome back, <span className="italic text-primary">{fullName}</span>
-                </>
-              ) : (
-                <>Welcome <span className="italic text-primary">back</span></>
-              )}
+      <div className="space-y-8">
+        {/* Slim Greeting */}
+        <AnimatedSection y={16}>
+          <div className="flex items-baseline justify-between flex-wrap gap-2">
+            <h1 className="font-serif text-2xl md:text-3xl font-normal tracking-[-0.02em] text-foreground">
+              {fullName ? <>Welcome back, <span className="italic text-primary">{fullName}</span></> : <>Welcome <span className="italic text-primary">back</span></>}
             </h1>
             {major && (
-              <p className="text-sm text-muted-foreground">
-                {major} {university ? `· ${university}` : ''}
+              <p className="text-xs text-muted-foreground">
+                {major}{university ? ` · ${university}` : ''}
               </p>
             )}
           </div>
         </AnimatedSection>
 
-        {/* Career Readiness Hero */}
-        {!readiness.loading && major && (
-          <AnimatedSection delay={0.08} y={20}>
-          <Card className="overflow-hidden">
-            <CardContent className="p-0">
-              <div className="flex items-stretch">
-                <div className="flex items-center justify-center px-6 py-5 bg-primary/5 border-r border-border">
-                  <div className="text-center">
-                    <div className="relative h-20 w-20">
-                      <svg className="h-20 w-20 -rotate-90" viewBox="0 0 36 36">
-                        <path
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          fill="none"
-                          stroke="hsl(var(--muted))"
-                          strokeWidth="2.5"
-                        />
-                        <path
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          fill="none"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth="2.5"
-                          strokeDasharray={`${readiness.overallScore}, 100`}
-                          strokeLinecap="round"
-                          className="transition-all duration-1000"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xl font-bold">{readiness.overallScore}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex-1 p-5">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Target className="h-4 w-4 text-primary" />
-                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Career Readiness</h2>
-                  </div>
-                  <p className="text-lg font-semibold mb-3">{major}</p>
-                  <div className="flex items-center gap-3">
-                    <Badge 
-                      variant="outline" 
-                      className={
-                        readiness.level === 'Career Ready' ? 'border-green-500 text-green-600' :
-                        readiness.level === 'Proficient' ? 'border-primary text-primary' :
-                        readiness.level === 'Developing' ? 'border-amber-500 text-amber-600' :
-                        'border-muted-foreground text-muted-foreground'
-                      }
-                    >
-                      {readiness.level}
-                    </Badge>
-                    <div className="flex-1">
-                      <Progress value={readiness.overallScore} className="h-2" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          </AnimatedSection>
-        )}
-
-        {/* Next Best Action */}
+        {/* HERO: Next Best Action — the single thing that matters right now */}
         {!loading && (
-          <AnimatedSection delay={0.1} y={20}>
-            <Card className="border-primary/30 bg-primary/5">
-              <CardContent className="p-5 flex flex-col md:flex-row md:items-center gap-4">
-                <div className="flex-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">Your next best move</p>
-                  <h3 className="text-lg font-semibold mb-1">{nextAction.title}</h3>
-                  <p className="text-sm text-muted-foreground">{nextAction.description}</p>
+          <AnimatedSection delay={0.05} y={20}>
+            <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent overflow-hidden">
+              <CardContent className="p-8 md:p-10">
+                <div className="flex flex-col md:flex-row md:items-center gap-6">
+                  <div className="flex-1 space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Your next move</p>
+                    <h2 className="font-serif text-3xl md:text-4xl font-normal leading-tight tracking-[-0.02em] text-foreground">
+                      {nextAction.title}
+                    </h2>
+                    <p className="text-base text-muted-foreground max-w-xl">{nextAction.description}</p>
+                  </div>
+                  <Button
+                    size="lg"
+                    onClick={() => navigate(nextAction.href)}
+                    className="shrink-0 h-12 px-6 text-base"
+                  >
+                    {nextAction.ctaLabel} <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
                 </div>
-                <Button onClick={() => navigate(nextAction.href)} className="shrink-0">
-                  {nextAction.ctaLabel} <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
               </CardContent>
             </Card>
           </AnimatedSection>
         )}
 
-        {/* Getting Started — shown for new users */}
+        {/* Below the fold — supporting context */}
+
+        {/* Career Readiness — compact */}
+        {!readiness.loading && major && (
+          <AnimatedSection delay={0.1} y={20}>
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex items-stretch">
+                  <div className="flex items-center justify-center px-5 py-4 bg-primary/5 border-r border-border">
+                    <div className="relative h-16 w-16">
+                      <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="hsl(var(--muted))" strokeWidth="2.5" />
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeDasharray={`${readiness.overallScore}, 100`} strokeLinecap="round" className="transition-all duration-1000" />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-base font-bold">{readiness.overallScore}%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1 p-4 flex items-center gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Target className="h-3.5 w-3.5 text-primary" />
+                        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Career Readiness</h2>
+                      </div>
+                      <Progress value={readiness.overallScore} className="h-1.5" />
+                    </div>
+                    <Badge variant="outline" className={
+                      readiness.level === 'Career Ready' ? 'border-green-500 text-green-600' :
+                      readiness.level === 'Proficient' ? 'border-primary text-primary' :
+                      readiness.level === 'Developing' ? 'border-amber-500 text-amber-600' :
+                      'border-muted-foreground text-muted-foreground'
+                    }>
+                      {readiness.level}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </AnimatedSection>
+        )}
+
+        {/* Getting Started — shown for new users only */}
         {isNewUser && !loading && (
           <AnimatedSection delay={0.12} y={20}>
           <Card className="border-primary/20">
