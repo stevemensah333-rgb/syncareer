@@ -52,13 +52,13 @@ const Portfolio = () => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('linkedin_url, bio, full_name')
+        .select('linkedin_url, bio, full_name, username')
         .eq('id', session.user.id)
         .maybeSingle();
       
       if (profile) {
         if (profile.linkedin_url) setLinkedinUrl(profile.linkedin_url);
-        setProfileData({ bio: profile.bio, full_name: profile.full_name });
+        setProfileData({ bio: profile.bio, full_name: profile.full_name, username: profile.username });
       }
 
       const { data: projectsData, error: projectsError } = await supabase
