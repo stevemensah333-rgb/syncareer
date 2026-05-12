@@ -362,7 +362,7 @@ export default function PublicPortfolio() {
                             <Github className="h-4 w-4 mr-1" /> Code
                           </Button>
                         )}
-                        {currentUserId && currentUserId !== userId && (
+                        {currentUserId && currentUserId !== resolvedUserId && (
                           <Button size="sm" variant="secondary" onClick={() => handleRateProject(project)}>
                             <MessageSquare className="h-4 w-4 mr-1" /> Rate
                           </Button>
