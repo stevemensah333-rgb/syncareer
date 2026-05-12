@@ -81,9 +81,10 @@ export function useNotifications() {
   useEffect(() => {
     fetchNotifications();
 
-    // Set up realtime subscription with debounce
-    channelRef.current = supabase
-      .channel('notifications-realtime')
+    // Set up realtime subscription with debounce — unique topic per instance
+    // to avoid Supabase channel collision ("cannot add postgres_changes after subscribe").
+    const channel = supabase
+      .channel(`notifications-realtime-${instanceId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
@@ -94,16 +95,18 @@ export function useNotifications() {
         () => {
           debouncedRefetch();
         }
-      )
-      .subscribe();
+      );
+    channelRef.current = channel;
+    channel.subscribe();
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
-  }, [fetchNotifications, debouncedRefetch]);
+  }, [fetchNotifications, debouncedRefetch, instanceId]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     // Optimistic update
