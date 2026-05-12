@@ -72,8 +72,13 @@ export default function LandingFooter() {
                 </a>
               </li>
               <li>
-                <a href="/terms" className="text-foreground/75 hover:text-foreground transition-colors">
+                <a href="/privacy" className="text-foreground/75 hover:text-foreground transition-colors">
                   Privacy
+                </a>
+              </li>
+              <li>
+                <a href="/blog" className="text-foreground/75 hover:text-foreground transition-colors">
+                  Blog
                 </a>
               </li>
               <li>
