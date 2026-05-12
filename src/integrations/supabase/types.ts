@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      alumni_outcomes_cache: {
+        Row: {
+          common_roles: Json
+          created_at: string
+          expires_at: string
+          generated_at: string
+          id: string
+          major: string
+          paths_summary: string | null
+          region: string
+          salary_observations: string | null
+          sources: Json
+          top_employers: Json
+          university_name: string
+          updated_at: string
+        }
+        Insert: {
+          common_roles?: Json
+          created_at?: string
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          major: string
+          paths_summary?: string | null
+          region?: string
+          salary_observations?: string | null
+          sources?: Json
+          top_employers?: Json
+          university_name: string
+          updated_at?: string
+        }
+        Update: {
+          common_roles?: Json
+          created_at?: string
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          major?: string
+          paths_summary?: string | null
+          region?: string
+          salary_observations?: string | null
+          sources?: Json
+          top_employers?: Json
+          university_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assessment_responses: {
         Row: {
           assessment_id: string
