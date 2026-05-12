@@ -3,8 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import {
-  ClipboardList, Star, GraduationCap, Sparkles, Settings,
-  TrendingUp, FileText, Calendar, MoreHorizontal, Users
+  ClipboardList, Sparkles, Settings,
+  Calendar, Users, LayoutDashboard, Hammer, Target, Briefcase, MoreHorizontal
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -20,18 +20,14 @@ interface NavTab {
 }
 
 const studentTabs: NavTab[] = [
-  { title: 'Assessment', icon: ClipboardList, href: '/assessment' },
-  { title: 'Learn', icon: GraduationCap, href: '/learn' },
-  { title: 'SynAI', icon: Sparkles, href: '/ai-coach' },
+  { title: 'Home', icon: LayoutDashboard, href: '/dashboard' },
+  { title: 'Build', icon: Hammer, href: '/build' },
+  { title: 'Practice', icon: Target, href: '/practice' },
+  { title: 'Apply', icon: Briefcase, href: '/apply' },
 ];
 
 const studentMoreItems: NavTab[] = [
-  { title: 'Opportunities', icon: TrendingUp, href: '/opportunities' },
-  { title: 'Portfolio', icon: Star, href: '/portfolio' },
-  { title: 'CV Builder', icon: FileText, href: '/cv-builder' },
-  { title: 'Applications', icon: ClipboardList, href: '/applications' },
-  { title: 'Interview Prep', icon: ClipboardList, href: '/interview-simulator' },
-  
+  { title: 'SynAI', icon: Sparkles, href: '/ai-coach' },
   { title: 'Settings', icon: Settings, href: '/settings' },
 ];
 

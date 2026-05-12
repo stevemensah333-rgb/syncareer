@@ -41,6 +41,9 @@ const AICoach = lazy(() => import("./pages/AICoach"));
 const InterviewSimulator = lazy(() => import("./pages/InterviewSimulator"));
 const ApplicationTracker = lazy(() => import("./pages/ApplicationTracker"));
 const CVBuilder = lazy(() => import("./pages/CVBuilder"));
+const Build = lazy(() => import("./pages/Build"));
+const Practice = lazy(() => import("./pages/Practice"));
+const Apply = lazy(() => import("./pages/Apply"));
 
 // Admin pages
 const FeedbackDashboard = lazy(() => import("./pages/admin/FeedbackDashboard"));
@@ -189,6 +192,15 @@ const AppContent = () => (
               } />
               <Route path="/cv-builder" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><CVBuilder /></RoleRoute></ProtectedRoute>
+              } />
+              <Route path="/build" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['student']}><Build /></RoleRoute></ProtectedRoute>
+              } />
+              <Route path="/practice" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['student']}><Practice /></RoleRoute></ProtectedRoute>
+              } />
+              <Route path="/apply" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['student']}><Apply /></RoleRoute></ProtectedRoute>
               } />
 
               {/* COUNSELLOR-ONLY ROUTES */}

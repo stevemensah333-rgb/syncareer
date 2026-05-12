@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Zap, BookOpen, Briefcase, User } from 'lucide-react';
+import { LayoutDashboard, Hammer, Target, Briefcase, User } from 'lucide-react';
 
 /**
  * Mobile bottom navigation for student dashboard
@@ -10,31 +10,11 @@ export const MobileBottomNav: React.FC = () => {
   const { pathname } = useLocation();
 
   const navItems = [
-    {
-      label: 'Dashboard',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-    },
-    {
-      label: 'Assessment',
-      href: '/assessment',
-      icon: Zap,
-    },
-    {
-      label: 'Learn',
-      href: '/learn',
-      icon: BookOpen,
-    },
-    {
-      label: 'Jobs',
-      href: '/opportunities',
-      icon: Briefcase,
-    },
-    {
-      label: 'Profile',
-      href: '/settings',
-      icon: User,
-    },
+    { label: 'Home', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Build', href: '/build', icon: Hammer },
+    { label: 'Practice', href: '/practice', icon: Target },
+    { label: 'Apply', href: '/apply', icon: Briefcase },
+    { label: 'Profile', href: '/settings', icon: User },
   ];
 
   const isActive = (href: string) => {
