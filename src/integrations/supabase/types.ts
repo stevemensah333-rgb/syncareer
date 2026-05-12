@@ -2022,6 +2022,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_profile_user_type: { Args: { _id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
