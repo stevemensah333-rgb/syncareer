@@ -41,6 +41,7 @@ const InterviewSimulator = () => {
   const { studentDetails } = useUserProfile();
   const { isPremium } = useSubscription();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<'setup' | 'interview' | 'offline-practice'>('setup');
   const [sessionLength, setSessionLength] = useState<SessionLength>('standard');
