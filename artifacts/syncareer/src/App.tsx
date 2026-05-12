@@ -193,6 +193,15 @@ const AppContent = () => (
               <Route path="/cv-builder" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><CVBuilder /></RoleRoute></ProtectedRoute>
               } />
+              <Route path="/build" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['student']}><Build /></RoleRoute></ProtectedRoute>
+              } />
+              <Route path="/practice" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['student']}><Practice /></RoleRoute></ProtectedRoute>
+              } />
+              <Route path="/apply" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['student']}><Apply /></RoleRoute></ProtectedRoute>
+              } />
 
               {/* COUNSELLOR-ONLY ROUTES */}
               <Route path="/counsellor-dashboard" element={
