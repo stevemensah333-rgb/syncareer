@@ -46,21 +46,23 @@ export function useSubscription() {
   useEffect(() => {
     fetchSubscription();
 
-    channelRef.current = supabase
-      .channel('subscriptions-realtime')
+    const channel = supabase
+      .channel(`subscriptions-realtime-${instanceId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'subscriptions' },
         () => fetchSubscription()
-      )
-      .subscribe();
+      );
+    channelRef.current = channel;
+    channel.subscribe();
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
-  }, [fetchSubscription]);
+  }, [fetchSubscription, instanceId]);
 
   return { subscription, isPremium, loading, error, refetch: fetchSubscription };
 }
