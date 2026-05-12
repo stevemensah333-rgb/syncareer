@@ -642,11 +642,15 @@ export type Database = {
       }
       job_postings: {
         Row: {
+          application_deadline: string | null
+          company_domain: string | null
+          company_name: string | null
           created_at: string
           department: string | null
           description: string
           employer_id: string | null
           employment_type: string
+          experience_level: string | null
           external_id: string | null
           id: string
           is_external: boolean
@@ -663,11 +667,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          application_deadline?: string | null
+          company_domain?: string | null
+          company_name?: string | null
           created_at?: string
           department?: string | null
           description: string
           employer_id?: string | null
           employment_type: string
+          experience_level?: string | null
           external_id?: string | null
           id?: string
           is_external?: boolean
@@ -684,11 +692,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          application_deadline?: string | null
+          company_domain?: string | null
+          company_name?: string | null
           created_at?: string
           department?: string | null
           description?: string
           employer_id?: string | null
           employment_type?: string
+          experience_level?: string | null
           external_id?: string | null
           id?: string
           is_external?: boolean
@@ -1399,6 +1411,27 @@ export type Database = {
           template?: string
           title?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_jobs: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
           user_id?: string
         }
         Relationships: []
