@@ -160,10 +160,6 @@ const Portfolio = () => {
 
   return (
     <PageLayout title="">
-      {!loading && projects.length === 0 && !isOnline && <OfflineEmptyState />}
-      <div className="mb-2">
-        <CachedDataIndicator hasData={projects.length > 0} />
-      </div>
       <AnimatedSection y={20}>
       <div className="flex items-center justify-between mb-6 -mt-2">
         <div className="flex items-center gap-1 border-b border-border w-full pb-0">
