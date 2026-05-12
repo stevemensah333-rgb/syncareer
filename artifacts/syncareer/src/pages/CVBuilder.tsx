@@ -278,8 +278,6 @@ const CVBuilder = () => {
 
       if (error) throw error;
 
-      // Mark in-memory state as synced so the "Sync now" hint clears.
-      setPendingSync(false);
 
       // ── Write skills to user_skills so SynAI can see them ─────────
       if (cvData.skills.length > 0) {
