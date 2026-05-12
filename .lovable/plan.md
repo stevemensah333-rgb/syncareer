@@ -1,39 +1,42 @@
+# Plan: Fix false offline banner + stability sweep
+
+## Problem
+When signing in (especially as counsellor), the "You're offline" banner appears even though the user is online. Network requests in logs confirm the user IS online (200s from Supabase). The cause is `navigator.onLine` returning a false negative — common in iframes / right after auth navigation — and `OfflineBanner` trusting it without verification.
+
 ## Root cause
+`src/hooks/useOnlineStatus.ts` returns `navigator.onLine` directly. The browser's `onLine` flag is unreliable: it can report `false` in iframes (the Lovable preview is one), during page transitions, or right after a service-worker takeover. Once `wasOffline` flips to `true`, the banner sticks until a real `online` event fires — which never comes if it was never truly offline.
 
-The crash on `/interview-simulator` (and any other page that mounts more than one consumer of `useSubscription` / `useNotifications`, including React StrictMode double-mounts) is:
+## Fix strategy
 
-```
-Error: cannot add `postgres_changes` callbacks for realtime:subscriptions-realtime after `subscribe()`.
-   at useSubscription.ts:40
-```
+### 1. Make online detection reliable (primary fix)
+Update `useOnlineStatus` to:
+- Default to `true` (assume online) on first render.
+- Only flip to `false` when an actual fetch probe fails, not on `navigator.onLine` alone.
+- Re-verify with a lightweight HEAD/GET to a known endpoint (Supabase REST root or `/favicon.svg`) before declaring offline.
+- Listen to `online`/`offline` events as hints, but confirm with a probe.
 
-`useSubscription` and `useNotifications` both create a Supabase Realtime channel with a **hard-coded topic name** (`'subscriptions-realtime'`, `'notifications-realtime'`). Supabase's client returns the *same* channel object for the same topic, so the second hook instance gets a channel that has already been `.subscribe()`-d, and calling `.on('postgres_changes', ...)` on it throws — bubbling up past `GlobalErrorBoundary`.
+### 2. Stop the banner from latching
+In `OfflineBanner`:
+- Don't set `wasOffline=true` unless we've been offline for >2s (debounce).
+- Auto-clear stale offline state on route change.
 
-This is the only "crash" currently reproducible from the logs; sign-in itself does not crash, but the app crashes anywhere these hooks are mounted twice (e.g. `MobileBottomNav` + a page using subscription gating, or strict-mode double-render).
+### 3. Stability sweep (verify, don't rewrite)
+Read-only verification pass — no changes unless an actual bug is found:
 
-## What to change
+- **Auth/Sign-in (student + counsellor):** confirm `ProtectedRoute` + `RoleRoute` flow, no double-redirect loops, profile loads via `.maybeSingle()`.
+- **Onboarding:** confirm role selection persists `user_type` and `onboarding_completed` correctly for both roles.
+- **Counsellor pages:** Dashboard, Availability, Sessions, Clients, Credential upload — verify each mounts without crash and queries return safely on empty data.
+- **Student pages:** Dashboard, Assessment, CV Builder, Interview Simulator, AI Coach, Opportunities, Portfolio, Applications — verify each mounts.
+- **Realtime hooks:** confirm the previous channel-collision fix is still in place in `useSubscription` and `useNotifications`.
+- **Lazy-loaded routes:** verify Suspense fallback resolves (no infinite spinners).
+- **Error boundary:** confirm `GlobalErrorBoundary` catches and shows recovery UI rather than blank screen.
 
-1. `artifacts/syncareer/src/hooks/useSubscription.ts`
-   - Generate a unique channel topic per hook instance: `` `subscriptions-realtime-${useId()}` `` (or `crypto.randomUUID()` stored in a ref).
-   - Move `.on(...)` *before* `.subscribe()` (already correct, but keep it explicit).
-   - Guard cleanup with `channelRef.current = null` after `removeChannel`.
+Any concrete crash or hang found during the sweep will be listed and fixed; the user will be told what was checked vs. what was changed.
 
-2. `artifacts/syncareer/src/hooks/useNotifications.ts`
-   - Same fix: unique per-instance topic, null-out ref on cleanup.
-
-3. Add a defensive note: any future `supabase.channel('...')` calls in hooks must use a unique topic per instance.
-
-4. Verify no other shared-topic channels exist (already checked — only these two files use `.channel(`).
-
-5. `PUBLISH_TROUBLESHOOTING.md` — append a short "Realtime channel collision" section documenting the pattern and the fix, so this doesn't regress.
+## Files to change
+- `artifacts/syncareer/src/hooks/useOnlineStatus.ts` — probe-based detection
+- `artifacts/syncareer/src/components/OfflineBanner.tsx` — debounce offline state, clear on mount
 
 ## Out of scope
-
-- Sign-in flow: no crash signal in logs/replay; current code is fine. No changes needed.
-- "Unnecessary delays": the only delay surfaced is the `Suspense` fallback during lazy-load of `InterviewSimulator`, which is by design. Will not touch unless a specific slow path appears after the crash fix.
-
-## Verification
-
-- Reload `/interview-simulator` — no `GlobalErrorBoundary` trigger, page renders.
-- Open a page that mounts `useSubscription` twice (e.g. dashboard with `MobileBottomNav` + gated content) — no error.
-- Confirm no `postgres_changes` error in console after navigating between pages.
+- Removing offline draft features (CV, Assessment, Interview practice) — they stay; only the false-positive banner is fixed.
+- Backend / RLS changes.
