@@ -177,7 +177,8 @@ export default function PublicPortfolio() {
 
   useEffect(() => {
     fetchData();
-  }, [userId, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeKey]);
 
   const handleRateProject = (project: Project) => {
     setSelectedProject(project);
