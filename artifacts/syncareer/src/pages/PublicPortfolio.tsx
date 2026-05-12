@@ -79,7 +79,7 @@ export default function PublicPortfolio() {
         .from('profiles')
         .select('id, username, full_name, avatar_url, bio, linkedin_url')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError || !profileData) {
         toast.error('User not found');
