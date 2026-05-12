@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import {
   ClipboardList, Star, GraduationCap, Sparkles, Settings,
-  TrendingUp, FileText, Calendar, MoreHorizontal
+  TrendingUp, FileText, Calendar, MoreHorizontal, Users
 } from 'lucide-react';
 import {
   DropdownMenu,
