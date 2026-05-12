@@ -1,5 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import * as Sentry from '@sentry/react';
 
 interface Props {
   children: ReactNode;
