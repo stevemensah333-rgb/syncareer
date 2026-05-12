@@ -200,6 +200,13 @@ const Analysis = () => {
           </div>
         )}
 
+        {/* Prescriptive action plan — the page's hero */}
+        {data && !loading && (
+          <AnimatedSection delay={0.06} y={20}>
+            <PrescriptiveActionPlan topSkills={data.hard_skills || []} major={major} />
+          </AnimatedSection>
+        )}
+
         {/* Main Content */}
         {data && !loading && (
           <AnimatedSection delay={0.08} y={20}>
