@@ -33,6 +33,12 @@ const Dashboard = () => {
   const [fullName, setFullName] = useState<string>('');
 
   const readiness = useCareerReadiness(major);
+  const nextAction = useNextBestAction({
+    hasAssessment: !!topCareer,
+    cvScore: stats.cvScore,
+    interviewScore: stats.interviewScore,
+    applications: stats.applications,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
