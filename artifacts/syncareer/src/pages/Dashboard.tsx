@@ -12,6 +12,7 @@ import { GuidedJourney } from '@/components/assessment/GuidedJourney';
 import { ReferralCard } from '@/components/referral/ReferralCard';
 import { UniversityInsightsCard } from '@/components/dashboard/UniversityInsightsCard';
 import AnimatedSection from '@/components/landing/AnimatedSection';
+import { useNextBestAction } from '@/hooks/useNextBestAction';
 
 interface JobMatch {
   id: string;
