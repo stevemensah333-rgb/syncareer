@@ -28,6 +28,9 @@ const PublicPortfolio = lazy(() => import("./pages/PublicPortfolio"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
 const SignedOut = lazy(() => import("./pages/SignedOut"));
 
 // Student pages
@@ -146,6 +149,9 @@ const AppContent = () => (
               <Route path="/subscription-success" element={<SubscriptionSuccess />} />
               <Route path="/portfolio/:userId" element={<PublicPortfolio />} />
               <Route path="/terms" element={<TermsAndConditions />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
 
               {/* Assessment is publicly accessible */}
               <Route path="/assessment" element={<Assessment />} />
