@@ -13,20 +13,22 @@ import { CareerOutlookTab } from '@/components/analysis/CareerOutlookTab';
 import { Link } from 'react-router-dom';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 
+import { PrescriptiveActionPlan } from '@/components/analysis/PrescriptiveActionPlan';
+
 const REGIONS = [
-  { value: 'global', label: 'Global' },
-  { value: 'north_america', label: 'North America' },
-  { value: 'europe', label: 'Europe' },
-  { value: 'africa', label: 'Africa' },
-  { value: 'asia', label: 'Asia' },
-  { value: 'middle_east', label: 'Middle East' },
-  { value: 'latin_america', label: 'Latin America' },
+  { value: 'accra_ghana',     label: 'Accra, Ghana' },
+  { value: 'lagos_nigeria',   label: 'Lagos, Nigeria' },
+  { value: 'nairobi_kenya',   label: 'Nairobi, Kenya' },
+  { value: 'cape_town_sa',    label: 'Cape Town, SA' },
+  { value: 'remote_africa',   label: 'Remote (Africa-friendly)' },
+  { value: 'remote_global',   label: 'Remote (Global)' },
+  { value: 'global',          label: 'Global benchmark' },
 ];
 
 const Analysis = () => {
   const { studentDetails, loading: profileLoading } = useUserProfile();
   const major = studentDetails?.major;
-  const [region, setRegion] = useState('global');
+  const [region, setRegion] = useState('accra_ghana');
 
   const { data, loading, error, refresh } = useMarketIntelligence(major, region);
 
@@ -196,6 +198,13 @@ const Analysis = () => {
               Analysing job market data for {major}…
             </p>
           </div>
+        )}
+
+        {/* Prescriptive action plan — the page's hero */}
+        {data && !loading && (
+          <AnimatedSection delay={0.06} y={20}>
+            <PrescriptiveActionPlan topSkills={data.hard_skills || []} major={major} />
+          </AnimatedSection>
         )}
 
         {/* Main Content */}
