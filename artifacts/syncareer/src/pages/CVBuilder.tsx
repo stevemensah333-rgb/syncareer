@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { useOfflineDraft } from '@/hooks/useOfflineDraft';
+
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -118,38 +118,23 @@ const CVBuilder = () => {
   const cvAnalysis = useCVAnalysis();
   const isOnline = useOnlineStatus();
   const { userId } = useAuth();
-  const [pendingSync, setPendingSync] = useState(false);
-  const offlineDraft = useOfflineDraft<CVData>('cv-builder', userId);
 
-  // Wrap setCVData so every change writes through to the offline draft.
   const setCVData: typeof setCVDataRaw = (updater) => {
     setCVDataRaw((prev) => {
       const next =
         typeof updater === 'function'
           ? (updater as (p: CVData) => CVData)(prev)
           : updater;
-      offlineDraft.saveDraft(next);
-      setPendingSync(true);
       return next;
     });
   };
 
-  // Auto-load saved CV on mount — prefer offline draft if it's newer than cloud copy
+  // Auto-load saved CV on mount from cloud copy.
   useEffect(() => {
     const loadSavedCV = async () => {
       try {
-        // Hydrate from offline draft immediately so the form is usable while we fetch
-        const draftLoaded = !!offlineDraft.draft;
-        if (offlineDraft.draft) {
-          setCVDataRaw(offlineDraft.draft);
-          // A hydrated local draft is unsynced work — surface "Sync now" so the
-          // user can push it to the cloud as soon as they're back online.
-          setPendingSync(true);
-        }
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) { setIsLoadingCV(false); return; }
-        // If we already have a local draft, don't let the cloud fetch clobber it.
-        if (draftLoaded) { setIsLoadingCV(false); return; }
 
         const { data: resume } = await supabase
           .from('resumes')
@@ -293,8 +278,6 @@ const CVBuilder = () => {
 
       if (error) throw error;
 
-      // Mark in-memory state as synced so the "Sync now" hint clears.
-      setPendingSync(false);
 
       // ── Write skills to user_skills so SynAI can see them ─────────
       if (cvData.skills.length > 0) {
@@ -402,19 +385,8 @@ const CVBuilder = () => {
                   className="rounded-full px-5"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {isSaving
-                    ? 'Saving...'
-                    : !isOnline
-                      ? 'Saved locally'
-                      : pendingSync && offlineDraft.lastSavedAt
-                        ? 'Sync now'
-                        : 'Save'}
+                  {isSaving ? 'Saving...' : 'Save'}
                 </Button>
-                {!isOnline && (
-                  <span className="text-[11px] text-muted-foreground">
-                    Saved locally — will sync when online
-                  </span>
-                )}
               </div>
               <Button
                 onClick={handleDownloadPDF}

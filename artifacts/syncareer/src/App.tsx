@@ -6,9 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { UserProfileProvider } from "./contexts/UserProfileContext";
-import { TourProvider } from "./contexts/TourContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
-import { TourOverlay } from "./components/common/TourOverlay";
 import { MobileBottomNav } from "./components/common/MobileBottomNav";
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { LoadingFallback } from "./components/LoadingFallback";
@@ -129,10 +127,8 @@ const AppContent = () => (
       <UserProfileProvider>
         <NotificationProvider>
           <TooltipProvider>
-            <TourProvider tours={[]}>
-              <Toaster />
+            <Toaster />
               <Sonner />
-              <TourOverlay />
               <MobileBottomNav />
               <Suspense fallback={<LoadingFallback />}>
               <Routes>
@@ -226,7 +222,6 @@ const AppContent = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          </TourProvider>
         </TooltipProvider>
         </NotificationProvider>
       </UserProfileProvider>

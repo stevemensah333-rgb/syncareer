@@ -1,6 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
-import { QuickTour, getStepsForRole } from '@/components/onboarding/QuickTour';
 
 type UserRole = 'student' | 'career_counsellor';
 
@@ -9,7 +8,6 @@ interface RoleRouteProps {
   allowedRoles: UserRole[];
 }
 
-// Maps each role to its default landing page
 const ROLE_HOME_ROUTES: Record<UserRole, string> = {
   student: '/dashboard',
   career_counsellor: '/counsellor-dashboard',
@@ -22,16 +20,10 @@ export function getHomeRouteForRole(role: string | null): string {
   return '/dashboard';
 }
 
-/**
- * RoleRoute ensures the authenticated user has the correct role.
- * Must be used INSIDE ProtectedRoute (which handles auth + profile loading).
- * If the user's role doesn't match, they are redirected to their correct dashboard.
- */
 const RoleRoute = ({ children, allowedRoles }: RoleRouteProps) => {
-  const { profile, loading, refreshProfile } = useUserProfile();
+  const { profile, loading } = useUserProfile();
   const location = useLocation();
 
-  // Still loading profile - show nothing (ProtectedRoute already shows spinner)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -42,71 +34,23 @@ const RoleRoute = ({ children, allowedRoles }: RoleRouteProps) => {
 
   const userRole = profile?.user_type as UserRole | null;
 
-  // If no profile or no role set, send to onboarding
   if (!profile || !userRole) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // If onboarding not completed, redirect to onboarding
   if (!profile.onboarding_completed) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  const tour = (
-    <HomeRouteTour
-      role={userRole}
-      userId={profile.id}
-      pathname={location.pathname}
-      tourCompleted={profile.tour_completed}
-      onCompleted={refreshProfile}
-    />
-  );
-
-  // If role is not allowed for this route, redirect to user's correct home
   if (!allowedRoles.includes(userRole)) {
     const correctHome = getHomeRouteForRole(userRole);
-    // Avoid redirect loop
     if (location.pathname === correctHome) {
-      return (
-        <>
-          {children}
-          {tour}
-        </>
-      );
+      return <>{children}</>;
     }
     return <Navigate to={correctHome} replace />;
   }
 
-  return (
-    <>
-      {children}
-      {tour}
-    </>
-  );
+  return <>{children}</>;
 };
-
-function HomeRouteTour({
-  role,
-  userId,
-  pathname,
-  tourCompleted,
-  onCompleted,
-}: {
-  role: UserRole;
-  userId: string;
-  pathname: string;
-  tourCompleted: boolean | null | undefined;
-  onCompleted: () => void;
-}) {
-  if (pathname !== getHomeRouteForRole(role)) return null;
-  return (
-    <QuickTour
-      userId={userId}
-      steps={getStepsForRole(role)}
-      profileTourCompleted={tourCompleted}
-      onCompleted={onCompleted}
-    />
-  );
-}
 
 export default RoleRoute;

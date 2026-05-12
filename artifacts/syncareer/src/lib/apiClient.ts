@@ -1,4 +1,6 @@
-import { captureException } from '@/services/sentry';
+const captureException = (error: Error, ctx?: Record<string, unknown>) => {
+  console.error('[apiClient]', error, ctx);
+};
 import { trackEvent } from '@/services/analytics';
 
 export interface ApiError {

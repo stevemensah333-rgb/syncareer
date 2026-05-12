@@ -1,4 +1,6 @@
-import * as Sentry from '@sentry/react';
+// Lightweight error handling utilities. No external error reporter is wired
+// here — log to the console; future reporting can hook into logErrorToSentry.
+
 
 export type AppErrorType = 'VALIDATION' | 'NETWORK' | 'AUTH' | 'SERVER' | 'UNKNOWN';
 
@@ -73,21 +75,13 @@ function classifyError(error: Error): AppErrorType {
 }
 
 /**
- * Logs error to Sentry with context
+ * Logs an error with optional context. Currently console-only.
  */
 export function logErrorToSentry(error: AppError | Error, context?: Record<string, unknown>) {
   if (error instanceof Error) {
-    Sentry.captureException(error, {
-      contexts: { app: context || {} },
-    });
+    console.error('[error]', error, context);
   } else {
-    Sentry.captureMessage((error as AppError).message, {
-      level: 'error',
-      contexts: {
-        error: error as Record<string, unknown>,
-        ...context,
-      },
-    });
+    console.error('[error]', (error as AppError).message, error, context);
   }
 }
 

@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import CachedDataIndicator, { OfflineEmptyState } from '@/components/CachedDataIndicator';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +34,7 @@ const Portfolio = () => {
   const [savingLinkedin, setSavingLinkedin] = useState(false);
   const [profileData, setProfileData] = useState<{ bio: string | null; full_name: string | null } | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
-  const isOnline = useOnlineStatus();
+  
 
   useEffect(() => {
     fetchData();
@@ -162,10 +160,6 @@ const Portfolio = () => {
 
   return (
     <PageLayout title="">
-      {!loading && projects.length === 0 && !isOnline && <OfflineEmptyState />}
-      <div className="mb-2">
-        <CachedDataIndicator hasData={projects.length > 0} />
-      </div>
       <AnimatedSection y={20}>
       <div className="flex items-center justify-between mb-6 -mt-2">
         <div className="flex items-center gap-1 border-b border-border w-full pb-0">

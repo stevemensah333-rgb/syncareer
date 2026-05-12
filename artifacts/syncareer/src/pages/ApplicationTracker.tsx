@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import CachedDataIndicator, { OfflineEmptyState } from '@/components/CachedDataIndicator';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,7 +55,7 @@ const ApplicationTracker = () => {
   const { updateOutcome, triggerIntelligenceRefresh } = useOutcomeTracking();
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const isOnline = useOnlineStatus();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
@@ -243,10 +241,6 @@ const ApplicationTracker = () => {
   return (
     <PageLayout title="Application Tracker">
       <div className="space-y-6">
-        <CachedDataIndicator hasData={applications.length > 0 || counsellorBookings.length > 0} />
-        {!isLoading && applications.length === 0 && counsellorBookings.length === 0 && !isOnline && (
-          <OfflineEmptyState />
-        )}
         {/* Stats Overview */}
         <AnimatedSection y={20}>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
