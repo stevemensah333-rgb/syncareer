@@ -55,7 +55,7 @@ const ApplicationTracker = () => {
   const { updateOutcome, triggerIntelligenceRefresh } = useOutcomeTracking();
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const isOnline = useOnlineStatus();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
