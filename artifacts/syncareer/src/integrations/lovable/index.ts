@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const lovableAuth = createLovableAuth();
 
-type OAuthProvider = "google" | "apple";
+type OAuthProvider = "google";
 
 interface SignInOpts {
   redirect_uri?: string;
