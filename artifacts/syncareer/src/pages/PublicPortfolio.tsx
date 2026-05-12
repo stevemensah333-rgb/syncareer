@@ -51,8 +51,10 @@ interface UserSkill {
   category: string;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default function PublicPortfolio() {
-  const { userId } = useParams();
+  const params = useParams();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -61,11 +63,14 @@ export default function PublicPortfolio() {
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
   const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
+  const routeKey = params.userId ?? params.slug ?? '';
+
   const fetchData = async () => {
-    if (!userId) {
+    if (!routeKey) {
       navigate('/');
       return;
     }
@@ -73,6 +78,26 @@ export default function PublicPortfolio() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       setCurrentUserId(session?.user?.id || null);
+
+      // Resolve route key (UUID or username slug) to a user id
+      let userId: string | null = null;
+      if (UUID_RE.test(routeKey)) {
+        userId = routeKey;
+      } else {
+        const { data: byUsername } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', routeKey)
+          .maybeSingle();
+        userId = byUsername?.id ?? null;
+      }
+
+      if (!userId) {
+        toast.error('Portfolio not found');
+        navigate('/');
+        return;
+      }
+      setResolvedUserId(userId);
 
       // Fetch profile
       const { data: profileData, error: profileError } = await supabase
@@ -152,7 +177,8 @@ export default function PublicPortfolio() {
 
   useEffect(() => {
     fetchData();
-  }, [userId, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeKey]);
 
   const handleRateProject = (project: Project) => {
     setSelectedProject(project);
@@ -336,7 +362,7 @@ export default function PublicPortfolio() {
                             <Github className="h-4 w-4 mr-1" /> Code
                           </Button>
                         )}
-                        {currentUserId && currentUserId !== userId && (
+                        {currentUserId && currentUserId !== resolvedUserId && (
                           <Button size="sm" variant="secondary" onClick={() => handleRateProject(project)}>
                             <MessageSquare className="h-4 w-4 mr-1" /> Rate
                           </Button>
