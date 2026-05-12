@@ -72,6 +72,9 @@ export default defineConfig({
           /\/api\//,
           /\/sign-in(\/|$)/,
           /\/sign-up(\/|$)/,
+          // OAuth broker callback path — must always hit the network, never
+          // be served the offline shell by the service worker.
+          /\/~oauth/,
         ],
         // Precache the entire built app shell (HTML/JS/CSS/icons/fonts) so the
         // app boots offline even on first navigation after install.
