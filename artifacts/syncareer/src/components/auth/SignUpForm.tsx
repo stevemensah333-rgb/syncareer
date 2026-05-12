@@ -67,6 +67,14 @@ export default function SignUpForm() {
 
   return (
     <div className="bg-white/95 backdrop-blur rounded-3xl shadow-[0_20px_60px_-30px_rgba(20,20,20,0.25)] ring-1 ring-black/[0.04] p-8">
+      <div className="space-y-4 mb-5">
+        <GoogleSignInButton label="Sign up with Google" />
+        <div className="flex items-center gap-3 text-xs uppercase tracking-wider text-foreground/40">
+          <div className="h-px flex-1 bg-black/[0.08]" />
+          <span>or</span>
+          <div className="h-px flex-1 bg-black/[0.08]" />
+        </div>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-1.5">
           <Label htmlFor="full-name" className="text-foreground/70 text-xs uppercase tracking-wider">Full name</Label>
