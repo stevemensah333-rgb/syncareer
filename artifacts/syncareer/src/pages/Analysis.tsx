@@ -209,6 +209,13 @@ const Analysis = () => {
           </AnimatedSection>
         )}
 
+        {/* Alumni outcomes — moat content (real grads, real employers) */}
+        {data && !loading && (
+          <AnimatedSection delay={0.07} y={20}>
+            <AlumniOutcomesCard university={university} major={major} region={region} />
+          </AnimatedSection>
+        )}
+
         {/* Main Content */}
         {data && !loading && (
           <AnimatedSection delay={0.08} y={20}>
