@@ -13,14 +13,16 @@ import { CareerOutlookTab } from '@/components/analysis/CareerOutlookTab';
 import { Link } from 'react-router-dom';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 
+import { PrescriptiveActionPlan } from '@/components/analysis/PrescriptiveActionPlan';
+
 const REGIONS = [
-  { value: 'global', label: 'Global' },
-  { value: 'north_america', label: 'North America' },
-  { value: 'europe', label: 'Europe' },
-  { value: 'africa', label: 'Africa' },
-  { value: 'asia', label: 'Asia' },
-  { value: 'middle_east', label: 'Middle East' },
-  { value: 'latin_america', label: 'Latin America' },
+  { value: 'accra_ghana',     label: 'Accra, Ghana' },
+  { value: 'lagos_nigeria',   label: 'Lagos, Nigeria' },
+  { value: 'nairobi_kenya',   label: 'Nairobi, Kenya' },
+  { value: 'cape_town_sa',    label: 'Cape Town, SA' },
+  { value: 'remote_africa',   label: 'Remote (Africa-friendly)' },
+  { value: 'remote_global',   label: 'Remote (Global)' },
+  { value: 'global',          label: 'Global benchmark' },
 ];
 
 const Analysis = () => {
