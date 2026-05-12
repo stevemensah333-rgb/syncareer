@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import GoogleSignInButton from './GoogleSignInButton';
 
 const ROLE_OPTIONS = [
   { value: 'student', label: 'Student / Job seeker' },
