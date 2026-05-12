@@ -31,6 +31,7 @@ const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const SignedOut = lazy(() => import("./pages/SignedOut"));
 
 // Student pages
@@ -152,6 +153,7 @@ const AppContent = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
 
               {/* Assessment is publicly accessible */}
               <Route path="/assessment" element={<Assessment />} />

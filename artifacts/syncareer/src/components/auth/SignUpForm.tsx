@@ -48,6 +48,17 @@ export default function SignUpForm() {
       });
       if (error) throw error;
 
+      // Fire-and-forget welcome email (don't block signup on failure)
+      const newUserId = data.user?.id;
+      supabase.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: 'welcome',
+          recipientEmail: email,
+          idempotencyKey: `welcome-${newUserId ?? email}`,
+          templateData: { name: fullName },
+        },
+      }).catch((err) => console.warn('welcome email enqueue failed', err));
+
       // If email confirmation is required, there's no session yet.
       if (!data.session) {
         toast.success('Check your email to confirm your account, then sign in.');
