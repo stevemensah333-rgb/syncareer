@@ -60,7 +60,6 @@ export default function PublicPortfolio() {
   const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [loading, setLoading] = useState(true);
-  const isOnline = useOnlineStatus();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
