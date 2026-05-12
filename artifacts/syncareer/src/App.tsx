@@ -41,6 +41,9 @@ const AICoach = lazy(() => import("./pages/AICoach"));
 const InterviewSimulator = lazy(() => import("./pages/InterviewSimulator"));
 const ApplicationTracker = lazy(() => import("./pages/ApplicationTracker"));
 const CVBuilder = lazy(() => import("./pages/CVBuilder"));
+const Build = lazy(() => import("./pages/Build"));
+const Practice = lazy(() => import("./pages/Practice"));
+const Apply = lazy(() => import("./pages/Apply"));
 
 // Admin pages
 const FeedbackDashboard = lazy(() => import("./pages/admin/FeedbackDashboard"));
