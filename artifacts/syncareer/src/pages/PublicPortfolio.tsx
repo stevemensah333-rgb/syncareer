@@ -412,7 +412,7 @@ export default function PublicPortfolio() {
             onRatingSubmitted={fetchData}
           />
         )}
-      </div>
-    </PageLayout>
+      </main>
+    </div>
   );
 }
