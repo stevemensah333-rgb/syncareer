@@ -367,9 +367,15 @@ const Portfolio = () => {
           <Card className="bg-primary text-primary-foreground">
             <CardContent className="pt-6 space-y-3">
               <h3 className="font-bold text-center">Share Your Portfolio</h3>
-              <p className="text-sm text-center opacity-90">
-                Let recruiters see your work
+              <p className="text-xs text-center opacity-90 break-all">
+                {publicUrl.replace(/^https?:\/\//, '')}
               </p>
+              {!profileData?.username && (
+                <p className="text-xs text-center opacity-80">
+                  Tip: set a username in Settings to get a clean URL like{' '}
+                  <span className="font-mono">/u/yourname</span>
+                </p>
+              )}
               <div className="flex gap-2">
                 <Button 
                   variant="secondary"
