@@ -1214,37 +1214,67 @@ export type Database = {
       }
       portfolio_projects: {
         Row: {
+          approach: string | null
+          cover_image_url: string | null
           created_at: string
           description: string
           github_url: string | null
           id: string
           is_verified: boolean | null
+          lessons_learned: string | null
+          outcome: string | null
+          position: number | null
+          problem: string | null
           project_url: string | null
+          role: string | null
+          screenshots: string[] | null
+          slug: string | null
           tags: string[] | null
+          tech_stack: string[] | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          approach?: string | null
+          cover_image_url?: string | null
           created_at?: string
           description: string
           github_url?: string | null
           id?: string
           is_verified?: boolean | null
+          lessons_learned?: string | null
+          outcome?: string | null
+          position?: number | null
+          problem?: string | null
           project_url?: string | null
+          role?: string | null
+          screenshots?: string[] | null
+          slug?: string | null
           tags?: string[] | null
+          tech_stack?: string[] | null
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          approach?: string | null
+          cover_image_url?: string | null
           created_at?: string
           description?: string
           github_url?: string | null
           id?: string
           is_verified?: boolean | null
+          lessons_learned?: string | null
+          outcome?: string | null
+          position?: number | null
+          problem?: string | null
           project_url?: string | null
+          role?: string | null
+          screenshots?: string[] | null
+          slug?: string | null
           tags?: string[] | null
+          tech_stack?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -1288,6 +1318,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      portfolio_settings: {
+        Row: {
+          accent_color: string | null
+          available_for: string | null
+          contact_email: string | null
+          created_at: string
+          cv_url: string | null
+          external_portfolio_url: string | null
+          figma_tokens: Json | null
+          font_pair: string | null
+          headline: string | null
+          og_image_url: string | null
+          subheadline: string | null
+          template: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent_color?: string | null
+          available_for?: string | null
+          contact_email?: string | null
+          created_at?: string
+          cv_url?: string | null
+          external_portfolio_url?: string | null
+          figma_tokens?: Json | null
+          font_pair?: string | null
+          headline?: string | null
+          og_image_url?: string | null
+          subheadline?: string | null
+          template?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent_color?: string | null
+          available_for?: string | null
+          contact_email?: string | null
+          created_at?: string
+          cv_url?: string | null
+          external_portfolio_url?: string | null
+          figma_tokens?: Json | null
+          font_pair?: string | null
+          headline?: string | null
+          og_image_url?: string | null
+          subheadline?: string | null
+          template?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      portfolio_views: {
+        Row: {
+          country: string | null
+          id: string
+          owner_user_id: string
+          referrer: string | null
+          viewed_at: string
+          viewer_user_id: string | null
+        }
+        Insert: {
+          country?: string | null
+          id?: string
+          owner_user_id: string
+          referrer?: string | null
+          viewed_at?: string
+          viewer_user_id?: string | null
+        }
+        Update: {
+          country?: string | null
+          id?: string
+          owner_user_id?: string
+          referrer?: string | null
+          viewed_at?: string
+          viewer_user_id?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

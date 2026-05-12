@@ -25,6 +25,7 @@ const Landing = lazy(() => import("./pages/Landing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const PublicPortfolio = lazy(() => import("./pages/PublicPortfolio"));
+const PublicProjectDetail = lazy(() => import("./pages/PublicProjectDetail"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
@@ -149,7 +150,9 @@ const AppContent = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/subscription-success" element={<SubscriptionSuccess />} />
               <Route path="/portfolio/:userId" element={<PublicPortfolio />} />
+              <Route path="/portfolio/:userId/p/:projectId" element={<PublicProjectDetail />} />
               <Route path="/u/:slug" element={<PublicPortfolio />} />
+              <Route path="/u/:slug/p/:projectSlug" element={<PublicProjectDetail />} />
               <Route path="/terms" element={<TermsAndConditions />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/blog" element={<Blog />} />

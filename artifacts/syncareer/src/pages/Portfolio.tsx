@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import AnimatedSection from '@/components/landing/AnimatedSection';
+import { PortfolioCustomizer } from '@/components/portfolio/PortfolioCustomizer';
+import { PortfolioAnalyticsCard } from '@/components/portfolio/PortfolioAnalyticsCard';
 
 interface Project {
   id: string;
@@ -309,6 +311,18 @@ const Portfolio = () => {
           <AnimatedSection delay={0.2} y={20}>
           <ProfileSummaryCard />
           </AnimatedSection>
+
+          {currentUserId && (
+            <AnimatedSection delay={0.22} y={20}>
+              <PortfolioAnalyticsCard userId={currentUserId} />
+            </AnimatedSection>
+          )}
+
+          {currentUserId && (
+            <AnimatedSection delay={0.23} y={20}>
+              <PortfolioCustomizer userId={currentUserId} />
+            </AnimatedSection>
+          )}
 
           {/* Portfolio Completeness */}
           <AnimatedSection delay={0.24} y={20}>
