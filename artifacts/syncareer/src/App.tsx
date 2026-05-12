@@ -127,10 +127,8 @@ const AppContent = () => (
       <UserProfileProvider>
         <NotificationProvider>
           <TooltipProvider>
-            <TourProvider tours={[]}>
-              <Toaster />
+            <Toaster />
               <Sonner />
-              <TourOverlay />
               <MobileBottomNav />
               <Suspense fallback={<LoadingFallback />}>
               <Routes>
