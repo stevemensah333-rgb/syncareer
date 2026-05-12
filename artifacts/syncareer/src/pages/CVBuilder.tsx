@@ -385,19 +385,8 @@ const CVBuilder = () => {
                   className="rounded-full px-5"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {isSaving
-                    ? 'Saving...'
-                    : !isOnline
-                      ? 'Saved locally'
-                      : pendingSync && offlineDraft.lastSavedAt
-                        ? 'Sync now'
-                        : 'Save'}
+                  {isSaving ? 'Saving...' : 'Save'}
                 </Button>
-                {!isOnline && (
-                  <span className="text-[11px] text-muted-foreground">
-                    Saved locally — will sync when online
-                  </span>
-                )}
               </div>
               <Button
                 onClick={handleDownloadPDF}
