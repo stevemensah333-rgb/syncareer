@@ -211,6 +211,39 @@ const CounsellorDashboard = () => {
 
   return (
     <CounsellorLayout title="My Portfolio">
+      {/* Focus Cards — at-a-glance counsellor stats */}
+      <AnimatedSection y={20}>
+        <div className="grid gap-4 md:grid-cols-3 mb-6">
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                <Calendar className="h-4 w-4 text-primary" /> Upcoming Sessions
+              </div>
+              <p className="text-3xl font-semibold">{earnings.pendingSessions}</p>
+              <p className="text-xs text-muted-foreground mt-1">Scheduled, not yet completed</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                <MessageSquare className="h-4 w-4 text-primary" /> Pending Bookings
+              </div>
+              <p className="text-3xl font-semibold">{pendingBookings}</p>
+              <p className="text-xs text-muted-foreground mt-1">Awaiting your confirmation</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                <Wallet className="h-4 w-4 text-primary" /> Total Earnings
+              </div>
+              <p className="text-3xl font-semibold">GHS {earnings.totalEarnings.toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground mt-1">{earnings.completedSessions} completed sessions</p>
+            </CardContent>
+          </Card>
+        </div>
+      </AnimatedSection>
+
       {/* Header Section - Portfolio Style */}
       <AnimatedSection y={20}>
       <Card className="overflow-hidden">
