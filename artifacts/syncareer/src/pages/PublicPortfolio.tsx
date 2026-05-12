@@ -93,7 +93,7 @@ export default function PublicPortfolio() {
       const [projectsRes, endorsementsRes, studentRes, skillsRes] = await Promise.all([
         supabase.from('portfolio_projects').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
         supabase.from('skill_endorsements').select('skill_name').eq('user_id', userId),
-        supabase.from('student_details').select('school, major, degree_type, expected_completion').eq('user_id', userId).single(),
+        supabase.from('student_details').select('school, major, degree_type, expected_completion').eq('user_id', userId).maybeSingle(),
         supabase.from('user_skills' as any).select('skill_name, proficiency, category').eq('user_id', userId),
       ]);
 
