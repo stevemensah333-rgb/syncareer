@@ -34,7 +34,7 @@ const Portfolio = () => {
   const [savingLinkedin, setSavingLinkedin] = useState(false);
   const [profileData, setProfileData] = useState<{ bio: string | null; full_name: string | null } | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
-  const isOnline = useOnlineStatus();
+  
 
   useEffect(() => {
     fetchData();
