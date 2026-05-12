@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { useOfflineDraft } from '@/hooks/useOfflineDraft';
+
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
