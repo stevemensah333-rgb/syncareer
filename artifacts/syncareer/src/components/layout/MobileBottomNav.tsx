@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import {
   ClipboardList, Sparkles, Settings,
-  Calendar, Users, LayoutDashboard, Hammer, Target, Briefcase
+  Calendar, Users, LayoutDashboard, Hammer, Target, Briefcase, MoreHorizontal
 } from 'lucide-react';
 import {
   DropdownMenu,
