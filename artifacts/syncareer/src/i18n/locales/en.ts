@@ -1,0 +1,53 @@
+export default {
+  translation: {
+    settings: {
+      title: "Settings",
+      account: "Account",
+      notifications: "Notifications",
+      security: "Security",
+      regional: "Regional Settings",
+      preferences: "Preferences",
+      saveChanges: "Save Changes",
+      cancel: "Cancel",
+      accountSettings: "Account Settings",
+      personalInfo: "Personal Information",
+      firstName: "First Name",
+      lastName: "Last Name",
+      email: "Email",
+      phone: "Phone",
+      notificationSettings: "Notification Settings",
+      emailNotifications: "Email Notifications",
+      emailNotificationsDesc: "Receive updates via email",
+      pushNotifications: "Push Notifications",
+      pushNotificationsDesc: "Receive browser notifications",
+      weeklyDigest: "Weekly Digest",
+      weeklyDigestDesc: "Weekly summary of activity",
+      marketingEmails: "Marketing Emails",
+      marketingEmailsDesc: "Receive promotional content",
+      securitySettings: "Security Settings",
+      changePassword: "Change Password",
+      currentPassword: "Current Password",
+      newPassword: "New Password",
+      confirmPassword: "Confirm New Password",
+      twoFactorAuth: "Two-Factor Authentication",
+      twoFactorAuthDesc: "Add an extra layer of security to your account",
+      enable2FA: "Enable 2FA",
+      regionalSettings: "Regional Settings",
+      language: "Language",
+      country: "Country",
+      timezone: "Timezone",
+      dateFormat: "Date Format",
+      displaySettings: "Display Settings",
+      darkMode: "Dark Mode",
+      darkModeDesc: "Switch between light and dark theme",
+      compactView: "Compact View",
+      compactViewDesc: "Show more data with less spacing",
+      settingsSaved: "Settings saved",
+      settingsSavedDesc: "Your preferences have been updated successfully."
+    },
+    navbar: {
+      forJobSeekers: "For Job Seekers",
+      searchPlaceholder: "Search skills, jobs, or people..."
+    }
+  }
+};
