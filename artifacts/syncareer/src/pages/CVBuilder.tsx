@@ -118,18 +118,13 @@ const CVBuilder = () => {
   const cvAnalysis = useCVAnalysis();
   const isOnline = useOnlineStatus();
   const { userId } = useAuth();
-  const [pendingSync, setPendingSync] = useState(false);
-  const offlineDraft = useOfflineDraft<CVData>('cv-builder', userId);
 
-  // Wrap setCVData so every change writes through to the offline draft.
   const setCVData: typeof setCVDataRaw = (updater) => {
     setCVDataRaw((prev) => {
       const next =
         typeof updater === 'function'
           ? (updater as (p: CVData) => CVData)(prev)
           : updater;
-      offlineDraft.saveDraft(next);
-      setPendingSync(true);
       return next;
     });
   };
