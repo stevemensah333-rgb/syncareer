@@ -32,7 +32,7 @@ const Portfolio = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [savingLinkedin, setSavingLinkedin] = useState(false);
-  const [profileData, setProfileData] = useState<{ bio: string | null; full_name: string | null } | null>(null);
+  const [profileData, setProfileData] = useState<{ bio: string | null; full_name: string | null; username: string | null } | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   
 
