@@ -129,22 +129,12 @@ const CVBuilder = () => {
     });
   };
 
-  // Auto-load saved CV on mount — prefer offline draft if it's newer than cloud copy
+  // Auto-load saved CV on mount from cloud copy.
   useEffect(() => {
     const loadSavedCV = async () => {
       try {
-        // Hydrate from offline draft immediately so the form is usable while we fetch
-        const draftLoaded = !!offlineDraft.draft;
-        if (offlineDraft.draft) {
-          setCVDataRaw(offlineDraft.draft);
-          // A hydrated local draft is unsynced work — surface "Sync now" so the
-          // user can push it to the cloud as soon as they're back online.
-          setPendingSync(true);
-        }
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) { setIsLoadingCV(false); return; }
-        // If we already have a local draft, don't let the cloud fetch clobber it.
-        if (draftLoaded) { setIsLoadingCV(false); return; }
 
         const { data: resume } = await supabase
           .from('resumes')
