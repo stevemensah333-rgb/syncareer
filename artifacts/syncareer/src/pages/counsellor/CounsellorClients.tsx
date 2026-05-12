@@ -43,7 +43,7 @@ interface ClientNote {
 }
 
 export default function CounsellorClients() {
-  const { user } = useAuth();
+  const { userId } = useAuth();
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export default function CounsellorClients() {
             profiles:student_id (id, first_name, last_name, email)
           `
           )
-          .eq('counsellor_id', user?.id)
+          .eq('counsellor_id', userId)
           .order('booking_date', { ascending: false });
 
         if (bookingError) throw bookingError;
@@ -113,10 +113,10 @@ export default function CounsellorClients() {
       }
     };
 
-    if (user?.id) {
+    if (userId) {
       fetchClients();
     }
-  }, [user?.id]);
+  }, [userId]);
 
   const filteredClients = clients.filter((client) =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
