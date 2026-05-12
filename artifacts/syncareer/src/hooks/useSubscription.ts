@@ -15,6 +15,7 @@ export function useSubscription() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const instanceId = useId();
 
   const fetchSubscription = useCallback(async () => {
     try {
