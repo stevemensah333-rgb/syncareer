@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      alumni_outcomes_cache: {
+        Row: {
+          common_roles: Json
+          created_at: string
+          expires_at: string
+          generated_at: string
+          id: string
+          major: string
+          paths_summary: string | null
+          region: string
+          salary_observations: string | null
+          sources: Json
+          top_employers: Json
+          university_name: string
+          updated_at: string
+        }
+        Insert: {
+          common_roles?: Json
+          created_at?: string
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          major: string
+          paths_summary?: string | null
+          region?: string
+          salary_observations?: string | null
+          sources?: Json
+          top_employers?: Json
+          university_name: string
+          updated_at?: string
+        }
+        Update: {
+          common_roles?: Json
+          created_at?: string
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          major?: string
+          paths_summary?: string | null
+          region?: string
+          salary_observations?: string | null
+          sources?: Json
+          top_employers?: Json
+          university_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assessment_responses: {
         Row: {
           assessment_id: string
@@ -42,64 +90,6 @@ export type Database = {
             columns: ["assessment_id"]
             isOneToOne: false
             referencedRelation: "assessments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      assessment_results: {
-        Row: {
-          answers: Json
-          application_id: string | null
-          assessment_id: string
-          candidate_id: string
-          completed_at: string | null
-          id: string
-          passed: boolean | null
-          score: number | null
-          started_at: string
-        }
-        Insert: {
-          answers?: Json
-          application_id?: string | null
-          assessment_id: string
-          candidate_id: string
-          completed_at?: string | null
-          id?: string
-          passed?: boolean | null
-          score?: number | null
-          started_at?: string
-        }
-        Update: {
-          answers?: Json
-          application_id?: string | null
-          assessment_id?: string
-          candidate_id?: string
-          completed_at?: string | null
-          id?: string
-          passed?: boolean | null
-          score?: number | null
-          started_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "assessment_results_application_id_fkey"
-            columns: ["application_id"]
-            isOneToOne: false
-            referencedRelation: "job_applications"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assessment_results_assessment_id_fkey"
-            columns: ["assessment_id"]
-            isOneToOne: false
-            referencedRelation: "skills_assessments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assessment_results_assessment_id_fkey"
-            columns: ["assessment_id"]
-            isOneToOne: false
-            referencedRelation: "skills_assessments_public"
             referencedColumns: ["id"]
           },
         ]
@@ -570,110 +560,6 @@ export type Database = {
           },
         ]
       }
-      employer_details: {
-        Row: {
-          company_description: string | null
-          company_email: string | null
-          company_location: string | null
-          company_name: string
-          company_phone: string | null
-          company_size: string | null
-          company_website: string | null
-          created_at: string | null
-          id: string
-          industry: string | null
-          job_title: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          company_description?: string | null
-          company_email?: string | null
-          company_location?: string | null
-          company_name: string
-          company_phone?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          created_at?: string | null
-          id?: string
-          industry?: string | null
-          job_title?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          company_description?: string | null
-          company_email?: string | null
-          company_location?: string | null
-          company_name?: string
-          company_phone?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          created_at?: string | null
-          id?: string
-          industry?: string | null
-          job_title?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      interview_sessions: {
-        Row: {
-          application_id: string
-          candidate_feedback: string | null
-          created_at: string
-          duration_minutes: number
-          id: string
-          interview_type: string
-          interviewer_notes: string | null
-          location: string | null
-          meeting_link: string | null
-          notes: string | null
-          scheduled_at: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          application_id: string
-          candidate_feedback?: string | null
-          created_at?: string
-          duration_minutes?: number
-          id?: string
-          interview_type?: string
-          interviewer_notes?: string | null
-          location?: string | null
-          meeting_link?: string | null
-          notes?: string | null
-          scheduled_at: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          application_id?: string
-          candidate_feedback?: string | null
-          created_at?: string
-          duration_minutes?: number
-          id?: string
-          interview_type?: string
-          interviewer_notes?: string | null
-          location?: string | null
-          meeting_link?: string | null
-          notes?: string | null
-          scheduled_at?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "interview_sessions_application_id_fkey"
-            columns: ["application_id"]
-            isOneToOne: false
-            referencedRelation: "job_applications"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       job_applications: {
         Row: {
           applicant_id: string
@@ -756,11 +642,15 @@ export type Database = {
       }
       job_postings: {
         Row: {
+          application_deadline: string | null
+          company_domain: string | null
+          company_name: string | null
           created_at: string
           department: string | null
           description: string
-          employer_id: string
+          employer_id: string | null
           employment_type: string
+          experience_level: string | null
           external_id: string | null
           id: string
           is_external: boolean
@@ -777,11 +667,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          application_deadline?: string | null
+          company_domain?: string | null
+          company_name?: string | null
           created_at?: string
           department?: string | null
           description: string
-          employer_id: string
+          employer_id?: string | null
           employment_type: string
+          experience_level?: string | null
           external_id?: string | null
           id?: string
           is_external?: boolean
@@ -798,11 +692,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          application_deadline?: string | null
+          company_domain?: string | null
+          company_name?: string | null
           created_at?: string
           department?: string | null
           description?: string
-          employer_id?: string
+          employer_id?: string | null
           employment_type?: string
+          experience_level?: string | null
           external_id?: string | null
           id?: string
           is_external?: boolean
@@ -1314,7 +1212,6 @@ export type Database = {
           linkedin_url: string | null
           onboarding_completed: boolean | null
           referral_code: string | null
-          tour_completed: boolean | null
           updated_at: string | null
           user_type: string | null
           username: string | null
@@ -1328,7 +1225,6 @@ export type Database = {
           linkedin_url?: string | null
           onboarding_completed?: boolean | null
           referral_code?: string | null
-          tour_completed?: boolean | null
           updated_at?: string | null
           user_type?: string | null
           username?: string | null
@@ -1342,7 +1238,6 @@ export type Database = {
           linkedin_url?: string | null
           onboarding_completed?: boolean | null
           referral_code?: string | null
-          tour_completed?: boolean | null
           updated_at?: string | null
           user_type?: string | null
           username?: string | null
@@ -1520,6 +1415,27 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_jobs: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       skill_endorsements: {
         Row: {
           created_at: string
@@ -1618,45 +1534,6 @@ export type Database = {
           options?: Json
           question?: string
           skill_name?: string
-        }
-        Relationships: []
-      }
-      skills_assessments: {
-        Row: {
-          created_at: string
-          description: string | null
-          duration_minutes: number
-          employer_id: string
-          id: string
-          is_active: boolean | null
-          passing_score: number | null
-          questions: Json
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          duration_minutes?: number
-          employer_id: string
-          id?: string
-          is_active?: boolean | null
-          passing_score?: number | null
-          questions?: Json
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          duration_minutes?: number
-          employer_id?: string
-          id?: string
-          is_active?: boolean | null
-          passing_score?: number | null
-          questions?: Json
-          title?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -2097,59 +1974,6 @@ export type Database = {
       }
     }
     Views: {
-      candidate_interview_view: {
-        Row: {
-          application_id: string | null
-          candidate_feedback: string | null
-          created_at: string | null
-          duration_minutes: number | null
-          id: string | null
-          interview_type: string | null
-          location: string | null
-          meeting_link: string | null
-          notes: string | null
-          scheduled_at: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          application_id?: string | null
-          candidate_feedback?: string | null
-          created_at?: string | null
-          duration_minutes?: number | null
-          id?: string | null
-          interview_type?: string | null
-          location?: string | null
-          meeting_link?: string | null
-          notes?: string | null
-          scheduled_at?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          application_id?: string | null
-          candidate_feedback?: string | null
-          created_at?: string | null
-          duration_minutes?: number | null
-          id?: string | null
-          interview_type?: string | null
-          location?: string | null
-          meeting_link?: string | null
-          notes?: string | null
-          scheduled_at?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "interview_sessions_application_id_fkey"
-            columns: ["application_id"]
-            isOneToOne: false
-            referencedRelation: "job_applications"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       counsellor_booking_view: {
         Row: {
           avatar_url: string | null
@@ -2277,44 +2101,9 @@ export type Database = {
         }
         Relationships: []
       }
-      skills_assessments_public: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          duration_minutes: number | null
-          employer_id: string | null
-          id: string | null
-          is_active: boolean | null
-          passing_score: number | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          duration_minutes?: number | null
-          employer_id?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          passing_score?: number | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          duration_minutes?: number | null
-          employer_id?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          passing_score?: number | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
+      get_profile_user_type: { Args: { _id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
