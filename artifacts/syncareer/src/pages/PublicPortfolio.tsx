@@ -195,12 +195,22 @@ export default function PublicPortfolio() {
   const totalEndorsements = endorsements.reduce((sum, e) => sum + e.count, 0);
 
   return (
-    <PageLayout title={`${displayName}'s Portfolio`}>
-      <div className="max-w-5xl mx-auto">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2 mb-4">
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-background/80 backdrop-blur sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="Syncareer" className="h-7 w-auto" />
+          </Link>
+          <Link
+            to="/auth"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Build your own
+          </Link>
+        </div>
+      </header>
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        <title>{`${displayName}'s Portfolio · Syncareer`}</title>
 
         {/* Profile Header */}
         <Card className="mb-6">
