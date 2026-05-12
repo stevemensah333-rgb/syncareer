@@ -119,6 +119,18 @@ const CVBuilder = () => {
   const cvAnalysis = useCVAnalysis();
   const isOnline = useOnlineStatus();
   const { userId } = useAuth();
+  const [searchParams] = useSearchParams();
+  const targetRole = searchParams.get('targetRole') || searchParams.get('role') || '';
+  const targetCompany = searchParams.get('company') || '';
+  const targetSkills = useMemo(() => {
+    const raw = searchParams.get('skills') || '';
+    return raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  }, [searchParams]);
+  const missingTargetSkills = useMemo(() => {
+    if (!targetSkills.length) return [];
+    const have = new Set(cvData.skills.map(s => s.toLowerCase()));
+    return targetSkills.filter(s => !have.has(s.toLowerCase()));
+  }, [targetSkills, cvData.skills]);
 
   const setCVData: typeof setCVDataRaw = (updater) => {
     setCVDataRaw((prev) => {
