@@ -190,13 +190,6 @@ export default function PublicPortfolio() {
   }
 
   if (!profile) {
-    if (!isOnline) {
-      return (
-        <PageLayout title="Portfolio">
-          <OfflineEmptyState message="This portfolio needs internet the first time. Reconnect to load it." />
-        </PageLayout>
-      );
-    }
     return null;
   }
 
