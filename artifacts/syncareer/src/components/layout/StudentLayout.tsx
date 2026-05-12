@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
-  Star, GraduationCap, TrendingUp, Settings, 
-  ChevronRight, ChevronLeft, Sparkles, FileText, ClipboardList, Mic, LayoutDashboard
+  Hammer, Target, Briefcase, Settings,
+  ChevronRight, ChevronLeft, Sparkles, LayoutDashboard
 } from 'lucide-react';
 
 interface StudentLayoutProps {
