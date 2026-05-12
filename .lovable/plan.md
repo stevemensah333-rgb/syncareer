@@ -1,53 +1,39 @@
-## Goal
-Make the Syncareer web artifact publish reliably again, then document the root cause and verification steps.
+## Root cause
 
-## Findings
-- The publish/dev command is failing before Vite can run: `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "vite" not found`.
-- The sandbox currently has no `node_modules` or `vite` binary installed, so the artifact build command cannot resolve `vite`.
-- The publish artifact has already been partly made standalone-safe, but the workspace still contains dependency formats and config that can reintroduce install/build failures:
-  - `catalog:` and `workspace:*` still exist in other workspace packages and the lockfile.
-  - The web artifact still depends on Replit-only dev plugins during non-production mode.
-  - The web artifact relies on managed `VITE_SUPABASE_*` environment values during build/runtime, so this must stay documented as a publish prerequisite.
+The crash on `/interview-simulator` (and any other page that mounts more than one consumer of `useSubscription` / `useNotifications`, including React StrictMode double-mounts) is:
 
-## Repair plan
-1. **Reproduce the exact failure signal**
-   - Run the exact web publish command after dependency installation so the real production error is visible, not just the missing `vite` symptom.
-   - Also check the dev-server health command because publishing and preview use the same web artifact tooling.
+```
+Error: cannot add `postgres_changes` callbacks for realtime:subscriptions-realtime after `subscribe()`.
+   at useSubscription.ts:40
+```
 
-2. **Stabilize dependency installation**
-   - Ensure workspace dependency configuration cannot block `pnpm install` or prevent bin shims like `vite` from being generated.
-   - Remove or replace any publish-breaking placeholder/specifier patterns that affect the web artifact install path.
-   - Keep changes minimal and avoid touching unrelated app features.
+`useSubscription` and `useNotifications` both create a Supabase Realtime channel with a **hard-coded topic name** (`'subscriptions-realtime'`, `'notifications-realtime'`). Supabase's client returns the *same* channel object for the same topic, so the second hook instance gets a channel that has already been `.subscribe()`-d, and calling `.on('postgres_changes', ...)` on it throws — bubbling up past `GlobalErrorBoundary`.
 
-3. **Harden the web artifact build config**
-   - Make `artifacts/syncareer/vite.config.ts` production-safe and dev-safe.
-   - Avoid loading Replit-only diagnostic plugins unless the environment can actually support them.
-   - Keep PWA output valid and verify required public assets exist.
+This is the only "crash" currently reproducible from the logs; sign-in itself does not crash, but the app crashes anywhere these hooks are mounted twice (e.g. `MobileBottomNav` + a page using subscription gating, or strict-mode double-render).
 
-4. **Run verification**
-   - Install dependencies if needed.
-   - Run the exact production publish build command:
-     `corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vite build --config vite.config.ts`
-   - Run the development build command:
-     `corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vite build --config vite.config.ts --mode development`
-   - Start/verify the dev server health path after the fix.
+## What to change
 
-5. **Document the failure and fix**
-   - Add a short publishing troubleshooting note to the project docs explaining:
-     - root cause,
-     - changed files,
-     - exact verification commands,
-     - how to avoid reintroducing `catalog:`/workspace install issues in the standalone publish artifact,
-     - managed environment variable prerequisites.
+1. `artifacts/syncareer/src/hooks/useSubscription.ts`
+   - Generate a unique channel topic per hook instance: `` `subscriptions-realtime-${useId()}` `` (or `crypto.randomUUID()` stored in a ref).
+   - Move `.on(...)` *before* `.subscribe()` (already correct, but keep it explicit).
+   - Guard cleanup with `channelRef.current = null` after `removeChannel`.
 
-## Files likely to change
-- `pnpm-workspace.yaml`
-- `artifacts/syncareer/vite.config.ts`
-- potentially `artifacts/syncareer/package.json` if dependency placement needs adjustment
-- a documentation file such as `ERROR_REPORT.md` or a new publish troubleshooting note
+2. `artifacts/syncareer/src/hooks/useNotifications.ts`
+   - Same fix: unique per-instance topic, null-out ref on cleanup.
 
-## Success criteria
-- Exact production publish command exits successfully.
-- Dev build exits successfully.
-- Dev server becomes healthy.
-- Documentation records what broke publishing and how it was verified.
+3. Add a defensive note: any future `supabase.channel('...')` calls in hooks must use a unique topic per instance.
+
+4. Verify no other shared-topic channels exist (already checked — only these two files use `.channel(`).
+
+5. `PUBLISH_TROUBLESHOOTING.md` — append a short "Realtime channel collision" section documenting the pattern and the fix, so this doesn't regress.
+
+## Out of scope
+
+- Sign-in flow: no crash signal in logs/replay; current code is fine. No changes needed.
+- "Unnecessary delays": the only delay surfaced is the `Suspense` fallback during lazy-load of `InterviewSimulator`, which is by design. Will not touch unless a specific slow path appears after the crash fix.
+
+## Verification
+
+- Reload `/interview-simulator` — no `GlobalErrorBoundary` trigger, page renders.
+- Open a page that mounts `useSubscription` twice (e.g. dashboard with `MobileBottomNav` + gated content) — no error.
+- Confirm no `postgres_changes` error in console after navigating between pages.

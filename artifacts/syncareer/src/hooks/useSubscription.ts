@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useId } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { SubscriptionData } from '@/services/subscriptionService';
 import { getUserSubscription, isPremiumUser } from '@/services/subscriptionService';
