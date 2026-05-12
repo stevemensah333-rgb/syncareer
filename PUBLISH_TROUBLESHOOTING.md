@@ -16,13 +16,15 @@ The workspace `node_modules` (and the `vite` bin shim under `artifacts/syncareer
 This was triggered by recent edits that left the lockfile / workspace in a state where the install step did not complete successfully on the publish runner — the `pnpm-workspace.yaml` `allowBuilds` placeholders that were already corrected in a previous fix had broken the install, leaving an empty `node_modules`. Once install fails, every subsequent `pnpm --dir … exec vite …` invocation reports "Command vite not found".
 
 ## Fix applied
-1. Re-ran `corepack pnpm install --config.verify-deps-before-run=false` from the repo root so all workspace packages (including `artifacts/syncareer`) repopulated their `node_modules` and bin shims.
-2. Verified the exact production publish command succeeds:
+1. Updated the root `build`, `build:dev`, `dev`, `test`, and `typecheck` scripts to run `corepack pnpm install --config.verify-deps-before-run=false --frozen-lockfile` before invoking package-local binaries from `artifacts/syncareer`.
+2. Re-ran the install from the repo root so all workspace packages (including `artifacts/syncareer`) repopulated their `node_modules` and bin shims.
+3. Verified the exact production publish command succeeds:
    ```
    corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vite build --config vite.config.ts
    ```
    Result: `✓ built in 15.86s`, PWA service worker generated, output in `artifacts/syncareer/dist/public`.
-3. Restarted the Vite dev server. It came up healthy on `http://localhost:8080/` (`VITE v7.3.2 ready in 565 ms`).
+4. Simulated a clean publish runner by copying the repo without `node_modules`, running a frozen lockfile install, then running the same Vite production build. The clean simulation succeeded.
+5. Restarted the Vite dev server. It came up healthy on `http://localhost:8080/` (`VITE v7.3.2 ready in 587 ms`).
 
 ## Verification commands
 ```bash
