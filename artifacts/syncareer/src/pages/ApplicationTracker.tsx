@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import CachedDataIndicator, { OfflineEmptyState } from '@/components/CachedDataIndicator';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
