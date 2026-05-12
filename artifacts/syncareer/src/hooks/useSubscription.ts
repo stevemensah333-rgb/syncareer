@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useId } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { SubscriptionData } from '@/services/subscriptionService';
 import { getUserSubscription, isPremiumUser } from '@/services/subscriptionService';
@@ -15,6 +15,7 @@ export function useSubscription() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const instanceId = useId();
 
   const fetchSubscription = useCallback(async () => {
     try {
@@ -45,21 +46,23 @@ export function useSubscription() {
   useEffect(() => {
     fetchSubscription();
 
-    channelRef.current = supabase
-      .channel('subscriptions-realtime')
+    const channel = supabase
+      .channel(`subscriptions-realtime-${instanceId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'subscriptions' },
         () => fetchSubscription()
-      )
-      .subscribe();
+      );
+    channelRef.current = channel;
+    channel.subscribe();
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
-  }, [fetchSubscription]);
+  }, [fetchSubscription, instanceId]);
 
   return { subscription, isPremium, loading, error, refetch: fetchSubscription };
 }
