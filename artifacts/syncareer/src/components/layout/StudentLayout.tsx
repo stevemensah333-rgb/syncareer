@@ -18,16 +18,10 @@ interface StudentLayoutProps {
 
 const studentNavItems = [
   { label: 'Main', items: [
-    { title: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { title: 'Assessment', icon: ClipboardList, href: '/assessment' },
-    { title: 'Learn', icon: GraduationCap, href: '/learn' },
-    { title: 'Opportunities', icon: TrendingUp, href: '/opportunities' },
-  ]},
-  { label: 'Growth', items: [
-    { title: 'Portfolio', icon: Star, href: '/portfolio' },
-    { title: 'CV Builder', icon: FileText, href: '/cv-builder' },
-    { title: 'Applications', icon: ClipboardList, href: '/applications' },
-    { title: 'Interview Prep', icon: Mic, href: '/interview-simulator' },
+    { title: 'Home', icon: LayoutDashboard, href: '/dashboard' },
+    { title: 'Build', icon: Hammer, href: '/build' },
+    { title: 'Practice', icon: Target, href: '/practice' },
+    { title: 'Apply', icon: Briefcase, href: '/apply' },
   ]},
   { label: 'Account', items: [
     { title: 'SynAI', icon: Sparkles, href: '/ai-coach' },
