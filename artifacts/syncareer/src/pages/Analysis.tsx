@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 
 import { PrescriptiveActionPlan } from '@/components/analysis/PrescriptiveActionPlan';
+import { AlumniOutcomesCard } from '@/components/analysis/AlumniOutcomesCard';
 
 const REGIONS = [
   { value: 'accra_ghana',     label: 'Accra, Ghana' },
@@ -28,6 +29,7 @@ const REGIONS = [
 const Analysis = () => {
   const { studentDetails, loading: profileLoading } = useUserProfile();
   const major = studentDetails?.major;
+  const university = (studentDetails as any)?.school ?? null;
   const [region, setRegion] = useState('accra_ghana');
 
   const { data, loading, error, refresh } = useMarketIntelligence(major, region);
@@ -204,6 +206,13 @@ const Analysis = () => {
         {data && !loading && (
           <AnimatedSection delay={0.06} y={20}>
             <PrescriptiveActionPlan topSkills={data.hard_skills || []} major={major} />
+          </AnimatedSection>
+        )}
+
+        {/* Alumni outcomes — moat content (real grads, real employers) */}
+        {data && !loading && (
+          <AnimatedSection delay={0.07} y={20}>
+            <AlumniOutcomesCard university={university} major={major} region={region} />
           </AnimatedSection>
         )}
 
