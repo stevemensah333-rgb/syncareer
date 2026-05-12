@@ -28,7 +28,7 @@ const REGIONS = [
 const Analysis = () => {
   const { studentDetails, loading: profileLoading } = useUserProfile();
   const major = studentDetails?.major;
-  const [region, setRegion] = useState('global');
+  const [region, setRegion] = useState('accra_ghana');
 
   const { data, loading, error, refresh } = useMarketIntelligence(major, region);
 
