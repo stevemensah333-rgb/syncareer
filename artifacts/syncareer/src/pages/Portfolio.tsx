@@ -139,7 +139,9 @@ const Portfolio = () => {
   const maxSkillCount = topSkills.length > 0 ? topSkills[0][1] : 1;
 
   // Public share URL
-  const publicUrl = currentUserId ? `${window.location.origin}/portfolio/${currentUserId}` : '';
+  const publicUrl = currentUserId
+    ? `${window.location.origin}${profileData?.username ? `/u/${profileData.username}` : `/portfolio/${currentUserId}`}`
+    : '';
 
   const copyShareLink = () => {
     navigator.clipboard.writeText(publicUrl);
