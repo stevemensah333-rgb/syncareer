@@ -55,7 +55,7 @@ export default function FeatureSpotlightSection() {
 
           <div>
             <AnimatedSection>
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-5">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-5">
                 Real tools
               </p>
               <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight mb-10">
@@ -70,7 +70,7 @@ export default function FeatureSpotlightSection() {
                     <h3 className="font-sans text-lg md:text-xl font-semibold text-foreground mb-2 leading-snug tracking-tight">
                       {f.title}
                     </h3>
-                    <p className="text-base text-foreground/65 leading-relaxed max-w-md">
+                    <p className="text-base text-muted-foreground leading-relaxed max-w-md">
                       {f.body}
                     </p>
                   </div>

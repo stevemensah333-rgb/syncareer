@@ -78,7 +78,7 @@ export default function HeroSection({ onSignUp }: HeroSectionProps) {
                 : { y: [0, -6, 0] }
             }
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-3.5 py-1.5 text-[11px] font-medium text-foreground/70 shadow-sm ring-1 ring-black/[0.04] mb-10"
+            className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-3.5 py-1.5 text-[11px] font-medium text-muted-foreground shadow-sm ring-1 ring-black/[0.04] mb-10"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
             For African graduates · Built with care
@@ -126,7 +126,7 @@ export default function HeroSection({ onSignUp }: HeroSectionProps) {
           initial={{ opacity: 0, y: reduce ? 0 : 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.7, ease: EASE }}
-          className="mx-auto mt-8 max-w-xl text-base sm:text-lg text-foreground/70 leading-relaxed"
+          className="mx-auto mt-8 max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed"
         >
           A free 5-minute career assessment, an ATS-ready CV builder, and AI
           interview practice — built to get you hired.

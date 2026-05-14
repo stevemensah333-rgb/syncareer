@@ -43,7 +43,7 @@ export default function SolutionSection() {
     <section id="features" className="relative py-24 md:py-32">
       <div className="container mx-auto px-6 max-w-6xl">
         <AnimatedSection className="max-w-3xl mb-16 md:mb-20">
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-5">
             What you get
           </p>
           <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight">
@@ -67,7 +67,7 @@ export default function SolutionSection() {
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                   />
                   <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
-                    <span className="inline-flex items-center rounded-full bg-white/85 backdrop-blur px-3 py-1 text-[11px] font-medium text-foreground/80 ring-1 ring-black/[0.04]">
+                    <span className="inline-flex items-center rounded-full bg-white/85 backdrop-blur px-3 py-1 text-[11px] font-medium text-muted-foreground ring-1 ring-black/[0.04]">
                       {s.eyebrow}
                     </span>
                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-foreground transition-transform duration-300 group-hover:rotate-45">
@@ -79,7 +79,7 @@ export default function SolutionSection() {
                   <h3 className="font-sans text-xl md:text-2xl font-semibold leading-snug text-foreground mb-2 tracking-tight">
                     {s.title}
                   </h3>
-                  <p className="text-sm text-foreground/65 leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {s.body}
                   </p>
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">

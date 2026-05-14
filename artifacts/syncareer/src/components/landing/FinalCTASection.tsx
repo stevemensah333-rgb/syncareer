@@ -15,7 +15,7 @@ export default function FinalCTASection() {
         </AnimatedSection>
 
         <AnimatedSection delay={0.1}>
-          <p className="mt-6 text-base md:text-lg text-foreground/65 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-6 text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Join thousands of students using Syncareer to discover, prepare for,
             and land their first role.
           </p>

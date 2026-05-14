@@ -17,7 +17,7 @@ export default function LandingFooter() {
 
         <div className="grid md:grid-cols-[2fr_1fr_1fr] gap-12 pt-10 border-t border-foreground/10">
           <div>
-            <p className="text-base text-foreground/65 max-w-sm leading-relaxed">
+            <p className="text-base text-muted-foreground max-w-sm leading-relaxed">
               AI-powered career intelligence for African students and recent
               graduates.
             </p>
@@ -30,14 +30,14 @@ export default function LandingFooter() {
           </div>
 
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-4">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-4">
               Product
             </p>
             <ul className="space-y-3 text-sm">
               <li>
                 <button
                   onClick={() => navigate("/assessment")}
-                  className="text-foreground/75 hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Assessment
                 </button>
@@ -45,7 +45,7 @@ export default function LandingFooter() {
               <li>
                 <button
                   onClick={() => navigate("/cv-builder")}
-                  className="text-foreground/75 hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   CV Builder
                 </button>
@@ -53,7 +53,7 @@ export default function LandingFooter() {
               <li>
                 <button
                   onClick={() => navigate("/pricing")}
-                  className="text-foreground/75 hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Pricing
                 </button>
@@ -62,22 +62,22 @@ export default function LandingFooter() {
           </div>
 
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-4">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-4">
               Company
             </p>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href="/terms" className="text-foreground/75 hover:text-foreground transition-colors">
+                <a href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
                   Terms
                 </a>
               </li>
               <li>
-                <a href="/privacy" className="text-foreground/75 hover:text-foreground transition-colors">
+                <a href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
                   Privacy
                 </a>
               </li>
               <li>
-                <a href="/blog" className="text-foreground/75 hover:text-foreground transition-colors">
+                <a href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
                   Blog
                 </a>
               </li>
@@ -86,7 +86,7 @@ export default function LandingFooter() {
                   href="https://www.instagram.com/syncareer"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-foreground/75 hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Instagram
                 </a>
@@ -95,7 +95,7 @@ export default function LandingFooter() {
           </div>
         </div>
 
-        <div className="mt-14 pt-6 border-t border-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-foreground/55">
+        <div className="mt-14 pt-6 border-t border-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} Syncareer. All rights reserved.</p>
           <p>Made for African graduates.</p>
         </div>
