@@ -51,7 +51,7 @@ export default function HowItWorksSection() {
             >
               {/* Sticky oversized serif numeral — per the brief */}
               <div className="self-start lg:sticky lg:top-32">
-                <div className="font-serif text-foreground/25 text-6xl md:text-8xl lg:text-9xl leading-none tabular-nums">
+                <div aria-hidden="true" className="font-serif text-foreground/25 text-6xl md:text-8xl lg:text-9xl leading-none tabular-nums">
                   {s.n}
                 </div>
               </div>
