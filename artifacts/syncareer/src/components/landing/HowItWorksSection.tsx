@@ -34,7 +34,7 @@ export default function HowItWorksSection() {
     <section id="how-it-works" className="relative py-24 md:py-32">
       <div className="container mx-auto px-6 max-w-6xl">
         <AnimatedSection className="max-w-2xl mb-16 md:mb-20">
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-5">
             How it works
           </p>
           <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight">
@@ -61,7 +61,7 @@ export default function HowItWorksSection() {
                   <h3 className="font-sans text-2xl md:text-3xl font-semibold text-foreground mb-4 leading-tight tracking-tight">
                     {s.title}
                   </h3>
-                  <p className="text-base md:text-lg text-foreground/65 leading-relaxed">
+                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
                     {s.body}
                   </p>
                 </div>

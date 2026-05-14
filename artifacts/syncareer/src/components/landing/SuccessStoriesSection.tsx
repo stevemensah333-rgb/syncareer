@@ -36,7 +36,7 @@ export default function SuccessStoriesSection() {
     <section className="relative py-24 md:py-32">
       <div className="container mx-auto px-6 max-w-6xl">
         <AnimatedSection className="max-w-3xl mb-12 md:mb-16">
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-5">
             Success stories
           </p>
           <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight">
@@ -80,7 +80,7 @@ export default function SuccessStoriesSection() {
                 </div>
                 <div className="pt-4 px-1">
                   <p className="text-sm font-medium text-foreground">{s.name}</p>
-                  <p className="text-xs text-foreground/55">{s.role}</p>
+                  <p className="text-xs text-muted-foreground">{s.role}</p>
                 </div>
               </article>
             </div>

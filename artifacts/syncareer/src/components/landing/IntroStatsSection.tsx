@@ -11,7 +11,7 @@ export default function IntroStatsSection() {
     <section className="relative py-24 md:py-32">
       <div className="container mx-auto px-6 max-w-6xl">
         <AnimatedSection>
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/50 mb-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-5">
             About Syncareer
           </p>
         </AnimatedSection>
@@ -23,7 +23,7 @@ export default function IntroStatsSection() {
             </h2>
           </AnimatedSection>
           <AnimatedSection delay={0.1}>
-            <p className="text-base md:text-lg text-foreground/65 leading-relaxed max-w-md">
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-md">
               Syncareer combines a research-backed RIASEC assessment, an AI CV
               builder tuned for African graduate markets, and voice-based
               interview practice. Every recommendation is explainable. Every
@@ -39,7 +39,7 @@ export default function IntroStatsSection() {
                 <div className="font-sans text-4xl md:text-5xl font-semibold text-foreground tracking-tight leading-none">
                   {s.value}
                 </div>
-                <div className="mt-3 text-xs md:text-sm text-foreground/55">
+                <div className="mt-3 text-xs md:text-sm text-muted-foreground">
                   {s.label}
                 </div>
               </div>
