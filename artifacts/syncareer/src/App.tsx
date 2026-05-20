@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider } from "@/lib/auth";
 import { UserProfileProvider } from "./contexts/UserProfileContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
-import { MobileBottomNav } from "./components/common/MobileBottomNav";
+
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { LoadingFallback } from "./components/LoadingFallback";
 import OfflineBanner from "./components/OfflineBanner";
@@ -137,7 +137,6 @@ const AppContent = () => (
           <TooltipProvider>
             <Toaster />
               <Sonner />
-              <MobileBottomNav />
               <Suspense fallback={<LoadingFallback />}>
               <Routes>
               {/* Public routes */}
