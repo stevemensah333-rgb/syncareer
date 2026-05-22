@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth';
+
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,7 @@ const InterviewSimulator = () => {
   const [step, setStep] = useState<'setup' | 'interview'>('setup');
   const [sessionLength, setSessionLength] = useState<SessionLength>('standard');
   const feedbackModal = useFeedbackModal('interview_simulator');
-  const { userId } = useAuth();
+  
   const [config, setConfig] = useState<InterviewSetupConfig>({
     jobRole: '',
     industry: '',
