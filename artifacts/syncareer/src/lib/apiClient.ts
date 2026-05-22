@@ -9,8 +9,6 @@ export interface ApiError {
   data?: any;
 }
 
-const isOnline = (): boolean => navigator.onLine;
-
 /**
  * Make an API request with centralized error handling
  */
@@ -19,12 +17,6 @@ export async function apiRequest<T>(
   options: RequestInit & { maxRetries?: number; timeout?: number } = {}
 ): Promise<T> {
   const { maxRetries = 1, timeout = 30000, ...fetchOptions } = options;
-
-  if (!isOnline()) {
-    const error = new Error('No internet connection');
-    captureException(error, { url, offline: true });
-    throw error;
-  }
 
   let lastError: Error | null = null;
 
@@ -65,7 +57,7 @@ export async function apiRequest<T>(
     } catch (error) {
       lastError = error as Error;
 
-      if (attempt < maxRetries && isOnline()) {
+      if (attempt < maxRetries) {
         // Wait before retry with exponential backoff
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
         continue;
