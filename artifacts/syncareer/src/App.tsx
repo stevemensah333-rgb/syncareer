@@ -10,7 +10,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { LoadingFallback } from "./components/LoadingFallback";
-import OfflineBanner from "./components/OfflineBanner";
+
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import RoleRoute from "./components/auth/RoleRoute";
 import AdminRoute from "./components/auth/AdminRoute";
@@ -131,7 +131,7 @@ function ResetPasswordPage() {
 const AppContent = () => (
   <GlobalErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <OfflineBanner />
+      
       <UserProfileProvider>
         <NotificationProvider>
           <TooltipProvider>

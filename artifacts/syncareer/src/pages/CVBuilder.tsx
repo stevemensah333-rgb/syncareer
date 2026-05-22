@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+
 
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -117,7 +117,7 @@ const CVBuilder = () => {
   const feedbackModal = useFeedbackModal('cv_builder');
   const [uploadOpen, setUploadOpen] = useState(false);
   const cvAnalysis = useCVAnalysis();
-  const isOnline = useOnlineStatus();
+  
   const { userId } = useAuth();
   const [searchParams] = useSearchParams();
   const targetRole = searchParams.get('targetRole') || searchParams.get('role') || '';
@@ -259,10 +259,6 @@ const CVBuilder = () => {
   };
 
   const handleSaveCV = async () => {
-    if (!isOnline) {
-      toast.info("You're offline — your CV is saved locally and will sync when you reconnect.");
-      return;
-    }
     setIsSaving(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();

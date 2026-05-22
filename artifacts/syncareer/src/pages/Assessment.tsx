@@ -1,7 +1,4 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@/lib/auth';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { useOfflineDraft } from '@/hooks/useOfflineDraft';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
@@ -80,32 +77,6 @@ const Assessment = () => {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [showIntro, setShowIntro] = useState<string | null>(null);
   const [guestSubmitting, setGuestSubmitting] = useState(false);
-  const isOnline = useOnlineStatus();
-  const { userId } = useAuth();
-  const assessmentDraft = useOfflineDraft<{
-    answers: Record<number, number>;
-    currentPage: number;
-    takingAssessment: boolean;
-  }>('assessment', userId);
-  const [pendingOfflineSubmit, setPendingOfflineSubmit] = useState(false);
-
-  // Hydrate from offline draft on first mount
-  useEffect(() => {
-    if (assessmentDraft.draft) {
-      setAnswers(assessmentDraft.draft.answers || {});
-      setCurrentPage(assessmentDraft.draft.currentPage || 0);
-      if (assessmentDraft.draft.takingAssessment) setTakingAssessment(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Persist answers + page on every change
-  useEffect(() => {
-    if (takingAssessment) {
-      assessmentDraft.saveDraft({ answers, currentPage, takingAssessment });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answers, currentPage, takingAssessment]);
 
   const totalPages = Math.ceil(TOTAL_QUESTIONS / QUESTIONS_PER_PAGE);
   const currentQuestions = ASSESSMENT_QUESTIONS.slice(
@@ -178,41 +149,19 @@ const Assessment = () => {
         setTakingAssessment(false);
         setAnswers({});
         setCurrentPage(0);
-        assessmentDraft.clearDraft();
       } finally {
         setGuestSubmitting(false);
       }
     } else {
-      // Authenticated: requires network to save to DB
-      if (!isOnline) {
-        setPendingOfflineSubmit(true);
-        return;
-      }
-      // Clear the pending flag immediately so the auto-sync effect can't re-trigger
-      // while submitAssessment is in flight.
-      setPendingOfflineSubmit(false);
       const success = await submitAssessment(answers);
       if (success) {
         setTakingAssessment(false);
         setAnswers({});
         setCurrentPage(0);
-        assessmentDraft.clearDraft();
         feedbackModal.triggerFeedback();
-      } else if (!isOnline) {
-        // Lost connection mid-submit — re-arm the queue
-        setPendingOfflineSubmit(true);
       }
     }
   };
-
-  // Auto-sync when connection returns. `submitting` guards against re-entry
-  // while the in-flight submission is still pending.
-  useEffect(() => {
-    if (isOnline && pendingOfflineSubmit && !isGuest && !submitting) {
-      handleSubmit();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOnline, pendingOfflineSubmit, isGuest, submitting]);
 
   const allCurrentAnswered = currentQuestions.every(q => answers[q.id] !== undefined);
   const isLastPage = currentPage === totalPages - 1;
@@ -335,31 +284,12 @@ const Assessment = () => {
               <div className="flex flex-col items-end gap-1">
                 <Button
                   onClick={handleSubmit}
-                  disabled={
-                    answeredCount < TOTAL_QUESTIONS ||
-                    submitting ||
-                    guestSubmitting ||
-                    (!isOnline && !isGuest && pendingOfflineSubmit)
-                  }
-                  title={!isOnline && !isGuest ? 'Saved locally — submits when you reconnect' : undefined}
+                  disabled={answeredCount < TOTAL_QUESTIONS || submitting || guestSubmitting}
                   className="rounded-full px-6"
                 >
-                  {(submitting || guestSubmitting)
-                    ? 'Submitting...'
-                    : pendingOfflineSubmit && isOnline
-                      ? 'Sync now'
-                      : pendingOfflineSubmit
-                        ? 'Will submit when online'
-                        : !isOnline && !isGuest
-                          ? 'Saved locally'
-                          : 'Submit Assessment'}
+                  {(submitting || guestSubmitting) ? 'Submitting...' : 'Submit Assessment'}
                   <ClipboardCheck className="h-4 w-4 ml-2" />
                 </Button>
-                {!isOnline && !isGuest && (
-                  <span className="text-[11px] text-muted-foreground">
-                    Saved locally — submits when you reconnect
-                  </span>
-                )}
               </div>
             ) : (
               <Button onClick={handleNext} disabled={!allCurrentAnswered} className="rounded-full px-6">
