@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { useOfflineDraft } from '@/hooks/useOfflineDraft';
-import OfflinePracticeMode from '@/components/OfflinePracticeMode';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,36 +40,18 @@ const InterviewSimulator = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const [step, setStep] = useState<'setup' | 'interview' | 'offline-practice'>('setup');
+  const [step, setStep] = useState<'setup' | 'interview'>('setup');
   const [sessionLength, setSessionLength] = useState<SessionLength>('standard');
   const feedbackModal = useFeedbackModal('interview_simulator');
   const { userId } = useAuth();
-  const setupDraft = useOfflineDraft<InterviewSetupConfig>(
-    'interview-setup',
-    userId,
-  );
-  const [config, setConfigRaw] = useState<InterviewSetupConfig>(
-    () =>
-      setupDraft.draft || {
-        jobRole: '',
-        industry: '',
-        difficulty: 'intermediate',
-        interviewType: 'mixed',
-        resumeText: '',
-        jobDescription: '',
-      },
-  );
-  // Persist setup form to localStorage so it survives reload / offline.
-  const setConfig: typeof setConfigRaw = (updater) => {
-    setConfigRaw((prev) => {
-      const next =
-        typeof updater === 'function'
-          ? (updater as (p: InterviewSetupConfig) => InterviewSetupConfig)(prev)
-          : updater;
-      setupDraft.saveDraft(next);
-      return next;
-    });
-  };
+  const [config, setConfig] = useState<InterviewSetupConfig>({
+    jobRole: '',
+    industry: '',
+    difficulty: 'intermediate',
+    interviewType: 'mixed',
+    resumeText: '',
+    jobDescription: '',
+  });
 
   // Dynamic pre-fill from assessment results + saved CV
   useEffect(() => {
@@ -192,17 +171,9 @@ const InterviewSimulator = () => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
-  const isOnline = useOnlineStatus();
   const startInterview = () => {
     if (!config.jobRole.trim()) {
       toast.error('Please enter a job role');
-      return;
-    }
-    if (!isOnline) {
-      // No internet → drop into the static, offline-friendly practice flow.
-      // AI voice + scored feedback require the network and stay disabled.
-      toast.info("You're offline — starting text-only practice with cached questions. AI feedback is unavailable until you reconnect.");
-      setStep('offline-practice');
       return;
     }
     setStep('interview');
