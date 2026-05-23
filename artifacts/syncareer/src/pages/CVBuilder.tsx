@@ -435,8 +435,7 @@ const CVBuilder = () => {
                 <Button
                   variant="outline"
                   onClick={handleSaveCV}
-                  disabled={isSaving || !isOnline}
-                  title={!isOnline ? 'Saved locally — will sync when online' : undefined}
+                  disabled={isSaving}
                   className="rounded-full px-5"
                 >
                   <Save className="h-4 w-4 mr-2" />

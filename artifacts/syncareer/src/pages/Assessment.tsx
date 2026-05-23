@@ -17,7 +17,7 @@ import {
 } from 'recharts';
 import {
   ClipboardCheck, ArrowRight, ArrowLeft, RotateCcw, Calendar,
-  Trophy, Brain, Clock, LogIn,
+  Trophy, Brain, Clock, LogIn, Compass,
 } from 'lucide-react';
 import { useAssessment, type AssessmentResult } from '@/hooks/useAssessment';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
@@ -134,7 +134,7 @@ const Assessment = () => {
 
   const handleSubmit = async () => {
     if (isGuest) {
-      // Guest: calculate results locally — works offline.
+      // Guest: calculate results locally without requiring an account.
       setGuestSubmitting(true);
       try {
         if (Object.keys(answers).length !== 45) {
