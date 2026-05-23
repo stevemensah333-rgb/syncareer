@@ -6,6 +6,21 @@ verify_jwt = true
 [functions.send-transactional-email]
 verify_jwt = true
 
+[functions.send-onboarding-nudges]
+verify_jwt = true
+
+[functions.aggregate-external-jobs]
+verify_jwt = true
+
+[functions.career-guidance]
+verify_jwt = true
+
+[functions.market-intelligence]
+verify_jwt = true
+
+[functions.alumni-outcomes]
+verify_jwt = true
+
 [functions.preview-transactional-email]
 verify_jwt = false
 
@@ -14,3 +29,4 @@ verify_jwt = false
 
 [functions.handle-email-suppression]
 verify_jwt = false
+

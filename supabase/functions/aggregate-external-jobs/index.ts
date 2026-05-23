@@ -103,6 +103,18 @@ async function searchSource(apiKey: string, source: typeof SOURCES[number]): Pro
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
+  // Service-role only (cron job)
+  const authHeader = req.headers.get('Authorization') || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  let isServiceRole = false;
+  try { isServiceRole = JSON.parse(atob(token.split('.')[1] || ''))?.role === 'service_role'; } catch {}
+  if (!isServiceRole) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+
   try {
     const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
     if (!FIRECRAWL_API_KEY) throw new Error('FIRECRAWL_API_KEY not configured');

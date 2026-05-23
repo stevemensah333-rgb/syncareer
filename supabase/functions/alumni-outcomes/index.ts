@@ -43,6 +43,17 @@ async function firecrawlSearch(query: string, limit = 5) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  // Require authenticated (non-anon) caller
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  let role = ""; let sub = "";
+  try { const p = JSON.parse(atob(token.split(".")[1] || "")); role = p?.role || ""; sub = p?.sub || ""; } catch {}
+  if (role === "anon" || (!sub && role !== "service_role")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { university, major, region = "accra_ghana" } = await req.json();
     if (!university || !major) {
