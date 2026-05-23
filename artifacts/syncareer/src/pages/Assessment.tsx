@@ -17,7 +17,7 @@ import {
 } from 'recharts';
 import {
   ClipboardCheck, ArrowRight, ArrowLeft, RotateCcw, Calendar,
-  Trophy, Brain, Clock, LogIn, Compass,
+  Trophy, Brain, Clock, LogIn, Compass, User, Zap,
 } from 'lucide-react';
 import { useAssessment, type AssessmentResult } from '@/hooks/useAssessment';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
