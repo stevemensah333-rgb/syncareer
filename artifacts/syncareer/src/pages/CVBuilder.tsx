@@ -26,7 +26,6 @@ import { useCVAnalysis } from '@/hooks/useCVAnalysis';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { supabase } from '@/integrations/supabase/client';
-import html2pdf from 'html2pdf.js';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 
 export interface CVData {
@@ -239,6 +238,7 @@ const CVBuilder = () => {
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
+      const { default: html2pdf } = await import('html2pdf.js');
       await html2pdf().set(opt).from(element).save();
       toast.success('CV downloaded! Share your achievement.', {
         action: {
@@ -319,7 +319,7 @@ const CVBuilder = () => {
         toast.success(`CV saved! Your profile matches ${jobCount} open position${jobCount > 1 ? 's' : ''}.`, {
           action: {
             label: 'View Jobs',
-            onClick: () => window.location.href = '/markets',
+            onClick: () => window.location.href = '/opportunities',
           },
         });
       } else {
