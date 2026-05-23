@@ -69,6 +69,22 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Require authenticated (non-anon) caller
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  let role = "";
+  let sub = "";
+  try {
+    const p = JSON.parse(atob(token.split(".")[1] || ""));
+    role = p?.role || "";
+    sub = p?.sub || "";
+  } catch { /* ignore */ }
+  if (role === "anon" || (!sub && role !== "service_role")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
