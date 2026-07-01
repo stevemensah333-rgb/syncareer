@@ -2326,11 +2326,28 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
       get_profile_user_type: { Args: { _id: string }; Returns: string }
+      get_public_portfolio_settings: {
+        Args: { _user_id: string }
+        Returns: {
+          accent_color: string
+          available_for: string
+          created_at: string
+          cv_url: string
+          external_portfolio_url: string
+          headline: string
+          og_image_url: string
+          subheadline: string
+          template: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

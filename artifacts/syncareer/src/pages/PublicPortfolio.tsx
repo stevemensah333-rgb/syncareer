@@ -99,10 +99,11 @@ export default function PublicPortfolio() {
         supabase.from('skill_endorsements').select('skill_name').eq('user_id', userId),
         supabase.from('student_details').select('school, major, degree_type, expected_completion').eq('user_id', userId).maybeSingle(),
         supabase.from('user_skills' as any).select('skill_name, proficiency, category').eq('user_id', userId),
-        supabase.from('portfolio_settings' as any).select('*').eq('user_id', userId).maybeSingle(),
+        supabase.rpc('get_public_portfolio_settings' as any, { _user_id: userId }),
       ]);
 
-      if (settingsRes.data) setSettings(settingsRes.data as any);
+      const settingsRow = Array.isArray(settingsRes.data) ? settingsRes.data[0] : settingsRes.data;
+      if (settingsRow) setSettings(settingsRow as any);
 
       const projectIds = (projectsRes.data || []).map(p => p.id);
       let reviewsByProject: Record<string, number[]> = {};
