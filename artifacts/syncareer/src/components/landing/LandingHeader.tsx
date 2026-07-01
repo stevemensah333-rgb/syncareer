@@ -1,9 +1,6 @@
-import { useState } from "react";
-import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Home, Sparkles, Tag, LogIn, Menu } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Menu, X, ArrowRight } from "lucide-react";
 import syncareerLogo from "@/assets/syncareer-logo.svg";
 
 interface LandingHeaderProps {
@@ -11,92 +8,123 @@ interface LandingHeaderProps {
   onSignUp: () => void;
 }
 
+const NAV = [
+  { label: "Why", href: "#why" },
+  { label: "How it works", href: "#how" },
+  { label: "What you get", href: "#tracks" },
+  { label: "Stories", href: "#stories" },
+  { label: "FAQs", href: "#faqs" },
+];
+
 export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps) {
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { scrollY } = useScroll();
 
-  // Once the user scrolls past the hero, narrow the pill and intensify blur.
-  useMotionValueEvent(scrollY, "change", (y) => {
-    setScrolled(y > 80);
-  });
-
-  const NavItem = ({
-    icon: Icon,
-    label,
-    onClick,
-  }: {
-    icon: typeof Home;
-    label: string;
-    onClick: () => void;
-  }) => (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-white/85 hover:text-white hover:bg-white/10 transition-colors"
-    >
-      <Icon className="h-3.5 w-3.5" />
-      <span>{label}</span>
-    </button>
-  );
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-      <motion.div
-        initial={{ y: -24, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-        className="pointer-events-auto"
-      >
-        <motion.div
-          animate={{
-            scale: scrolled ? 0.96 : 1,
-            backgroundColor: scrolled
-              ? "rgba(0,0,0,0.92)"
-              : "rgba(0,0,0,0.85)",
-            backdropFilter: scrolled ? "blur(28px)" : "blur(14px)",
-          }}
-          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          className="flex items-center gap-1 pl-2 pr-2 py-1.5 rounded-full border border-white/10 shadow-lg"
-        >
+    <>
+      {/* Announcement bar */}
+      <div className="w-full bg-[#0a1512] border-b border-white/5 text-[13px]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-11 flex items-center justify-between gap-4">
+          <p className="text-white/70 truncate">
+            <span className="hidden sm:inline">The free 5-minute career assessment is open — </span>
+            <span className="sm:hidden">Free assessment open — </span>
+            find a path that actually fits.
+          </p>
           <button
-            onClick={() => navigate("/")}
-            className="flex items-center justify-center h-8 w-8 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
-            aria-label="Home"
+            onClick={() => navigate("/assessment")}
+            className="text-[#00c4cc] hover:text-white transition-colors font-medium whitespace-nowrap inline-flex items-center gap-1"
           >
-            <img src={syncareerLogo} alt="Syncareer" className="h-5 w-5 object-contain" />
+            Start now <ArrowRight className="h-3.5 w-3.5" />
           </button>
-          <nav className="hidden sm:flex items-center">
-            <NavItem icon={Home} label="Home" onClick={() => navigate("/")} />
-            <NavItem icon={Sparkles} label="Assessment" onClick={() => navigate("/assessment")} />
-            <NavItem icon={Tag} label="Pricing" onClick={() => navigate("/pricing")} />
-            <NavItem icon={LogIn} label="Sign in" onClick={onSignIn} />
-          </nav>
-          <button
-            className="sm:hidden flex items-center justify-center h-8 w-8 rounded-full text-white/85 hover:bg-white/10"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="right" className="w-72">
-          <SheetHeader>
-            <SheetTitle>Menu</SheetTitle>
-          </SheetHeader>
-          <nav className="flex flex-col gap-1 mt-6">
-            <button onClick={() => { navigate("/"); setMobileOpen(false); }} className="text-left py-3 text-sm">Home</button>
-            <button onClick={() => { navigate("/assessment"); setMobileOpen(false); }} className="text-left py-3 text-sm">Free Assessment</button>
-            <button onClick={() => { navigate("/pricing"); setMobileOpen(false); }} className="text-left py-3 text-sm">Pricing</button>
-            <hr className="my-3 border-border" />
-            <Button variant="ghost" onClick={() => { onSignIn(); setMobileOpen(false); }}>Sign in</Button>
-            <Button onClick={() => { onSignUp(); setMobileOpen(false); }} className="rounded-full">Create account</Button>
+      {/* Header */}
+      <header
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "bg-[#0a1512]/85 backdrop-blur-md border-b border-white/5"
+            : "bg-transparent border-b border-transparent"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-6">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 shrink-0">
+            <img src={syncareerLogo} alt="Syncareer" className="h-7 w-7" />
+            <span className="text-white font-semibold tracking-tight text-lg">
+              Syncareer
+            </span>
+          </button>
+
+          <nav className="hidden lg:flex items-center gap-1">
+            {NAV.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="px-3 py-2 text-sm text-white/70 hover:text-white transition-colors rounded-full"
+              >
+                {item.label}
+              </a>
+            ))}
           </nav>
-        </SheetContent>
-      </Sheet>
-    </header>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onSignIn}
+              className="hidden sm:inline-flex h-9 px-4 items-center text-sm text-white/80 hover:text-white transition-colors"
+            >
+              Sign in
+            </button>
+            <button
+              onClick={() => navigate("/assessment")}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#00c4cc] text-[#0a1512] px-4 text-sm font-semibold hover:bg-[#33d4da] transition-colors shadow-[0_0_0_1px_rgba(0,196,204,0.4),0_10px_30px_-10px_rgba(0,196,204,0.5)]"
+            >
+              Start free
+            </button>
+            <button
+              onClick={() => setOpen(!open)}
+              className="lg:hidden h-9 w-9 grid place-items-center text-white/80 hover:text-white"
+              aria-label="Toggle menu"
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {open && (
+          <div className="lg:hidden border-t border-white/5 bg-[#0a1512]">
+            <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col">
+              {NAV.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className="py-3 text-white/80 hover:text-white border-b border-white/5"
+                >
+                  {item.label}
+                </a>
+              ))}
+              <button
+                onClick={() => {
+                  onSignIn();
+                  setOpen(false);
+                }}
+                className="py-3 text-left text-white/80 hover:text-white"
+              >
+                Sign in
+              </button>
+            </nav>
+          </div>
+        )}
+      </header>
+    </>
   );
 }

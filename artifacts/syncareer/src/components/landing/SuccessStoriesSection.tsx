@@ -1,94 +1,101 @@
 import AnimatedSection from "./AnimatedSection";
 
-const stories = [
+const STORIES = [
   {
-    photo: "/landing/story-1.png",
-    quote:
-      "In four weeks, I went from no clear direction to a UX internship offer.",
+    quote: "In four weeks, I went from no clear direction to a UX internship offer.",
     name: "Ama K.",
     role: "UX Design Intern · KNUST, Level 300",
+    image: "/landing/story-1.png",
   },
   {
-    photo: "/landing/story-2.png",
-    quote:
-      "I was getting zero callbacks. After Syncareer's CV, I had three interviews in a week.",
+    quote: "I was getting zero callbacks. After Syncareer's CV, I had three interviews in a week.",
     name: "Kwame O.",
     role: "CS Graduate · UG, 2025",
+    image: "/landing/story-2.png",
   },
   {
-    photo: "/landing/story-3.png",
-    quote:
-      "Practising with SynAssist made the real interview feel routine. I got the offer.",
+    quote: "Practising with SynAssist made the real interview feel routine. I got the offer.",
     name: "Esi M.",
     role: "Marketing Associate · Ashesi",
+    image: "/landing/story-3.png",
   },
   {
-    photo: "/landing/story-1.png",
-    quote:
-      "Finally, advice that didn't just say 'figure it out yourself'. The plan was specific.",
+    quote: "Finally, advice that didn't just say 'figure it out yourself'. The plan was specific.",
     name: "Naa A.",
     role: "Data Analyst · GIMPA",
+    image: "/landing/story-1.png",
   },
+];
+
+const STATS = [
+  { value: "2,400+", label: "Assessments taken" },
+  { value: "12+", label: "Partner universities" },
+  { value: "94%", label: "Completion rate" },
 ];
 
 export default function SuccessStoriesSection() {
   return (
-    <section className="relative py-24 md:py-32">
-      <div className="container mx-auto px-6 max-w-6xl">
-        <AnimatedSection className="max-w-3xl mb-12 md:mb-16">
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-5">
+    <section id="stories" className="relative py-24 lg:py-32 bg-[#0a1512] text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <AnimatedSection>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#00c4cc]">
             Success stories
           </p>
-          <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight">
-            Students who broke through.
-          </h2>
+          <div className="mt-3 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight max-w-2xl leading-[1.05]">
+              Students who broke through.
+            </h2>
+            <p className="text-lg text-white/70 max-w-md leading-relaxed">
+              Real graduates from Ghanaian universities using Syncareer to
+              discover, prepare, and land their first role.
+            </p>
+          </div>
         </AnimatedSection>
-      </div>
 
-      {/* Horizontal-snap scroller — bleeds to the edge of the viewport */}
-      <AnimatedSection delay={0.1}>
-        <div
-          className="flex gap-5 md:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-6 px-6 md:px-12 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {stories.map((s, i) => (
-            <div
-              key={`${s.name}-${i}`}
-              className="snap-start shrink-0 w-[82%] sm:w-[60%] md:w-[44%] lg:w-[32%]"
-            >
-              <article className="group h-full">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted">
+        {/* Stats bar */}
+        <AnimatedSection delay={0.05}>
+          <div className="mt-14 grid grid-cols-3 rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+            {STATS.map((s, i) => (
+              <div
+                key={s.label}
+                className={`p-6 sm:p-8 ${
+                  i > 0 ? "border-l border-white/10" : ""
+                }`}
+              >
+                <p className="text-3xl sm:text-4xl font-semibold tracking-tight text-[#00c4cc]">
+                  {s.value}
+                </p>
+                <p className="mt-2 text-sm text-white/60">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </AnimatedSection>
+
+        {/* Stories grid */}
+        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {STORIES.map((s, i) => (
+            <AnimatedSection key={s.name + i} delay={i * 0.06}>
+              <figure className="group h-full rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col transition-all duration-300 hover:border-[#00c4cc]/40 hover:-translate-y-1">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-white/5">
                   <img
-                    src={s.photo}
-                    alt=""
+                    src={s.image}
+                    alt={s.name}
                     loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                   />
-                  <div
-                    aria-hidden
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.45) 100%)",
-                    }}
-                  />
-                  <blockquote className="absolute inset-x-5 bottom-5 text-white">
-                    <p className="font-sans text-base md:text-lg font-medium leading-snug">
-                      &ldquo;{s.quote}&rdquo;
-                    </p>
-                  </blockquote>
                 </div>
-                <div className="pt-4 px-1">
-                  <p className="text-sm font-medium text-foreground">{s.name}</p>
-                  <p className="text-xs text-muted-foreground">{s.role}</p>
-                </div>
-              </article>
-            </div>
+                <blockquote className="mt-5 text-[15px] text-white/85 leading-relaxed">
+                  “{s.quote}”
+                </blockquote>
+                <figcaption className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-sm font-semibold text-white">{s.name}</p>
+                  <p className="text-xs text-white/60 mt-0.5">{s.role}</p>
+                </figcaption>
+              </figure>
+            </AnimatedSection>
           ))}
-          {/* Trailing spacer so the last card snaps cleanly */}
-          <div className="shrink-0 w-1 md:w-6" aria-hidden />
         </div>
-      </AnimatedSection>
+      </div>
     </section>
   );
 }

@@ -3,100 +3,101 @@ import syncareerLogo from "@/assets/syncareer-logo.svg";
 
 export default function LandingFooter() {
   const navigate = useNavigate();
+  const year = new Date().getFullYear();
+
+  const cols: { title: string; links: { label: string; onClick?: () => void; href?: string; external?: boolean }[] }[] = [
+    {
+      title: "Product",
+      links: [
+        { label: "Assessment", onClick: () => navigate("/assessment") },
+        { label: "CV Builder", onClick: () => navigate("/cv-builder") },
+        { label: "Interview Simulator", onClick: () => navigate("/interview-simulator") },
+        { label: "Counsellors", onClick: () => navigate("/counsellors") },
+        { label: "Pricing", onClick: () => navigate("/pricing") },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "Blog", href: "/blog" },
+        { label: "Contact", href: "mailto:hello@syncareer.me" },
+      ],
+    },
+    {
+      title: "Legal",
+      links: [
+        { label: "Terms", href: "/terms" },
+        { label: "Privacy", href: "/privacy" },
+        { label: "Unsubscribe", href: "/unsubscribe" },
+      ],
+    },
+    {
+      title: "Social",
+      links: [
+        { label: "Instagram", href: "https://www.instagram.com/syncareer", external: true },
+        { label: "LinkedIn", href: "https://linkedin.com/company/syncareer", external: true },
+      ],
+    },
+  ];
 
   return (
-    <footer className="relative border-t border-foreground/10">
-      <div className="container mx-auto px-6 pt-20 pb-10 max-w-6xl">
-        {/* Editorial wordmark */}
-        <div className="flex items-center gap-3 mb-14">
-          <img src={syncareerLogo} alt="" className="h-10 w-10" />
-          <span className="font-sans text-3xl md:text-4xl font-semibold tracking-tight text-foreground leading-none">
-            Syncareer
-          </span>
-        </div>
-
-        <div className="grid md:grid-cols-[2fr_1fr_1fr] gap-12 pt-10 border-t border-foreground/10">
+    <footer className="relative bg-[#070f0d] text-white border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 pb-10">
+        <div className="grid lg:grid-cols-[1.5fr_repeat(4,1fr)] gap-10">
           <div>
-            <p className="text-base text-muted-foreground max-w-sm leading-relaxed">
+            <div className="flex items-center gap-2">
+              <img src={syncareerLogo} alt="" className="h-8 w-8" />
+              <span className="text-xl font-semibold tracking-tight">
+                Syncareer
+              </span>
+            </div>
+            <p className="mt-5 text-sm text-white/60 max-w-xs leading-relaxed">
               AI-powered career intelligence for African students and recent
               graduates.
             </p>
             <a
               href="mailto:hello@syncareer.me"
-              className="mt-5 inline-block text-sm font-medium text-primary hover:underline underline-offset-4"
+              className="mt-5 inline-block text-sm font-medium text-[#00c4cc] hover:text-white transition-colors"
             >
               hello@syncareer.me
             </a>
           </div>
 
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-4">
-              Product
-            </p>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <button
-                  onClick={() => navigate("/assessment")}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Assessment
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/cv-builder")}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  CV Builder
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate("/pricing")}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Pricing
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-4">
-              Company
-            </p>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <a href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Terms
-                </a>
-              </li>
-              <li>
-                <a href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Privacy
-                </a>
-              </li>
-              <li>
-                <a href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.instagram.com/syncareer"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Instagram
-                </a>
-              </li>
-            </ul>
-          </div>
+          {cols.map((col) => (
+            <div key={col.title}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50 mb-4">
+                {col.title}
+              </p>
+              <ul className="space-y-3 text-sm">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    {l.onClick ? (
+                      <button
+                        onClick={l.onClick}
+                        className="text-white/70 hover:text-white transition-colors"
+                      >
+                        {l.label}
+                      </button>
+                    ) : (
+                      <a
+                        href={l.href}
+                        {...(l.external
+                          ? { target: "_blank", rel: "noopener noreferrer" }
+                          : {})}
+                        className="text-white/70 hover:text-white transition-colors"
+                      >
+                        {l.label}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-14 pt-6 border-t border-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} Syncareer. All rights reserved.</p>
+        <div className="mt-16 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/50">
+          <p>© {year} Syncareer. All rights reserved.</p>
           <p>Made for African graduates.</p>
         </div>
       </div>
