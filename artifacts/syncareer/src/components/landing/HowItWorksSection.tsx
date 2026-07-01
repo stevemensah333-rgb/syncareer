@@ -1,6 +1,6 @@
 import AnimatedSection from "./AnimatedSection";
 
-const steps = [
+const STEPS = [
   {
     n: "01",
     title: "Assess",
@@ -23,50 +23,43 @@ const steps = [
   },
 ];
 
-/**
- * Editorial four-step section. Each step occupies a tall row; its numeral
- * uses `position: sticky` so it pins to the viewport while the prose
- * scrolls past, then releases as the next step takes over. Pure CSS — no
- * scroll-jacking library.
- */
 export default function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="relative py-24 md:py-32">
-      <div className="container mx-auto px-6 max-w-6xl">
-        <AnimatedSection className="max-w-2xl mb-16 md:mb-20">
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-5">
+    <section id="how" className="relative py-24 lg:py-32 bg-[#f7f5ef] text-[#0a1512]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <AnimatedSection>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#009ba1]">
             How it works
           </p>
-          <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-semibold leading-[1.1] text-foreground tracking-tight">
-            Reach your goals in four steps.
-          </h2>
+          <div className="mt-3 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight max-w-2xl leading-[1.05]">
+              Reach your goals in four steps.
+            </h2>
+            <p className="text-lg text-[#0a1512]/70 max-w-md leading-relaxed">
+              Every step produces something you can act on the same day, not just
+              a box you check.
+            </p>
+          </div>
         </AnimatedSection>
 
-        {/* Each step is a tall row with a sticky numeral column on the left */}
-        <div>
-          {steps.map((s, i) => (
-            <div
-              key={s.n}
-              className="relative grid grid-cols-[auto_1fr] gap-6 md:gap-12 border-t border-foreground/10 first:border-t-0 lg:min-h-[60vh] py-10 md:py-16"
-            >
-              {/* Sticky oversized serif numeral — per the brief */}
-              <div className="self-start lg:sticky lg:top-32">
-                <div aria-hidden="true" className="font-serif text-foreground/25 text-6xl md:text-8xl lg:text-9xl leading-none tabular-nums">
-                  {s.n}
+        <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {STEPS.map((step, i) => (
+            <AnimatedSection key={step.n} delay={i * 0.08}>
+              <div className="group rounded-2xl border border-black/8 bg-white p-7 h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_25px_50px_-20px_rgba(0,0,0,0.15)]">
+                <div
+                  aria-hidden
+                  className="text-5xl font-semibold tracking-tight text-[#00c4cc]"
+                >
+                  {step.n}
                 </div>
+                <h3 className="mt-6 text-xl font-semibold tracking-tight">
+                  {step.title}
+                </h3>
+                <p className="mt-3 text-[15px] text-[#0a1512]/70 leading-relaxed">
+                  {step.body}
+                </p>
               </div>
-
-              <AnimatedSection delay={i * 0.04} className="self-center">
-                <div className="max-w-xl">
-                  <h3 className="font-sans text-2xl md:text-3xl font-semibold text-foreground mb-4 leading-tight tracking-tight">
-                    {s.title}
-                  </h3>
-                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-                    {s.body}
-                  </p>
-                </div>
-              </AnimatedSection>
-            </div>
+            </AnimatedSection>
           ))}
         </div>
       </div>

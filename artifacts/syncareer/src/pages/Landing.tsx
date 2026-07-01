@@ -4,14 +4,14 @@ import { useAuth } from "@/lib/auth";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { getHomeRouteForRole } from "@/components/auth/RoleRoute";
 import { setMetaTags, setOrganizationSchema, setApplicationSchema } from "@/lib/seo";
-import LandingBackground from "@/components/landing/LandingBackground";
 import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
-import IntroStatsSection from "@/components/landing/IntroStatsSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
-import SolutionSection from "@/components/landing/SolutionSection";
 import FeatureSpotlightSection from "@/components/landing/FeatureSpotlightSection";
+import ProgramViewSection from "@/components/landing/ProgramViewSection";
 import SuccessStoriesSection from "@/components/landing/SuccessStoriesSection";
+import CommunitySection from "@/components/landing/CommunitySection";
+import FAQSection from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 
@@ -21,7 +21,6 @@ export default function Landing() {
   const { profile, loading: profileLoading } = useUserProfile();
 
   useEffect(() => {
-    // Set SEO metadata
     setMetaTags({
       title: 'Syncareer - Career Development Platform for African Graduates',
       description: 'Build an ATS-ready CV, practice interviews with AI, get career assessment, and connect with career counsellors. Discover the path that fits you.',
@@ -33,21 +32,15 @@ export default function Landing() {
       canonical: 'https://syncareer.com',
       twitterCard: 'summary_large_image',
     });
-
-    // Set structured data
     setOrganizationSchema({
       name: 'Syncareer',
       logo: 'https://syncareer.com/logo.png',
       url: 'https://syncareer.com',
-      sameAs: [
-        'https://twitter.com/syncareer',
-        'https://linkedin.com/company/syncareer',
-      ],
+      sameAs: ['https://twitter.com/syncareer', 'https://linkedin.com/company/syncareer'],
     });
-
     setApplicationSchema({
       name: 'Syncareer',
-      description: 'AI-powered career development and counselling platform for African graduates. Build your CV, practice interviews, get career assessment, and connect with vetted counsellors.',
+      description: 'AI-powered career development and counselling platform for African graduates.',
       url: 'https://syncareer.com',
       image: 'https://syncareer.com/app-preview.png',
       applicationCategory: 'EducationalApplication',
@@ -56,9 +49,7 @@ export default function Landing() {
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
-    // Wait for the cached profile fetch to settle before deciding where to send them.
     if (profileLoading) return;
-    // Brand-new users have no profile row yet — send them to onboarding.
     if (!profile || !profile.onboarding_completed) {
       navigate('/onboarding');
     } else {
@@ -70,16 +61,16 @@ export default function Landing() {
   const openSignUp = () => navigate('/sign-up');
 
   return (
-    <div className="min-h-screen relative font-sans">
-      <LandingBackground />
+    <div className="min-h-screen font-sans bg-[#0a1512] text-white antialiased overflow-x-hidden">
       <LandingHeader onSignIn={openSignIn} onSignUp={openSignUp} />
       <main>
         <HeroSection onSignUp={openSignUp} />
-        <IntroStatsSection />
         <HowItWorksSection />
-        <SolutionSection />
         <FeatureSpotlightSection />
+        <ProgramViewSection />
         <SuccessStoriesSection />
+        <CommunitySection />
+        <FAQSection />
         <FinalCTASection />
       </main>
       <LandingFooter />
