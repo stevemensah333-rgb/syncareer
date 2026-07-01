@@ -2320,6 +2320,48 @@ export type Database = {
         }
         Relationships: []
       }
+      public_portfolio_settings: {
+        Row: {
+          accent_color: string | null
+          available_for: string | null
+          created_at: string | null
+          cv_url: string | null
+          external_portfolio_url: string | null
+          headline: string | null
+          og_image_url: string | null
+          subheadline: string | null
+          template: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          available_for?: string | null
+          created_at?: string | null
+          cv_url?: string | null
+          external_portfolio_url?: string | null
+          headline?: string | null
+          og_image_url?: string | null
+          subheadline?: string | null
+          template?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          available_for?: string | null
+          created_at?: string | null
+          cv_url?: string | null
+          external_portfolio_url?: string | null
+          headline?: string | null
+          og_image_url?: string | null
+          subheadline?: string | null
+          template?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       delete_email: {
