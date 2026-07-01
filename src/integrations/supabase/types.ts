@@ -2320,48 +2320,6 @@ export type Database = {
         }
         Relationships: []
       }
-      public_portfolio_settings: {
-        Row: {
-          accent_color: string | null
-          available_for: string | null
-          created_at: string | null
-          cv_url: string | null
-          external_portfolio_url: string | null
-          headline: string | null
-          og_image_url: string | null
-          subheadline: string | null
-          template: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          accent_color?: string | null
-          available_for?: string | null
-          created_at?: string | null
-          cv_url?: string | null
-          external_portfolio_url?: string | null
-          headline?: string | null
-          og_image_url?: string | null
-          subheadline?: string | null
-          template?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          accent_color?: string | null
-          available_for?: string | null
-          created_at?: string | null
-          cv_url?: string | null
-          external_portfolio_url?: string | null
-          headline?: string | null
-          og_image_url?: string | null
-          subheadline?: string | null
-          template?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       delete_email: {
@@ -2374,6 +2332,22 @@ export type Database = {
         Returns: number
       }
       get_profile_user_type: { Args: { _id: string }; Returns: string }
+      get_public_portfolio_settings: {
+        Args: { _user_id: string }
+        Returns: {
+          accent_color: string
+          available_for: string
+          created_at: string
+          cv_url: string
+          external_portfolio_url: string
+          headline: string
+          og_image_url: string
+          subheadline: string
+          template: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
