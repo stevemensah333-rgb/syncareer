@@ -42,7 +42,6 @@ export default function FeatureSpotlightSection() {
   const navigate = useNavigate();
   return (
     <RippleBackground
-      id="tracks"
       className="py-24 lg:py-32 text-white"
       accent="rgba(0,196,204,0.16)"
     >
