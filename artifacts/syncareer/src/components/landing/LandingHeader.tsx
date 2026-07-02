@@ -9,10 +9,8 @@ interface LandingHeaderProps {
 }
 
 const NAV = [
-  { label: "Why", href: "#why" },
   { label: "How it works", href: "#how" },
   { label: "What you get", href: "#tracks" },
-  { label: "Stories", href: "#stories" },
   { label: "FAQs", href: "#faqs" },
 ];
 
