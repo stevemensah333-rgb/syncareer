@@ -6,11 +6,10 @@ import { getHomeRouteForRole } from "@/components/auth/RoleRoute";
 import { setMetaTags, setOrganizationSchema, setApplicationSchema } from "@/lib/seo";
 import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
-import HowItWorksSection from "@/components/landing/HowItWorksSection";
+import MarqueeTicker from "@/components/landing/MarqueeTicker";
+import TabbedShowcase from "@/components/landing/TabbedShowcase";
 import FeatureSpotlightSection from "@/components/landing/FeatureSpotlightSection";
-import ProgramViewSection from "@/components/landing/ProgramViewSection";
-import SuccessStoriesSection from "@/components/landing/SuccessStoriesSection";
-import CommunitySection from "@/components/landing/CommunitySection";
+import WhyDifferentSection from "@/components/landing/WhyDifferentSection";
 import FAQSection from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
@@ -65,11 +64,10 @@ export default function Landing() {
       <LandingHeader onSignIn={openSignIn} onSignUp={openSignUp} />
       <main>
         <HeroSection onSignUp={openSignUp} />
-        <HowItWorksSection />
+        <MarqueeTicker />
+        <TabbedShowcase />
         <FeatureSpotlightSection />
-        <ProgramViewSection />
-        <SuccessStoriesSection />
-        <CommunitySection />
+        <WhyDifferentSection />
         <FAQSection />
         <FinalCTASection />
       </main>
