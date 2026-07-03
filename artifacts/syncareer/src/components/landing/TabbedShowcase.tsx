@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, PlayCircle, Compass, FileText, Mic, Users } from "lucide-react";
+import { ArrowRight, PlayCircle, Compass, FileText, Mic, Users, X } from "lucide-react";
 import AnimatedSection from "./AnimatedSection";
 
 type Tab = {
@@ -96,21 +96,34 @@ const TABS: Tab[] = [
 
 export default function TabbedShowcase() {
   const [active, setActive] = useState(0);
+  const [videoOpen, setVideoOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const tab = TABS[active];
 
+  useEffect(() => {
+    if (!videoOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setVideoOpen(false);
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [videoOpen]);
+
   return (
-    <section id="how" className="relative py-20 lg:py-28 bg-[#0a1512] text-white">
+    <section id="how" className="relative py-20 lg:py-28 bg-[#f7f5ef] text-[#0a1512]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <AnimatedSection>
           <div className="text-center max-w-3xl mx-auto">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#00c4cc]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#009ba1]">
               How it works
             </p>
             <h2 className="mt-3 text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]">
               Five views of the same engine.
             </h2>
-            <p className="mt-6 text-lg text-white/70 leading-relaxed">
+            <p className="mt-6 text-lg text-[#0a1512]/70 leading-relaxed">
               Watch the system guide you from career discovery to interview-ready
               — one calm step at a time.
             </p>
@@ -118,7 +131,7 @@ export default function TabbedShowcase() {
         </AnimatedSection>
 
         {/* Tabs */}
-        <div className="mt-12 rounded-2xl border border-white/10 bg-white/[0.02] p-1.5 overflow-x-auto">
+        <div className="mt-12 rounded-2xl border border-black/10 bg-white p-1.5 overflow-x-auto shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <div className="flex gap-1 min-w-max">
             {TABS.map((t, i) => {
               const isActive = i === active;
@@ -128,14 +141,14 @@ export default function TabbedShowcase() {
                   onClick={() => setActive(i)}
                   className={`relative flex-1 min-w-[180px] rounded-xl px-4 py-3.5 text-left transition-colors ${
                     isActive
-                      ? "bg-white/[0.06] text-white"
-                      : "text-white/60 hover:text-white/90 hover:bg-white/[0.03]"
+                      ? "bg-[#0a1512] text-white"
+                      : "text-[#0a1512]/60 hover:text-[#0a1512] hover:bg-black/[0.03]"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <span
                       className={`text-xs font-mono ${
-                        isActive ? "text-[#00c4cc]" : "text-white/40"
+                        isActive ? "text-[#00c4cc]" : "text-[#0a1512]/40"
                       }`}
                     >
                       {t.n}
@@ -144,12 +157,6 @@ export default function TabbedShowcase() {
                       {t.label}
                     </span>
                   </div>
-                  {isActive && (
-                    <motion.span
-                      layoutId="tab-underline"
-                      className="absolute inset-x-4 -bottom-px h-px bg-[#00c4cc]"
-                    />
-                  )}
                 </button>
               );
             })}
@@ -159,7 +166,7 @@ export default function TabbedShowcase() {
         {/* Panel */}
         <div className="mt-8 grid lg:grid-cols-2 gap-8 items-stretch">
           {/* Visual */}
-          <div className="relative rounded-2xl border border-white/10 bg-gradient-to-br from-[#0d1c1a] to-[#071110] overflow-hidden min-h-[380px]">
+          <div className="relative rounded-2xl border border-black/10 bg-white overflow-hidden min-h-[380px] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={tab.key}
@@ -170,8 +177,7 @@ export default function TabbedShowcase() {
                 className="absolute inset-0 grid place-items-center p-8"
               >
                 {tab.key === "intro" ? (
-                  <div className="relative w-full aspect-video rounded-xl border border-white/10 bg-black overflow-hidden grid place-items-center">
-                    {/* Video placeholder */}
+                  <div className="relative w-full aspect-video rounded-xl border border-black/10 bg-[#0a1512] overflow-hidden grid place-items-center">
                     <div
                       aria-hidden
                       className="absolute inset-0 opacity-40"
@@ -181,9 +187,9 @@ export default function TabbedShowcase() {
                       }}
                     />
                     <button
-                      onClick={() => navigate("/assessment")}
+                      onClick={() => setVideoOpen(true)}
                       className="relative z-10 flex items-center gap-3 text-white group"
-                      aria-label="Play Syncareer intro"
+                      aria-label="Play Syncareer intro video"
                     >
                       <span className="grid place-items-center h-16 w-16 rounded-full bg-[#00c4cc] text-[#0a1512] shadow-[0_10px_40px_-5px_rgba(0,196,204,0.6)] group-hover:scale-105 transition-transform">
                         <PlayCircle className="h-8 w-8" strokeWidth={1.5} />
@@ -200,27 +206,27 @@ export default function TabbedShowcase() {
                   </div>
                 ) : (
                   <div className="w-full max-w-md">
-                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
+                    <div className="rounded-xl border border-black/10 bg-[#f7f5ef] p-6">
                       <div className="flex items-center justify-between">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-white/70">
-                          <tab.Icon className="h-3.5 w-3.5 text-[#00c4cc]" />
+                        <span className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-2.5 py-1 text-[11px] text-[#0a1512]/70">
+                          <tab.Icon className="h-3.5 w-3.5 text-[#009ba1]" />
                           {tab.label}
                         </span>
-                        <span className="text-[11px] font-mono text-white/40">
+                        <span className="text-[11px] font-mono text-[#0a1512]/40">
                           {tab.n}
                         </span>
                       </div>
-                      <h4 className="mt-5 text-xl font-semibold tracking-tight text-white">
+                      <h4 className="mt-5 text-xl font-semibold tracking-tight text-[#0a1512]">
                         {tab.title}
                       </h4>
                       <div className="mt-5 space-y-2.5">
                         {tab.bullets.map((b, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-2 rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2"
+                            className="flex items-center gap-2 rounded-lg bg-white border border-black/[0.06] px-3 py-2"
                           >
                             <span className="h-1.5 w-1.5 rounded-full bg-[#00c4cc]" />
-                            <span className="text-[13px] text-white/80">{b}</span>
+                            <span className="text-[13px] text-[#0a1512]/80">{b}</span>
                           </div>
                         ))}
                       </div>
@@ -232,7 +238,7 @@ export default function TabbedShowcase() {
           </div>
 
           {/* Copy */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 lg:p-10 flex flex-col">
+          <div className="rounded-2xl border border-black/10 bg-white p-8 lg:p-10 flex flex-col shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={tab.key + "-copy"}
@@ -242,27 +248,27 @@ export default function TabbedShowcase() {
                 transition={{ duration: 0.3 }}
                 className="flex flex-col h-full"
               >
-                <span className="inline-flex self-start items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
+                <span className="inline-flex self-start items-center rounded-full border border-black/10 bg-[#f7f5ef] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0a1512]/70">
                   {tab.eyebrow}
                 </span>
                 <h3 className="mt-6 text-3xl sm:text-4xl font-semibold tracking-tight leading-[1.1]">
                   {tab.title}
                 </h3>
-                <p className="mt-5 text-[15px] text-white/70 leading-relaxed">
+                <p className="mt-5 text-[15px] text-[#0a1512]/70 leading-relaxed">
                   {tab.body}
                 </p>
                 <ul className="mt-6 space-y-3">
                   {tab.bullets.map((b) => (
                     <li key={b} className="flex items-start gap-3">
                       <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#00c4cc] shrink-0" />
-                      <span className="text-[14px] text-white/80">{b}</span>
+                      <span className="text-[14px] text-[#0a1512]/80">{b}</span>
                     </li>
                   ))}
                 </ul>
                 <div className="mt-auto pt-8">
                   <button
                     onClick={() => navigate(tab.cta.href)}
-                    className="group inline-flex items-center gap-2 rounded-full bg-[#00c4cc] px-5 h-11 text-sm font-semibold text-[#0a1512] hover:bg-[#33d4da] transition-colors"
+                    className="group inline-flex items-center gap-2 rounded-full bg-[#0a1512] px-5 h-11 text-sm font-semibold text-white hover:bg-[#00c4cc] hover:text-[#0a1512] transition-colors"
                   >
                     {tab.cta.label}
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -273,6 +279,43 @@ export default function TabbedShowcase() {
           </div>
         </div>
       </div>
+
+      {/* Video Modal */}
+      <AnimatePresence>
+        {videoOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm grid place-items-center p-4"
+            onClick={() => setVideoOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-4xl aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setVideoOpen(false)}
+                className="absolute top-3 right-3 z-10 grid place-items-center h-9 w-9 rounded-full bg-black/60 text-white hover:bg-black/80 transition"
+                aria-label="Close video"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <video
+                ref={videoRef}
+                src="/videos/promo-video.mp4"
+                controls
+                autoPlay
+                className="w-full h-full object-contain bg-black"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
