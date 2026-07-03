@@ -17,14 +17,6 @@ export interface PillarScore {
   description: string;
 }
 
-export interface CourseProgress {
-  id: string;
-  skill_name: string;
-  course_title: string;
-  course_url: string | null;
-  status: string;
-  validated_at: string | null;
-}
 
 export interface ReadinessData {
   overallScore: number;
@@ -32,7 +24,7 @@ export interface ReadinessData {
   pillars: PillarScore[];
   skillGaps: SkillReadiness[];
   radarData: { axis: string; value: number }[];
-  savedCourses: CourseProgress[];
+  
   portfolioCount: number;
   cvScore: number;
   interviewScore: number;
@@ -78,7 +70,7 @@ export const useCareerReadiness = (major: string | null | undefined) => {
     pillars: [],
     skillGaps: [],
     radarData: [],
-    savedCourses: [],
+    
     portfolioCount: 0,
     cvScore: 0,
     interviewScore: 0,
@@ -97,19 +89,18 @@ export const useCareerReadiness = (major: string | null | undefined) => {
       const careerSkills = getCareerSkills(major);
 
       // Fetch all data in parallel
-      const [skillsRes, portfolioRes, resumeRes, interviewsRes, coursesRes] = await Promise.all([
+      const [skillsRes, portfolioRes, resumeRes, interviewsRes] = await Promise.all([
         supabase.from('user_skills').select('skill_name, proficiency').eq('user_id', userId),
         supabase.from('portfolio_projects').select('id').eq('user_id', userId),
         supabase.from('resumes').select('personal_info, education, experience, skills, projects').eq('user_id', userId).eq('is_primary', true).maybeSingle(),
         supabase.from('mock_interviews').select('overall_score').eq('user_id', userId).not('overall_score', 'is', null),
-        supabase.from('user_course_progress').select('*').eq('user_id', userId).eq('career_path', major),
       ]);
 
       const userSkills = skillsRes.data || [];
       const portfolioCount = portfolioRes.data?.length || 0;
       const resume = resumeRes.data;
       const interviews = interviewsRes.data || [];
-      const courses = (coursesRes.data || []) as CourseProgress[];
+
 
       // === Technical Skills (50%) ===
       const skillGaps: SkillReadiness[] = careerSkills.map(skill => {
@@ -180,7 +171,7 @@ export const useCareerReadiness = (major: string | null | undefined) => {
         pillars,
         skillGaps: skillGaps.sort((a, b) => a.mastery - b.mastery), // worst gaps first
         radarData,
-        savedCourses: courses,
+        
         portfolioCount,
         cvScore: Math.round(cvScore),
         interviewScore: Math.round(avgInterview),

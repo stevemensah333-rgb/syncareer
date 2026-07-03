@@ -427,12 +427,12 @@ const Opportunities = () => {
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {job.missingSkills.map(s => (
-                    <button key={s} onClick={() => navigate(`/learn?skill=${encodeURIComponent(s)}`)}
-                      className="text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 px-2 py-0.5 rounded-full transition-colors">
-                      {s} →
-                    </button>
+                    <span key={s} className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+                      {s}
+                    </span>
                   ))}
                 </div>
+
               </div>
             )}
           </CardContent>

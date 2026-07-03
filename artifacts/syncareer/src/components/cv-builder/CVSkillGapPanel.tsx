@@ -1,9 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Target, ArrowRight, Briefcase } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Target, Briefcase } from 'lucide-react';
 import type { AnalysisResult } from '@/hooks/useCVAnalysis';
 
 interface CVSkillGapPanelProps {
@@ -11,18 +9,8 @@ interface CVSkillGapPanelProps {
 }
 
 export const CVSkillGapPanel: React.FC<CVSkillGapPanelProps> = ({ result }) => {
-  const navigate = useNavigate();
   const roles = (result.suggestedRoles || []).slice(0, 5);
   const missing = (result.missingSkills || []).slice(0, 6);
-
-  const handleCloseGaps = () => {
-    if (missing.length === 0) {
-      navigate('/learn');
-      return;
-    }
-    const focus = missing.map(s => encodeURIComponent(s)).join(',');
-    navigate(`/learn?focus=${focus}`);
-  };
 
   return (
     <Card className="border-primary/30 bg-primary/5">
@@ -58,12 +46,7 @@ export const CVSkillGapPanel: React.FC<CVSkillGapPanelProps> = ({ result }) => {
             </p>
             <div className="flex flex-wrap gap-1.5">
               {missing.map(skill => (
-                <Badge
-                  key={skill}
-                  variant="outline"
-                  className="text-xs cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                  onClick={() => navigate(`/learn?focus=${encodeURIComponent(skill)}`)}
-                >
+                <Badge key={skill} variant="outline" className="text-xs">
                   {skill}
                 </Badge>
               ))}
@@ -76,11 +59,6 @@ export const CVSkillGapPanel: React.FC<CVSkillGapPanelProps> = ({ result }) => {
             No specific gaps detected. Keep building your portfolio and CV.
           </p>
         )}
-
-        <Button onClick={handleCloseGaps} size="sm" className="w-full gap-1.5">
-          Close these gaps in Learn
-          <ArrowRight className="h-3 w-3" />
-        </Button>
       </CardContent>
     </Card>
   );

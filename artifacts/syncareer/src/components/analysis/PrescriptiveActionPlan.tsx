@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, BookOpen, Briefcase, Target, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Briefcase, Target, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { HardSkill } from '@/hooks/useMarketIntelligence';
@@ -15,7 +15,7 @@ interface Props {
 /**
  * Prescriptive hero: compares the user's skills against the top in-demand
  * skills for their major and turns it into an action plan with concrete
- * next steps in Learn (close gaps) and Apply (matching jobs).
+ * next step in Apply (matching jobs).
  */
 export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) => {
   const navigate = useNavigate();
@@ -110,16 +110,12 @@ export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) =>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 pt-2">
-          <Button onClick={() => navigate('/learn')} className="gap-2">
-            <BookOpen className="h-4 w-4" />
-            Close skill gaps in Learn
-            <ArrowRight className="h-4 w-4" />
-          </Button>
           <Button variant="outline" onClick={() => navigate('/apply')} className="gap-2">
             <Briefcase className="h-4 w-4" />
             See matching jobs
           </Button>
         </div>
+
       </CardContent>
     </Card>
   );
