@@ -24,7 +24,7 @@ export interface ReadinessData {
   pillars: PillarScore[];
   skillGaps: SkillReadiness[];
   radarData: { axis: string; value: number }[];
-  savedCourses: CourseProgress[];
+  
   portfolioCount: number;
   cvScore: number;
   interviewScore: number;
