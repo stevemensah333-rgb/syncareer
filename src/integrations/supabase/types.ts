@@ -2331,6 +2331,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_my_referral_code: { Args: never; Returns: string }
       get_profile_user_type: { Args: { _id: string }; Returns: string }
       get_public_portfolio_settings: {
         Args: { _user_id: string }

@@ -18,14 +18,15 @@ export const ReferralCard: React.FC = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
-      const [profileRes, referralsRes] = await Promise.all([
-        supabase.from('profiles').select('referral_code').eq('id', session.user.id).single(),
+      const [codeRes, referralsRes] = await Promise.all([
+        supabase.rpc('get_my_referral_code'),
         supabase.from('referrals').select('id').eq('referrer_id', session.user.id).eq('status', 'completed'),
       ]);
 
-      if (profileRes.data?.referral_code) {
-        setReferralCode(profileRes.data.referral_code);
+      if (codeRes.data) {
+        setReferralCode(codeRes.data as string);
       }
+
       setReferralCount(referralsRes.data?.length || 0);
       setLoading(false);
     };
