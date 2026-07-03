@@ -70,7 +70,7 @@ export const useCareerReadiness = (major: string | null | undefined) => {
     pillars: [],
     skillGaps: [],
     radarData: [],
-    savedCourses: [],
+    
     portfolioCount: 0,
     cvScore: 0,
     interviewScore: 0,
@@ -171,7 +171,7 @@ export const useCareerReadiness = (major: string | null | undefined) => {
         pillars,
         skillGaps: skillGaps.sort((a, b) => a.mastery - b.mastery), // worst gaps first
         radarData,
-        savedCourses: courses,
+        
         portfolioCount,
         cvScore: Math.round(cvScore),
         interviewScore: Math.round(avgInterview),
