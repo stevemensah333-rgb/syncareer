@@ -38,7 +38,7 @@ const SignedOut = lazy(() => import("./pages/SignedOut"));
 // Student pages
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Assessment = lazy(() => import("./pages/Assessment"));
-const Learn = lazy(() => import("./pages/Learn"));
+
 const Markets = lazy(() => import("./pages/Markets"));
 const Portfolio = lazy(() => import("./pages/Portfolio"));
 const Analysis = lazy(() => import("./pages/Analysis"));
@@ -179,9 +179,6 @@ const AppContent = () => (
               {/* STUDENT-ONLY ROUTES */}
               <Route path="/dashboard" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><Dashboard /></RoleRoute></ProtectedRoute>
-              } />
-              <Route path="/learn" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['student']}><Learn /></RoleRoute></ProtectedRoute>
               } />
               <Route path="/opportunities" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><Markets /></RoleRoute></ProtectedRoute>

@@ -110,16 +110,12 @@ export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) =>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 pt-2">
-          <Button onClick={() => navigate('/learn')} className="gap-2">
-            <BookOpen className="h-4 w-4" />
-            Close skill gaps in Learn
-            <ArrowRight className="h-4 w-4" />
-          </Button>
           <Button variant="outline" onClick={() => navigate('/apply')} className="gap-2">
             <Briefcase className="h-4 w-4" />
             See matching jobs
           </Button>
         </div>
+
       </CardContent>
     </Card>
   );

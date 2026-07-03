@@ -2,7 +2,7 @@ import React from 'react';
 import { StudentLayout } from '@/components/layout/StudentLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Star, GraduationCap, ArrowRight } from 'lucide-react';
+import { FileText, Star, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const sections = [
@@ -18,12 +18,6 @@ const sections = [
     icon: Star,
     href: '/portfolio',
   },
-  {
-    title: 'Learn',
-    description: 'AI-recommended courses to close skill gaps for your target career.',
-    icon: GraduationCap,
-    href: '/learn',
-  },
 ];
 
 export default function Build() {
@@ -31,9 +25,9 @@ export default function Build() {
   return (
     <StudentLayout title="Build">
       <p className="text-muted-foreground mb-6 max-w-2xl">
-        Everything you need to build a credible professional profile — your CV, portfolio, and skills.
+        Everything you need to build a credible professional profile — your CV and portfolio.
       </p>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {sections.map((s) => (
           <Card key={s.href} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(s.href)}>
             <CardContent className="p-6 space-y-4">
