@@ -8,7 +8,7 @@ import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
 import MarqueeTicker from "@/components/landing/MarqueeTicker";
 import TabbedShowcase from "@/components/landing/TabbedShowcase";
-import FeatureSpotlightSection from "@/components/landing/FeatureSpotlightSection";
+
 import WhyDifferentSection from "@/components/landing/WhyDifferentSection";
 import FAQSection from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
@@ -66,7 +66,7 @@ export default function Landing() {
         <HeroSection onSignUp={openSignUp} />
         <MarqueeTicker />
         <TabbedShowcase />
-        <FeatureSpotlightSection />
+        
         <WhyDifferentSection />
         <FAQSection />
         <FinalCTASection />
