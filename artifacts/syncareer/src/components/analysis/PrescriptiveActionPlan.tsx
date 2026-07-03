@@ -15,7 +15,7 @@ interface Props {
 /**
  * Prescriptive hero: compares the user's skills against the top in-demand
  * skills for their major and turns it into an action plan with concrete
- * next steps in Learn (close gaps) and Apply (matching jobs).
+ * next step in Apply (matching jobs).
  */
 export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) => {
   const navigate = useNavigate();
