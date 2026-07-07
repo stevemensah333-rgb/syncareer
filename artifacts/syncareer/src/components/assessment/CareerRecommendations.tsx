@@ -105,6 +105,7 @@ interface JobMatch {
   location: string;
   employment_type: string;
   skills: string[] | null;
+  matchReason?: string;
 }
 
 interface CareerRecommendationsProps {
@@ -115,7 +116,17 @@ interface CareerRecommendationsProps {
   tertiaryInterest: string | null;
   loading: boolean;
   isGuest?: boolean;
+  userMajor?: string | null;
 }
+
+// Tokenize a phrase for loose matching (drops stopwords + short tokens)
+const STOPWORDS = new Set([
+  'the', 'and', 'for', 'with', 'from', 'that', 'this', 'into', 'over',
+  'a', 'an', 'of', 'to', 'in', 'on', 'at', 'by', 'or', 'is', 'as',
+  'engineer', 'engineering', 'science', 'sciences', 'studies', 'management',
+]);
+const tokenize = (s: string): string[] =>
+  s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(t => t.length > 2 && !STOPWORDS.has(t));
 
 const CareerRecommendations = ({
   recommendations,
@@ -125,24 +136,92 @@ const CareerRecommendations = ({
   tertiaryInterest,
   loading,
   isGuest = false,
+  userMajor = null,
 }: CareerRecommendationsProps) => {
   const navigate = useNavigate();
   const [jobMatches, setJobMatches] = useState<JobMatch[]>([]);
   const [jobsLoading, setJobsLoading] = useState(false);
   const [peerPercentile, setPeerPercentile] = useState<number | null>(null);
 
-  // Fetch matching jobs
+  // Fetch jobs and rank them against the user's major + top recommended careers.
   useEffect(() => {
     if (recommendations.length === 0) return;
     const fetchJobs = async () => {
       setJobsLoading(true);
       try {
+        // Build match vocabulary from top 3 careers + user major
+        const top = recommendations.slice(0, 3);
+        const majorTokens = userMajor ? tokenize(userMajor) : [];
+        const skillTokens = new Set(
+          top.flatMap(r => (r.career.required_skills || []).flatMap(s => tokenize(s)))
+        );
+        const titleTokens = new Set(top.flatMap(r => tokenize(r.career.title)));
+        const industries = new Set(top.map(r => r.career.industry?.toLowerCase()).filter(Boolean));
+        const majorMatches = new Set(
+          top.flatMap(r => (r.career.suggested_majors || []).map(m => m.toLowerCase()))
+        );
+
+        // Pull a larger candidate pool, then score client-side.
         const { data } = await supabase
           .from('job_postings')
-          .select('id, title, location, employment_type, skills')
+          .select('id, title, location, employment_type, skills, description, department')
           .eq('status', 'active')
-          .limit(5);
-        setJobMatches(data || []);
+          .order('created_at', { ascending: false })
+          .limit(80);
+
+        const candidates = (data || []) as Array<JobMatch & { description?: string; department?: string | null }>;
+
+        const scored = candidates.map(job => {
+          const jobTitleTokens = new Set(tokenize(job.title));
+          const jobSkillTokens = new Set((job.skills || []).flatMap(s => tokenize(s)));
+          const deptTokens = job.department ? new Set(tokenize(job.department)) : new Set<string>();
+          const descTokens = job.description ? new Set(tokenize(job.description).slice(0, 60)) : new Set<string>();
+
+          let score = 0;
+          const reasons: string[] = [];
+
+          // Major alignment (strongest signal — user asked for major-relevant jobs)
+          if (majorTokens.length) {
+            const hits = majorTokens.filter(t => jobTitleTokens.has(t) || jobSkillTokens.has(t) || deptTokens.has(t) || descTokens.has(t));
+            if (hits.length) {
+              score += hits.length * 6;
+              reasons.push(`matches your ${userMajor} background`);
+            }
+          }
+          // Suggested-major overlap (career's target degrees)
+          for (const m of majorMatches) {
+            if (job.title.toLowerCase().includes(m) || (job.department?.toLowerCase().includes(m) ?? false)) {
+              score += 4;
+              reasons.push('typical role for this field');
+              break;
+            }
+          }
+          // Title token overlap with recommended careers
+          let titleHits = 0;
+          jobTitleTokens.forEach(t => { if (titleTokens.has(t)) titleHits++; });
+          if (titleHits) { score += titleHits * 3; reasons.push(`aligned with ${top[0]?.career.title ?? 'your top match'}`); }
+          // Skill overlap
+          let skillHits = 0;
+          jobSkillTokens.forEach(t => { if (skillTokens.has(t)) skillHits++; });
+          if (skillHits) { score += skillHits * 2; }
+          // Industry loose match
+          if (industries.size && Array.from(industries).some(i => i && (job.title.toLowerCase().includes(i) || (job.description?.toLowerCase().includes(i) ?? false)))) {
+            score += 1;
+          }
+
+          return { job, score, reason: reasons[0] };
+        });
+
+        const top5 = scored
+          .filter(s => s.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5)
+          .map(s => ({ ...s.job, matchReason: s.reason }));
+
+        // Fallback: if nothing scored (sparse job pool), still surface the most recent 3
+        // so the section isn't empty.
+        const finalJobs = top5.length > 0 ? top5 : candidates.slice(0, 3).map(j => ({ ...j }));
+        setJobMatches(finalJobs);
       } catch (err) {
         console.error('Failed to fetch job matches:', err);
       } finally {
@@ -150,7 +229,7 @@ const CareerRecommendations = ({
       }
     };
     fetchJobs();
-  }, [recommendations]);
+  }, [recommendations, userMajor]);
 
   // Calculate peer percentile
   useEffect(() => {
