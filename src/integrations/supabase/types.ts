@@ -136,33 +136,6 @@ export type Database = {
         }
         Relationships: []
       }
-      cached_free_resources: {
-        Row: {
-          career_path: string
-          created_at: string
-          expires_at: string
-          id: string
-          payload: Json
-          skill_name: string
-        }
-        Insert: {
-          career_path: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          payload: Json
-          skill_name: string
-        }
-        Update: {
-          career_path?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          payload?: Json
-          skill_name?: string
-        }
-        Relationships: []
-      }
       career_guidance_sessions: {
         Row: {
           confidence_score: number | null
@@ -802,182 +775,6 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      learning_activities: {
-        Row: {
-          activity_date: string
-          activity_type: string
-          created_at: string
-          duration_minutes: number | null
-          id: string
-          user_id: string
-        }
-        Insert: {
-          activity_date?: string
-          activity_type: string
-          created_at?: string
-          duration_minutes?: number | null
-          id?: string
-          user_id: string
-        }
-        Update: {
-          activity_date?: string
-          activity_type?: string
-          created_at?: string
-          duration_minutes?: number | null
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      learning_goals: {
-        Row: {
-          created_at: string
-          current_count: number
-          goal_type: string
-          id: string
-          target_count: number
-          updated_at: string
-          user_id: string
-          week_start: string
-        }
-        Insert: {
-          created_at?: string
-          current_count?: number
-          goal_type: string
-          id?: string
-          target_count?: number
-          updated_at?: string
-          user_id: string
-          week_start?: string
-        }
-        Update: {
-          created_at?: string
-          current_count?: number
-          goal_type?: string
-          id?: string
-          target_count?: number
-          updated_at?: string
-          user_id?: string
-          week_start?: string
-        }
-        Relationships: []
-      }
-      learning_module_completions: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          id: string
-          module_number: number
-          passed: boolean
-          path_id: string
-          quiz_answers: Json
-          quiz_questions: Json
-          score: number | null
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          module_number: number
-          passed?: boolean
-          path_id: string
-          quiz_answers?: Json
-          quiz_questions?: Json
-          score?: number | null
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          module_number?: number
-          passed?: boolean
-          path_id?: string
-          quiz_answers?: Json
-          quiz_questions?: Json
-          score?: number | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_module_completions_path_id_fkey"
-            columns: ["path_id"]
-            isOneToOne: false
-            referencedRelation: "learning_paths"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      learning_paths: {
-        Row: {
-          completed_modules: number
-          created_at: string
-          id: string
-          last_module_completed_at: string | null
-          milestone_level: string
-          path_title: string
-          total_modules: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_modules?: number
-          created_at?: string
-          id?: string
-          last_module_completed_at?: string | null
-          milestone_level?: string
-          path_title: string
-          total_modules?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_modules?: number
-          created_at?: string
-          id?: string
-          last_module_completed_at?: string | null
-          milestone_level?: string
-          path_title?: string
-          total_modules?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      learning_streaks: {
-        Row: {
-          created_at: string
-          current_streak: number
-          id: string
-          last_activity_date: string | null
-          longest_streak: number
-          total_learning_days: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_streak?: number
-          id?: string
-          last_activity_date?: string | null
-          longest_streak?: number
-          total_learning_days?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          current_streak?: number
-          id?: string
-          last_activity_date?: string | null
-          longest_streak?: number
-          total_learning_days?: number
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -1693,45 +1490,6 @@ export type Database = {
           },
         ]
       }
-      skill_question_bank: {
-        Row: {
-          career_path: string
-          correct_index: number
-          created_at: string
-          difficulty: string
-          explanation: string
-          id: string
-          module_level: number
-          options: Json
-          question: string
-          skill_name: string
-        }
-        Insert: {
-          career_path: string
-          correct_index: number
-          created_at?: string
-          difficulty?: string
-          explanation?: string
-          id?: string
-          module_level?: number
-          options?: Json
-          question: string
-          skill_name: string
-        }
-        Update: {
-          career_path?: string
-          correct_index?: number
-          created_at?: string
-          difficulty?: string
-          explanation?: string
-          id?: string
-          module_level?: number
-          options?: Json
-          question?: string
-          skill_name?: string
-        }
-        Relationships: []
-      }
       skills_taxonomy: {
         Row: {
           canonical_name: string
@@ -1893,47 +1651,6 @@ export type Database = {
         }
         Relationships: []
       }
-      unmapped_skills_log: {
-        Row: {
-          created_at: string
-          id: string
-          raw_skill_text: string
-          resolved: boolean
-          resolved_at: string | null
-          resolved_skill_id: string | null
-          source_id: string
-          source_table: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          raw_skill_text: string
-          resolved?: boolean
-          resolved_at?: string | null
-          resolved_skill_id?: string | null
-          source_id: string
-          source_table: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          raw_skill_text?: string
-          resolved?: boolean
-          resolved_at?: string | null
-          resolved_skill_id?: string | null
-          source_id?: string
-          source_table?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "unmapped_skills_log_resolved_skill_id_fkey"
-            columns: ["resolved_skill_id"]
-            isOneToOne: false
-            referencedRelation: "skills_taxonomy"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       usage_logs: {
         Row: {
           created_at: string
@@ -1961,45 +1678,6 @@ export type Database = {
           updated_at?: string
           usage_count?: number
           user_id?: string
-        }
-        Relationships: []
-      }
-      user_course_progress: {
-        Row: {
-          career_path: string
-          course_title: string
-          course_url: string | null
-          created_at: string
-          id: string
-          skill_name: string
-          status: string
-          updated_at: string
-          user_id: string
-          validated_at: string | null
-        }
-        Insert: {
-          career_path: string
-          course_title: string
-          course_url?: string | null
-          created_at?: string
-          id?: string
-          skill_name: string
-          status?: string
-          updated_at?: string
-          user_id: string
-          validated_at?: string | null
-        }
-        Update: {
-          career_path?: string
-          course_title?: string
-          course_url?: string | null
-          created_at?: string
-          id?: string
-          skill_name?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
-          validated_at?: string | null
         }
         Relationships: []
       }
@@ -2153,39 +1831,6 @@ export type Database = {
           proficiency?: string
           skill_name?: string
           source?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_stats: {
-        Row: {
-          created_at: string
-          endorsements_received: number
-          id: string
-          network_count: number
-          skill_score: number
-          skills_verified: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          endorsements_received?: number
-          id?: string
-          network_count?: number
-          skill_score?: number
-          skills_verified?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          endorsements_received?: number
-          id?: string
-          network_count?: number
-          skill_score?: number
-          skills_verified?: number
           updated_at?: string
           user_id?: string
         }
@@ -2357,14 +2002,6 @@ export type Database = {
         Returns: boolean
       }
       is_counsellor_owner: { Args: { counsellor_id: string }; Returns: boolean }
-      migrate_skills_to_relational: {
-        Args: never
-        Returns: {
-          mapped_count: number
-          source_table: string
-          unmapped_count: number
-        }[]
-      }
       move_to_dlq: {
         Args: {
           dlq_name: string
