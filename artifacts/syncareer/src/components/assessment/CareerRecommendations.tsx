@@ -355,12 +355,12 @@ const CareerRecommendations = ({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <MapPin className="h-5 w-5 text-primary" />
-            Jobs You Qualify For
+            Jobs matched to your {userMajor ? <span className="italic">{userMajor}</span> : 'profile'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {jobsLoading ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Loading job matches...</p>
+            <p className="text-sm text-muted-foreground text-center py-4">Finding roles for you...</p>
           ) : jobMatches.length > 0 ? (
             <div className="space-y-3">
               {jobMatches.map((job) => (
@@ -370,6 +370,9 @@ const CareerRecommendations = ({
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <MapPin className="h-3 w-3" /> {job.location} · {job.employment_type}
                     </p>
+                    {job.matchReason && (
+                      <p className="text-[11px] text-primary/80 mt-1">Why: {job.matchReason}</p>
+                    )}
                   </div>
                   {isGuest ? (
                     <Button size="sm" variant="outline" onClick={() => navigate('/', { state: { openAuth: true } })} className="shrink-0 text-xs">
