@@ -129,6 +129,21 @@ function ResetPasswordPage() {
   );
 }
 
+const RoutePrefetcher = () => {
+  const { isSignedIn, isLoaded } = useAuth();
+  const { profile } = useUserProfile();
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      prefetchLandingRoutes();
+      return;
+    }
+    if (profile?.user_type === "career_counsellor") prefetchCounsellorRoutes();
+    else prefetchStudentRoutes();
+  }, [isLoaded, isSignedIn, profile?.user_type]);
+  return null;
+};
+
 const AppContent = () => (
   <GlobalErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -136,6 +151,7 @@ const AppContent = () => (
       <UserProfileProvider>
         <NotificationProvider>
           <TooltipProvider>
+            <RoutePrefetcher />
             <Toaster />
               <Sonner />
               <Suspense fallback={<LoadingFallback />}>
