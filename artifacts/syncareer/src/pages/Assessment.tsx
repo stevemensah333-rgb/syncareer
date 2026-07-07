@@ -38,7 +38,7 @@ import {
 } from './assessment/assessmentConstants';
 
 const Assessment = () => {
-  const { profile } = useUserProfile();
+  const { profile, studentDetails } = useUserProfile();
   const navigate = useNavigate();
   const [isGuest, setIsGuest] = useState<boolean | null>(null); // null = loading
   const [guestResult, setGuestResult] = useState<AssessmentResult | null>(null);
@@ -556,6 +556,7 @@ const Assessment = () => {
           tertiaryInterest={activeResult.tertiary_interest}
           loading={careersLoading}
           isGuest={isGuest || false}
+          userMajor={studentDetails?.major ?? null}
         />
         </AnimatedSection>
 
