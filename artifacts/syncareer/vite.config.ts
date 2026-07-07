@@ -56,6 +56,26 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    target: "es2020",
+    cssCodeSplit: true,
+    reportCompressedSize: false,
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("react-dom") || id.match(/[\\/]react[\\/]/) || id.includes("scheduler")) return "react-vendor";
+          if (id.includes("@radix-ui") || id.includes("cmdk") || id.includes("vaul") || id.includes("sonner")) return "ui-vendor";
+          if (id.includes("@supabase") || id.includes("@tanstack/react-query")) return "data-vendor";
+          if (id.includes("recharts") || id.includes("d3-")) return "charts-vendor";
+          if (id.includes("html2pdf") || id.includes("jspdf") || id.includes("html2canvas")) return "pdf-vendor";
+          if (id.includes("i18next") || id.includes("react-i18next")) return "i18n-vendor";
+          if (id.includes("react-router")) return "router-vendor";
+          if (id.includes("lucide-react")) return "icons-vendor";
+          return "vendor";
+        },
+      },
+    },
   },
   server: {
     port,
