@@ -119,7 +119,7 @@ export default function PricingPage() {
           {/* Free Tier */}
           <Card className="bg-slate-800/50 border-slate-700 p-8 flex flex-col justify-between hover:bg-slate-800/70 transition-colors">
             <div>
-              <h3 className="text-2xl font-bold mb-2">Free</h3>
+              <h2 className="text-2xl font-bold mb-2">Free</h2>
               <p className="text-slate-400 mb-6">For exploration and early-stage students.</p>
               <div className="mb-8">
                 <span className="text-4xl font-bold">GH₵0</span>
