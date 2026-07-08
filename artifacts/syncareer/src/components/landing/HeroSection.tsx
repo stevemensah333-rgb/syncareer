@@ -111,9 +111,9 @@ export default function HeroSection({ onSignUp }: HeroSectionProps) {
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#00c4cc]">
             What you get
           </p>
-          <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
             Everything you need to land your first role.
-          </h3>
+          </h2>
 
           <div className="grid grid-cols-3 gap-3 mt-6">
             {[

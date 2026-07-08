@@ -55,7 +55,7 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-6">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 shrink-0">
-            <img src={syncareerLogo} alt="Syncareer" className="h-7 w-7" />
+            <img src={syncareerLogo} alt="Syncareer logo" className="h-7 w-7" />
             <span className="text-white font-semibold tracking-tight text-lg">
               Syncareer
             </span>
