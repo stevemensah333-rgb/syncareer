@@ -45,6 +45,7 @@ export function StudentLayout({ children, title }: StudentLayoutProps) {
           isCollapsed ? "opacity-0 w-0" : "opacity-100 pl-1"
         )}>Syncareer</h2>
         <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(p => !p)}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           className="text-sidebar-foreground hover:bg-sidebar-accent h-7 w-7">
           {isCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
         </Button>

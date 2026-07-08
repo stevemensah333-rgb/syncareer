@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,11 +6,24 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate } from 'react-router-dom';
 import PaystackButton from '@/components/payment/PaystackButton';
 import AnimatedSection from '@/components/landing/AnimatedSection';
+import { setMetaTags } from '@/lib/seo';
 
 export default function PricingPage() {
   const navigate = useNavigate();
   const { isPremium, loading } = useSubscription();
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly');
+
+  useEffect(() => {
+    setMetaTags({
+      title: 'Pricing — Syncareer Free & Premium Plans',
+      description: 'Simple pricing for African graduates. Start free; upgrade to Premium for unlimited assessments, CV exports, mock interviews, and AI coaching.',
+      ogTitle: 'Syncareer Pricing — Free & Premium Plans',
+      ogDescription: 'Free forever tier plus a Premium plan with unlimited assessments, interviews, and AI coaching.',
+      ogUrl: 'https://syncareer.me/pricing',
+      canonical: 'https://syncareer.me/pricing',
+      twitterCard: 'summary_large_image',
+    });
+  }, []);
 
   const pricing = {
     monthly: { price: 30, amount: 3000 }, // pesewas
@@ -106,7 +119,7 @@ export default function PricingPage() {
           {/* Free Tier */}
           <Card className="bg-slate-800/50 border-slate-700 p-8 flex flex-col justify-between hover:bg-slate-800/70 transition-colors">
             <div>
-              <h3 className="text-2xl font-bold mb-2">Free</h3>
+              <h2 className="text-2xl font-bold mb-2">Free</h2>
               <p className="text-slate-400 mb-6">For exploration and early-stage students.</p>
               <div className="mb-8">
                 <span className="text-4xl font-bold">GH₵0</span>
@@ -136,7 +149,7 @@ export default function PricingPage() {
               Recommended
             </div>
             <div>
-              <h3 className="text-2xl font-bold mb-2">Premium</h3>
+              <h2 className="text-2xl font-bold mb-2">Premium</h2>
               <p className="text-slate-300 mb-6">For committed students serious about their careers.</p>
               <div className="mb-8">
                 <span className="text-4xl font-bold">
@@ -223,7 +236,7 @@ export default function PricingPage() {
         {/* CTA Section */}
         <AnimatedSection delay={0.24} y={20}>
         <div className="text-center mt-16 pt-12 border-t border-slate-700">
-          <h3 className="text-2xl font-bold mb-4">Ready to accelerate your career?</h3>
+          <h2 className="text-2xl font-bold mb-4">Ready to accelerate your career?</h2>
           <p className="text-slate-300 mb-6">
             Join thousands of professionals transforming their careers with Syncareer.
           </p>

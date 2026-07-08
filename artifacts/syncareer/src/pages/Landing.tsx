@@ -21,29 +21,52 @@ export default function Landing() {
 
   useEffect(() => {
     setMetaTags({
-      title: 'Syncareer - Career Development Platform for African Graduates',
-      description: 'Build an ATS-ready CV, practice interviews with AI, get career assessment, and connect with career counsellors. Discover the path that fits you.',
+      title: 'Syncareer — Career Platform for African Graduates',
+      description: 'Build an ATS-ready CV, practice interviews with AI, get a career assessment, and connect with vetted counsellors.',
       keywords: 'career development, assessment, CV builder, interview practice, career counselling, African graduates',
-      ogTitle: 'Syncareer - Your Career Development Platform',
-      ogDescription: 'AI-powered career development platform for African graduates. Assessment, CV builder, interview practice, and career counselling.',
-      ogImage: 'https://syncareer.com/og-image.png',
-      ogUrl: 'https://syncareer.com',
-      canonical: 'https://syncareer.com',
+      ogTitle: 'Syncareer — Career Platform for African Graduates',
+      ogDescription: 'AI-powered career development platform for African graduates. Assessment, CV builder, interview practice, and counselling.',
+      ogUrl: 'https://syncareer.me',
+      canonical: 'https://syncareer.me',
       twitterCard: 'summary_large_image',
     });
     setOrganizationSchema({
       name: 'Syncareer',
-      logo: 'https://syncareer.com/logo.png',
-      url: 'https://syncareer.com',
+      logo: 'https://syncareer.me/logo.png',
+      url: 'https://syncareer.me',
       sameAs: ['https://twitter.com/syncareer', 'https://linkedin.com/company/syncareer'],
     });
     setApplicationSchema({
       name: 'Syncareer',
       description: 'AI-powered career development and counselling platform for African graduates.',
-      url: 'https://syncareer.com',
-      image: 'https://syncareer.com/app-preview.png',
+      url: 'https://syncareer.me',
+      image: 'https://syncareer.me/app-preview.png',
       applicationCategory: 'EducationalApplication',
     });
+    // FAQPage structured data mirrors FAQSection questions
+    const faqs = [
+      { q: 'Is Syncareer really free?', a: 'Yes. The career assessment, CV builder starter, and interview practice starter are free forever. No card required.' },
+      { q: 'How long does the assessment take?', a: 'About 5 minutes. It uses a RIASEC diagnostic plus a short skills pass, then maps you against 25+ career paths.' },
+      { q: 'Will the CV actually pass ATS filters?', a: 'Yes. Templates are engineered for African graduate hiring filters with a built-in strength score.' },
+      { q: 'What is SynAssist and how does interview practice work?', a: 'SynAssist is our voice-based interview coach that runs role-specific sessions with actionable feedback.' },
+      { q: 'Who are the career counsellors?', a: 'Vetted, experienced counsellors — many alumni from Ghanaian universities. You can browse profiles and book sessions.' },
+      { q: 'Which students is this built for?', a: 'Senior high, university, TVET students, and recent graduates across Ghana and the broader region.' },
+    ];
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'faq-jsonld';
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    });
+    document.getElementById('faq-jsonld')?.remove();
+    document.head.appendChild(script);
+    return () => { document.getElementById('faq-jsonld')?.remove(); };
   }, []);
 
   useEffect(() => {
