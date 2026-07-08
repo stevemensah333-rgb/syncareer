@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,11 +6,24 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate } from 'react-router-dom';
 import PaystackButton from '@/components/payment/PaystackButton';
 import AnimatedSection from '@/components/landing/AnimatedSection';
+import { setMetaTags } from '@/lib/seo';
 
 export default function PricingPage() {
   const navigate = useNavigate();
   const { isPremium, loading } = useSubscription();
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly');
+
+  useEffect(() => {
+    setMetaTags({
+      title: 'Pricing — Syncareer Free & Premium Plans',
+      description: 'Simple pricing for African graduates. Start free; upgrade to Premium for unlimited assessments, CV exports, mock interviews, and AI coaching.',
+      ogTitle: 'Syncareer Pricing — Free & Premium Plans',
+      ogDescription: 'Free forever tier plus a Premium plan with unlimited assessments, interviews, and AI coaching.',
+      ogUrl: 'https://syncareer.me/pricing',
+      canonical: 'https://syncareer.me/pricing',
+      twitterCard: 'summary_large_image',
+    });
+  }, []);
 
   const pricing = {
     monthly: { price: 30, amount: 3000 }, // pesewas
