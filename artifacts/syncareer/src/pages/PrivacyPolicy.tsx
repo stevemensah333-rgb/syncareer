@@ -1,4 +1,17 @@
+import { useEffect } from 'react';
+import { setMetaTags } from '@/lib/seo';
+
 export default function PrivacyPolicy() {
+  useEffect(() => {
+    setMetaTags({
+      title: 'Privacy Policy — Syncareer',
+      description: 'How Syncareer collects, uses, and protects your personal information across our career platform.',
+      ogTitle: 'Syncareer Privacy Policy',
+      ogDescription: 'How Syncareer collects, uses, and protects your personal information.',
+      ogUrl: 'https://syncareer.me/privacy',
+      canonical: 'https://syncareer.me/privacy',
+    });
+  }, []);
   return (
     <div className="min-h-screen bg-background py-16 px-6">
       <div className="container mx-auto max-w-3xl prose prose-neutral dark:prose-invert">
