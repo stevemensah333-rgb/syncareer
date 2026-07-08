@@ -33,11 +33,17 @@ Deno.serve(async (req) => {
 
   try {
     const { major, region = "accra_ghana" } = await req.json();
-    if (!major || typeof major !== "string") {
-      return new Response(JSON.stringify({ error: "major is required" }), {
+    if (!major || typeof major !== "string" || major.length > 200) {
+      return new Response(JSON.stringify({ error: "major is required (max 200 chars)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (typeof region !== "string" || !(region in REGION_LABELS)) {
+      return new Response(JSON.stringify({ error: "Invalid region" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const safeMajor = major.replace(/[\r\n"`]/g, " ").trim();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
