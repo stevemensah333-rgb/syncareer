@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     }
 
     // --- Step 3: synthesize with Lovable AI ---
-    const prompt = `You are a career-outcomes researcher. Using the web evidence and internal signal below, produce a concrete picture of where ${major} graduates from ${university} actually end up working in ${regionLabel}.
+    const prompt = `You are a career-outcomes researcher. Using the web evidence and internal signal below, produce a concrete picture of where ${safeMajor} graduates from ${safeUniversity} actually end up working in ${regionLabel}.
 
 Be specific. Name real employers from the evidence. If evidence is thin, say so honestly in paths_summary and lower the confidence implicitly by being conservative.
 
