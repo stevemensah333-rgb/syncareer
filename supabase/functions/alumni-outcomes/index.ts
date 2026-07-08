@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
         .limit(100);
       const titles = (apps ?? []).map((a: any) => a.job_postings?.title).filter(Boolean);
       if (titles.length > 0) {
-        internalSignal = `Internal Syncareer signal: ${userIds.length} users from ${university} studying ${major} have applied to roles like: ${titles.slice(0, 15).join(", ")}.`;
+        internalSignal = `Internal Syncareer signal: ${userIds.length} users from ${safeUniversity} studying ${safeMajor} have applied to roles like: ${titles.slice(0, 15).join(", ")}.`;
       }
     }
 
