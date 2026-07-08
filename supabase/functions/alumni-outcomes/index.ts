@@ -55,11 +55,24 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { university, major, region = "accra_ghana" } = await req.json();
+    const body = await req.json();
+    const university = typeof body.university === "string" ? body.university : "";
+    const major = typeof body.major === "string" ? body.major : "";
+    const region = typeof body.region === "string" ? body.region : "accra_ghana";
     if (!university || !major) {
       return new Response(JSON.stringify({ error: "university and major required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    if (university.length > 300 || major.length > 200) {
+      return new Response(JSON.stringify({ error: "university (max 300) or major (max 200) too long" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (!(region in REGION_LABELS)) {
+      return new Response(JSON.stringify({ error: "Invalid region" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const safeUniversity = university.replace(/[\r\n"`]/g, " ").trim();
+    const safeMajor = major.replace(/[\r\n"`]/g, " ").trim();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
