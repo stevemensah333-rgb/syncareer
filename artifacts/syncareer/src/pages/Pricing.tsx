@@ -149,7 +149,7 @@ export default function PricingPage() {
               Recommended
             </div>
             <div>
-              <h3 className="text-2xl font-bold mb-2">Premium</h3>
+              <h2 className="text-2xl font-bold mb-2">Premium</h2>
               <p className="text-slate-300 mb-6">For committed students serious about their careers.</p>
               <div className="mb-8">
                 <span className="text-4xl font-bold">
