@@ -55,11 +55,24 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { university, major, region = "accra_ghana" } = await req.json();
+    const body = await req.json();
+    const university = typeof body.university === "string" ? body.university : "";
+    const major = typeof body.major === "string" ? body.major : "";
+    const region = typeof body.region === "string" ? body.region : "accra_ghana";
     if (!university || !major) {
       return new Response(JSON.stringify({ error: "university and major required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    if (university.length > 300 || major.length > 200) {
+      return new Response(JSON.stringify({ error: "university (max 300) or major (max 200) too long" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (!(region in REGION_LABELS)) {
+      return new Response(JSON.stringify({ error: "Invalid region" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const safeUniversity = university.replace(/[\r\n"`]/g, " ").trim();
+    const safeMajor = major.replace(/[\r\n"`]/g, " ").trim();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -85,9 +98,9 @@ Deno.serve(async (req) => {
 
     // --- Step 1: gather public web evidence via Firecrawl ---
     const queries = [
-      `"${university}" ${major} alumni LinkedIn ${regionLabel}`,
-      `"${university}" ${major} graduates working at site:linkedin.com`,
-      `${university} ${major} graduate first job ${regionLabel}`,
+      `"${safeUniversity}" ${safeMajor} alumni LinkedIn ${regionLabel}`,
+      `"${safeUniversity}" ${safeMajor} graduates working at site:linkedin.com`,
+      `${safeUniversity} ${safeMajor} graduate first job ${regionLabel}`,
     ];
     const searches = await Promise.all(queries.map(q => firecrawlSearch(q, 5)));
     const webEvidence = searches.flat().slice(0, 12).map((r: any) => ({
@@ -115,12 +128,12 @@ Deno.serve(async (req) => {
         .limit(100);
       const titles = (apps ?? []).map((a: any) => a.job_postings?.title).filter(Boolean);
       if (titles.length > 0) {
-        internalSignal = `Internal Syncareer signal: ${userIds.length} users from ${university} studying ${major} have applied to roles like: ${titles.slice(0, 15).join(", ")}.`;
+        internalSignal = `Internal Syncareer signal: ${userIds.length} users from ${safeUniversity} studying ${safeMajor} have applied to roles like: ${titles.slice(0, 15).join(", ")}.`;
       }
     }
 
     // --- Step 3: synthesize with Lovable AI ---
-    const prompt = `You are a career-outcomes researcher. Using the web evidence and internal signal below, produce a concrete picture of where ${major} graduates from ${university} actually end up working in ${regionLabel}.
+    const prompt = `You are a career-outcomes researcher. Using the web evidence and internal signal below, produce a concrete picture of where ${safeMajor} graduates from ${safeUniversity} actually end up working in ${regionLabel}.
 
 Be specific. Name real employers from the evidence. If evidence is thin, say so honestly in paths_summary and lower the confidence implicitly by being conservative.
 
@@ -184,7 +197,7 @@ Return ONLY a JSON object with this exact shape:
       { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error(e);
-    return new Response(JSON.stringify({ error: String(e) }),
+    return new Response(JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

@@ -33,11 +33,17 @@ Deno.serve(async (req) => {
 
   try {
     const { major, region = "accra_ghana" } = await req.json();
-    if (!major || typeof major !== "string") {
-      return new Response(JSON.stringify({ error: "major is required" }), {
+    if (!major || typeof major !== "string" || major.length > 200) {
+      return new Response(JSON.stringify({ error: "major is required (max 200 chars)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (typeof region !== "string" || !(region in REGION_LABELS)) {
+      return new Response(JSON.stringify({ error: "Invalid region" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const safeMajor = major.replace(/[\r\n"`]/g, " ").trim();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -68,7 +74,7 @@ Deno.serve(async (req) => {
     const isRemote = region.startsWith("remote_");
     const currency = region === "accra_ghana" ? "GHS" : region === "lagos_nigeria" ? "NGN" : region === "nairobi_kenya" ? "KES" : region === "cape_town_sa" ? "ZAR" : "USD";
 
-    const prompt = `You are a senior labour-market analyst. Produce a hyper-local, actionable career market report for ENTRY-LEVEL roles for someone studying "${major}" who wants to work in: ${regionLabel}.
+    const prompt = `You are a senior labour-market analyst. Produce a hyper-local, actionable career market report for ENTRY-LEVEL roles for someone studying "${safeMajor}" who wants to work in: ${regionLabel}.
 
 Rules:
 - Be concrete and local. Name actual employers, actual job titles, actual salary ranges in ${currency} (entry-level reality, not aspirational).
@@ -158,7 +164,7 @@ IMPORTANT: rename salary fields to use lowercase currency suffix (e.g. avg_entry
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error(e);
-    return new Response(JSON.stringify({ error: String(e) }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
