@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     const isRemote = region.startsWith("remote_");
     const currency = region === "accra_ghana" ? "GHS" : region === "lagos_nigeria" ? "NGN" : region === "nairobi_kenya" ? "KES" : region === "cape_town_sa" ? "ZAR" : "USD";
 
-    const prompt = `You are a senior labour-market analyst. Produce a hyper-local, actionable career market report for ENTRY-LEVEL roles for someone studying "${major}" who wants to work in: ${regionLabel}.
+    const prompt = `You are a senior labour-market analyst. Produce a hyper-local, actionable career market report for ENTRY-LEVEL roles for someone studying "${safeMajor}" who wants to work in: ${regionLabel}.
 
 Rules:
 - Be concrete and local. Name actual employers, actual job titles, actual salary ranges in ${currency} (entry-level reality, not aspirational).
