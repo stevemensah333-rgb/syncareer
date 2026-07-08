@@ -98,9 +98,9 @@ Deno.serve(async (req) => {
 
     // --- Step 1: gather public web evidence via Firecrawl ---
     const queries = [
-      `"${university}" ${major} alumni LinkedIn ${regionLabel}`,
-      `"${university}" ${major} graduates working at site:linkedin.com`,
-      `${university} ${major} graduate first job ${regionLabel}`,
+      `"${safeUniversity}" ${safeMajor} alumni LinkedIn ${regionLabel}`,
+      `"${safeUniversity}" ${safeMajor} graduates working at site:linkedin.com`,
+      `${safeUniversity} ${safeMajor} graduate first job ${regionLabel}`,
     ];
     const searches = await Promise.all(queries.map(q => firecrawlSearch(q, 5)));
     const webEvidence = searches.flat().slice(0, 12).map((r: any) => ({
