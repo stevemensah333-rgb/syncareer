@@ -236,7 +236,7 @@ export default function PricingPage() {
         {/* CTA Section */}
         <AnimatedSection delay={0.24} y={20}>
         <div className="text-center mt-16 pt-12 border-t border-slate-700">
-          <h3 className="text-2xl font-bold mb-4">Ready to accelerate your career?</h3>
+          <h2 className="text-2xl font-bold mb-4">Ready to accelerate your career?</h2>
           <p className="text-slate-300 mb-6">
             Join thousands of professionals transforming their careers with Syncareer.
           </p>
