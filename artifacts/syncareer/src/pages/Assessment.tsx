@@ -46,17 +46,20 @@ const Assessment = () => {
   // Set SEO metadata
   useEffect(() => {
     setMetaTags({
-      title: 'Free Career Assessment - Discover Your RIASEC Profile | Syncareer',
+      title: 'Free RIASEC Career Assessment | Syncareer',
       description: 'Take our comprehensive career assessment to discover your personality, skills, and ideal career paths. Free, no sign-up required.',
       keywords: 'career assessment, RIASEC, personality test, career test, skills assessment',
-      ogTitle: 'Discover Your Career Profile - Free Assessment',
+      ogTitle: 'Discover Your Career Profile — Free Assessment',
       ogDescription: 'Find your ideal career path with our AI-powered RIASEC assessment.',
-      canonical: 'https://syncareer.com/assessment',
+      ogUrl: 'https://syncareer.me/assessment',
+      ogImage: 'https://syncareer.me/og-image.png',
+      canonical: 'https://syncareer.me/assessment',
+      twitterCard: 'summary_large_image',
     });
 
     setBreadcrumbSchema([
-      { name: 'Home', url: 'https://syncareer.com' },
-      { name: 'Assessment', url: 'https://syncareer.com/assessment' },
+      { name: 'Home', url: 'https://syncareer.me' },
+      { name: 'Assessment', url: 'https://syncareer.me/assessment' },
     ]);
   }, []);
 
