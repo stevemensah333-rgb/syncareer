@@ -1,4 +1,17 @@
+import { useEffect } from 'react';
+import { setMetaTags } from '@/lib/seo';
+
 export default function TermsAndConditions() {
+  useEffect(() => {
+    setMetaTags({
+      title: 'Terms & Conditions — Syncareer',
+      description: 'The terms governing your use of Syncareer, our AI-powered career intelligence platform for students and graduates.',
+      ogTitle: 'Syncareer Terms & Conditions',
+      ogDescription: 'Terms governing your use of the Syncareer career platform.',
+      ogUrl: 'https://syncareer.me/terms',
+      canonical: 'https://syncareer.me/terms',
+    });
+  }, []);
   return (
     <div className="min-h-screen bg-background py-16 px-6">
       <div className="container mx-auto max-w-3xl prose prose-neutral dark:prose-invert">
