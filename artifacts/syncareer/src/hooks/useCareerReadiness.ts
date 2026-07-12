@@ -70,8 +70,8 @@ export const useCareerReadiness = (major: string | null | undefined) => {
     pillars: [],
     skillGaps: [],
     radarData: [],
-    
-    portfolioCount: 0,
+
+    projectCount: 0,
     cvScore: 0,
     interviewScore: 0,
     loading: true,
