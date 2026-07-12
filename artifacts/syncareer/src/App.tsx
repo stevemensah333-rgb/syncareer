@@ -193,9 +193,6 @@ const AppContent = () => (
               <Route path="/opportunities" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><Markets /></RoleRoute></ProtectedRoute>
               } />
-              <Route path="/portfolio" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['student']}><Portfolio /></RoleRoute></ProtectedRoute>
-              } />
               <Route path="/analysis" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><Analysis /></RoleRoute></ProtectedRoute>
               } />
