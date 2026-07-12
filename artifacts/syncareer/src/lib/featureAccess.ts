@@ -2,7 +2,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 // ─── Feature Keys ──────────────────────────────────────────────────────────
 export type FeatureKey =
-  | 'portfolio_upload'
   | 'ai_coach_session'
   | 'mock_interview'
   | 'cv_export'
@@ -13,7 +12,7 @@ export type FeatureKey =
 
 // ─── Quantified Free Tier Limits ─────────────────────────────────────────
 export const FREE_LIMITS: Record<string, { limit: number; period: 'monthly' | 'total' | 'active'; label: string }> = {
-  portfolio_upload:               { limit: 3,  period: 'total',   label: 'Portfolio projects' },
+  
   ai_coach_session:               { limit: 5,  period: 'monthly', label: 'AI Coach sessions' },
   mock_interview:                 { limit: 3,  period: 'monthly', label: 'Mock interviews' },
   cv_export:                      { limit: 2,  period: 'monthly', label: 'CV exports' },
@@ -79,7 +78,7 @@ export async function getMonthlyUsage(userId: string, featureKey: string): Promi
 
 // ─── Human-readable labels ────────────────────────────────────────────────
 export const FEATURE_LABELS: Record<string, string> = {
-  portfolio_upload: 'Portfolio Projects',
+  
   ai_coach_session: 'AI Coach Sessions',
   mock_interview: 'Mock Interviews',
   cv_export: 'CV Exports',
