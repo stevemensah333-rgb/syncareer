@@ -21,20 +21,18 @@ import { FREE_LIMITS, getCurrentMonth } from '@/lib/featureAccess';
 import PaystackButton from '@/components/payment/PaystackButton';
 
 const MONTHLY_FEATURES = ['ai_coach_session', 'mock_interview', 'cv_export'] as const;
-const TOTAL_FEATURES = ['portfolio_upload', 'career_assessment'] as const;
+const TOTAL_FEATURES = ['career_assessment'] as const;
 const ACTIVE_FEATURES = ['job_application'] as const;
 
 interface UsageData {
   ai_coach_session: number;
   mock_interview: number;
   cv_export: number;
-  portfolio_upload: number;
   career_assessment: number;
   job_application: number;
 }
 
 const FREE_PLAN_FEATURES = [
-  'Portfolio projects: 3 uploads max',
   'AI Coach sessions: 5 per month',
   'Mock interviews: 3 per month (basic roles only)',
   'CV downloads: 2 exports per month (PDF only)',
@@ -44,7 +42,6 @@ const FREE_PLAN_FEATURES = [
 ];
 
 const PREMIUM_PLAN_FEATURES = [
-  'Portfolio projects: Unlimited uploads',
   'AI Coach sessions: Unlimited',
   'Mock interviews: Unlimited + advanced roles',
   'CV downloads: Unlimited (multiple formats)',
@@ -62,7 +59,6 @@ export default function SubscriptionManager() {
     ai_coach_session: 0,
     mock_interview: 0,
     cv_export: 0,
-    portfolio_upload: 0,
     career_assessment: 0,
     job_application: 0,
   });
@@ -76,7 +72,6 @@ export default function SubscriptionManager() {
 
     const [
       monthlyResult,
-      portfolioResult,
       assessmentResult,
       jobAppsResult,
     ] = await Promise.all([
@@ -86,10 +81,6 @@ export default function SubscriptionManager() {
         .eq('user_id', userId)
         .eq('month', month)
         .in('feature_key', [...MONTHLY_FEATURES]),
-      supabase
-        .from('portfolio_projects')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId),
       supabase
         .from('assessments')
         .select('*', { count: 'exact', head: true })
@@ -111,7 +102,6 @@ export default function SubscriptionManager() {
       ai_coach_session: monthlyMap['ai_coach_session'] ?? 0,
       mock_interview: monthlyMap['mock_interview'] ?? 0,
       cv_export: monthlyMap['cv_export'] ?? 0,
-      portfolio_upload: portfolioResult.count ?? 0,
       career_assessment: assessmentResult.count ?? 0,
       job_application: jobAppsResult.count ?? 0,
     });
@@ -145,7 +135,6 @@ export default function SubscriptionManager() {
     { key: 'ai_coach_session',  label: 'AI Coach Sessions',      limit: FREE_LIMITS.ai_coach_session.limit,  period: '/mo' },
     { key: 'mock_interview',    label: 'Mock Interviews',         limit: FREE_LIMITS.mock_interview.limit,    period: '/mo' },
     { key: 'cv_export',         label: 'CV Exports',              limit: FREE_LIMITS.cv_export.limit,         period: '/mo' },
-    { key: 'portfolio_upload',  label: 'Portfolio Projects',      limit: FREE_LIMITS.portfolio_upload.limit,  period: ' total' },
     { key: 'career_assessment', label: 'Career Assessments',      limit: FREE_LIMITS.career_assessment.limit, period: ' total' },
     { key: 'job_application',   label: 'Active Job Applications', limit: FREE_LIMITS.job_application.limit,   period: ' active' },
   ];
@@ -208,7 +197,7 @@ export default function SubscriptionManager() {
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              3 portfolio uploads · 5 AI sessions/month · 3 mock interviews/month · 10 job applications
+              5 AI sessions/month · 3 mock interviews/month · 10 job applications tracked
             </p>
            <PaystackButton
               plan="monthly"
