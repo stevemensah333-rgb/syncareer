@@ -24,8 +24,8 @@ export interface ReadinessData {
   pillars: PillarScore[];
   skillGaps: SkillReadiness[];
   radarData: { axis: string; value: number }[];
-  
-  portfolioCount: number;
+
+  projectCount: number;
   cvScore: number;
   interviewScore: number;
   loading: boolean;
