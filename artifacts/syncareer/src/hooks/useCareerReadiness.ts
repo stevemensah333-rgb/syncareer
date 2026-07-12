@@ -89,17 +89,16 @@ export const useCareerReadiness = (major: string | null | undefined) => {
       const careerSkills = getCareerSkills(major);
 
       // Fetch all data in parallel
-      const [skillsRes, portfolioRes, resumeRes, interviewsRes] = await Promise.all([
+      const [skillsRes, resumeRes, interviewsRes] = await Promise.all([
         supabase.from('user_skills').select('skill_name, proficiency').eq('user_id', userId),
-        supabase.from('portfolio_projects').select('id').eq('user_id', userId),
         supabase.from('resumes').select('personal_info, education, experience, skills, projects').eq('user_id', userId).eq('is_primary', true).maybeSingle(),
         supabase.from('mock_interviews').select('overall_score').eq('user_id', userId).not('overall_score', 'is', null),
       ]);
 
       const userSkills = skillsRes.data || [];
-      const portfolioCount = portfolioRes.data?.length || 0;
       const resume = resumeRes.data;
       const interviews = interviewsRes.data || [];
+      const projectCount = Array.isArray(resume?.projects) ? resume.projects.length : 0;
 
 
       // === Technical Skills (50%) ===
@@ -118,8 +117,8 @@ export const useCareerReadiness = (major: string | null | undefined) => {
         ? skillGaps.reduce((sum, s) => sum + s.mastery, 0) / careerSkills.length
         : 0;
 
-      // === Practical Application (30%) ===
-      const practicalScore = Math.min(100, portfolioCount * 25);
+      // === Practical Application (30%) — based on projects listed in CV ===
+      const practicalScore = Math.min(100, projectCount * 25);
 
       // === Professional Readiness (20%) ===
       const cvScore = computeCVScore(resume);
