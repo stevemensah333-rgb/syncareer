@@ -133,14 +133,28 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Parallel search all sources
-    const all = (await Promise.all(SOURCES.map(s => searchSource(FIRECRAWL_API_KEY, s)))).flat();
-    console.log(`Aggregated ${all.length} jobs from ${SOURCES.length} sources`);
+    // Fetch distinct majors from student_details; fall back to a general set
+    const { data: majorRows } = await supabase
+      .from('student_details')
+      .select('major')
+      .not('major', 'is', null);
+    const majorsSet = new Set<string>();
+    (majorRows || []).forEach((r: any) => { if (r.major) majorsSet.add(String(r.major).trim()); });
+    const majors = majorsSet.size > 0 ? Array.from(majorsSet) : FALLBACK_MAJORS;
+
+    // Search each site for each major in parallel
+    const tasks: Promise<ScrapedJob[]>[] = [];
+    for (const major of majors) {
+      for (const site of SITES) {
+        tasks.push(searchSource(FIRECRAWL_API_KEY, site, major));
+      }
+    }
+    const all = (await Promise.all(tasks)).flat();
+    console.log(`Aggregated ${all.length} jobs across ${majors.length} majors × ${SITES.length} sites`);
 
     let inserted = 0;
     let skipped = 0;
     for (const j of all) {
-      // Dedupe by external_id
       const { data: existing } = await supabase
         .from('job_postings')
         .select('id')
@@ -174,7 +188,8 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      sources: SOURCES.map(s => s.id),
+      sources: SITES.map(s => s.id),
+      majors,
       total_scraped: all.length,
       inserted,
       skipped,
