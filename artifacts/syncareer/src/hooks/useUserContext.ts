@@ -162,7 +162,7 @@ export function useUserContext() {
         readinessScore = computeReadinessScore(
           major,
           skillsData as Array<{ skill_name: string; proficiency: string }>,
-          portfolioData?.length || 0,
+          projects.length,
           resumeData,
           interviewsData as Array<{ overall_score: number | null }>,
         );
