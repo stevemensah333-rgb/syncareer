@@ -143,7 +143,7 @@ export const useCareerReadiness = (major: string | null | undefined) => {
           score: Math.round(practicalScore),
           weight: 0.3,
           weightedScore: Math.round(practicalScore * 0.3),
-          description: 'Projects, portfolio, real-world application',
+          description: 'Projects and real-world application',
         },
         {
           name: 'Professional Readiness',
@@ -170,8 +170,8 @@ export const useCareerReadiness = (major: string | null | undefined) => {
         pillars,
         skillGaps: skillGaps.sort((a, b) => a.mastery - b.mastery), // worst gaps first
         radarData,
-        
-        portfolioCount,
+
+        projectCount,
         cvScore: Math.round(cvScore),
         interviewScore: Math.round(avgInterview),
         loading: false,
