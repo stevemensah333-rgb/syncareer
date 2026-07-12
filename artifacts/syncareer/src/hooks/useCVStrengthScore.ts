@@ -180,7 +180,7 @@ function generateStrengths(breakdown: ScoreBreakdown, cv: CVData): string[] {
   if (breakdown.competitiveness.details.practicalExp?.score >= 5)
     strengths.push('Solid practical work experience included.');
   if (cv.projects.length >= 2)
-    strengths.push('Portfolio of projects demonstrates initiative.');
+    strengths.push('Multiple projects demonstrate initiative.');
 
   return strengths.slice(0, 3);
 }

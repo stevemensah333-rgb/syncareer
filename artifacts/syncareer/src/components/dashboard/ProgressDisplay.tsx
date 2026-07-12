@@ -43,10 +43,6 @@ export const ProgressDisplay: React.FC<ProgressDisplayProps> = ({
                 <p className="font-medium">{progress.assessmentCount > 0 ? '✓' : '○'}</p>
               </div>
               <div>
-                <p className="text-foreground/60">Portfolio</p>
-                <p className="font-medium">{progress.portfolioCompletion}%</p>
-              </div>
-              <div>
                 <p className="text-foreground/60">Milestones</p>
                 <p className="font-medium">{milestones.length}</p>
               </div>
@@ -84,15 +80,6 @@ export const ProgressDisplay: React.FC<ProgressDisplayProps> = ({
               <span className="text-xs text-foreground/60">{progress.assessmentCompleted} completed</span>
             </div>
             <Progress value={progress.assessmentCompletion} className="h-2" />
-          </div>
-
-          {/* Portfolio */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium">Portfolio</label>
-              <span className="text-xs text-foreground/60">{progress.portfolioCompletion}%</span>
-            </div>
-            <Progress value={progress.portfolioCompletion} className="h-2" />
           </div>
 
           {/* Overall */}

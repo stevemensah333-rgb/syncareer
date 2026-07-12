@@ -34,10 +34,6 @@ export const EVENTS = {
   INTERVIEW_COMPLETED: 'interview_completed',
   INTERVIEW_QUESTION_ANSWERED: 'interview_question_answered',
 
-  // Portfolio
-  PORTFOLIO_CREATED: 'portfolio_created',
-  PORTFOLIO_UPDATED: 'portfolio_updated',
-  PORTFOLIO_PUBLISHED: 'portfolio_published',
 
   // Job Applications
   JOB_VIEW: 'job_view',

@@ -32,7 +32,7 @@ const studentMoreItems: NavTab[] = [
 ];
 
 const counsellorTabs: NavTab[] = [
-  { title: 'Portfolio', icon: Users, href: '/counsellor-dashboard' },
+  { title: 'Profile', icon: Users, href: '/counsellor-dashboard' },
   { title: 'Availability', icon: Calendar, href: '/counsellor-availability' },
   { title: 'Sessions', icon: ClipboardList, href: '/counsellor-sessions' },
   { title: 'Settings', icon: Settings, href: '/settings' },

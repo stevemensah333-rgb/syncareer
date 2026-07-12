@@ -21,13 +21,20 @@ interface ScrapedJob {
   experience_level?: string;
 }
 
-const SOURCES = [
-  { id: 'linkedin',       query: 'entry-level jobs Ghana site:linkedin.com/jobs' },
-  { id: 'indeed',         query: 'graduate jobs Accra Ghana site:indeed.com' },
-  { id: 'jobberman',      query: 'graduate internship site:jobberman.com.gh' },
-  { id: 'ghanajobweb',    query: 'jobs site:ghanajobweb.com' },
-  { id: 'brightermonday', query: 'graduate jobs site:brightermonday.co.ke' },
-  { id: 'jobsinghana',    query: 'jobs site:jobsinghana.com' },
+// Job board domains to search across for each major
+const SITES: { id: string; site: string }[] = [
+  { id: 'linkedin',       site: 'linkedin.com/jobs' },
+  { id: 'indeed',         site: 'indeed.com' },
+  { id: 'jobberman',      site: 'jobberman.com.gh' },
+  { id: 'ghanajobweb',    site: 'ghanajobweb.com' },
+  { id: 'brightermonday', site: 'brightermonday.co.ke' },
+  { id: 'jobsinghana',    site: 'jobsinghana.com' },
+];
+
+// Fallback majors used when no student rows exist yet
+const FALLBACK_MAJORS = [
+  'Computer Science', 'Business Administration', 'Accounting', 'Marketing',
+  'Engineering', 'Nursing', 'Economics', 'Information Technology',
 ];
 
 const JOB_SCHEMA = {
@@ -58,23 +65,24 @@ const JOB_SCHEMA = {
   },
 };
 
-async function searchSource(apiKey: string, source: typeof SOURCES[number]): Promise<ScrapedJob[]> {
+async function searchSource(apiKey: string, source: { id: string; site: string }, major: string): Promise<ScrapedJob[]> {
   try {
+    const query = `${major} entry-level graduate jobs Ghana site:${source.site}`;
     const res = await fetch(`${FIRECRAWL_V2}/search`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        query: source.query,
-        limit: 10,
+        query,
+        limit: 15,
         scrapeOptions: {
           formats: [
-            { type: 'json', schema: JOB_SCHEMA, prompt: 'Extract all job postings on this page with company, location, type, required skills, and application deadline.' },
+            { type: 'json', schema: JOB_SCHEMA, prompt: `Extract job postings relevant to a ${major} graduate: title, company, location, type, required skills, and application deadline.` },
           ],
         },
       }),
     });
     if (!res.ok) {
-      console.error(`[${source.id}] search failed`, res.status, await res.text());
+      console.error(`[${source.id}/${major}] search failed`, res.status, await res.text());
       return [];
     }
     const data = await res.json();
@@ -90,12 +98,13 @@ async function searchSource(apiKey: string, source: typeof SOURCES[number]): Pro
           source_url: j.source_url || r.url,
           external_id: `${source.id}:${j.source_url || r.url}`,
           employment_type: (j.employment_type || 'full-time').toLowerCase(),
+          skills: [...(j.skills || []), major],
         });
       }
     }
     return jobs;
   } catch (e) {
-    console.error(`[${source.id}]`, e);
+    console.error(`[${source.id}/${major}]`, e);
     return [];
   }
 }
@@ -124,14 +133,28 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Parallel search all sources
-    const all = (await Promise.all(SOURCES.map(s => searchSource(FIRECRAWL_API_KEY, s)))).flat();
-    console.log(`Aggregated ${all.length} jobs from ${SOURCES.length} sources`);
+    // Fetch distinct majors from student_details; fall back to a general set
+    const { data: majorRows } = await supabase
+      .from('student_details')
+      .select('major')
+      .not('major', 'is', null);
+    const majorsSet = new Set<string>();
+    (majorRows || []).forEach((r: any) => { if (r.major) majorsSet.add(String(r.major).trim()); });
+    const majors = majorsSet.size > 0 ? Array.from(majorsSet) : FALLBACK_MAJORS;
+
+    // Search each site for each major in parallel
+    const tasks: Promise<ScrapedJob[]>[] = [];
+    for (const major of majors) {
+      for (const site of SITES) {
+        tasks.push(searchSource(FIRECRAWL_API_KEY, site, major));
+      }
+    }
+    const all = (await Promise.all(tasks)).flat();
+    console.log(`Aggregated ${all.length} jobs across ${majors.length} majors × ${SITES.length} sites`);
 
     let inserted = 0;
     let skipped = 0;
     for (const j of all) {
-      // Dedupe by external_id
       const { data: existing } = await supabase
         .from('job_postings')
         .select('id')
@@ -165,7 +188,8 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      sources: SOURCES.map(s => s.id),
+      sources: SITES.map(s => s.id),
+      majors,
       total_scraped: all.length,
       inserted,
       skipped,

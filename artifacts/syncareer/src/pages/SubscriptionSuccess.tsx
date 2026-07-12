@@ -23,7 +23,7 @@ export default function SubscriptionSuccessPage() {
           </AnimatedSection>
           <AnimatedSection delay={0.16} y={16}>
             <Button
-              onClick={() => navigate('/portfolio')}
+              onClick={() => navigate('/dashboard')}
               className="w-full bg-green-500 hover:bg-green-600 text-slate-900 font-semibold"
             >
               Go to Dashboard

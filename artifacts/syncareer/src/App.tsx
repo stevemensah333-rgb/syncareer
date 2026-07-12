@@ -25,8 +25,6 @@ import ResetPasswordForm from "./components/auth/ResetPasswordForm";
 const Landing = lazy(() => import("./pages/Landing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const PublicPortfolio = lazy(() => import("./pages/PublicPortfolio"));
-const PublicProjectDetail = lazy(() => import("./pages/PublicProjectDetail"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
@@ -41,7 +39,6 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Assessment = lazy(() => import("./pages/Assessment"));
 
 const Markets = lazy(() => import("./pages/Markets"));
-const Portfolio = lazy(() => import("./pages/Portfolio"));
 const Analysis = lazy(() => import("./pages/Analysis"));
 const AICoach = lazy(() => import("./pages/AICoach"));
 const InterviewSimulator = lazy(() => import("./pages/InterviewSimulator"));
@@ -165,10 +162,6 @@ const AppContent = () => (
               <Route path="/signed-out" element={<SignedOut />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/subscription-success" element={<SubscriptionSuccess />} />
-              <Route path="/portfolio/:userId" element={<PublicPortfolio />} />
-              <Route path="/portfolio/:userId/p/:projectId" element={<PublicProjectDetail />} />
-              <Route path="/u/:slug" element={<PublicPortfolio />} />
-              <Route path="/u/:slug/p/:projectSlug" element={<PublicProjectDetail />} />
               <Route path="/terms" element={<TermsAndConditions />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/blog" element={<Blog />} />
@@ -199,9 +192,6 @@ const AppContent = () => (
               } />
               <Route path="/opportunities" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><Markets /></RoleRoute></ProtectedRoute>
-              } />
-              <Route path="/portfolio" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['student']}><Portfolio /></RoleRoute></ProtectedRoute>
               } />
               <Route path="/analysis" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><Analysis /></RoleRoute></ProtectedRoute>
