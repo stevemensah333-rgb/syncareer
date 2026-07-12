@@ -32,7 +32,7 @@ export default function PricingPage() {
 
   const features = {
     free: [
-      'Portfolio projects: 3 uploads max',
+      
       'AI Coach sessions: 5 per month',
       'Mock interviews: 3 per month (basic roles only)',
       'CV downloads: 2 exports per month (PDF only)',
@@ -41,7 +41,7 @@ export default function PricingPage() {
       'Analytics: Monthly summary report only',
     ],
     premium: [
-      'Portfolio projects: Unlimited uploads',
+      
       'AI Coach sessions: Unlimited',
       'Mock interviews: Unlimited + advanced role simulation',
       'CV downloads: Unlimited (multiple formats)',

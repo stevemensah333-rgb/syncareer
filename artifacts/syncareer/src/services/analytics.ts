@@ -28,7 +28,7 @@ export type TrackableEvent =
   | { event: 'assessment_completed'; properties: { assessment_type: string; score?: number; duration_seconds?: number } }
   | { event: 'cv_section_added'; properties: { section_type: string; order?: number } }
   | { event: 'cv_section_completed'; properties: { section_type: string } }
-  | { event: 'portfolio_view'; properties: { portfolio_type: string } }
+  
   | { event: 'tour_started'; properties: { tour_type: string } }
   | { event: 'tour_completed'; properties: { tour_type: string; steps_completed: number } }
   | { event: 'tour_skipped'; properties: { tour_type: string; step_current?: number } }

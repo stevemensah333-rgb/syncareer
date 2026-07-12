@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { FileText, Mic, Briefcase, MapPin, ArrowRight, TrendingUp, ClipboardList, FolderOpen, CheckCircle, Target, Zap } from 'lucide-react';
+import { FileText, Mic, Briefcase, MapPin, ArrowRight, TrendingUp, ClipboardList, CheckCircle, Target, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useCareerReadiness } from '@/hooks/useCareerReadiness';

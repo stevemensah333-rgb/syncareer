@@ -17,7 +17,7 @@ interface CounsellorLayoutProps {
 
 const counsellorNavItems = [
   { label: 'Main', items: [
-    { title: 'My Portfolio', icon: Users, href: '/counsellor-dashboard' },
+    { title: 'My Profile', icon: Users, href: '/counsellor-dashboard' },
     { title: 'Availability', icon: Calendar, href: '/counsellor-availability' },
   ]},
   { label: 'Schedule', items: [

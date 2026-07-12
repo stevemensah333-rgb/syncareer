@@ -191,7 +191,7 @@ const CounsellorDashboard = () => {
 
   if (loading) {
     return (
-      <CounsellorLayout title="My Portfolio">
+      <CounsellorLayout title="My Profile">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -201,7 +201,7 @@ const CounsellorDashboard = () => {
 
   if (!counsellorDetails) {
     return (
-      <CounsellorLayout title="My Portfolio">
+      <CounsellorLayout title="My Profile">
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">Counsellor profile not found. Please complete your onboarding.</p>
         </Card>
@@ -210,7 +210,7 @@ const CounsellorDashboard = () => {
   }
 
   return (
-    <CounsellorLayout title="My Portfolio">
+    <CounsellorLayout title="My Profile">
       {/* Focus Cards — at-a-glance counsellor stats */}
       <AnimatedSection y={20}>
         <div className="grid gap-4 md:grid-cols-3 mb-6">
