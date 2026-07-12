@@ -51,7 +51,7 @@ function computeCVScore(resume: any): number {
 function computeReadinessScore(
   major: string,
   userSkills: Array<{ skill_name: string; proficiency: string }>,
-  portfolioCount: number,
+  projectCount: number,
   resume: any,
   interviews: Array<{ overall_score: number | null }>,
 ): number {
@@ -65,8 +65,8 @@ function computeReadinessScore(
       }, 0) / careerSkills.length
     : 0;
 
-  // Practical (30%)
-  const practicalScore = Math.min(100, portfolioCount * 25);
+  // Practical (30%) — based on projects listed in CV
+  const practicalScore = Math.min(100, projectCount * 25);
 
   // Professional (20%)
   const cvScore = computeCVScore(resume);
