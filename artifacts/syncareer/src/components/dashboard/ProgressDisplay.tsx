@@ -82,9 +82,6 @@ export const ProgressDisplay: React.FC<ProgressDisplayProps> = ({
             <Progress value={progress.assessmentCompletion} className="h-2" />
           </div>
 
-
-          </div>
-
           {/* Overall */}
           <div className="pt-4 border-t">
             <div className="flex items-center justify-between mb-2">
