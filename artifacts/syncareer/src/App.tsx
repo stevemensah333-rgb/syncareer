@@ -39,7 +39,6 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Assessment = lazy(() => import("./pages/Assessment"));
 
 const Markets = lazy(() => import("./pages/Markets"));
-const Portfolio = lazy(() => import("./pages/Portfolio"));
 const Analysis = lazy(() => import("./pages/Analysis"));
 const AICoach = lazy(() => import("./pages/AICoach"));
 const InterviewSimulator = lazy(() => import("./pages/InterviewSimulator"));
