@@ -21,13 +21,20 @@ interface ScrapedJob {
   experience_level?: string;
 }
 
-const SOURCES = [
-  { id: 'linkedin',       query: 'entry-level jobs Ghana site:linkedin.com/jobs' },
-  { id: 'indeed',         query: 'graduate jobs Accra Ghana site:indeed.com' },
-  { id: 'jobberman',      query: 'graduate internship site:jobberman.com.gh' },
-  { id: 'ghanajobweb',    query: 'jobs site:ghanajobweb.com' },
-  { id: 'brightermonday', query: 'graduate jobs site:brightermonday.co.ke' },
-  { id: 'jobsinghana',    query: 'jobs site:jobsinghana.com' },
+// Job board domains to search across for each major
+const SITES: { id: string; site: string }[] = [
+  { id: 'linkedin',       site: 'linkedin.com/jobs' },
+  { id: 'indeed',         site: 'indeed.com' },
+  { id: 'jobberman',      site: 'jobberman.com.gh' },
+  { id: 'ghanajobweb',    site: 'ghanajobweb.com' },
+  { id: 'brightermonday', site: 'brightermonday.co.ke' },
+  { id: 'jobsinghana',    site: 'jobsinghana.com' },
+];
+
+// Fallback majors used when no student rows exist yet
+const FALLBACK_MAJORS = [
+  'Computer Science', 'Business Administration', 'Accounting', 'Marketing',
+  'Engineering', 'Nursing', 'Economics', 'Information Technology',
 ];
 
 const JOB_SCHEMA = {
