@@ -7,7 +7,6 @@ import {
 } from './featureAccess';
 
 const ALL_FEATURE_KEYS: FeatureKey[] = [
-  'portfolio_upload',
   'ai_coach_session',
   'mock_interview',
   'cv_export',
@@ -23,7 +22,6 @@ const PREMIUM_ONLY_KEYS: FeatureKey[] = [
 ];
 
 const QUANTIFIED_KEYS: FeatureKey[] = [
-  'portfolio_upload',
   'ai_coach_session',
   'mock_interview',
   'cv_export',
@@ -57,7 +55,7 @@ describe('hasAccess', () => {
 
 describe('FREE_LIMITS', () => {
   const expected: Record<FeatureKey, { limit: number; period: 'monthly' | 'total' | 'active' }> = {
-    portfolio_upload:               { limit: 3,  period: 'total'   },
+    
     ai_coach_session:               { limit: 5,  period: 'monthly' },
     mock_interview:                 { limit: 3,  period: 'monthly' },
     cv_export:                      { limit: 2,  period: 'monthly' },
