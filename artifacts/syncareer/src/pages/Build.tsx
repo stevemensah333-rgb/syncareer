@@ -2,7 +2,7 @@ import React from 'react';
 import { StudentLayout } from '@/components/layout/StudentLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Star, ArrowRight } from 'lucide-react';
+import { FileText, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const sections = [
@@ -12,12 +12,6 @@ const sections = [
     icon: FileText,
     href: '/cv-builder',
   },
-  {
-    title: 'Portfolio',
-    description: 'Showcase projects, skills and links employers can verify.',
-    icon: Star,
-    href: '/portfolio',
-  },
 ];
 
 export default function Build() {
@@ -25,7 +19,7 @@ export default function Build() {
   return (
     <StudentLayout title="Build">
       <p className="text-muted-foreground mb-6 max-w-2xl">
-        Everything you need to build a credible professional profile — your CV and portfolio.
+        Everything you need to build a credible professional profile — starting with your CV.
       </p>
       <div className="grid gap-4 md:grid-cols-2">
         {sections.map((s) => (
