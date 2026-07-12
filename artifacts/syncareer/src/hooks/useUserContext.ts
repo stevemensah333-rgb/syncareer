@@ -97,7 +97,6 @@ export function useUserContext() {
         supabase.from('assessments').select('primary_interest, secondary_interest, tertiary_interest').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('user_skills').select('skill_name, proficiency, category').eq('user_id', userId).limit(30),
         supabase.from('resumes').select('personal_info, education, experience, skills, projects').eq('user_id', userId).eq('is_primary', true).maybeSingle(),
-        supabase.from('portfolio_projects').select('id').eq('user_id', userId),
         supabase.from('mock_interviews').select('overall_score').eq('user_id', userId).not('overall_score', 'is', null),
       ]);
 
@@ -111,8 +110,7 @@ export function useUserContext() {
       const assessmentData = getResult<{ primary_interest?: string; secondary_interest?: string; tertiary_interest?: string } | null>(2, null);
       const skillsData = getResult<Array<{ skill_name: string; proficiency: string; category: string }>>(3, []);
       const resumeData = getResult<any>(4, null);
-      const portfolioData = getResult<Array<{ id: string }>>(5, []);
-      const interviewsData = getResult<Array<{ overall_score: number | null }>>(6, []);
+      const interviewsData = getResult<Array<{ overall_score: number | null }>>(5, []);
 
       // Log any individual failures without crashing the whole context
       settled.forEach((s, i) => {
