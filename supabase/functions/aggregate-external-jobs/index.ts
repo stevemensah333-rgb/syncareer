@@ -65,23 +65,24 @@ const JOB_SCHEMA = {
   },
 };
 
-async function searchSource(apiKey: string, source: typeof SOURCES[number]): Promise<ScrapedJob[]> {
+async function searchSource(apiKey: string, source: { id: string; site: string }, major: string): Promise<ScrapedJob[]> {
   try {
+    const query = `${major} entry-level graduate jobs Ghana site:${source.site}`;
     const res = await fetch(`${FIRECRAWL_V2}/search`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        query: source.query,
-        limit: 10,
+        query,
+        limit: 15,
         scrapeOptions: {
           formats: [
-            { type: 'json', schema: JOB_SCHEMA, prompt: 'Extract all job postings on this page with company, location, type, required skills, and application deadline.' },
+            { type: 'json', schema: JOB_SCHEMA, prompt: `Extract job postings relevant to a ${major} graduate: title, company, location, type, required skills, and application deadline.` },
           ],
         },
       }),
     });
     if (!res.ok) {
-      console.error(`[${source.id}] search failed`, res.status, await res.text());
+      console.error(`[${source.id}/${major}] search failed`, res.status, await res.text());
       return [];
     }
     const data = await res.json();
@@ -97,12 +98,13 @@ async function searchSource(apiKey: string, source: typeof SOURCES[number]): Pro
           source_url: j.source_url || r.url,
           external_id: `${source.id}:${j.source_url || r.url}`,
           employment_type: (j.employment_type || 'full-time').toLowerCase(),
+          skills: [...(j.skills || []), major],
         });
       }
     }
     return jobs;
   } catch (e) {
-    console.error(`[${source.id}]`, e);
+    console.error(`[${source.id}/${major}]`, e);
     return [];
   }
 }
