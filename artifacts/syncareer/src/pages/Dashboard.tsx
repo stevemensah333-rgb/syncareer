@@ -101,7 +101,7 @@ const Dashboard = () => {
     { label: 'Take the career assessment', description: 'Discover your ideal career path in 10 minutes', icon: ClipboardList, href: '/assessment', done: !!topCareer },
     { label: 'Build your CV', description: 'Create a professional, ATS-friendly CV', icon: FileText, href: '/cv-builder', done: stats.cvScore > 0 },
     { label: 'Practice an interview', description: 'Simulate a real interview and get AI feedback', icon: Mic, href: '/interview-simulator', done: stats.interviewScore > 0 },
-    { label: 'Add a portfolio project', description: 'Showcase your work to stand out', icon: FolderOpen, href: '/portfolio', done: false },
+    
   ];
 
   const statCards = [
