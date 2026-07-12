@@ -162,8 +162,6 @@ const AppContent = () => (
               <Route path="/signed-out" element={<SignedOut />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/subscription-success" element={<SubscriptionSuccess />} />
-              <Route path="/u/:slug" element={<PublicPortfolio />} />
-              <Route path="/u/:slug/p/:projectSlug" element={<PublicProjectDetail />} />
               <Route path="/terms" element={<TermsAndConditions />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/blog" element={<Blog />} />
