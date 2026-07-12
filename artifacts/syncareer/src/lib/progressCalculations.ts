@@ -16,8 +16,6 @@ export interface UserProgress {
   assessmentCompletion: number; // 0-100
   assessmentCount: number;
   assessmentCompleted: number;
-  portfolioCompletion: number; // 0-100
-  portfolioSections: ProgressItem[];
   totalCompletion: number; // 0-100
   lastUpdated: Date;
   milestones: string[]; // Milestone IDs earned
@@ -28,10 +26,9 @@ export interface UserProgress {
  */
 export function calculateTotalProgress(progress: UserProgress): number {
   const weights = {
-    profile: 0.25,
-    assessment: 0.25,
-    portfolio: 0.25,
-    jobs: 0.25,
+    profile: 0.34,
+    assessment: 0.33,
+    jobs: 0.33,
   };
 
   const jobsProgress = progress.assessmentCompleted > 0 ? 50 : 0;
@@ -39,7 +36,6 @@ export function calculateTotalProgress(progress: UserProgress): number {
   return Math.round(
     progress.profileCompletion * weights.profile +
     progress.assessmentCompletion * weights.assessment +
-    progress.portfolioCompletion * weights.portfolio +
     jobsProgress * weights.jobs
   );
 }
@@ -60,14 +56,6 @@ export function getMilestones(progress: UserProgress): string[] {
 
   if (progress.assessmentCompleted >= 3) {
     earned.push('assessment-explorer');
-  }
-
-  if (progress.portfolioCompletion >= 50) {
-    earned.push('portfolio-starter');
-  }
-
-  if (progress.portfolioCompletion === 100) {
-    earned.push('portfolio-complete');
   }
 
   if (calculateTotalProgress(progress) === 100) {
@@ -101,16 +89,6 @@ export function getMilestoneDetails(milestoneId: string): {
       label: 'Assessment Explorer',
       description: 'You&apos;ve completed 3+ assessments',
       icon: '🔍',
-    },
-    'portfolio-starter': {
-      label: 'Portfolio Starter',
-      description: 'Your portfolio is half complete',
-      icon: '🎨',
-    },
-    'portfolio-complete': {
-      label: 'Portfolio Complete',
-      description: 'Your portfolio is fully complete and ready to show',
-      icon: '✨',
     },
     'syncareer-ready': {
       label: 'Syncareer Ready',
@@ -147,27 +125,11 @@ export function getNextAction(progress: UserProgress): {
     };
   }
 
-  if (progress.portfolioCompletion < 50) {
-    return {
-      action: 'Build Portfolio',
-      description: 'Showcase your work and skills with a professional portfolio.',
-      urgency: 'medium',
-    };
-  }
-
   if (progress.assessmentCompleted < 3) {
     return {
       action: 'Take More Assessments',
       description: 'Explore different career paths with additional assessments.',
       urgency: 'medium',
-    };
-  }
-
-  if (progress.portfolioCompletion < 100) {
-    return {
-      action: 'Complete Portfolio',
-      description: 'Finish your portfolio to maximize your job opportunities.',
-      urgency: 'low',
     };
   }
 
