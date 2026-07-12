@@ -25,8 +25,6 @@ import ResetPasswordForm from "./components/auth/ResetPasswordForm";
 const Landing = lazy(() => import("./pages/Landing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const PublicPortfolio = lazy(() => import("./pages/PublicPortfolio"));
-const PublicProjectDetail = lazy(() => import("./pages/PublicProjectDetail"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
