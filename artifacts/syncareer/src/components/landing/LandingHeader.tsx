@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import syncareerLogo from "@/assets/syncareer-logo.svg";
 
 interface LandingHeaderProps {
@@ -28,35 +28,16 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
 
   return (
     <>
-      {/* Announcement bar */}
-      <div className="w-full bg-[#0a1512] border-b border-white/5 text-[13px]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-11 flex items-center justify-between gap-4">
-          <p className="text-white/70 truncate">
-            <span className="hidden sm:inline">The free 5-minute career assessment is open — </span>
-            <span className="sm:hidden">Free assessment open — </span>
-            find a path that actually fits.
-          </p>
-          <button
-            onClick={() => navigate("/assessment")}
-            className="text-[#00c4cc] hover:text-white transition-colors font-medium whitespace-nowrap inline-flex items-center gap-1"
-          >
-            Start now <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
-
       {/* Header */}
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-[#0a1512]/85 backdrop-blur-md border-b border-white/5"
-            : "bg-transparent border-b border-transparent"
+        className={`sticky top-0 z-50 bg-[#f7f5ef] transition-all duration-300 ${
+          scrolled ? "border-b border-black/10 shadow-sm" : "border-b border-black/5"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-6">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 shrink-0">
             <img src={syncareerLogo} alt="Syncareer logo" className="h-7 w-7" />
-            <span className="text-white font-semibold tracking-tight text-lg">
+            <span className="text-[#0a1512] font-semibold tracking-tight text-lg">
               Syncareer
             </span>
           </button>
@@ -66,7 +47,7 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
               <a
                 key={item.href}
                 href={item.href}
-                className="px-3 py-2 text-sm text-white/70 hover:text-white transition-colors rounded-full"
+                className="px-3 py-2 text-sm text-[#0a1512]/70 hover:text-[#0a1512] transition-colors rounded-full"
               >
                 {item.label}
               </a>
@@ -76,7 +57,7 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
           <div className="flex items-center gap-2">
             <button
               onClick={onSignIn}
-              className="hidden sm:inline-flex h-9 px-4 items-center text-sm text-white/80 hover:text-white transition-colors"
+              className="hidden sm:inline-flex h-9 px-4 items-center text-sm text-[#0a1512]/80 hover:text-[#0a1512] transition-colors"
             >
               Sign in
             </button>
@@ -88,7 +69,7 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
             </button>
             <button
               onClick={() => setOpen(!open)}
-              className="lg:hidden h-9 w-9 grid place-items-center text-white/80 hover:text-white"
+              className="lg:hidden h-9 w-9 grid place-items-center text-[#0a1512]/80 hover:text-[#0a1512]"
               aria-label="Toggle menu"
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -98,14 +79,14 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
 
         {/* Mobile menu */}
         {open && (
-          <div className="lg:hidden border-t border-white/5 bg-[#0a1512]">
+          <div className="lg:hidden border-t border-black/10 bg-[#f7f5ef]">
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col">
               {NAV.map((item) => (
                 <a
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="py-3 text-white/80 hover:text-white border-b border-white/5"
+                  className="py-3 text-[#0a1512]/80 hover:text-[#0a1512] border-b border-black/10"
                 >
                   {item.label}
                 </a>
@@ -115,7 +96,7 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
                   onSignIn();
                   setOpen(false);
                 }}
-                className="py-3 text-left text-white/80 hover:text-white"
+                className="py-3 text-left text-[#0a1512]/80 hover:text-[#0a1512]"
               >
                 Sign in
               </button>
