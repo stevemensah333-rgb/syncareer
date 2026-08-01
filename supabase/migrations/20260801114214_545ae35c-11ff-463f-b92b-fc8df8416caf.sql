@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Public can read video files" ON storage.objects;
