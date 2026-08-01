@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import syncareerLogo from "@/assets/syncareer-logo.svg";
 
 interface LandingHeaderProps {
@@ -69,7 +69,7 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
             </button>
             <button
               onClick={() => setOpen(!open)}
-              className="lg:hidden h-9 w-9 grid place-items-center text-white/80 hover:text-white"
+              className="lg:hidden h-9 w-9 grid place-items-center text-[#0a1512]/80 hover:text-[#0a1512]"
               aria-label="Toggle menu"
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -79,14 +79,14 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
 
         {/* Mobile menu */}
         {open && (
-          <div className="lg:hidden border-t border-white/5 bg-[#0a1512]">
+          <div className="lg:hidden border-t border-black/10 bg-[#f7f5ef]">
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col">
               {NAV.map((item) => (
                 <a
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="py-3 text-white/80 hover:text-white border-b border-white/5"
+                  className="py-3 text-[#0a1512]/80 hover:text-[#0a1512] border-b border-black/10"
                 >
                   {item.label}
                 </a>
@@ -96,7 +96,7 @@ export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps
                   onSignIn();
                   setOpen(false);
                 }}
-                className="py-3 text-left text-white/80 hover:text-white"
+                className="py-3 text-left text-[#0a1512]/80 hover:text-[#0a1512]"
               >
                 Sign in
               </button>

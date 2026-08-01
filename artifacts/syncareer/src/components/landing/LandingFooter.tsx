@@ -41,7 +41,7 @@ export default function LandingFooter() {
   ];
 
   return (
-    <footer className="relative bg-[#070f0d] text-white border-t border-white/5">
+    <footer className="relative bg-[#f7f5ef] text-[#0a1512] border-t border-black/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 pb-10">
         <div className="grid lg:grid-cols-[1.5fr_repeat(4,1fr)] gap-10">
           <div>
@@ -51,21 +51,15 @@ export default function LandingFooter() {
                 Syncareer
               </span>
             </div>
-            <p className="mt-5 text-sm text-white/60 max-w-xs leading-relaxed">
+            <p className="mt-5 text-sm text-[#0a1512]/70 max-w-xs leading-relaxed">
               AI-powered career intelligence for African students and recent
               graduates.
             </p>
-            <a
-              href="mailto:hello@syncareer.me"
-              className="mt-5 inline-block text-sm font-medium text-[#00c4cc] hover:text-white transition-colors"
-            >
-              hello@syncareer.me
-            </a>
           </div>
 
           {cols.map((col) => (
             <div key={col.title}>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50 mb-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0a1512]/50 mb-4">
                 {col.title}
               </p>
               <ul className="space-y-3 text-sm">
@@ -74,7 +68,7 @@ export default function LandingFooter() {
                     {l.onClick ? (
                       <button
                         onClick={l.onClick}
-                        className="text-white/70 hover:text-white transition-colors"
+                        className="text-[#0a1512]/70 hover:text-[#0a1512] transition-colors"
                       >
                         {l.label}
                       </button>
@@ -84,7 +78,7 @@ export default function LandingFooter() {
                         {...(l.external
                           ? { target: "_blank", rel: "noopener noreferrer" }
                           : {})}
-                        className="text-white/70 hover:text-white transition-colors"
+                        className="text-[#0a1512]/70 hover:text-[#0a1512] transition-colors"
                       >
                         {l.label}
                       </a>
@@ -96,7 +90,7 @@ export default function LandingFooter() {
           ))}
         </div>
 
-        <div className="mt-16 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/50">
+        <div className="mt-16 pt-6 border-t border-black/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#0a1512]/60">
           <p>© {year} Syncareer. All rights reserved.</p>
           <p>Made for African graduates.</p>
         </div>
