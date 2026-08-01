@@ -60,22 +60,11 @@ export default defineConfig({
     cssCodeSplit: true,
     reportCompressedSize: false,
     chunkSizeWarningLimit: 1200,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes("node_modules")) return;
-          if (id.includes("react-dom") || id.match(/[\\/]react[\\/]/) || id.includes("scheduler")) return "react-vendor";
-          if (id.includes("@radix-ui") || id.includes("cmdk") || id.includes("vaul") || id.includes("sonner")) return "ui-vendor";
-          if (id.includes("@supabase") || id.includes("@tanstack/react-query")) return "data-vendor";
-          if (id.includes("recharts") || id.includes("d3-")) return "charts-vendor";
-          if (id.includes("html2pdf") || id.includes("jspdf") || id.includes("html2canvas")) return "pdf-vendor";
-          if (id.includes("i18next") || id.includes("react-i18next")) return "i18n-vendor";
-          if (id.includes("react-router")) return "router-vendor";
-          if (id.includes("lucide-react")) return "icons-vendor";
-          return "vendor";
-        },
-      },
-    },
+    // NOTE: do NOT add custom manualChunks here. Splitting React out of the
+    // shared vendor chunk caused a circular chunk-init order in production
+    // ("Cannot read properties of undefined (reading 'useLayoutEffect')"),
+    // which rendered a blank published site. Rollup's default chunking is safe.
+
   },
   server: {
     port,
