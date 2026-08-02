@@ -180,12 +180,22 @@ async function callTool(name: string, args: any, authHeader: string, userId: str
       let q = supabase.from("job_postings")
         .select("id, title, company_name, location, employment_type, experience_level, source, source_url, created_at")
         .eq("status", "active").order("created_at", { ascending: false }).limit(limit);
-      if (args?.query && typeof args.query === "string") {
-        const term = args.query.replace(/[%,]/g, " ").trim();
-        if (term) q = q.or(`title.ilike.%${term}%,description.ilike.%${term}%,company_name.ilike.%${term}%`);
+      // Safe-list: keep only alphanumerics, spaces and a few harmless separators
+      // so nothing can alter the PostgREST filter grammar.
+      const sanitize = (value: unknown) =>
+        typeof value === "string"
+          ? value.replace(/[^\p{L}\p{N} .\-_/+&']/gu, " ").replace(/\s+/g, " ").trim().slice(0, 100)
+          : "";
+
+      const term = sanitize(args?.query);
+      if (term) {
+        q = q.or(
+          `title.ilike."%${term}%",description.ilike."%${term}%",company_name.ilike."%${term}%"`,
+        );
       }
-      if (args?.location && typeof args.location === "string") {
-        q = q.ilike("location", `%${args.location}%`);
+      const loc = sanitize(args?.location);
+      if (loc) {
+        q = q.ilike("location", `%${loc}%`);
       }
       const { data, error } = await q;
       if (error) return toolError(error.message);
