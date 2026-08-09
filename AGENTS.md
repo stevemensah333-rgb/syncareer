@@ -117,7 +117,7 @@ corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer ex
 - Document why a non-obvious integration or security boundary exists, not what obvious code syntax does.
 - When an AI session exposes a repeated repository-specific mistake, propose a concise AGENTS.md update; do not grow this file with one-off task details.
 
-Current authoritative docs: `replit.md` (stack and runbook), `PUBLISH_TROUBLESHOOTING.md` (publish fixes and the realtime-channel rule), `docs/CLEANUP_BACKLOG.md` (known technical-debt items and their risk classifications). `docs/archive/*` is historical.
+Current authoritative docs: `docs/BUILD_AND_CHECK.md` (build, verification, and CI runbook), `docs/BACKEND_PLATFORM_INVENTORY.md` (edge functions, secrets, and Lovable integration inventory), `replit.md` (stack and runbook), `PUBLISH_TROUBLESHOOTING.md` (publish fixes and the realtime-channel rule), `docs/CLEANUP_BACKLOG.md` (known technical-debt items and their risk classifications). `docs/archive/*` is historical.
 
 ## Definition of done
 
