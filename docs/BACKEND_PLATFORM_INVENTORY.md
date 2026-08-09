@@ -3,9 +3,9 @@
 ## 1. Executive Summary & Hard Stop Status
 
 - **Objective:** Establish an authoritative inventory of all Supabase Edge Functions, backend touchpoints, secrets, and Lovable platform dependencies before any backend refactoring.
-- **Live Access Status:** Supabase CLI authentication (`SUPABASE_ACCESS_TOKEN` / `supabase login`) is **not configured** in this sandbox environment.
+- **Live Access Status:** This repository snapshot does not provide a Lovable project-session inspection tool. Personal Supabase CLI access is neither configured nor an approved substitute for Lovable Cloud ownership.
 - **Hard Stop Execution:** In strict adherence to repository engineering policy (`AGENTS.md` and session constraints: *"If live project access is unavailable, do not recreate functions from call sites"*), missing deployed edge functions have **not** been reverse-engineered from frontend call sites.
-- **Next Step:** Section 7 provides the exact runbook and CLI commands for exporting and saving deployed function sources verbatim into Git.
+- **Next Step:** Section 7 provides the Lovable Cloud **View code**, Git sync, and support-assisted recovery path. The former personal-Supabase-CLI path is explicitly prohibited.
 
 ---
 
@@ -143,7 +143,7 @@
 
 ## 6. Required Secrets Matrix (Names Only)
 
-*Never commit secret values. Configure these secret names in the Supabase Dashboard (`Settings -> Edge Functions -> Secrets`) or via `supabase secrets set`.*
+*Never commit secret values. For this Lovable Cloud backend, configure them only through Lovable's Cloud secret UI/approved chat flow. A personal Supabase Dashboard or `supabase secrets set` is not an approved substitute for Cloud ownership.*
 
 | Secret Name | Consuming Edge Functions | Purpose |
 |---|---|---|
@@ -159,44 +159,14 @@
 
 ---
 
-## 7. Action Runbook for Live Function Recovery
+## 7. Current Lovable-supported recovery runbook
 
-Because live Supabase project credentials cannot be accessed from this sandbox, perform the following steps on your authenticated local workstation:
+> **Supersedes the earlier personal-Supabase-CLI guidance.** This backend is Lovable Cloud. Do not run `supabase link`, remote `db pull`/`db dump`, remote type generation, migration repair, or function downloads against project reference `fsorkxlcasekndigezlx` through a developer's personal Supabase account.
 
-### Option A: Download via Supabase CLI (Recommended)
+1. Open the Syncareer project in Lovable and select **Cloud -> Edge functions**.
+2. For each deployed function, use **View code** and Lovable's existing Git synchronization to recover the deployed source. Record the environment and deployed update timestamp. Do not reconstruct a function from its frontend call site.
+3. Compare the recovered source with both the current working tree and historical Git source. Git history contains older versions of several currently missing functions, but historical source is not proof of what is deployed now.
+4. Ask Lovable support for an export of deployed function source/configuration if **View code** or Git sync cannot recover it. Request code and non-secret configuration only; never request or copy secret values.
+5. Save confirmed source under `supabase/functions/<function-name>/`, update `supabase/config.toml` only from confirmed configuration, and review without deploying.
 
-1. Authenticate Supabase CLI:
-   ```bash
-   supabase login
-   ```
-2. Link to project `fsorkxlcasekndigezlx`:
-   ```bash
-   supabase link --project-ref fsorkxlcasekndigezlx
-   ```
-3. Download each missing deployed edge function:
-   ```bash
-   supabase functions download admin-feedback
-   supabase functions download admin-users
-   supabase functions download analyze-portfolio
-   supabase functions download check-feature-access
-   supabase functions download compute-university-insights
-   supabase functions download compute-user-intelligence
-   supabase functions download cv-ai-assistant
-   supabase functions download delete-account
-   supabase functions download interview-tts
-   supabase functions download mock-interview
-   supabase functions download send-notification
-   supabase functions download verify-paystack-payment
-   ```
-4. Copy the downloaded function directories into `supabase/functions/<function-name>/index.ts`.
-5. Update `supabase/config.toml` to register `verify_jwt` entries for the newly tracked functions.
-6. Commit the exact recovered source files to the repository.
-
-### Option B: Export via Supabase Dashboard
-
-1. Navigate to: `https://supabase.com/dashboard/project/fsorkxlcasekndigezlx/functions`
-2. For each missing function (`admin-feedback`, `admin-users`, `analyze-portfolio`, `check-feature-access`, `compute-university-insights`, `compute-user-intelligence`, `cv-ai-assistant`, `delete-account`, `interview-tts`, `mock-interview`, `send-notification`, `verify-paystack-payment`):
-   - Open the function page.
-   - Copy the deployed source code verbatim.
-   - Create `supabase/functions/<function-name>/index.ts` and paste the exact code without refactoring.
-3. Commit the additions to Git.
+Database schema/export/type reconciliation is documented separately in [`SCHEMA_RECONCILIATION.md`](./SCHEMA_RECONCILIATION.md). That runbook also records Lovable Cloud's supported full-database export, its schema-only portability gap, and the required no-production-change workflow.
