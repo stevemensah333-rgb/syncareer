@@ -32,6 +32,13 @@ node_modules
 /connect.lock
 /coverage
 /libpeerconnection.log
+
+# Private Lovable database exports contain production rows. Keep reviewed
+# schema-only snapshots under supabase/schema/ instead.
+/private-schema-exports/
+/lovable-cloud-exports/
+*.dump
+*.backup
 npm-debug.log
 yarn-error.log
 testem.log

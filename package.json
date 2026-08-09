@@ -9,6 +9,9 @@
     "build:dev": "corepack pnpm install --config.verify-deps-before-run=false --frozen-lockfile && corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vite build --config vite.config.ts --mode development && rm -rf dist && cp -r artifacts/syncareer/dist/public dist",
     "test": "corepack pnpm install --config.verify-deps-before-run=false --frozen-lockfile && corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vitest run",
     "typecheck": "corepack pnpm install --config.verify-deps-before-run=false --frozen-lockfile && corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec tsc -p tsconfig.json --noEmit",
+    "schema:repo:smoke": "node scripts/schema/repository-smoke.mjs",
+    "schema:types:check": "node scripts/schema/generated-types.mjs check",
+    "schema:types:sync": "node scripts/schema/generated-types.mjs sync",
     "dev": "corepack pnpm install --config.verify-deps-before-run=false --frozen-lockfile && corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vite --config vite.config.ts --host 0.0.0.0"
   },
   "private": true,
