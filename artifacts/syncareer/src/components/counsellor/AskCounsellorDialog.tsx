@@ -159,7 +159,7 @@ const AskCounsellorDialog: React.FC<AskCounsellorDialogProps> = ({ open, onOpenC
   const handleFormSubmit = () => {
     const result = bookingSchema.safeParse({ name: userName, contact: userContact });
     if (!result.success) {
-      toast.error(result.error.errors[0].message);
+      toast.error(result.error.errors[0]?.message ?? 'Validation failed');
       return;
     }
     setStep('list');
@@ -204,7 +204,7 @@ const AskCounsellorDialog: React.FC<AskCounsellorDialogProps> = ({ open, onOpenC
   };
 
   const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
+    const [hours = '0', minutes = '0'] = time.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const formattedHour = hour % 12 || 12;

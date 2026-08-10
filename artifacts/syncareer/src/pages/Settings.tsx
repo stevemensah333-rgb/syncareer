@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, useClerk } from '@/lib/auth';
 import { NotificationSettingsPanel } from '@/components/notifications/NotificationSettingsPanel';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Bell, Globe, Lock, User, Settings as SettingsIcon, UserCircle, CreditCard, AlertTriangle } from 'lucide-react';
@@ -53,7 +53,7 @@ const detectUserLocale = async () => {
   } catch {
     // fallback: derive rough country from timezone
     const tzParts = tz.split('/');
-    countryName = tzParts[tzParts.length - 1].replace(/_/g, ' ') || '';
+    countryName = tzParts[tzParts.length - 1]?.replace(/_/g, ' ') || '';
   }
   return { timezone: tz, countryName };
 };

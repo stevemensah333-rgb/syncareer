@@ -6,7 +6,7 @@ import { User, Users, LogOut, MessageCircle, HelpCircle, Phone, Mail, CreditCard
 import { useSubscription } from '@/hooks/useSubscription';
 import { Badge } from '@/components/ui/badge';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
-import { useIsMobile } from '@/hooks/use-mobile';
+
 import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';

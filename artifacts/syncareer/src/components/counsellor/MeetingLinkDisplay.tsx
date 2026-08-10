@@ -29,7 +29,7 @@ export function MeetingLinkDisplay({ counsellorId, sessionTitle }: MeetingLinkDi
           .single();
 
         if (error) throw error;
-        setDetails(data);
+        setDetails(data as CounsellorDetails | null);
       } catch (error) {
         console.error('[MeetingLinkDisplay] Error fetching meeting link:', error);
       } finally {

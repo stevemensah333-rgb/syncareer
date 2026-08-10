@@ -11,7 +11,7 @@ export type FeatureKey =
   | 'ai_personalized_recommendation';
 
 // ─── Quantified Free Tier Limits ─────────────────────────────────────────
-export const FREE_LIMITS: Record<string, { limit: number; period: 'monthly' | 'total' | 'active'; label: string }> = {
+export const FREE_LIMITS: Record<FeatureKey, { limit: number; period: 'monthly' | 'total' | 'active'; label: string }> = {
   
   ai_coach_session:               { limit: 5,  period: 'monthly', label: 'AI Coach sessions' },
   mock_interview:                 { limit: 3,  period: 'monthly', label: 'Mock interviews' },

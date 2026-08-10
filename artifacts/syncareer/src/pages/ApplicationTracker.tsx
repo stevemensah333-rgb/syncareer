@@ -214,8 +214,9 @@ const ApplicationTracker = () => {
       withdrawn: 0,
     };
     applications.forEach(app => {
-      if (counts[app.status] !== undefined) {
-        counts[app.status]++;
+      const key = app.status;
+      if (key in counts) {
+        counts[key] = (counts[key] ?? 0) + 1;
       }
     });
     return counts;

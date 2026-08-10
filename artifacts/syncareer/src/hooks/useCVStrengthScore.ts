@@ -169,15 +169,15 @@ function generateStrengths(breakdown: ScoreBreakdown, cv: CVData): string[] {
 
   if (breakdown.completeness.score >= 20)
     strengths.push('Well-structured with all key sections filled.');
-  if (breakdown.contentQuality.details.actionVerbs?.score >= 4)
+  if ((breakdown.contentQuality.details.actionVerbs?.score ?? 0) >= 4)
     strengths.push('Effective use of action verbs in bullet points.');
-  if (breakdown.contentQuality.details.quantifiable?.score >= 4)
+  if ((breakdown.contentQuality.details.quantifiable?.score ?? 0) >= 4)
     strengths.push('Strong use of quantifiable achievements.');
-  if (breakdown.competitiveness.details.leadership?.score >= 5)
+  if ((breakdown.competitiveness.details.leadership?.score ?? 0) >= 5)
     strengths.push('Clear demonstration of leadership experience.');
   if (cv.skills.length >= 6)
     strengths.push('Comprehensive skills section with good coverage.');
-  if (breakdown.competitiveness.details.practicalExp?.score >= 5)
+  if ((breakdown.competitiveness.details.practicalExp?.score ?? 0) >= 5)
     strengths.push('Solid practical work experience included.');
   if (cv.projects.length >= 2)
     strengths.push('Multiple projects demonstrate initiative.');
@@ -192,9 +192,9 @@ function generateSuggestions(breakdown: ScoreBreakdown, cv: CVData): string[] {
     suggestions.push('Add at least one work or internship experience.');
   if (cv.skills.length < 5)
     suggestions.push(`Add ${5 - cv.skills.length} more skills to strengthen your profile.`);
-  if (breakdown.contentQuality.details.quantifiable?.score < 3)
+  if ((breakdown.contentQuality.details.quantifiable?.score ?? 0) < 3)
     suggestions.push('Add measurable achievements (numbers, percentages) to your bullet points.');
-  if (breakdown.contentQuality.details.actionVerbs?.score < 3)
+  if ((breakdown.contentQuality.details.actionVerbs?.score ?? 0) < 3)
     suggestions.push('Start bullet points with strong action verbs like "Led", "Developed", or "Implemented".');
   if (breakdown.competitiveness.details.leadership?.score === 0)
     suggestions.push('Include at least one leadership role or responsibility.');
@@ -202,9 +202,9 @@ function generateSuggestions(breakdown: ScoreBreakdown, cv: CVData): string[] {
     suggestions.push('Add certifications, awards, or relevant online courses.');
   if (cv.projects.length === 0)
     suggestions.push('Include projects to showcase your practical abilities.');
-  if (breakdown.completeness.details.personalDetails?.score < 5)
+  if ((breakdown.completeness.details.personalDetails?.score ?? 0) < 5)
     suggestions.push('Complete all personal details for a professional impression.');
-  if (breakdown.skillsRelevance.details.careerAlignment?.score < 5)
+  if ((breakdown.skillsRelevance.details.careerAlignment?.score ?? 0) < 5)
     suggestions.push('Align your skills section with your chosen career path.');
 
   return suggestions.slice(0, 3);

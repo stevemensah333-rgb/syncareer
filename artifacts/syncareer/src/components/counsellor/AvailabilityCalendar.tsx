@@ -85,7 +85,7 @@ export function AvailabilityCalendar({ counsellorId }: AvailabilityCalendarProps
 
   const updateSlot = (index: number, field: keyof TimeSlot, value: any) => {
     const newSlots = [...slots];
-    newSlots[index] = { ...newSlots[index], [field]: value };
+    newSlots[index] = { ...newSlots[index]!, [field]: value };
     setSlots(newSlots);
   };
 

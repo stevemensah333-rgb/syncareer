@@ -114,7 +114,7 @@ export function ProfileSection() {
       major: formData.major,
     });
     if (!result.success) {
-      toast.error(result.error.errors[0].message);
+      toast.error(result.error.errors[0]?.message ?? "Validation failed");
       return;
     }
 
@@ -153,7 +153,7 @@ export function ProfileSection() {
       major: formData.major,
     });
     if (!result.success) {
-      toast.error(result.error.errors[0].message);
+      toast.error(result.error.errors[0]?.message ?? "Validation failed");
       return;
     }
 

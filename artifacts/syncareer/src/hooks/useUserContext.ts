@@ -102,7 +102,8 @@ export function useUserContext() {
 
       const getResult = <T>(idx: number, fallback: T): T => {
         const s = settled[idx];
-        return s.status === 'fulfilled' ? ((s.value as any)?.data ?? fallback) : fallback;
+        if (!s || s.status !== 'fulfilled' || !('value' in s)) return fallback;
+        return (s.value as any)?.data ?? fallback;
       };
 
       const profileData = getResult<{ full_name?: string; bio?: string } | null>(0, null);
@@ -127,7 +128,7 @@ export function useUserContext() {
       }
       if (!location && profileData?.bio) {
         const match = profileData.bio.match(/(?:based in|from|located in|in)\s+([^,.]+(?:,\s*[^,.]+)?)/i);
-        if (match) location = match[1].trim();
+        if (match) location = match[1]?.trim() ?? null;
       }
 
       // Parse work experience from resume

@@ -56,7 +56,7 @@ export default function CounsellorClients() {
             profiles:student_id (id, first_name, last_name, email)
           `
           )
-          .eq('counsellor_id', userId)
+          .eq('counsellor_id', userId ?? '')
           .order('booking_date', { ascending: false });
 
         if (bookingError) throw bookingError;

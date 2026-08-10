@@ -172,7 +172,7 @@ const Onboarding = () => {
     if (userType === 'student') {
       const result = studentSchema.safeParse({ school, major, degreeType });
       if (!result.success) {
-        toast.error(result.error.errors[0].message);
+        toast.error(result.error.errors[0]?.message ?? "Validation failed");
         return;
       }
     } else if (userType === 'career_counsellor') {
@@ -182,7 +182,7 @@ const Onboarding = () => {
         phoneNumber: phoneNumber.trim(),
       });
       if (!result.success) {
-        toast.error(result.error.errors[0].message);
+        toast.error(result.error.errors[0]?.message ?? "Validation failed");
         return;
       }
     }

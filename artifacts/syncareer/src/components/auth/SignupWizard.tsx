@@ -57,7 +57,7 @@ export const SignupWizard: React.FC<SignupWizardProps> = ({
 
     try {
       if (step === 'email') {
-        z.object({ email: z.string().email('Invalid email') }).parseSync({
+        z.object({ email: z.string().email('Invalid email') }).parse({
           email: formData.email,
         });
       } else if (step === 'password') {
@@ -67,14 +67,14 @@ export const SignupWizard: React.FC<SignupWizardProps> = ({
         }).refine((data) => data.password === data.confirmPassword, {
           message: 'Passwords do not match',
           path: ['confirmPassword'],
-        }).parseSync({
+        }).parse({
           password: formData.password,
           confirmPassword: formData.confirmPassword,
         });
       } else if (step === 'profile') {
         z.object({
           fullName: z.string().min(2, 'Name must be at least 2 characters'),
-        }).parseSync({
+        }).parse({
           fullName: formData.fullName,
         });
       }
@@ -96,7 +96,7 @@ export const SignupWizard: React.FC<SignupWizardProps> = ({
 
     const nextIndex = currentStepIndex + 1;
     if (nextIndex < steps.length) {
-      setCurrentStep(steps[nextIndex]);
+      setCurrentStep(steps[nextIndex]!);
       trackEvent({
         event: 'user_action',
         properties: {
@@ -110,7 +110,7 @@ export const SignupWizard: React.FC<SignupWizardProps> = ({
   const handlePrev = () => {
     const prevIndex = currentStepIndex - 1;
     if (prevIndex >= 0) {
-      setCurrentStep(steps[prevIndex]);
+      setCurrentStep(steps[prevIndex]!);
     }
   };
 

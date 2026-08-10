@@ -99,7 +99,7 @@ export default function TabbedShowcase() {
   const [videoOpen, setVideoOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
-  const tab = TABS[active];
+  const tab = TABS[active]!;
 
   useEffect(() => {
     if (!videoOpen) return;
