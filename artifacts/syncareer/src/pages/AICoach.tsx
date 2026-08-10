@@ -172,7 +172,7 @@ export default function AICoach() {
   const sessionsLeft = isLimited ? Math.max(0, (limit as number) - (used as number)) : null;
 
   return (
-    <PageLayout title="SynAI">
+    <PageLayout title="SynAI" breadcrumbs={[{ label: "Home", to: "/dashboard" }, { label: "Practice", to: "/practice" }, { label: "SynAI" }]}>
       <div className="h-[calc(100vh-12rem)] flex gap-4">
         {/* Main chat area */}
         <AnimatedSection y={20} className="flex-1 flex">

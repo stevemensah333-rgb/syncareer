@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LogOut, MessageSquare, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/PageHeader';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +26,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="app-canvas min-h-screen bg-background">
       {/* Admin Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
@@ -68,16 +69,8 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
 
       {/* Page Content */}
       <main>
-        {title && (
-          <div className="bg-landing-cream/60 border-b border-border/40">
-            <div className="container mx-auto px-6 py-8">
-              <h1 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em] text-foreground">
-                {title}
-              </h1>
-            </div>
-          </div>
-        )}
-        <div className="container mx-auto px-6 py-8">
+        <PageHeader title={title} />
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-8">
           {children}
         </div>
       </main>

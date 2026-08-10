@@ -203,7 +203,7 @@ const ApplicationTracker = () => {
   const statusCounts = getStatusCounts();
 
   return (
-    <PageLayout title="Application Tracker">
+    <PageLayout title="Application Tracker" breadcrumbs={[{ label: "Home", to: "/dashboard" }, { label: "Applications" }]}>
       <div className="space-y-6">
         {/* Stats Overview */}
         <AnimatedSection y={20}>

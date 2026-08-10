@@ -7,53 +7,65 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 220 14% 10%;
+    /* Canvas: warm near-white */
+    --background: 39 38% 97%;
+    /* Text: dark navy-charcoal */
+    --foreground: 222 26% 15%;
 
+    /* Surfaces: white */
     --card: 0 0% 100%;
-    --card-foreground: 220 14% 10%;
+    --card-foreground: 222 26% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 14% 10%;
+    --popover-foreground: 222 26% 15%;
 
-    --primary: 181 100% 40%;
+    /* Primary action: cobalt */
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 181 60% 25%;
+    /* Secondary action: deep navy-slate */
+    --secondary: 221 22% 30%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 8% 46%;
+    --muted: 40 22% 96%;
+    --muted-foreground: 220 12% 44%;
 
-    --accent: 168 81% 44%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent: restrained lavender for contextual guidance */
+    --accent: 255 58% 58%;
+    --accent-foreground: 260 55% 26%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 72% 52%;
+    /* Success / progress: teal-mint */
+    --success: 166 70% 36%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    /* Attention / deadlines: restrained amber */
+    --warning: 38 90% 42%;
     --warning-foreground: 0 0% 100%;
 
-    --danger: 0 84% 60%;
+    --danger: 0 72% 51%;
     --danger-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 181 100% 40%;
+    /* Contextual guidance: lavender */
+    --info: 258 62% 50%;
+    --info-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    --border: 222 20% 89%;
+    --input: 222 22% 86%;
+    --ring: 221 83% 53%;
+
+    --radius: 0.625rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 14% 10%;
-    --sidebar-primary: 181 100% 40%;
+    --sidebar-foreground: 222 26% 15%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 14% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 181 100% 40%;
+    --sidebar-accent: 255 58% 96%;
+    --sidebar-accent-foreground: 222 26% 15%;
+    --sidebar-border: 222 20% 90%;
+    --sidebar-ring: 221 83% 53%;
 
     /* Landing page (Keitimas-inspired) — scoped, do not affect app theme */
     --landing-cream: 38 35% 95%;
@@ -63,42 +75,54 @@
   }
 
   .dark {
-    --background: 220 14% 10%;
+    --background: 222 28% 10%;
     --foreground: 220 14% 96%;
 
-    --card: 220 14% 13%;
+    --card: 222 26% 13%;
     --card-foreground: 220 14% 96%;
 
-    --popover: 220 14% 13%;
+    --popover: 222 26% 13%;
     --popover-foreground: 220 14% 96%;
 
-    --primary: 181 100% 40%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 28% 10%;
 
-    --secondary: 181 60% 25%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 220 18% 24%;
+    --secondary-foreground: 220 14% 96%;
 
-    --muted: 220 14% 18%;
-    --muted-foreground: 220 14% 72%;
+    --muted: 222 22% 18%;
+    --muted-foreground: 220 12% 72%;
 
-    --accent: 168 81% 44%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 258 40% 30%;
+    --accent-foreground: 255 70% 88%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 72% 52%;
-    --success-foreground: 0 0% 100%;
+    --success: 166 65% 55%;
+    --success-foreground: 220 28% 10%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 38 90% 55%;
+    --warning-foreground: 222 28% 10%;
 
-    --danger: 0 84% 60%;
+    --danger: 0 72% 58%;
     --danger-foreground: 0 0% 100%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 181 100% 40%;
+    --info: 258 60% 62%;
+    --info-foreground: 222 28% 10%;
+
+    --border: 222 24% 20%;
+    --input: 222 24% 22%;
+    --ring: 217 91% 60%;
+
+    --sidebar-background: 222 26% 11%;
+    --sidebar-foreground: 220 14% 96%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 222 28% 10%;
+    --sidebar-accent: 222 22% 17%;
+    --sidebar-accent-foreground: 220 14% 92%;
+    --sidebar-border: 222 24% 20%;
+    --sidebar-ring: 217 91% 60%;
   }
 }
 
@@ -117,6 +141,46 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
+  /* Ensure a visible keyboard focus indicator on every interactive element.
+     Radix/shadcn widgets opt out with `focus-visible:outline-none` and draw
+     their own ring, so this base rule is a safety net for everything else. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Respect users who prefer reduced motion globally. Radix transitions and
+     Tailwind animations collapse to near-instant, matching the 120-180ms
+     interaction rhythm while staying comfortable for motion-sensitive users. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Authenticated application canvas — warm near-white with a very subtle
+     blue/lavender atmospheric wash. Applied only to app shells, never to the
+     landing page which carries its own editorial background. */
+  .app-canvas {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(
+        900px 480px at 100% -12%,
+        hsl(var(--info) / 0.05),
+        transparent 60%
+      ),
+      radial-gradient(
+        760px 420px at -8% 30%,
+        hsl(var(--primary) / 0.045),
+        transparent 55%
+      );
+  }
+
   /* Glass morphism */
   .glass {
     @apply bg-white/10 backdrop-blur-lg border border-white/20 shadow-glass;
@@ -126,9 +190,9 @@
     @apply bg-black/20 backdrop-blur-lg border border-white/10 shadow-glass;
   }
 
-  /* Card transitions */
+  /* Card transitions — short, calm, and reserved for interactivity */
   .card-hover-effect {
-    @apply transition-all duration-300 ease-in-out;
+    @apply transition-all duration-150 ease-out;
   }
   
   /* Custom scrollbar for webkit browsers */

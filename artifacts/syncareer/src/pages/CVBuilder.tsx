@@ -213,7 +213,7 @@ const CVBuilder = () => {
   };
 
   return (
-    <PageLayout title="CV Builder">
+    <PageLayout title="CV Builder" breadcrumbs={[{ label: "Home", to: "/dashboard" }, { label: "Build", to: "/build" }, { label: "CV Builder" }]}>
       {isLoadingCV ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
