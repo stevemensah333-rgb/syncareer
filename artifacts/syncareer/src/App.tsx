@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { UserProfileProvider, useUserProfile } from "./contexts/UserProfileContext";
-import { NotificationProvider } from "./contexts/NotificationContext";
 import { prefetchLandingRoutes, prefetchStudentRoutes, prefetchCounsellorRoutes } from "@/lib/routePrefetch";
 
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
@@ -146,13 +145,12 @@ const AppContent = () => (
     <QueryClientProvider client={queryClient}>
       
       <UserProfileProvider>
-        <NotificationProvider>
-          <TooltipProvider>
-            <RoutePrefetcher />
-            <Toaster />
-              <Sonner />
-              <Suspense fallback={<LoadingFallback />}>
-              <Routes>
+        <TooltipProvider>
+          <RoutePrefetcher />
+          <Toaster />
+            <Sonner />
+            <Suspense fallback={<LoadingFallback />}>
+            <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Navigate to="/sign-in" replace />} />
@@ -247,10 +245,9 @@ const AppContent = () => (
               } />
 
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </TooltipProvider>
-        </NotificationProvider>
+          </Routes>
+        </Suspense>
+      </TooltipProvider>
       </UserProfileProvider>
     </QueryClientProvider>
   </GlobalErrorBoundary>

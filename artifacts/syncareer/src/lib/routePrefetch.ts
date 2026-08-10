@@ -27,8 +27,6 @@ export function prefetch(importer: Importer) {
 // Public / unauth landing → most likely next stops
 export const prefetchLandingRoutes = () => {
   prefetch(() => import("@/pages/Assessment"));
-  prefetch(() => import("@/components/auth/SignInForm"));
-  prefetch(() => import("@/components/auth/SignUpForm"));
   prefetch(() => import("@/pages/Pricing"));
 };
 

@@ -10,12 +10,8 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Auth boundary for the app.
- *
- * `useClerk()` keeps a Clerk-shaped name for historical reasons: the app was
- * migrated off Clerk to Supabase Auth and the call sites (`Navbar`, `Settings`)
- * were left untouched. Clerk is NOT a provider here — everything below is
- * `supabase.auth`. Renaming it is a deliberate follow-up, not cleanup.
+ * Auth boundary for the app using Supabase Auth.
+ * Provides `AuthProvider` and `useAuth` hook.
  */
 
 interface AuthContextValue {
@@ -71,11 +67,6 @@ export function useAuth() {
     userId: session?.user?.id ?? null,
     sessionId: session?.access_token ?? null,
     getToken: async () => session?.access_token ?? null,
-  };
-}
-
-export function useClerk() {
-  return {
     signOut: async (opts?: { redirectUrl?: string }) => {
       await supabase.auth.signOut();
       if (opts?.redirectUrl && typeof window !== "undefined") {

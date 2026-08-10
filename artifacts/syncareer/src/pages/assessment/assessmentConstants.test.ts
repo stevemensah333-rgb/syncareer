@@ -82,8 +82,9 @@ describe('calculateScoresLocally (RIASEC)', () => {
 
   it('is deterministic across repeated runs', () => {
     const answers = riasecAnswers({ R: 5, I: 4, A: 3, S: 2, E: 1, C: 5 });
-    const a = calculateScoresLocally(answers);
-    const b = calculateScoresLocally(answers);
+    const fixedTime = '2026-08-10T12:00:00.000Z';
+    const a = calculateScoresLocally(answers, fixedTime);
+    const b = calculateScoresLocally(answers, fixedTime);
     expect(a).toEqual(b);
   });
 });

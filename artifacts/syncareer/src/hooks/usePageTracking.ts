@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { trackPageView } from '@/lib/analyticsEvents';
+import { trackPageView } from '@/services/analytics';
 
 /**
  * Hook that automatically tracks page views when route changes

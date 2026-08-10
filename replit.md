@@ -40,8 +40,8 @@ corepack pnpm run build      # production build
 ## Where things live
 
 - `artifacts/syncareer/` — React frontend (main app).
-- `artifacts/syncareer/src/lib/auth.tsx` — `AuthProvider` + `useAuth`/`useClerk`
-  shim over `supabase.auth` (Clerk-shaped name, Supabase implementation).
+- `artifacts/syncareer/src/lib/auth.tsx` — `AuthProvider` + `useAuth`
+  boundary over `supabase.auth`.
 - `artifacts/syncareer/src/integrations/supabase/client.ts` — Supabase client.
 - `artifacts/syncareer/src/integrations/lovable/index.ts` — `lovable.auth` OAuth wrapper.
 - `artifacts/syncareer/src/App.tsx` — router.
