@@ -5,8 +5,6 @@ dist
 tmp
 out-tsc
 *.tsbuildinfo
-.expo
-.expo-shared
 
 # dependencies
 node_modules
@@ -48,8 +46,11 @@ testem.log
 .DS_Store
 Thumbs.db
 
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
+# Local env overrides. The tracked root `.env` holds only public VITE_*
+# client configuration required by the Lovable/Replit publish artifact
+# (see .env.example). Never put server secrets in either file.
+.env.local
+.env.*.local
 
 # Replit
 .cache/

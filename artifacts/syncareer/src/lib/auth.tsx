@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
@@ -6,45 +6,25 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type ShimUser = {
-  id: string;
-  primaryEmailAddress: { emailAddress: string } | null;
-  fullName: string | null;
-  imageUrl: string;
-  firstName: string | null;
-  lastName: string | null;
-};
-
-function toShimUser(user: User | null | undefined): ShimUser | null {
-  if (!user) return null;
-  const email = user.email ?? "";
-  const fullName =
-    (user.user_metadata?.full_name as string | undefined) ??
-    (user.user_metadata?.name as string | undefined) ??
-    null;
-  const [firstName = null, ...rest] = (fullName ?? "").trim().split(/\s+/);
-  return {
-    id: user.id,
-    primaryEmailAddress: email ? { emailAddress: email } : null,
-    fullName,
-    imageUrl: (user.user_metadata?.avatar_url as string | undefined) ?? "",
-    firstName: firstName || null,
-    lastName: rest.length ? rest.join(" ") : null,
-  };
-}
+/**
+ * Auth boundary for the app.
+ *
+ * `useClerk()` keeps a Clerk-shaped name for historical reasons: the app was
+ * migrated off Clerk to Supabase Auth and the call sites (`Navbar`, `Settings`)
+ * were left untouched. Clerk is NOT a provider here — everything below is
+ * `supabase.auth`. Renaming it is a deliberate follow-up, not cleanup.
+ */
 
 interface AuthContextValue {
   session: Session | null;
-  user: ShimUser | null;
   isLoaded: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue>({
   session: null,
-  user: null,
   isLoaded: false,
 });
 
@@ -76,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ session, user: toShimUser(session?.user), isLoaded }),
+    () => ({ session, isLoaded }),
     [session, isLoaded],
   );
 
@@ -94,15 +74,6 @@ export function useAuth() {
   };
 }
 
-export function useUser() {
-  const { user, isLoaded } = useContext(AuthContext);
-  return {
-    isLoaded,
-    isSignedIn: !!user,
-    user,
-  };
-}
-
 export function useClerk() {
   return {
     signOut: async (opts?: { redirectUrl?: string }) => {
@@ -111,23 +82,5 @@ export function useClerk() {
         window.location.assign(opts.redirectUrl);
       }
     },
-    openUserProfile: () => {
-      // No equivalent — settings page exposes change-password form instead.
-      if (typeof window !== "undefined") {
-        window.location.assign("/settings?tab=security");
-      }
-    },
   };
-}
-
-export function SignedIn({ children }: { children: ReactNode }) {
-  const { isLoaded, isSignedIn } = useAuth();
-  if (!isLoaded || !isSignedIn) return null;
-  return <>{children}</>;
-}
-
-export function SignedOut({ children }: { children: ReactNode }) {
-  const { isLoaded, isSignedIn } = useAuth();
-  if (!isLoaded || isSignedIn) return null;
-  return <>{children}</>;
 }

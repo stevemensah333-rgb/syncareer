@@ -42,11 +42,22 @@ how each artifact is classified. Classifications follow AGENTS.md policy:
 | Root `src/integrations/supabase/types.ts` | Lovable auto-sync target | HISTORICAL COMPATIBILITY / GENERATED CODE DEBT |
 | `artifacts/syncareer/src/integrations/supabase/types.ts` | App-build generated types | GENERATED CODE DEBT (used by the app) |
 | `bun.lock` (root & `artifacts/syncareer/`) | Lovable sandbox / proxy cache | ACTIVE PLATFORM DEPENDENCY |
+| Root `.env` (tracked) | Public `VITE_*` build config for the publish artifact | ACTIVE PLATFORM DEPENDENCY |
+| `index.html` `og:image` on `gpt-engineer-file-uploads` | Live social-preview asset | USEFUL INTEGRATION |
 | `.lovable/plan.md` | Prior automation audit log | HISTORICAL COMPATIBILITY |
 | `LOVABLE_API_KEY`, `LOVABLE_SEND_URL` | Edge-function secrets | ACTIVE PLATFORM DEPENDENCY / USEFUL INTEGRATION |
 
 See [`BACKEND_PLATFORM_INVENTORY.md`](./BACKEND_PLATFORM_INVENTORY.md) §5 for the full
-annotated table with rationale.
+annotated table with rationale, and
+[`PLATFORM_ARTIFACT_INVENTORY.md`](./PLATFORM_ARTIFACT_INVENTORY.md) for the
+repository-wide classification of every Replit/Lovable/Clerk/PWA artifact,
+including what was removed during platform cleanup and why.
+
+> **`bun.lock` handling.** Its package URLs resolve through Lovable's private
+> proxy (`europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache`).
+> Never regenerate it with a public-registry `bun install` from outside
+> Lovable — that rewrites every entry and discards the pinned resolutions.
+> Dependency changes made outside Lovable must be applied surgically.
 
 ## Generated-code policy
 

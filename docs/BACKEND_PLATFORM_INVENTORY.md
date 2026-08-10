@@ -139,6 +139,11 @@
 | **Cloud Managed Env Vars** | `.env` / Platform runtime (`VITE_SUPABASE_*`) | `ACTIVE PLATFORM DEPENDENCY` | Provided automatically by Lovable Cloud; required for client builds. |
 | **`.lovable/plan.md`** | `.lovable/plan.md` | `HISTORICAL COMPATIBILITY` | Audit log from prior automated cleanup passes. Retained for historical context. |
 
+> The repository-wide classification of **all** platform artifacts (Replit, Lovable,
+> GPT Engineer, Clerk, PWA, duplicate package managers), including what was removed
+> during platform cleanup and the evidence for each decision, lives in
+> [`PLATFORM_ARTIFACT_INVENTORY.md`](./PLATFORM_ARTIFACT_INVENTORY.md).
+
 ---
 
 ## 6. Required Secrets Matrix (Names Only)

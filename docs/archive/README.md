@@ -28,7 +28,16 @@ or code understanding.
 - **Employer dashboard / employer role** — removed.
 - **Offline PWA** (`vite-plugin-pwa`, `offline.html`, install/offline UI) — no
   offline PWA ships; current service-worker code is decommission logic.
-- **Clerk auth** — replaced by the Supabase-backed shim in `src/lib/auth.tsx`.
+- **Clerk auth** — the Clerk *provider* is gone. A deliberately Clerk-shaped
+  `useClerk()` shim over `supabase.auth` survives in
+  `artifacts/syncareer/src/lib/auth.tsx` and is still used by `Navbar.tsx` and
+  `Settings.tsx`; it is live code, not residue.
+- **`CLEANUP_BACKLOG.md`** — superseded audit backlog (see its header note).
+- **`TYPECHECK_TRACKING.md`** — resolved 205-error typecheck baseline.
+- **Replit "attached_assets" branding capture** — a scrape of an unrelated
+  third-party site; removed, nothing consumed it.
+- **Expo/React Native `artifacts/syncareer-mobile`** — never present in this
+  repository; leftover ignore rules and pnpm overrides were removed.
 
 When in doubt, verify against current code (see the documents above), never
 against this archive.

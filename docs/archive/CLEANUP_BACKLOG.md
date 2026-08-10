@@ -1,4 +1,14 @@
-# Cleanup Backlog — Risks, Impact, and Fix Plans
+# Cleanup Backlog — Risks, Impact, and Fix Plans (ARCHIVED)
+
+> **Archived / non-authoritative — superseded.** Several claims here are no longer
+> true: 11 edge functions are now tracked in `supabase/functions/` (not 3), the
+> ~150 strict-null typecheck errors are resolved (0 errors), and the duplicate
+> generated-types problem now has tooling (`pnpm schema:types:check` /
+> `schema:types:sync`). Current sources of truth:
+> [`../BACKEND_PLATFORM_INVENTORY.md`](../BACKEND_PLATFORM_INVENTORY.md),
+> [`../SCHEMA_RECONCILIATION.md`](../SCHEMA_RECONCILIATION.md),
+> [`../BUILD_AND_CHECK.md`](../BUILD_AND_CHECK.md), and
+> [`../PLATFORM_ARTIFACT_INVENTORY.md`](../PLATFORM_ARTIFACT_INVENTORY.md).
 
 Last updated: 2026-05-12
 Status: **All items below are deferred.** Only the safe Assessment.tsx constants extraction has been executed.

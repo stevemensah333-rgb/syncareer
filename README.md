@@ -58,6 +58,7 @@ docs/                          Current runbooks (see "Documentation index")
   EDGE_FUNCTIONS.md            Edge-function inventory & deployment
   PAYMENT_AND_SUBSCRIPTIONS.md Payment & subscription trust flow
   LOVABLE_INTEGRATION.md       Lovable boundaries & artifact classifications
+  PLATFORM_ARTIFACT_INVENTORY.md  Replit/Lovable/Clerk/PWA artifact classifications
   INCIDENT_RECOVERY.md         Incident & recovery basics
   SCHEMA_RECONCILIATION.md     Schema, migrations & generated-type workflow
   BUILD_AND_CHECK.md           Setup / test / build runbook
@@ -126,7 +127,13 @@ install is authoritative:
 corepack pnpm install --config.verify-deps-before-run=false --frozen-lockfile
 ```
 
-Create a `.env` in the repository root. **Required variable names (no values):**
+The root `.env` is **tracked on purpose**: it holds only public `VITE_*` client
+configuration that the Lovable/Replit publish artifact reads at build time (see
+[`PUBLISH_TROUBLESHOOTING.md`](PUBLISH_TROUBLESHOOTING.md)). Copy
+[`.env.example`](.env.example) for the full list, and put personal overrides in
+`.env.local`, which is git-ignored. **Never** put server secrets in either file.
+
+**Variable names (no values):**
 
 | Variable | Purpose |
 |---|---|
@@ -193,6 +200,7 @@ project from a personal Supabase account. Recovery paths:
 - [`docs/EDGE_FUNCTIONS.md`](docs/EDGE_FUNCTIONS.md) — edge-function inventory & deployment
 - [`docs/PAYMENT_AND_SUBSCRIPTIONS.md`](docs/PAYMENT_AND_SUBSCRIPTIONS.md) — payment/subscription trust flow
 - [`docs/LOVABLE_INTEGRATION.md`](docs/LOVABLE_INTEGRATION.md) — Lovable boundaries & classifications
+- [`docs/PLATFORM_ARTIFACT_INVENTORY.md`](docs/PLATFORM_ARTIFACT_INVENTORY.md) — every Replit/Lovable/Clerk/PWA artifact, classified
 - [`docs/INCIDENT_RECOVERY.md`](docs/INCIDENT_RECOVERY.md) — incident/recovery basics
 - [`docs/SCHEMA_RECONCILIATION.md`](docs/SCHEMA_RECONCILIATION.md) — schema/migrations/types
 - [`docs/BUILD_AND_CHECK.md`](docs/BUILD_AND_CHECK.md) — setup / test / build runbook
