@@ -31,16 +31,18 @@ export async function getUserSubscription(userId: string): Promise<SubscriptionD
   }
 }
 
-export async function isPremiumUser(userId: string): Promise<boolean> {
-  const subscription = await getUserSubscription(userId);
+export function isActivePremium(subscription: SubscriptionData | null | undefined): boolean {
   if (!subscription) return false;
-
   if (subscription.status !== 'active') return false;
-
+  if (subscription.tier !== 'premium') return false;
   if (subscription.current_period_end) {
     const endDate = new Date(subscription.current_period_end);
     if (endDate < new Date()) return false;
   }
+  return true;
+}
 
-  return subscription.tier === 'premium';
+export async function isPremiumUser(userId: string): Promise<boolean> {
+  const subscription = await getUserSubscription(userId);
+  return isActivePremium(subscription);
 }

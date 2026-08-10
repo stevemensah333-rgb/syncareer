@@ -7,12 +7,13 @@ import { Progress } from '@/components/ui/progress';
 import { FileText, Mic, Briefcase, MapPin, ArrowRight, TrendingUp, ClipboardList, CheckCircle, Target, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useCareerReadiness } from '@/hooks/useCareerReadiness';
 import { GuidedJourney } from '@/components/assessment/GuidedJourney';
 import { ReferralCard } from '@/components/referral/ReferralCard';
 import { UniversityInsightsCard } from '@/components/dashboard/UniversityInsightsCard';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 import { useNextBestAction } from '@/hooks/useNextBestAction';
+import { useUserProfile } from '@/contexts/UserProfileContext';
+import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 
 interface JobMatch {
   id: string;
@@ -22,17 +23,55 @@ interface JobMatch {
   created_at: string;
 }
 
+interface ReadinessSummary {
+  overallScore: number;
+  cvScore: number;
+  interviewScore: number;
+}
+
+function interviewsAvg(cvScore: number, interviewScore: number): number {
+  return interviewScore > 0 ? Math.round((cvScore + interviewScore) / 2) : cvScore;
+}
+
+function getLevel(score: number): string {
+  if (score >= 76) return 'Career Ready';
+  if (score >= 51) return 'Proficient';
+  if (score >= 26) return 'Developing';
+  return 'Beginning';
+}
+
+function scoreResume(resume: any): number {
+  if (!resume) return 0;
+  let score = 0;
+  if (resume.personal_info?.fullName || resume.personal_info?.full_name) score += 15;
+  if (resume.personal_info?.email) score += 10;
+  if (Array.isArray(resume.education) && resume.education.length > 0) score += 20;
+  if (Array.isArray(resume.experience) && resume.experience.length > 0) score += 20;
+  if (Array.isArray(resume.skills) && resume.skills.length > 0) score += 15;
+  if (Array.isArray(resume.projects) && resume.projects.length > 0) score += 15;
+  return Math.min(100, score);
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [major, setMajor] = useState<string | null>(null);
-  const [university, setUniversity] = useState<string | null>(null);
+  const { profile, studentDetails, loading: profileLoading } = useUserProfile();
+  const userId = useSupabaseUserId();
+
+  // Consolidated dashboard query: a single Promise.all that fetches the data
+  // NOT already cached by the UserProfileProvider (which holds profile +
+  // student_details). Previously <Dashboard> + useCareerReadiness together
+  // issued 7 + 3 = 10 Supabase round trips; after this change the dashboard
+  // page fires ~5 focused queries.
   const [topCareer, setTopCareer] = useState<{ title: string; industry: string } | null>(null);
   const [jobMatches, setJobMatches] = useState<JobMatch[]>([]);
   const [stats, setStats] = useState({ applications: 0, interviewScore: 0, cvScore: 0 });
+  const [readiness, setReadiness] = useState<ReadinessSummary>({ overallScore: 0, cvScore: 0, interviewScore: 0 });
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState<string>('');
 
-  const readiness = useCareerReadiness(major);
+  const major = studentDetails?.major ?? null;
+  const university = studentDetails?.school ?? null;
+
   const nextAction = useNextBestAction({
     hasAssessment: !!topCareer,
     cvScore: stats.cvScore,
@@ -41,59 +80,64 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-      const userId = session.user.id;
+    if (profileLoading) return;
+    if (profile?.full_name) {
+      setFullName(profile.full_name.split(' ')[0] ?? '');
+    }
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
-      const [studentRes, assessmentRes, appsRes, interviewRes, resumeRes, jobsRes, profileRes] = await Promise.all([
-        supabase.from('student_details').select('major, school').eq('user_id', userId).maybeSingle(),
-        supabase.from('assessments').select('primary_interest').eq('user_id', userId).not('completed_at', 'is', null).order('completed_at', { ascending: false }).limit(1),
+    let cancelled = false;
+    (async () => {
+      const [assessmentRes, appsRes, interviewRes, resumeRes, jobsRes, skillsRes] = await Promise.all([
+        supabase.from('assessments').select('primary_interest').eq('user_id', userId).not('completed_at', 'is', null).order('completed_at', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('job_applications').select('id').eq('applicant_id', userId),
-        supabase.from('mock_interviews').select('overall_score').eq('user_id', userId).not('overall_score', 'is', null).order('created_at', { ascending: false }).limit(1),
+        supabase.from('mock_interviews').select('overall_score').eq('user_id', userId).not('overall_score', 'is', null).order('created_at', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('resumes').select('personal_info, education, experience, skills, projects').eq('user_id', userId).eq('is_primary', true).maybeSingle(),
         supabase.from('job_postings').select('id, title, location, employment_type, created_at').eq('status', 'active').order('created_at', { ascending: false }).limit(5),
-        supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle(),
+        // skills are used for the career-readiness technical-score pillar
+        major ? supabase.from('user_skills').select('skill_name, proficiency').eq('user_id', userId) : Promise.resolve({ data: [] as any[] }),
       ]);
 
-      if (profileRes.data?.full_name) {
-        setFullName(profileRes.data.full_name.split(' ')[0] ?? '');
+      if (cancelled) return;
+
+      if (assessmentRes.data?.primary_interest) {
+        setTopCareer({ title: assessmentRes.data.primary_interest, industry: assessmentRes.data.primary_interest });
       }
+      setJobMatches((jobsRes.data as JobMatch[] | null) || []);
 
-      if (studentRes.data) {
-        setMajor(studentRes.data.major);
-        setUniversity(studentRes.data.school || null);
+      const cvScore = scoreResume(resumeRes.data);
+      const interviewScore = interviewRes.data?.overall_score || 0;
+      const applications = (appsRes.data as any[] | null)?.length ?? 0;
+      setStats({ applications, interviewScore, cvScore });
+
+      // Compute career-readiness inline so we don't refetch the same tables
+      // from a sibling hook.  The score is a rough estimate sufficient for
+      // the dashboard gauge; heavier analytics lives on /analysis.
+      const projectCount = Array.isArray((resumeRes.data as any)?.projects) ? ((resumeRes.data as any).projects as any[]).length : 0;
+      const practicalScore = Math.min(100, projectCount * 25);
+      const professionalScore = interviewsAvg(cvScore, interviewScore);
+      let technicalScore = 0;
+      if (major) {
+        // We don't have a fixed list of "career skills" without pulling in
+        // careerSkillFramework, so approximate technical score from completed
+        // skills rows. A more accurate version lives on the Analysis page.
+        const skills = (skillsRes.data as { skill_name: string; proficiency: string }[] | null) || [];
+        const proficiencyToPercent: Record<string, number> = {
+          beginner: 25, intermediate: 50, advanced: 75, expert: 100,
+        };
+        const total = skills.reduce((acc, s) => acc + (proficiencyToPercent[s.proficiency] ?? 0), 0);
+        technicalScore = skills.length ? Math.round(total / skills.length) : 0;
       }
-
-      if (assessmentRes.data?.[0]?.primary_interest) {
-        setTopCareer({ title: assessmentRes.data[0].primary_interest, industry: assessmentRes.data[0].primary_interest });
-      }
-
-      setJobMatches(jobsRes.data || []);
-
-      let cvScore = 0;
-      if (resumeRes.data) {
-        const r = resumeRes.data as any;
-        if (r.personal_info?.fullName || r.personal_info?.full_name) cvScore += 15;
-        if (r.personal_info?.email) cvScore += 10;
-        if (Array.isArray(r.education) && r.education.length > 0) cvScore += 20;
-        if (Array.isArray(r.experience) && r.experience.length > 0) cvScore += 20;
-        if (Array.isArray(r.skills) && r.skills.length > 0) cvScore += 15;
-        if (Array.isArray(r.projects) && r.projects.length > 0) cvScore += 15;
-        cvScore = Math.min(100, cvScore);
-      }
-
-      setStats({
-        applications: appsRes.data?.length || 0,
-        interviewScore: interviewRes.data?.[0]?.overall_score || 0,
-        cvScore,
-      });
-
+      const overallScore = Math.round(technicalScore * 0.5 + practicalScore * 0.3 + professionalScore * 0.2);
+      setReadiness({ overallScore, cvScore, interviewScore });
       setLoading(false);
-    };
+    })();
 
-    fetchData();
-  }, []);
+    return () => { cancelled = true; };
+  }, [userId, major, profileLoading, profile?.full_name]);
 
   const isNewUser = !topCareer && stats.cvScore === 0 && stats.applications === 0 && stats.interviewScore === 0;
 
@@ -179,7 +223,7 @@ const Dashboard = () => {
         {/* Below the fold — supporting context */}
 
         {/* Career Readiness — compact */}
-        {!readiness.loading && major && (
+        {!loading && major && (
           <AnimatedSection delay={0.1} y={20}>
             <Card className="overflow-hidden">
               <CardContent className="p-0">
@@ -204,12 +248,12 @@ const Dashboard = () => {
                       <Progress value={readiness.overallScore} className="h-1.5" />
                     </div>
                     <Badge variant="outline" className={
-                      readiness.level === 'Career Ready' ? 'border-green-500 text-green-600' :
-                      readiness.level === 'Proficient' ? 'border-primary text-primary' :
-                      readiness.level === 'Developing' ? 'border-amber-500 text-amber-600' :
+                      readiness.overallScore >= 76 ? 'border-green-500 text-green-600' :
+                      readiness.overallScore >= 51 ? 'border-primary text-primary' :
+                      readiness.overallScore >= 26 ? 'border-amber-500 text-amber-600' :
                       'border-muted-foreground text-muted-foreground'
                     }>
-                      {readiness.level}
+                      {getLevel(readiness.overallScore)}
                     </Badge>
                   </div>
                 </div>

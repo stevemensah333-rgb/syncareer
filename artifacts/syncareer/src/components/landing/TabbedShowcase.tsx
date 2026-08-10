@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, PlayCircle, Compass, FileText, Mic, Users, X } from "lucide-react";
+import { ArrowRight, Compass, FileText, Mic, Users } from "lucide-react";
 import AnimatedSection from "./AnimatedSection";
 
 type Tab = {
@@ -30,7 +30,7 @@ const TABS: Tab[] = [
       "Results you can act on the same day",
     ],
     cta: { label: "Start free assessment", href: "/assessment" },
-    Icon: PlayCircle,
+    Icon: Compass,
   },
   {
     n: "02",
@@ -96,21 +96,8 @@ const TABS: Tab[] = [
 
 export default function TabbedShowcase() {
   const [active, setActive] = useState(0);
-  const [videoOpen, setVideoOpen] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const tab = TABS[active]!;
-
-  useEffect(() => {
-    if (!videoOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setVideoOpen(false);
-    window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [videoOpen]);
 
   return (
     <section id="how" className="relative py-20 lg:py-28 bg-[#f7f5ef] text-[#0a1512]">
@@ -187,19 +174,19 @@ export default function TabbedShowcase() {
                       }}
                     />
                     <button
-                      onClick={() => setVideoOpen(true)}
+                      onClick={() => navigate('/sign-up')}
                       className="relative z-10 flex items-center gap-3 text-white group"
-                      aria-label="Play Syncareer intro video"
+                      aria-label="Get started with Syncareer"
                     >
                       <span className="grid place-items-center h-16 w-16 rounded-full bg-[#00c4cc] text-[#0a1512] shadow-[0_10px_40px_-5px_rgba(0,196,204,0.6)] group-hover:scale-105 transition-transform">
-                        <PlayCircle className="h-8 w-8" strokeWidth={1.5} />
+                        <ArrowRight className="h-8 w-8" strokeWidth={1.5} />
                       </span>
                       <span className="text-left">
                         <span className="block text-sm font-semibold">
-                          Watch the intro
+                          Start for free
                         </span>
                         <span className="block text-xs text-white/60">
-                          2 min · what Syncareer does
+                          Assessment · CV · Interview practice
                         </span>
                       </span>
                     </button>
@@ -279,43 +266,6 @@ export default function TabbedShowcase() {
           </div>
         </div>
       </div>
-
-      {/* Video Modal */}
-      <AnimatePresence>
-        {videoOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm grid place-items-center p-4"
-            onClick={() => setVideoOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="relative w-full max-w-4xl aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setVideoOpen(false)}
-                className="absolute top-3 right-3 z-10 grid place-items-center h-9 w-9 rounded-full bg-black/60 text-white hover:bg-black/80 transition"
-                aria-label="Close video"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <video
-                ref={videoRef}
-                src="/videos/promo-video.mp4"
-                controls
-                autoPlay
-                className="w-full h-full object-contain bg-black"
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   );
 }

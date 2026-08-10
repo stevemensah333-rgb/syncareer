@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useId } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { SubscriptionData } from '@/services/subscriptionService';
-import { getUserSubscription, isPremiumUser } from '@/services/subscriptionService';
+import { getUserSubscription, isActivePremium } from '@/services/subscriptionService';
 import {
   hasAccess,
   getMonthlyUsage,
@@ -30,7 +30,7 @@ export function useSubscription() {
       }
 
       const sub = await getUserSubscription(user.id);
-      const premium = await isPremiumUser(user.id);
+      const premium = isActivePremium(sub);
 
       setSubscription(sub);
       setIsPremium(premium);
