@@ -28,13 +28,16 @@ There is **no Express/Node API server**. All server-side work is Supabase.
 
 - Location: `artifacts/syncareer/`.
 - Entry: `src/main.tsx` → `src/App.tsx` (router in `App.tsx`).
-- Auth hook shim: `src/lib/auth.tsx` (`AuthProvider`, `useAuth`, `useClerk`)
-  backed by `supabase.auth`. New code imports from `@/lib/auth`, not directly
-  from `@supabase/supabase-js`. `useClerk` keeps a Clerk-shaped name only
-  because the migration off Clerk left its two call sites (`Navbar`,
-  `Settings`) untouched; Clerk is not a provider. The unused Clerk-shaped
-  exports (`useUser`, `SignedIn`, `SignedOut`, `openUserProfile`) had zero
-  importers and were removed.
+- Auth boundary: `src/lib/auth.tsx` (`AuthProvider`, `useAuth`) backed by
+  `supabase.auth`. `useAuth` provides all auth properties and `signOut`; legacy
+  Clerk-shaped names (`useClerk`) were removed after migrating verified call sites.
+- Analytics boundary: `src/services/analytics.ts` owns PostHog initialization,
+  identity, page views, and event tracking (`trackEvent`, `EVENTS`).
+- Notifications boundary: authoritative notifications are managed by Supabase
+  (`src/hooks/useNotifications.ts`, `src/utils/notifications.ts`, table `notifications`).
+  Legacy localStorage notifications were removed as duplicate.
+- Route prefetch: `src/lib/routePrefetch.ts` warms role-based dynamically imported
+  page chunks during browser idle time.
 - Integration seams:
   - `src/integrations/supabase/client.ts` — Supabase client.
   - `src/integrations/supabase/types.ts` — generated DB types.

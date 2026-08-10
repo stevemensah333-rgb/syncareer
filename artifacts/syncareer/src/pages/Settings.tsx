@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth, useClerk } from '@/lib/auth';
+import { useAuth } from '@/lib/auth';
 import { NotificationSettingsPanel } from '@/components/notifications/NotificationSettingsPanel';
 import { useSearchParams } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -61,8 +61,7 @@ const detectUserLocale = async () => {
 const Settings = () => {
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
-  const { userId } = useAuth();
-  const { signOut } = useClerk();
+  const { userId, signOut } = useAuth();
   const [searchParams] = useSearchParams();
   const initialTab = (searchParams.get('tab') as SettingsSection) || 'account';
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialTab);

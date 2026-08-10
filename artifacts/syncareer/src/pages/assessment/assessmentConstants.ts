@@ -51,7 +51,10 @@ export const SECTION_START_PAGES: Record<number, string> = {
 };
 
 /** Calculate assessment scores locally (for guest users or reuse) */
-export function calculateScoresLocally(answers: Record<number, number>): Omit<AssessmentResult, 'id' | 'created_at'> {
+export function calculateScoresLocally(
+  answers: Record<number, number>,
+  completedAt = new Date().toISOString()
+): Omit<AssessmentResult, 'id' | 'created_at'> {
   const personalityScores: Record<string, number> = {};
   const skillsScores: Record<string, number> = {};
   const riasecScores: Record<string, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
@@ -81,7 +84,7 @@ export function calculateScoresLocally(answers: Record<number, number>): Omit<As
   const tertiary = sorted[2]?.[0] ?? null;
 
   return {
-    completed_at: new Date().toISOString(),
+    completed_at: completedAt,
     personality_score_json: personalityScores,
     skills_score_json: skillsScores,
     work_interest_score_json: workInterestScores,

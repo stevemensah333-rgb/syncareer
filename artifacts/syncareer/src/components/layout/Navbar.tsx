@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/contexts/UserProfileContext';
-import { useClerk } from '@/lib/auth';
+import { useAuth } from '@/lib/auth';
 import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 import {
   DropdownMenu,
@@ -43,7 +43,7 @@ export function Navbar({ className }: NavbarProps) {
   const { isPremium, loading: subLoading } = useSubscription();
   
   const supabaseUserId = useSupabaseUserId();
-  const { signOut } = useClerk();
+  const { signOut } = useAuth();
 
   const isCounsellor = profile?.user_type === 'career_counsellor';
   const [isAdmin, setIsAdmin] = useState(false);

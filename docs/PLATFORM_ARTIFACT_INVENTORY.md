@@ -95,7 +95,7 @@ exist) and Replit-agent *output* with no consumer were removed.
 
 | Artifact | Owner | Evidence | Decision |
 |---|---|---|---|
-| `useClerk()` in `artifacts/syncareer/src/lib/auth.tsx` | Clerk (abandoned provider) | Two live call sites: `Navbar.tsx`, `Settings.tsx` | **Kept.** Clerk is gone but this is live Supabase code wearing a legacy name. Renaming is a follow-up refactor, explicitly out of scope for cleanup. Its unused siblings were removed (§3.6) |
+| `useClerk()` in `artifacts/syncareer/src/lib/auth.tsx` | Clerk (abandoned provider) | Call sites migrated to `useAuth()` | **Removed.** Replaced by `useAuth()` in `Navbar.tsx` and `Settings.tsx`. Its unused siblings were removed (§3.6) |
 | `.lovable/plan.md` | Lovable | Audit log of a prior automated pass; inside a directory Lovable owns | **Kept** — prior explicit retention decision (`LOVABLE_INTEGRATION.md`, `BACKEND_PLATFORM_INVENTORY.md` §5) |
 | `docs/archive/**` | Various | Explicitly non-authoritative; linked from `README.md` and `docs/archive/README.md` | **Kept**, and two superseded docs were moved *into* it (§3.7) |
 
@@ -209,10 +209,7 @@ importers across `artifacts/syncareer/src`):
 - the now-unreachable `ShimUser` type, `toShimUser()` mapper, and the `user`
   field on the auth context
 
-Kept: `AuthProvider`, `useAuth`, and `useClerk().signOut` — all live. A comment
-now records *why* the Clerk-shaped name survives, so the next reader does not
-mistake it for an active Clerk integration. Enforced by `noUnusedLocals` +
-`noUnusedParameters` in `artifacts/syncareer/tsconfig.json`.
+Kept: `AuthProvider` and `useAuth` — all live (`useClerk` was removed and its call sites migrated to `useAuth`). Enforced by `noUnusedLocals` + `noUnusedParameters` in `artifacts/syncareer/tsconfig.json`.
 
 ### 3.7 Superseded documentation
 
@@ -263,9 +260,7 @@ so local overrides can never be committed.
 2. **`prose` styling bug** — `@tailwindcss/typography` is installed but not
    registered while three pages use `prose` classes. Decide: register the plugin
    or drop the classes.
-3. **`useClerk` rename** — a two-call-site rename to something like `useSession()`
-   would retire the last Clerk-shaped name. Deliberately excluded here because
-   cleanup must not carry refactors.
+3. **`useClerk` rename (Completed)** — `useClerk` has been removed and its two call sites (`Navbar`, `Settings`) migrated to `useAuth()`.
 4. **Generated-type drift** — `pnpm schema:types:check` reports the root (Lovable)
    and app copies out of sync. This is pre-existing and intentional until a fresh
    Lovable regeneration (see `SCHEMA_RECONCILIATION.md`).
