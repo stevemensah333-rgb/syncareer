@@ -36,7 +36,12 @@ corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer ex
 # Or via root script
 corepack pnpm run test
 ```
-- **Status:** **PASS** (36 tests pass across 2 test suites: `useAICoachAccess.test.ts` and `featureAccess.test.ts`).
+- **Status:** **PASS** (99 tests pass across 11 test suites). The suite covers deterministic
+  domain logic (RIASEC scoring, CV strength, feature access, progress, subscription gating),
+  auth/onboarding validation + the Lovable Google OAuth session-handoff boundary, and
+  email sign-up/sign-in contracts. See [`docs/TEST_MATRIX.md`](./TEST_MATRIX.md) for what each
+  layer protects. Database/RLS and edge-function contract layers are runnable scripts that
+  require an isolated Supabase/Deno environment and are not part of this local suite.
 
 ### 3. Production Build
 ```bash
@@ -46,7 +51,7 @@ corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer ex
 # Or via root script
 corepack pnpm run build
 ```
-- **Status:** **PASS** (Vite builds client production bundles and PWA service worker into `artifacts/syncareer/dist/public` and root `dist`).
+- **Status:** **PASS** (Vite builds client production bundles into `artifacts/syncareer/dist/public` and copies `public/` into root `dist`. Note: there is no offline PWA; `public/sw.js` is decommission logic that unregisters legacy service workers and clears caches.)
 
 ### 4. TypeScript Typecheck
 ```bash
@@ -56,12 +61,8 @@ corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer ex
 # Or via root script
 corepack pnpm run typecheck
 ```
-- **Status:** **PRE-EXISTING FAILURES DOCUMENTED** (205 errors under strict TypeScript compiler settings).
-- **Failure Breakdown:**
-  - Strict-null and undefined index access checks (`noUncheckedIndexedAccess`, `strictNullChecks` across legacy UI views and hooks).
-  - Outdated or missing Supabase generated types for specific tables/columns (e.g. `counsellor_messages`, `meeting_platform`).
-  - Unused imports/declarations (`noUnusedLocals`, `noUnusedParameters`).
-- **Policy:** TypeScript settings (`strict: true`, `noImplicitAny: true`, `strictNullChecks: true`, `noEmitOnError: true`) must **never** be weakened. Errors must remain visible and resolved in dedicated type-repair stages.
+- **Status:** **PASS** (0 errors under strict TypeScript compiler settings).
+- **Policy:** TypeScript settings (`strict: true`, `noImplicitAny: true`, `strictNullChecks: true`, `noEmitOnError: true`, `noUncheckedIndexedAccess`) must **never** be weakened. The historical 205-error debt described in `TYPECHECK_TRACKING.md` has been resolved on this branch; that file is retained for history.
 
 ---
 
@@ -103,13 +104,9 @@ jobs:
       - name: Production Build
         run: corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec vite build --config vite.config.ts
 
-  typecheck-debt-reporting:
-    name: Typecheck (Technical Debt Reporting)
+  typecheck:
+    name: Typecheck
     runs-on: ubuntu-latest
-    # Temporary non-blocking job to report existing TypeScript errors (~205 errors).
-    # REMOVAL CONDITION: Once dedicated type-repair stages eliminate all pre-existing
-    # TypeScript errors, remove continue-on-error to make typecheck blocking in main CI.
-    continue-on-error: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -125,16 +122,17 @@ jobs:
       - name: Install dependencies (frozen lockfile)
         run: corepack pnpm install --config.verify-deps-before-run=false --frozen-lockfile
 
-      - name: Run TypeScript typecheck (Non-blocking technical debt reporting)
+      - name: Run TypeScript typecheck
         run: corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer exec tsc -p tsconfig.json --noEmit
 ```
 
 ### CI Job Structure:
 1. **`build-and-test` (Blocking):**
    - Runs `pnpm install --frozen-lockfile`.
-   - Runs Vitest test suite (`36 passing`).
+   - Runs Vitest test suite (`99 passing`) — the local/stable test layer.
    - Runs production Vite build.
-2. **`typecheck-debt-reporting` (Non-blocking):**
-   - Explicitly labeled as temporary technical-debt reporting (`continue-on-error: true`).
-   - Runs `tsc -p tsconfig.json --noEmit` and outputs all compiler errors.
-   - **Removal/Promotion Condition:** Once dedicated type-repair stages resolve all 205 errors, `continue-on-error` will be removed to enforce typecheck as a blocking CI gate.
+2. **`typecheck` (Blocking):**
+   - Runs `tsc -p tsconfig.json --noEmit` and gates on zero errors (now passing).
+   - Note: this `ci.yml` is a recommended configuration. No `.github/workflows/` file is
+     committed in this repository and none should be added without the platform owner's
+     approval (the CI contract is currently the root `pnpm test` / `pnpm typecheck` scripts).
