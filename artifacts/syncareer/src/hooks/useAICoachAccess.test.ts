@@ -8,6 +8,7 @@ import { useAICoachAccess } from './useSubscription';
 vi.mock('@/services/subscriptionService', () => ({
   getUserSubscription: vi.fn(),
   isPremiumUser: vi.fn(),
+  isActivePremium: vi.fn((sub: any) => !!sub && sub.tier === 'premium' && sub.status === 'active'),
 }));
 
 vi.mock('@/lib/featureAccess', async (importOriginal) => {
@@ -21,6 +22,7 @@ vi.mock('@/lib/featureAccess', async (importOriginal) => {
 const mockedAuthUser = (supabase.auth.getUser as unknown as ReturnType<typeof vi.fn>);
 const mockedGetMonthlyUsage = featureAccess.getMonthlyUsage as unknown as ReturnType<typeof vi.fn>;
 const mockedIsPremium = subscriptionService.isPremiumUser as unknown as ReturnType<typeof vi.fn>;
+const mockedIsActivePremium = subscriptionService.isActivePremium as unknown as ReturnType<typeof vi.fn>;
 const mockedGetSub = subscriptionService.getUserSubscription as unknown as ReturnType<typeof vi.fn>;
 
 describe('useAICoachAccess', () => {
@@ -30,10 +32,18 @@ describe('useAICoachAccess', () => {
     vi.clearAllMocks();
     mockedAuthUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
     mockedGetSub.mockResolvedValue(null);
+    // Tests drive the hook via the isPremiumUser path which now reads the
+    // subscription directly; make isActivePremium default false for free
+    // users and true for premium test subscriptions.
+    mockedIsActivePremium.mockImplementation((sub: any) =>
+      !!sub && sub.tier === 'premium' && sub.status === 'active',
+    );
   });
 
   it('allows free users who are under the monthly limit', async () => {
     mockedIsPremium.mockResolvedValue(false);
+    mockedIsActivePremium.mockReturnValue(false);
+    mockedGetSub.mockResolvedValue(null);
     mockedGetMonthlyUsage.mockResolvedValue(FREE_LIMIT - 1);
 
     const { result } = renderHook(() => useAICoachAccess());
@@ -47,6 +57,8 @@ describe('useAICoachAccess', () => {
 
   it('blocks free users who have hit the monthly limit', async () => {
     mockedIsPremium.mockResolvedValue(false);
+    mockedIsActivePremium.mockReturnValue(false);
+    mockedGetSub.mockResolvedValue(null);
     mockedGetMonthlyUsage.mockResolvedValue(FREE_LIMIT);
 
     const { result } = renderHook(() => useAICoachAccess());
@@ -59,6 +71,8 @@ describe('useAICoachAccess', () => {
 
   it('blocks free users who exceeded the monthly limit', async () => {
     mockedIsPremium.mockResolvedValue(false);
+    mockedIsActivePremium.mockReturnValue(false);
+    mockedGetSub.mockResolvedValue(null);
     mockedGetMonthlyUsage.mockResolvedValue(FREE_LIMIT + 5);
 
     const { result } = renderHook(() => useAICoachAccess());
@@ -69,6 +83,9 @@ describe('useAICoachAccess', () => {
 
   it('bypasses the limit for premium users without reading usage', async () => {
     mockedIsPremium.mockResolvedValue(true);
+    // Simulate an active premium subscription row.
+    mockedGetSub.mockResolvedValue({ tier: 'premium', status: 'active', current_period_end: null });
+    mockedIsActivePremium.mockReturnValue(true);
 
     const { result } = renderHook(() => useAICoachAccess());
 

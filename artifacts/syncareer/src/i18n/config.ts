@@ -5,6 +5,12 @@ import en from './locales/en';
 
 // Eager-load English only; other locales are dynamically imported on demand
 // so they don't bloat the initial JS bundle.
+// Note: i18next itself (~80 kB) remains in the initial chunk because
+// react-i18next's <I18nextProvider>/useTranslation require a live instance
+// synchronously during render; deferring initialization introduced complexity
+// without commensurate gain. All heavy analytics (posthog-js ~187 kB) and
+// react-day-picker/date-fns-v4 (~200 kB) are moved out of the initial chunk.
+
 const SUPPORTED = ['en', 'af', 'zu', 'xh', 'es', 'fr', 'de', 'pt', 'zh', 'ar'] as const;
 type Lng = (typeof SUPPORTED)[number];
 
@@ -34,7 +40,7 @@ async function ensureLanguage(lng: string) {
   }
 }
 
-i18n
+void i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({

@@ -1,6 +1,6 @@
 
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Users, LogOut, MessageCircle, HelpCircle, Phone, Mail, CreditCard, Sparkles, Shield } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -27,8 +27,17 @@ import {
   DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import AskCounsellorDialog from '@/components/counsellor/AskCounsellorDialog';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
+
+// The AskCounsellorDialog pulls in react-day-picker + date-fns v4 (~300 kB
+// combined). Lazy-load it so the calendar/date-picker code is only fetched
+// the first time the user opens (or hovers) the "Ask a Counsellor" CTA.
+const AskCounsellorDialog = lazy(() => import('@/components/counsellor/AskCounsellorDialog'));
+
+function preloadAskCounsellor() {
+  // Vite dedupes this with the lazy() importer; multiple calls are cheap.
+  void import('@/components/counsellor/AskCounsellorDialog');
+}
 
 interface NavbarProps {
   className?: string;
@@ -37,7 +46,14 @@ interface NavbarProps {
 
 export function Navbar({ className }: NavbarProps) {
   const [askCounsellorOpen, setAskCounsellorOpen] = useState(false);
-  
+
+  const openAskCounsellor = useCallback(() => {
+    // Start preloading the moment the user opens the dialog so the lazy
+    // chunk starts fetching immediately in parallel with state commit.
+    preloadAskCounsellor();
+    setAskCounsellorOpen(true);
+  }, []);
+
   const navigate = useNavigate();
   const { profile } = useUserProfile();
   const { isPremium, loading: subLoading } = useSubscription();
@@ -104,10 +120,12 @@ export function Navbar({ className }: NavbarProps) {
                     For Job Seekers
                   </Button>
                   
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="text-sm"
-                    onClick={() => setAskCounsellorOpen(true)}
+                    onMouseEnter={preloadAskCounsellor}
+                    onFocus={preloadAskCounsellor}
+                    onClick={openAskCounsellor}
                   >
                     <MessageCircle className="h-4 w-4 mr-1" />
                     Ask a Counsellor
@@ -137,7 +155,9 @@ export function Navbar({ className }: NavbarProps) {
                 variant="ghost"
                 size="icon"
                 className="lg:hidden h-9 w-9"
-                onClick={() => setAskCounsellorOpen(true)}
+                onMouseEnter={preloadAskCounsellor}
+                onFocus={preloadAskCounsellor}
+                onClick={openAskCounsellor}
               >
                 <MessageCircle className="h-5 w-5" />
               </Button>
@@ -229,8 +249,12 @@ export function Navbar({ className }: NavbarProps) {
         </div>
       </header>
 
-      {/* Ask a Counsellor Dialog */}
-      <AskCounsellorDialog open={askCounsellorOpen} onOpenChange={setAskCounsellorOpen} />
+      {/* Ask a Counsellor Dialog — lazily loaded; render nothing until the chunk arrives. */}
+      {askCounsellorOpen && (
+        <Suspense fallback={null}>
+          <AskCounsellorDialog open={askCounsellorOpen} onOpenChange={setAskCounsellorOpen} />
+        </Suspense>
+      )}
     </>
   );
 }

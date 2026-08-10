@@ -32,6 +32,27 @@ runWhenIdle(() => {
   });
 }, 1500);
 
-// Defer analytics until the browser is idle so it never blocks first paint.
-const startAnalytics = () => initializeAnalytics();
-runWhenIdle(startAnalytics, 3000);
+// Analytics is downloaded lazily the first time an event is tracked or on
+// first user interaction (whichever comes first). This keeps ~190 kB of
+// posthog-js off the initial download for users who bounce immediately,
+// without losing events that fire shortly after page load (they're queued).
+let analyticsScheduled = false;
+const scheduleAnalyticsLoad = () => {
+  if (analyticsScheduled) return;
+  analyticsScheduled = true;
+  runWhenIdle(() => initializeAnalytics(), 3000);
+};
+// Load on first interaction (covers authenticated sessions where events
+// fire almost immediately after hydration).
+const onFirstInput = () => {
+  scheduleAnalyticsLoad();
+  window.removeEventListener('pointerdown', onFirstInput);
+  window.removeEventListener('keydown', onFirstInput);
+  window.removeEventListener('scroll', onFirstInput, { capture: true });
+};
+window.addEventListener('pointerdown', onFirstInput, { passive: true });
+window.addEventListener('keydown', onFirstInput);
+window.addEventListener('scroll', onFirstInput, { passive: true, capture: true });
+// Also load during idle for passive observers (e.g. analytics-only pageviews
+// without user interaction).
+runWhenIdle(scheduleAnalyticsLoad, 4500);

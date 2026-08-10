@@ -65,6 +65,10 @@ const JOB_SCHEMA = {
   },
 };
 
+// Cap concurrent outbound searches to avoid hammering Firecrawl / the network
+// and to keep function memory bounded.
+const MAX_CONCURRENT_SEARCHES = 6;
+
 async function searchSource(apiKey: string, source: { id: string; site: string }, major: string): Promise<ScrapedJob[]> {
   try {
     const query = `${major} entry-level graduate jobs Ghana site:${source.site}`;
@@ -109,6 +113,29 @@ async function searchSource(apiKey: string, source: { id: string; site: string }
   }
 }
 
+/**
+ * Run async tasks with bounded concurrency.
+ */
+async function pool<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async (_, runnerIdx) => {
+    while (true) {
+      const i = next++;
+      if (i >= items.length) break;
+      // Spacing out start times slightly to reduce thundering-herd.
+      if (runnerIdx > 0) await new Promise((r) => setTimeout(r, runnerIdx * 50));
+      results[i] = await worker(items[i]);
+    }
+  });
+  await Promise.all(runners);
+  return results;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -122,7 +149,6 @@ Deno.serve(async (req) => {
       status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-
 
   try {
     const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
@@ -142,57 +168,95 @@ Deno.serve(async (req) => {
     (majorRows || []).forEach((r: any) => { if (r.major) majorsSet.add(String(r.major).trim()); });
     const majors = majorsSet.size > 0 ? Array.from(majorsSet) : FALLBACK_MAJORS;
 
-    // Search each site for each major in parallel
-    const tasks: Promise<ScrapedJob[]>[] = [];
-    for (const major of majors) {
-      for (const site of SITES) {
-        tasks.push(searchSource(FIRECRAWL_API_KEY, site, major));
+    // Build (source, major) pairs and run searches with bounded concurrency.
+    const pairs: { major: string; site: typeof SITES[number] }[] = [];
+    for (const major of majors) for (const site of SITES) pairs.push({ major, site });
+
+    const results = await pool(pairs, MAX_CONCURRENT_SEARCHES, ({ major, site }) =>
+      searchSource(FIRECRAWL_API_KEY, site, major),
+    );
+    const all = results.flat();
+
+    // Deduplicate within this run by external_id so upsert inputs are unique.
+    const byExternalId = new Map<string, ScrapedJob>();
+    for (const j of all) byExternalId.set(j.external_id, j);
+    const deduped = Array.from(byExternalId.values());
+
+    console.log(`Aggregated ${all.length} jobs (${deduped.length} unique) across ${majors.length} majors × ${SITES.length} sites (concurrency=${MAX_CONCURRENT_SEARCHES})`);
+
+    if (deduped.length === 0) {
+      return new Response(JSON.stringify({
+        success: true,
+        sources: SITES.map(s => s.id),
+        majors,
+        total_scraped: 0,
+        inserted: 0,
+        updated: 0,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Bulk upsert: a single statement that uses the unique partial index on
+    // external_id. Existing rows keep their id/created_at; new rows are
+    // inserted. We count inserted vs. no-op via a deterministic client-side
+    // comparison of upserted count vs. previous count — simpler is to record
+    // the before-count once.
+    const { count: beforeCount, error: countErr } = await supabase
+      .from('job_postings')
+      .select('*', { count: 'exact', head: true })
+      .not('external_id', 'is', null);
+    if (countErr) console.error('count before upsert failed', countErr);
+
+    const rows = deduped.map((j) => ({
+      title: j.title,
+      company_name: j.company_name || null,
+      company_domain: j.company_domain || null,
+      department: j.company_name || null,
+      location: j.location,
+      employment_type: j.employment_type,
+      experience_level: j.experience_level || null,
+      description: j.description,
+      skills: j.skills || [],
+      salary_min: j.salary_min || null,
+      salary_max: j.salary_max || null,
+      salary_currency: j.salary_currency || null,
+      application_deadline: j.application_deadline || null,
+      source: j.source,
+      source_url: j.source_url,
+      external_id: j.external_id,
+      is_external: true,
+      status: 'active',
+    }));
+
+    // Upsert in chunks of 200 to stay safely below PostgREST payload limits.
+    const CHUNK = 200;
+    let upsertErrors = 0;
+    for (let i = 0; i < rows.length; i += CHUNK) {
+      const chunk = rows.slice(i, i + CHUNK);
+      const { error } = await supabase
+        .from('job_postings')
+        .upsert(chunk, { onConflict: 'external_id', ignoreDuplicates: false });
+      if (error) {
+        upsertErrors += chunk.length;
+        console.error('upsert chunk failed', i, error);
       }
     }
-    const all = (await Promise.all(tasks)).flat();
-    console.log(`Aggregated ${all.length} jobs across ${majors.length} majors × ${SITES.length} sites`);
 
-    let inserted = 0;
-    let skipped = 0;
-    for (const j of all) {
-      const { data: existing } = await supabase
-        .from('job_postings')
-        .select('id')
-        .eq('external_id', j.external_id)
-        .maybeSingle();
-      if (existing) { skipped++; continue; }
+    const { count: afterCount } = await supabase
+      .from('job_postings')
+      .select('*', { count: 'exact', head: true })
+      .not('external_id', 'is', null);
 
-      const { error } = await supabase.from('job_postings').insert({
-        title: j.title,
-        company_name: j.company_name || null,
-        company_domain: j.company_domain || null,
-        department: j.company_name || null,
-        location: j.location,
-        employment_type: j.employment_type,
-        experience_level: j.experience_level || null,
-        description: j.description,
-        skills: j.skills || [],
-        salary_min: j.salary_min || null,
-        salary_max: j.salary_max || null,
-        salary_currency: j.salary_currency || null,
-        application_deadline: j.application_deadline || null,
-        source: j.source,
-        source_url: j.source_url,
-        external_id: j.external_id,
-        is_external: true,
-        status: 'active',
-      });
-      if (!error) inserted++;
-      else console.error('insert error', error);
-    }
+    const inserted = Math.max(0, (afterCount ?? 0) - (beforeCount ?? 0));
+    const updated = deduped.length - inserted - upsertErrors;
 
     return new Response(JSON.stringify({
       success: true,
       sources: SITES.map(s => s.id),
       majors,
-      total_scraped: all.length,
+      total_scraped: deduped.length,
       inserted,
-      skipped,
+      updated: Math.max(0, updated),
+      errors: upsertErrors,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {
     console.error(e);

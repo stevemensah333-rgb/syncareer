@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const services = [
   {
-    image: "/landing/feature-cv.png",
+    image: "/landing/feature-cv.webp",
     eyebrow: "Career Assessment",
     title: "Find a path that actually fits.",
     body: "RIASEC + skills + interests cross-referenced with 25+ career paths so the recommendation feels obvious, not generic.",
@@ -12,7 +12,7 @@ const services = [
     cta: "Take the assessment",
   },
   {
-    image: "/landing/feature-interview.png",
+    image: "/landing/feature-interview.webp",
     eyebrow: "CV Builder",
     title: "An ATS-ready CV in minutes.",
     body: "Templates engineered to pass screening filters, with a built-in score that tells you exactly what to tighten.",
@@ -20,7 +20,7 @@ const services = [
     cta: "Open the builder",
   },
   {
-    image: "/landing/story-2.png",
+    image: "/landing/story-2.webp",
     eyebrow: "Interview Simulator",
     title: "Walk in already rehearsed.",
     body: "Voice interviews with SynAssist. Role-specific prompts, calm pacing, and feedback you can act on the same day.",
@@ -28,7 +28,7 @@ const services = [
     cta: "Practice now",
   },
   {
-    image: "/landing/feature-counsellor.png",
+    image: "/landing/feature-counsellor.webp",
     eyebrow: "Counsellor Marketplace",
     title: "Talk to a real career counsellor.",
     body: "Book a session with a vetted counsellor — one-on-one guidance from people who have walked the path before you.",

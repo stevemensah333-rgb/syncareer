@@ -5,25 +5,25 @@ const STORIES = [
     quote: "In four weeks, I went from no clear direction to a UX internship offer.",
     name: "Ama K.",
     role: "UX Design Intern · KNUST, Level 300",
-    image: "/landing/story-1.png",
+    image: "/landing/story-1.webp",
   },
   {
     quote: "I was getting zero callbacks. After Syncareer's CV, I had three interviews in a week.",
     name: "Kwame O.",
     role: "CS Graduate · UG, 2025",
-    image: "/landing/story-2.png",
+    image: "/landing/story-2.webp",
   },
   {
     quote: "Practising with SynAssist made the real interview feel routine. I got the offer.",
     name: "Esi M.",
     role: "Marketing Associate · Ashesi",
-    image: "/landing/story-3.png",
+    image: "/landing/story-3.webp",
   },
   {
     quote: "Finally, advice that didn't just say 'figure it out yourself'. The plan was specific.",
     name: "Naa A.",
     role: "Data Analyst · GIMPA",
-    image: "/landing/story-1.png",
+    image: "/landing/story-1.webp",
   },
 ];
 
@@ -81,6 +81,7 @@ export default function SuccessStoriesSection() {
                     src={s.image}
                     alt={s.name}
                     loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                   />
                 </div>

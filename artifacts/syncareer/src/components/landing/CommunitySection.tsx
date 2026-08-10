@@ -1,18 +1,18 @@
 import AnimatedSection from "./AnimatedSection";
 
 const PHOTOS = [
-  "/landing/story-1.png",
-  "/landing/story-2.png",
-  "/landing/story-3.png",
-  "/landing/feature-counsellor.png",
-  "/landing/story-1.png",
-  "/landing/feature-cv.png",
-  "/landing/story-2.png",
-  "/landing/feature-interview.png",
-  "/landing/story-3.png",
-  "/landing/story-1.png",
-  "/landing/story-2.png",
-  "/landing/story-3.png",
+  "/landing/story-1.webp",
+  "/landing/story-2.webp",
+  "/landing/story-3.webp",
+  "/landing/feature-counsellor.webp",
+  "/landing/story-1.webp",
+  "/landing/feature-cv.webp",
+  "/landing/story-2.webp",
+  "/landing/feature-interview.webp",
+  "/landing/story-3.webp",
+  "/landing/story-1.webp",
+  "/landing/story-2.webp",
+  "/landing/story-3.webp",
 ];
 
 export default function CommunitySection() {
@@ -61,6 +61,7 @@ export default function CommunitySection() {
                     src={src}
                     alt=""
                     loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 hover:scale-105"
                   />
                 </div>
