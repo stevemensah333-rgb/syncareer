@@ -22,11 +22,13 @@ import { CVSkillGapPanel } from '@/components/cv-builder/CVSkillGapPanel';
 import { useCVStrengthScore } from '@/hooks/useCVStrengthScore';
 import { useCVAnalysis } from '@/hooks/useCVAnalysis';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
+import { useCVPersistence } from '@/hooks/useCVPersistence';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { supabase } from '@/integrations/supabase/client';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 import type { CVData } from '@/features/cv-builder/types';
 import { initialCVData } from '@/features/cv-builder/types';
+import { loadPrimaryCV, syncCVSkills, cvSaveToast } from '@/features/cv-builder/persistence';
 
 
 
@@ -35,13 +37,18 @@ const CVBuilder = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [showPreview, setShowPreview] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [isLoadingCV, setIsLoadingCV] = useState(true);
   const previewRef = useRef<HTMLDivElement>(null);
   const strengthResult = useCVStrengthScore(cvData);
   const feedbackModal = useFeedbackModal('cv_builder');
   const [uploadOpen, setUploadOpen] = useState(false);
   const cvAnalysis = useCVAnalysis();
+  const { isSaving, save } = useCVPersistence();
+  // Always save the latest editor state (avoids stale-closure saves via retry).
+  const cvDataRef = useRef(cvData);
+  useEffect(() => {
+    cvDataRef.current = cvData;
+  }, [cvData]);
 
   const [searchParams] = useSearchParams();
   const targetRole = searchParams.get('targetRole') || searchParams.get('role') || '';
@@ -63,41 +70,8 @@ const CVBuilder = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) { setIsLoadingCV(false); return; }
 
-        const { data: resume } = await supabase
-          .from('resumes')
-          .select('personal_info, education, experience, projects, achievements, skills, references_section')
-          .eq('user_id', session.user.id)
-          .eq('is_primary', true)
-          .maybeSingle();
-
-        if (resume) {
-          const pi = resume.personal_info as any;
-          const edu = Array.isArray(resume.education) ? (resume.education as any[])[0] : resume.education;
-          setCVData({
-            personal: {
-              firstName: pi?.firstName || pi?.first_name || '',
-              lastName: pi?.lastName || pi?.last_name || '',
-              phone: pi?.phone || '',
-              nationality: pi?.nationality || '',
-              email: pi?.email || '',
-              schoolEmail: pi?.schoolEmail || pi?.school_email || '',
-              linkedIn: pi?.linkedIn || pi?.linkedin || '',
-            },
-            education: {
-              university: edu?.university || '',
-              location: edu?.location || '',
-              degree: edu?.degree || '',
-              graduationDate: edu?.graduationDate || edu?.graduation_date || '',
-              gpa: edu?.gpa || '',
-            },
-            achievements: Array.isArray(resume.achievements) ? (resume.achievements as any[]) : [],
-            experience: Array.isArray(resume.experience) ? (resume.experience as any[]) : [],
-            projects: Array.isArray(resume.projects) ? (resume.projects as any[]) : [],
-            activities: [],
-            skills: Array.isArray(resume.skills) ? (resume.skills as string[]) : [],
-            references: (resume.references_section as string) || 'Available upon request',
-          });
-        }
+        const loaded = await loadPrimaryCV(supabase, session.user.id);
+        if (loaded) setCVData(loaded.cv);
       } catch (err) {
         console.error('Failed to load saved CV:', err);
       } finally {
@@ -173,78 +147,60 @@ const CVBuilder = () => {
     }
   };
 
-  const handleSaveCV = async () => {
-    setIsSaving(true);
+  const countActiveJobs = async (): Promise<number> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error('Please sign in to save your CV');
-        return;
-      }
-      const userId = session.user.id;
-
-      const { error } = await supabase
-        .from('resumes')
-        .upsert({
-          user_id: userId,
-          title: `${cvData.personal.firstName} ${cvData.personal.lastName} CV`,
-          template: 'basic',
-          personal_info: cvData.personal,
-          education: [cvData.education],
-          experience: cvData.experience,
-          projects: cvData.projects,
-          achievements: cvData.achievements,
-          skills: cvData.skills,
-          is_primary: true,
-        }, {
-          onConflict: 'user_id,is_primary'
-        });
-
-      if (error) throw error;
-
-      // ── Write skills to user_skills so SynAI can see them ─────────
-      if (cvData.skills.length > 0) {
-        const skillRows = cvData.skills.map(skill => ({
-          user_id: userId,
-          skill_name: skill.trim(),
-          category: 'general',
-          proficiency: 'intermediate',
-          source: 'cv',
-        }));
-        // Upsert to avoid duplicates
-        await supabase
-          .from('user_skills')
-          .upsert(skillRows, { onConflict: 'user_id,skill_name' });
-      }
-
-      // ── Trigger intelligence recompute (fire-and-forget) ──────────
-      supabase.functions.invoke('compute-user-intelligence').catch(e =>
-        console.warn('[CVBuilder] Intelligence recompute failed:', e)
-      );
-
-      // Check for matching jobs
-      const { data: matchingJobs } = await supabase
+      const { data, error } = await supabase
         .from('job_postings')
         .select('id')
         .eq('status', 'active');
-      
-      const jobCount = matchingJobs?.length || 0;
-      if (jobCount > 0) {
-        toast.success(`CV saved! Your profile matches ${jobCount} open position${jobCount > 1 ? 's' : ''}.`, {
-          action: {
-            label: 'View Jobs',
-            onClick: () => window.location.href = '/opportunities',
-          },
-        });
-      } else {
-        toast.success('CV saved successfully!');
-      }
-    } catch (error) {
-      console.error('Save error:', error);
-      toast.error('Failed to save CV');
-    } finally {
-      setIsSaving(false);
+      if (error) return 0;
+      return data?.length ?? 0;
+    } catch {
+      return 0;
     }
+  };
+
+  const handleSaveCV = async () => {
+    const cv = cvDataRef.current;
+    const result = await save(cv);
+
+    if (!result.ok) {
+      // Validation / auth / permission / network / server failures preserve the
+      // user's unsaved editor state and show a safe, actionable message.
+      const spec = cvSaveToast(result, { onRetry: handleSaveCV });
+      if (spec.type === 'error') {
+        toast.error(spec.message, spec.action ? { action: spec.action } : undefined);
+      }
+      return;
+    }
+
+    // Confirmed persistence succeeded. All secondary writes are best-effort and
+    // never flip a confirmed save into a failure notification.
+    const session = await supabase.auth
+      .getSession()
+      .then((r) => r.data.session)
+      .catch(() => null);
+    if (session?.user?.id) {
+      syncCVSkills(supabase, session.user.id, cv.skills).catch((e) =>
+        console.warn('[CVBuilder] skills sync failed:', e)
+      );
+      supabase.functions.invoke('compute-user-intelligence').catch((e) =>
+        console.warn('[CVBuilder] Intelligence recompute failed:', e)
+      );
+    }
+
+    const jobs = await countActiveJobs();
+    const spec = cvSaveToast(result, { jobs });
+    toast.success(spec.message, {
+      ...(jobs > 0
+        ? {
+            action: {
+              label: 'View Jobs',
+              onClick: () => (window.location.href = '/opportunities'),
+            },
+          }
+        : {}),
+    });
   };
 
   const handleAISuggestion = (section: string, content: string) => {
