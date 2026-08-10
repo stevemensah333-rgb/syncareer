@@ -6,6 +6,15 @@
 > See [`README.md`](README.md) for the authoritative guide and
 > [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the current architecture.
 
+**Replit is intentionally retained.** `.replit`, `.replitignore`,
+`artifacts/syncareer/.replit-artifact/artifact.toml`, and the three
+`@replit/vite-plugin-*` packages are active development/preview tooling, not
+residue. The plugins are dev-only: the runtime-error modal loads when
+`NODE_ENV !== "production"`, and cartographer/dev-banner additionally require
+`REPL_ID`, so production builds never include them. The rationale and the full
+artifact classification are in
+[`docs/PLATFORM_ARTIFACT_INVENTORY.md`](docs/PLATFORM_ARTIFACT_INVENTORY.md).
+
 ## Stack (current)
 
 - **Frontend:** React 19 + Vite 7 + TypeScript 5.9 + Tailwind CSS, at
@@ -31,8 +40,8 @@ corepack pnpm run build      # production build
 ## Where things live
 
 - `artifacts/syncareer/` — React frontend (main app).
-- `artifacts/syncareer/src/lib/auth.tsx` — `AuthProvider` + `useAuth`/`useUser`/
-  `useClerk`/`SignedIn`/`SignedOut` shim over `supabase.auth`.
+- `artifacts/syncareer/src/lib/auth.tsx` — `AuthProvider` + `useAuth`/`useClerk`
+  shim over `supabase.auth` (Clerk-shaped name, Supabase implementation).
 - `artifacts/syncareer/src/integrations/supabase/client.ts` — Supabase client.
 - `artifacts/syncareer/src/integrations/lovable/index.ts` — `lovable.auth` OAuth wrapper.
 - `artifacts/syncareer/src/App.tsx` — router.
@@ -43,8 +52,10 @@ corepack pnpm run build      # production build
 ## Environment variables (names only)
 
 `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`,
-`VITE_PAYSTACK_PUBLIC_KEY`, `VITE_POSTHOG_API_KEY` (optional). Edge functions
-require server secrets configured in Lovable Cloud — never commit values.
+`VITE_PAYSTACK_PUBLIC_KEY`, `VITE_POSTHOG_API_KEY` (optional). See
+[`.env.example`](.env.example); the tracked root `.env` carries only public
+`VITE_*` build config, and `.env.local` is git-ignored for local overrides. Edge
+functions require server secrets configured in Lovable Cloud — never commit values.
 Vite caches env vars at startup; restart the dev server after adding secrets.
 
 ## Gotchas

@@ -1,4 +1,9 @@
-# TypeScript Error Tracking Summary
+# TypeScript Error Tracking Summary (ARCHIVED)
+
+> **Archived / non-authoritative.** This tracked a historical 205-error typecheck
+> baseline that has since been resolved (`tsc --noEmit` reports 0 errors). It is
+> retained only as a record of what was repaired. The current build/verification
+> contract is [`../BUILD_AND_CHECK.md`](../BUILD_AND_CHECK.md).
 
 **Baseline:** 205 errors across 57 files  
 **Generated types:** `artifacts/syncareer/src/integrations/supabase/types.ts` (verified schema)

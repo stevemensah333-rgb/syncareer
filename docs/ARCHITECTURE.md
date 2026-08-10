@@ -28,9 +28,13 @@ There is **no Express/Node API server**. All server-side work is Supabase.
 
 - Location: `artifacts/syncareer/`.
 - Entry: `src/main.tsx` → `src/App.tsx` (router in `App.tsx`).
-- Auth hook shim: `src/lib/auth.tsx` (`AuthProvider`, `useAuth`, `useUser`,
-  `useClerk`, `SignedIn`, `SignedOut`) backed by `supabase.auth`. New code
-  imports from `@/lib/auth`, not directly from `@supabase/supabase-js`.
+- Auth hook shim: `src/lib/auth.tsx` (`AuthProvider`, `useAuth`, `useClerk`)
+  backed by `supabase.auth`. New code imports from `@/lib/auth`, not directly
+  from `@supabase/supabase-js`. `useClerk` keeps a Clerk-shaped name only
+  because the migration off Clerk left its two call sites (`Navbar`,
+  `Settings`) untouched; Clerk is not a provider. The unused Clerk-shaped
+  exports (`useUser`, `SignedIn`, `SignedOut`, `openUserProfile`) had zero
+  importers and were removed.
 - Integration seams:
   - `src/integrations/supabase/client.ts` — Supabase client.
   - `src/integrations/supabase/types.ts` — generated DB types.

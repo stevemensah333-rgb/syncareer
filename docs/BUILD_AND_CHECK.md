@@ -13,8 +13,8 @@
 | Tool / File | Scope / Platform | Classification | Authority Status |
 |---|---|---|---|
 | **`pnpm` / `pnpm-lock.yaml` / `pnpm-workspace.yaml`** | Local dev, CI, Replit, Publisher | `ACTIVE PLATFORM DEPENDENCY` | **Authoritative** package manager for local development, CI pipelines, and production builds. |
-| **`bun.lock` / `artifacts/syncareer/bun.lock`** | Lovable | `ACTIVE PLATFORM DEPENDENCY` | Used by Lovable sandbox environment and auto-sync. Retained. |
-| **`package-lock.json`** | npm / Dependabot | `UNKNOWN` / Compatibility | Maintained for GitHub Dependabot and tooling compatibility. Retained. |
+| **`bun.lock` / `artifacts/syncareer/bun.lock`** | Lovable | `ACTIVE PLATFORM DEPENDENCY` | Used by the Lovable sandbox environment and auto-sync. Package URLs resolve through Lovable's private npm proxy (`europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache`), so these files must be edited surgically and never regenerated against the public registry. Retained. |
+| **`package-lock.json`** | npm | *Removed* | Removed during platform cleanup. There is no `.github/` directory, no Dependabot/Renovate configuration, and no npm-based script or platform consumer. npm also does not read `pnpm-workspace.yaml`, so `npm ci` only ever installed the four root dependencies and never the actual app in `artifacts/syncareer` — a misleading, non-reproducible install. |
 
 ---
 
@@ -62,7 +62,7 @@ corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer ex
 corepack pnpm run typecheck
 ```
 - **Status:** **PASS** (0 errors under strict TypeScript compiler settings).
-- **Policy:** TypeScript settings (`strict: true`, `noImplicitAny: true`, `strictNullChecks: true`, `noEmitOnError: true`, `noUncheckedIndexedAccess`) must **never** be weakened. The historical 205-error debt described in `TYPECHECK_TRACKING.md` has been resolved on this branch; that file is retained for history.
+- **Policy:** TypeScript settings (`strict: true`, `noImplicitAny: true`, `strictNullChecks: true`, `noEmitOnError: true`, `noUncheckedIndexedAccess`) must **never** be weakened. The historical 205-error debt described in [`archive/TYPECHECK_TRACKING.md`](./archive/TYPECHECK_TRACKING.md) has been resolved; that file is archived for history.
 
 ---
 
