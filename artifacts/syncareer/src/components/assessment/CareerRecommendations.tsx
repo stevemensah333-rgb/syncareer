@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Briefcase, ChevronDown, ChevronUp, GraduationCap, Lightbulb, Sparkles, TrendingUp, Zap, MapPin, FileText, Mic, ArrowRight, Users, LogIn } from 'lucide-react';
+import { Briefcase, ChevronDown, ChevronUp, GraduationCap, Lightbulb, Sparkles, Zap, MapPin, ArrowRight, Users, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';

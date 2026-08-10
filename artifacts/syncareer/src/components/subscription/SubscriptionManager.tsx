@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useAICoachAccess } from '@/hooks/useSubscription';
+import { } from '@/hooks/useSubscription';
 import { toast } from 'sonner';
 import {
   CheckCircle,
@@ -21,8 +21,6 @@ import { FREE_LIMITS, getCurrentMonth } from '@/lib/featureAccess';
 import PaystackButton from '@/components/payment/PaystackButton';
 
 const MONTHLY_FEATURES = ['ai_coach_session', 'mock_interview', 'cv_export'] as const;
-const TOTAL_FEATURES = ['career_assessment'] as const;
-const ACTIVE_FEATURES = ['job_application'] as const;
 
 interface UsageData {
   ai_coach_session: number;
@@ -31,15 +29,6 @@ interface UsageData {
   career_assessment: number;
   job_application: number;
 }
-
-const FREE_PLAN_FEATURES = [
-  'AI Coach sessions: 5 per month',
-  'Mock interviews: 3 per month (basic roles only)',
-  'CV downloads: 2 exports per month (PDF only)',
-  'Career assessments: 2 full assessments',
-  'Job applications tracked: 10 active',
-  'Analytics: Monthly summary report only',
-];
 
 const PREMIUM_PLAN_FEATURES = [
   'AI Coach sessions: Unlimited',

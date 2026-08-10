@@ -53,10 +53,10 @@ export function setMetaTags(metadata: PageMetadata) {
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement('link');
-      canonical.rel = 'canonical';
+      (canonical as HTMLLinkElement).rel = 'canonical';
       document.head.appendChild(canonical);
     }
-    canonical.href = metadata.canonical;
+    (canonical as HTMLLinkElement).href = metadata.canonical;
   }
 }
 

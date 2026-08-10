@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
-  Briefcase, MapPin, Clock, DollarSign, Building2, CheckCircle2, XCircle,
+  Briefcase, MapPin, DollarSign, CheckCircle2, XCircle,
   ExternalLink, Search, Bookmark, BookmarkCheck, MessageSquare, FileText, X, AlertCircle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -167,7 +167,7 @@ const Opportunities = () => {
       });
       enriched.sort((a, b) => b.matchPercentage - a.matchPercentage);
       setJobs(enriched);
-      if (enriched.length && !selectedId) setSelectedId(enriched[0].id);
+      if (enriched.length && !selectedId) setSelectedId(enriched[0]!.id);
     } catch (e) {
       console.error(e);
       toast.error('Failed to load opportunities');
@@ -239,7 +239,7 @@ const Opportunities = () => {
 
   useEffect(() => {
     if (filtered.length && !filtered.find(j => j.id === selectedId)) {
-      setSelectedId(filtered[0].id);
+      setSelectedId(filtered[0]!.id);
     }
   }, [filtered, selectedId]);
 

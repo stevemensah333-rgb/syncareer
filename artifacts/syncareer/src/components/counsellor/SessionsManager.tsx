@@ -361,7 +361,7 @@ export function SessionsManager({ counsellorId }: SessionsManagerProps) {
                           <MessageSquare className="h-4 w-4" />
                           Messages with Client
                         </h4>
-                        <SessionMessaging bookingId={session.id} counsellorId={counsellorId} />
+                        <SessionMessaging bookingId={session.id} clientName="Client" />
                       </div>
 
                       {/* Session Notes */}

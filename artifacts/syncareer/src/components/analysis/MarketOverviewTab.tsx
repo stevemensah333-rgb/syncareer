@@ -53,7 +53,7 @@ export function MarketOverviewTab({ data }: Props) {
 
       const skills: string[] = [];
       if (resumes && resumes.length > 0) {
-        const resumeSkills = resumes[0].skills;
+        const resumeSkills = resumes[0]!.skills;
         if (Array.isArray(resumeSkills)) {
           resumeSkills.forEach((s: unknown) => {
             if (typeof s === "string") skills.push(s.toLowerCase());

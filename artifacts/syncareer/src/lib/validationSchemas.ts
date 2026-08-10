@@ -112,7 +112,7 @@ export type FeedbackFormData = z.infer<typeof feedbackFormSchema>;
  */
 export function getFormErrorMessage(error: unknown): string {
   if (error instanceof z.ZodError) {
-    const firstIssue = error.issues[0];
+    const firstIssue = error.issues[0]!;
     return firstIssue.message || 'Invalid input';
   }
   

@@ -85,21 +85,21 @@ export function useAssessment() {
       ASSESSMENT_QUESTIONS.forEach(q => {
         const val = answers[q.id];
         if (q.category === 'personality') {
-          personalityScores[`q${q.id}`] = val;
+          if (val !== undefined) personalityScores[`q${q.id}`] = val;
         } else if (q.category === 'skills') {
-          skillsScores[`q${q.id}`] = val;
+          if (val !== undefined) skillsScores[`q${q.id}`] = val;
         } else if (q.category === 'work_interest' && q.subcategory) {
-          riasecScores[q.subcategory] += val;
-          riasecCounts[q.subcategory] += 1;
+          riasecScores[q.subcategory] = (riasecScores[q.subcategory] ?? 0) + (val ?? 0);
+          riasecCounts[q.subcategory] = (riasecCounts[q.subcategory] ?? 0) + 1;
         }
       });
 
       // Normalize RIASEC to 0-100
       const workInterestScores: Record<string, number> = {};
       Object.keys(riasecScores).forEach(key => {
-        const maxPossible = riasecCounts[key] * 5;
+        const maxPossible = (riasecCounts[key] ?? 0) * 5;
         workInterestScores[key] = maxPossible > 0
-          ? Math.round((riasecScores[key] / maxPossible) * 100)
+          ? Math.round(((riasecScores[key] ?? 0) / maxPossible) * 100)
           : 0;
       });
 

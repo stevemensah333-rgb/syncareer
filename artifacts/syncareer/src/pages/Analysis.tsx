@@ -5,12 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, GraduationCap, RefreshCw, AlertCircle, BarChart3, TrendingUp, LineChart, Download } from 'lucide-react';
+import { Sparkles, GraduationCap, RefreshCw, AlertCircle, BarChart3, TrendingUp, Download } from 'lucide-react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useMarketIntelligence } from '@/hooks/useMarketIntelligence';
 import { MarketOverviewTab } from '@/components/analysis/MarketOverviewTab';
 import { CareerOutlookTab } from '@/components/analysis/CareerOutlookTab';
-import { Link } from 'react-router-dom';
+import { } from 'react-router-dom';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 
 import { PrescriptiveActionPlan } from '@/components/analysis/PrescriptiveActionPlan';

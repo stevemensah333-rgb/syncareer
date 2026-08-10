@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { Calendar, Clock, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AvailabilityCalendar } from '@/components/counsellor/AvailabilityCalendar';

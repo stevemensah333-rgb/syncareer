@@ -75,6 +75,7 @@ export async function apiRequest<T>(
   }
 
   if (lastError) throw lastError;
+  throw new Error('apiRequest: no response received');
 }
 
 /**

@@ -55,7 +55,7 @@ interface EarningsSummary {
 }
 
 const CounsellorDashboard = () => {
-  const { profile } = useUserProfile();
+  const { } = useUserProfile();
   const [counsellorDetails, setCounsellorDetails] = useState<CounsellorDetails | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);

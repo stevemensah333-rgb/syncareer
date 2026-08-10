@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { } from 'sonner';
 
 export interface Credential {
   id: string;
@@ -56,7 +56,7 @@ export async function getCounsellorCredentials(counsellorId: string) {
       .eq('counsellor_id', counsellorId);
 
     if (error) throw error;
-    return data as Credential[];
+    return data as unknown as Credential[];
   } catch (error) {
     console.error('[credentialApi] Failed to fetch counsellor credentials:', error);
     throw error;
@@ -153,7 +153,7 @@ export async function getAdminCredentials(filters?: {
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as Credential[];
+    return data as unknown as Credential[];
   } catch (error) {
     console.error('[credentialApi] Failed to fetch admin credentials:', error);
     throw error;

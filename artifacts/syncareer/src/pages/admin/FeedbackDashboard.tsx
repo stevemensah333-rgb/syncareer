@@ -87,7 +87,9 @@ const FeedbackDashboard = () => {
     const map: Record<string, { positive: number; negative: number }> = {};
     feedback.forEach(f => {
       if (!map[f.feature_name]) map[f.feature_name] = { positive: 0, negative: 0 };
-      map[f.feature_name][f.response_type as 'positive' | 'negative']++;
+      const entry = map[f.feature_name]!;
+      if (f.response_type === 'positive') entry.positive++;
+      else if (f.response_type === 'negative') entry.negative++;
     });
     return Object.entries(map).map(([name, counts]) => ({
       name: FEATURE_LABELS[name] || name,

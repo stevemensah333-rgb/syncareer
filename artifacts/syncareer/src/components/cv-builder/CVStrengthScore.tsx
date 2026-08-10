@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, AlertTriangle, TrendingUp, Target } from 'lucide-react';
+import { CheckCircle, TrendingUp, Target } from 'lucide-react';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import type { CVStrengthResult } from '@/hooks/useCVStrengthScore';

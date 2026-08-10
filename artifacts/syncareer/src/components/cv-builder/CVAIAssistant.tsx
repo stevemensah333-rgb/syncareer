@@ -179,7 +179,7 @@ export const CVAIAssistant: React.FC<CVAIAssistantProps> = ({
         </CardHeader>
         <CardContent>
           <ul className="space-y-2">
-            {currentTips.map((tip, index) => (
+            {(currentTips ?? []).map((tip, index) => (
               <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
                 <span className="text-primary">•</span>
                 {tip}

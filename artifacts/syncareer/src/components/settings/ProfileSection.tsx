@@ -53,7 +53,7 @@ const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 30 }, (_, i) => currentYear - 20 + i);
 
 export function ProfileSection() {
-  const { profile, studentDetails, refreshProfile } = useUserProfile();
+  const { profile, studentDetails } = useUserProfile();
   const [qualifications, setQualifications] = useState<Qualification[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -114,7 +114,7 @@ export function ProfileSection() {
       major: formData.major,
     });
     if (!result.success) {
-      toast.error(result.error.errors[0].message);
+      toast.error(result.error.errors[0]?.message ?? "Validation failed");
       return;
     }
 
@@ -153,7 +153,7 @@ export function ProfileSection() {
       major: formData.major,
     });
     if (!result.success) {
-      toast.error(result.error.errors[0].message);
+      toast.error(result.error.errors[0]?.message ?? "Validation failed");
       return;
     }
 

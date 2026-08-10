@@ -63,22 +63,22 @@ function parseFinalReport(content: string): FinalReport | null {
     if (!scoreMatch) return null;
 
     return {
-      overallScore: parseInt(scoreMatch[1]),
-      overallVerdict: verdictMatch ? verdictMatch[1].trim() : 'N/A',
-      readiness: readinessMatch ? readinessMatch[1].trim() : 'N/A',
-      assessment: assessmentMatch ? assessmentMatch[1].trim() : '',
-      strengths: strengthsMatch ? strengthsMatch[1].split(', ').filter(Boolean) : [],
-      weaknesses: weaknessesMatch ? weaknessesMatch[1].split(', ').filter(Boolean) : [],
+      overallScore: parseInt(scoreMatch[1]!),
+      overallVerdict: verdictMatch?.[1]?.trim() ?? 'N/A',
+      readiness: readinessMatch?.[1]?.trim() ?? 'N/A',
+      assessment: assessmentMatch?.[1]?.trim() ?? '',
+      strengths: strengthsMatch?.[1]?.split(', ').filter(Boolean) ?? [],
+      weaknesses: weaknessesMatch?.[1]?.split(', ').filter(Boolean) ?? [],
       priorities: [],
-      nextSteps: nextStepsMatch ? nextStepsMatch[1].split(', ').filter(Boolean) : [],
+      nextSteps: nextStepsMatch?.[1]?.split(', ').filter(Boolean) ?? [],
       categoryScores: {
         technical: null,
         behavioral: null,
         situational: null,
         communication: 0,
-        overall_impression: parseInt(scoreMatch[1]),
+        overall_impression: parseInt(scoreMatch[1]!),
       },
-      interviewerNote: noteMatch ? noteMatch[1].trim() : undefined,
+      interviewerNote: noteMatch?.[1]?.trim(),
     };
   } catch {
     return null;
@@ -242,7 +242,7 @@ export function VoiceInterviewMode({
   const status = getStatusInfo();
   const StatusIcon = status.icon;
   const progressPercent = progress.total > 0 ? (progress.answered / progress.total) * 100 : 0;
-  const roundInfo = ROUND_LABELS[progress.currentRound] || ROUND_LABELS.intro;
+  const roundInfo = ROUND_LABELS[progress.currentRound] ?? ROUND_LABELS['intro']!;
 
   // Find the final report message (last assistant message when completed)
   const finalReportMessage = isCompleted ? messages.filter(m => m.role === 'assistant').pop() : null;

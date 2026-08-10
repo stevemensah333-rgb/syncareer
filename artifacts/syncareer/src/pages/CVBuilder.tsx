@@ -2,13 +2,12 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 
-
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Download, Eye, Sparkles, Save, FileText, MessageCircle, CheckCircle2, Upload } from 'lucide-react';
-import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
+import { Download, Eye, Save, FileText, CheckCircle2, Upload } from 'lucide-react';
+
 import { toast } from 'sonner';
 import { CVFormPersonal } from '@/components/cv-builder/CVFormPersonal';
 import { CVFormEducation } from '@/components/cv-builder/CVFormEducation';
@@ -117,7 +116,7 @@ const CVBuilder = () => {
   const [uploadOpen, setUploadOpen] = useState(false);
   const cvAnalysis = useCVAnalysis();
   
-  const { userId } = useAuth();
+  const { } = useAuth();
   const [searchParams] = useSearchParams();
   const targetRole = searchParams.get('targetRole') || searchParams.get('role') || '';
   const targetCompany = searchParams.get('company') || '';
@@ -286,7 +285,6 @@ const CVBuilder = () => {
         });
 
       if (error) throw error;
-
 
       // ── Write skills to user_skills so SynAI can see them ─────────
       if (cvData.skills.length > 0) {

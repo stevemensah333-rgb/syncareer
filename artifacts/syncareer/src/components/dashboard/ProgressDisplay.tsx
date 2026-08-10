@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle } from 'lucide-react';
 import { UserProgress, calculateTotalProgress, getMilestones, getNextAction, getMilestoneDetails } from '@/lib/progressCalculations';

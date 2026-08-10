@@ -71,70 +71,6 @@ const DEGREE_TYPES = [
   'Professional Degree',
 ];
 
-const INDUSTRIES = [
-  'Technology',
-  'Finance & Banking',
-  'Healthcare',
-  'Manufacturing',
-  'Retail',
-  'Education',
-  'Construction',
-  'Mining',
-  'Agriculture',
-  'Telecommunications',
-  'Hospitality & Tourism',
-  'Legal Services',
-  'Consulting',
-  'Media & Entertainment',
-  'Non-Profit',
-  'Government',
-  'Other',
-];
-
-const COMPANY_SIZES = [
-  '1-10 employees',
-  '11-50 employees',
-  '51-200 employees',
-  '201-500 employees',
-  '501-1000 employees',
-  '1000+ employees',
-];
-
-const JOB_ROLES = [
-  'Software Developer',
-  'Data Analyst',
-  'Project Manager',
-  'Business Analyst',
-  'Marketing Manager',
-  'Sales Representative',
-  'Human Resources Manager',
-  'Financial Analyst',
-  'Operations Manager',
-  'Product Manager',
-  'UX/UI Designer',
-  'Account Manager',
-  'Consultant',
-  'Teacher/Educator',
-  'Healthcare Professional',
-  'Engineer',
-  'Administrative Assistant',
-  'Customer Service Representative',
-  'Legal Professional',
-  'Research Scientist',
-  'Entrepreneur/Business Owner',
-  'Other',
-];
-
-const YEARS_OF_EXPERIENCE = [
-  'Less than 1 year',
-  '1-2 years',
-  '3-5 years',
-  '6-10 years',
-  '11-15 years',
-  '16-20 years',
-  'More than 20 years',
-];
-
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 20 }, (_, i) => currentYear - 10 + i);
 
@@ -181,7 +117,6 @@ const Onboarding = () => {
   const [counsellorFullName, setCounsellorFullName] = useState<string>('');
   const [countryCode, setCountryCode] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
-
 
   useEffect(() => {
     const checkSession = async () => {
@@ -230,7 +165,6 @@ const Onboarding = () => {
     checkSession();
   }, [navigate]);
 
-
   const handleSubmit = async () => {
     if (!userId) return;
 
@@ -238,7 +172,7 @@ const Onboarding = () => {
     if (userType === 'student') {
       const result = studentSchema.safeParse({ school, major, degreeType });
       if (!result.success) {
-        toast.error(result.error.errors[0].message);
+        toast.error(result.error.errors[0]?.message ?? "Validation failed");
         return;
       }
     } else if (userType === 'career_counsellor') {
@@ -248,7 +182,7 @@ const Onboarding = () => {
         phoneNumber: phoneNumber.trim(),
       });
       if (!result.success) {
-        toast.error(result.error.errors[0].message);
+        toast.error(result.error.errors[0]?.message ?? "Validation failed");
         return;
       }
     }
@@ -329,7 +263,6 @@ const Onboarding = () => {
       />
     );
   }
-
 
   const shellProps =
     userType === 'student'

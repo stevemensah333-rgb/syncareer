@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Download, CheckCircle, AlertCircle } from 'lucide-react';
 import { Credential, approveCredential, rejectCredential } from '@/lib/credentialApi';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';

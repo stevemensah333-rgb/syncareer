@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ThumbsUp, ThumbsDown, Send, X } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send } from 'lucide-react';
 
 interface FeedbackModalProps {
   isOpen: boolean;

@@ -57,7 +57,7 @@ const Dashboard = () => {
       ]);
 
       if (profileRes.data?.full_name) {
-        setFullName(profileRes.data.full_name.split(' ')[0]);
+        setFullName(profileRes.data.full_name.split(' ')[0] ?? '');
       }
 
       if (studentRes.data) {

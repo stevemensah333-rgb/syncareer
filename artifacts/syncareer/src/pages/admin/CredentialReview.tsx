@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { } from '@/components/ui/badge';
 import { CredentialList } from '@/components/admin/CredentialList';
 import { CredentialViewer } from '@/components/admin/CredentialViewer';
 import { getAdminCredentials, Credential } from '@/lib/credentialApi';

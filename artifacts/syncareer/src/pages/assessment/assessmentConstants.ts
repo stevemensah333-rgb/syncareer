@@ -60,33 +60,33 @@ export function calculateScoresLocally(answers: Record<number, number>): Omit<As
   ASSESSMENT_QUESTIONS.forEach(q => {
     const val = answers[q.id];
     if (q.category === 'personality') {
-      personalityScores[`q${q.id}`] = val;
+      if (val !== undefined) personalityScores[`q${q.id}`] = val;
     } else if (q.category === 'skills') {
-      skillsScores[`q${q.id}`] = val;
+      if (val !== undefined) skillsScores[`q${q.id}`] = val;
     } else if (q.category === 'work_interest' && q.subcategory) {
-      riasecScores[q.subcategory] += val;
-      riasecCounts[q.subcategory] += 1;
+      riasecScores[q.subcategory] = (riasecScores[q.subcategory] ?? 0) + (val ?? 0);
+      riasecCounts[q.subcategory] = (riasecCounts[q.subcategory] ?? 0) + 1;
     }
   });
 
   const workInterestScores: Record<string, number> = {};
   Object.keys(riasecScores).forEach(key => {
-    const maxPossible = riasecCounts[key] * 5;
-    workInterestScores[key] = maxPossible > 0 ? Math.round((riasecScores[key] / maxPossible) * 100) : 0;
+    const maxPossible = (riasecCounts[key] ?? 0) * 5;
+    workInterestScores[key] = maxPossible > 0 ? Math.round(((riasecScores[key] ?? 0) / maxPossible) * 100) : 0;
   });
 
   const sorted = Object.entries(workInterestScores).sort(([, a], [, b]) => b - a);
-  const primary = sorted[0]?.[0] || null;
-  const secondary = sorted[1]?.[0] || null;
-  const tertiary = sorted[2]?.[0] || null;
+  const primary = sorted[0]?.[0] ?? null;
+  const secondary = sorted[1]?.[0] ?? null;
+  const tertiary = sorted[2]?.[0] ?? null;
 
   return {
     completed_at: new Date().toISOString(),
     personality_score_json: personalityScores,
     skills_score_json: skillsScores,
     work_interest_score_json: workInterestScores,
-    primary_interest: primary ? RIASEC_LABELS[primary] : null,
-    secondary_interest: secondary ? RIASEC_LABELS[secondary] : null,
-    tertiary_interest: tertiary ? RIASEC_LABELS[tertiary] : null,
+    primary_interest: primary ? (RIASEC_LABELS[primary] ?? null) : null,
+    secondary_interest: secondary ? (RIASEC_LABELS[secondary] ?? null) : null,
+    tertiary_interest: tertiary ? (RIASEC_LABELS[tertiary] ?? null) : null,
   };
 }

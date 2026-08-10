@@ -45,7 +45,7 @@ function generateExplanation(
   const profile = career.riasec_profile;
 
   [primaryKey, secondaryKey, tertiaryKey].forEach((key) => {
-    if (key && profile[key] >= 0.4) {
+    if (key && (profile[key] ?? 0) >= 0.4) {
       parts.push(`${RIASEC_LABELS[key]} ${RIASEC_STRENGTHS[key] || 'traits'}`);
     }
   });
@@ -114,13 +114,13 @@ export function useCareerRecommendations(assessmentResult: AssessmentResult | nu
     const userProfile: Record<string, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
 
     if (primaryKey && workScores[primaryKey] !== undefined) {
-      userProfile[primaryKey] += (workScores[primaryKey] / 100) * INTEREST_WEIGHTS.primary;
+      userProfile[primaryKey] = (userProfile[primaryKey] ?? 0) + ((workScores[primaryKey] ?? 0) / 100) * INTEREST_WEIGHTS.primary;
     }
     if (secondaryKey && workScores[secondaryKey] !== undefined) {
-      userProfile[secondaryKey] += (workScores[secondaryKey] / 100) * INTEREST_WEIGHTS.secondary;
+      userProfile[secondaryKey] = (userProfile[secondaryKey] ?? 0) + ((workScores[secondaryKey] ?? 0) / 100) * INTEREST_WEIGHTS.secondary;
     }
     if (tertiaryKey && workScores[tertiaryKey] !== undefined) {
-      userProfile[tertiaryKey] += (workScores[tertiaryKey] / 100) * INTEREST_WEIGHTS.tertiary;
+      userProfile[tertiaryKey] = (userProfile[tertiaryKey] ?? 0) + ((workScores[tertiaryKey] ?? 0) / 100) * INTEREST_WEIGHTS.tertiary;
     }
 
     // Score each career
@@ -131,8 +131,8 @@ export function useCareerRecommendations(assessmentResult: AssessmentResult | nu
       let careerMag = 0;
 
       Object.keys(userProfile).forEach((key) => {
-        const u = userProfile[key] || 0;
-        const c = cp[key] || 0;
+        const u = userProfile[key] ?? 0;
+        const c = cp[key] ?? 0;
         dotProduct += u * c;
         userMag += u * u;
         careerMag += c * c;

@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { TrendingUp, Calendar, Users, CheckCircle, AlertTriangle, Info, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { } from "@/components/ui/badge";
 import type { MarketIntelligence } from "@/hooks/useMarketIntelligence";
 
 interface Props {
