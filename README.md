@@ -63,6 +63,7 @@ docs/                          Current runbooks (see "Documentation index")
   SCHEMA_RECONCILIATION.md     Schema, migrations & generated-type workflow
   BUILD_AND_CHECK.md           Setup / test / build runbook
   TEST_MATRIX.md               Test layers & coverage intent
+  FEATURE_PORTFOLIO_DECISIONS.md  Feature classifications & evidence plan (no removals)
   archive/                     Historical, non-authoritative docs
 artifacts/syncareer/           React + Vite + TypeScript frontend (the app)
   src/                         Frontend source
@@ -205,4 +206,5 @@ project from a personal Supabase account. Recovery paths:
 - [`docs/SCHEMA_RECONCILIATION.md`](docs/SCHEMA_RECONCILIATION.md) — schema/migrations/types
 - [`docs/BUILD_AND_CHECK.md`](docs/BUILD_AND_CHECK.md) — setup / test / build runbook
 - [`docs/TEST_MATRIX.md`](docs/TEST_MATRIX.md) — test layers and coverage intent
+- [`docs/FEATURE_PORTFOLIO_DECISIONS.md`](docs/FEATURE_PORTFOLIO_DECISIONS.md) — feature retain/simplify/pause/remove classifications & evidence plan (decision stage; nothing removed)
 - [`AGENTS.md`](AGENTS.md) — engineering policy (read first)
