@@ -7,6 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { useVoiceInterview } from '@/hooks/useVoiceInterview';
 import { useEffect, useRef } from 'react';
+import { ROUND_LABELS } from '@/features/interview/constants';
+import { parseFinalReport, type FinalReport } from '@/features/interview/reportParser';
 
 interface VoiceInterviewModeProps {
   jobRole: string;
@@ -17,72 +19,6 @@ interface VoiceInterviewModeProps {
   jobDescription?: string;
   sessionLength?: 'quick' | 'standard' | 'extended';
   onEnd: () => void;
-}
-
-const ROUND_LABELS: Record<string, { label: string; color: string }> = {
-  intro: { label: 'Intro', color: 'bg-primary/20 text-primary border-primary/30' },
-  technical: { label: 'Technical', color: 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30' },
-  behavioral: { label: 'Behavioral', color: 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-500/30' },
-  situational: { label: 'Scenario', color: 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30' },
-  closing: { label: 'Closing', color: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30' },
-  complete: { label: 'Complete', color: 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30' },
-};
-
-interface FinalReport {
-  overallScore: number;
-  overallVerdict: string;
-  readiness: string;
-  assessment: string;
-  strengths: string[];
-  weaknesses: string[];
-  priorities: string[];
-  nextSteps: string[];
-  categoryScores: {
-    technical: number | null;
-    behavioral: number | null;
-    situational: number | null;
-    communication: number;
-    overall_impression: number;
-  };
-  interviewerNote?: string;
-}
-
-/** Parse the final report text from the completed interview message */
-function parseFinalReport(content: string): FinalReport | null {
-  try {
-    // Extract score
-    const scoreMatch = content.match(/Score:\s*(\d+)\/100/);
-    const verdictMatch = content.match(/—\s*([^\n]+)/);
-    const readinessMatch = content.match(/Readiness:\s*([^\n]+)/);
-    const assessmentMatch = content.match(/Readiness:[^\n]*\n\n([\s\S]*?)(?:\n\n|✅)/);
-    const strengthsMatch = content.match(/✅ Strengths:\s*([^\n]+)/);
-    const weaknessesMatch = content.match(/⚠️ Areas to Improve:\s*([^\n]+)/);
-    const nextStepsMatch = content.match(/📋 Next Steps:\s*([^\n]+)/);
-    const noteMatch = content.match(/💼 Interviewer's Note:\s*([^\n]+)/);
-
-    if (!scoreMatch) return null;
-
-    return {
-      overallScore: parseInt(scoreMatch[1]!),
-      overallVerdict: verdictMatch?.[1]?.trim() ?? 'N/A',
-      readiness: readinessMatch?.[1]?.trim() ?? 'N/A',
-      assessment: assessmentMatch?.[1]?.trim() ?? '',
-      strengths: strengthsMatch?.[1]?.split(', ').filter(Boolean) ?? [],
-      weaknesses: weaknessesMatch?.[1]?.split(', ').filter(Boolean) ?? [],
-      priorities: [],
-      nextSteps: nextStepsMatch?.[1]?.split(', ').filter(Boolean) ?? [],
-      categoryScores: {
-        technical: null,
-        behavioral: null,
-        situational: null,
-        communication: 0,
-        overall_impression: parseInt(scoreMatch[1]!),
-      },
-      interviewerNote: noteMatch?.[1]?.trim(),
-    };
-  } catch {
-    return null;
-  }
 }
 
 function FinalReportCard({ report }: { report: FinalReport }) {

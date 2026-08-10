@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useOutcomeTracking } from '@/hooks/useOutcomeTracking';
 import { format } from 'date-fns';
 import AnimatedSection from '@/components/landing/AnimatedSection';
+import { STATUS_COLORS, STATUS_OUTCOME_MAP, formatShortDate, getDaysAgo } from '@/features/application-tracker/constants';
 
 interface InterviewSession {
   id: string;
@@ -39,17 +40,6 @@ interface Application {
   };
   interview?: InterviewSession;
 }
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-warning/15 text-warning',
-  reviewing: 'bg-primary/15 text-primary',
-  shortlisted: 'bg-secondary/15 text-secondary',
-  interview: 'bg-primary/20 text-primary',
-  offered: 'bg-success/15 text-success',
-  hired: 'bg-success text-success-foreground',
-  rejected: 'bg-destructive/15 text-destructive',
-  withdrawn: 'bg-muted text-muted-foreground',
-};
 
 const ApplicationTracker = () => {
   const { updateOutcome, triggerIntelligenceRefresh } = useOutcomeTracking();
@@ -122,13 +112,7 @@ const ApplicationTracker = () => {
 
       if (error) throw error;
 
-      // Interview sessions are no longer tracked separately.
-      const interviewMap: Record<string, InterviewSession> = {};
-
-      setApplications((data || []).map(app => ({
-        ...app,
-        interview: interviewMap[app.id] || undefined,
-      })));
+      setApplications((data || []).map(app => ({ ...app })));
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast.error('Failed to load applications');
@@ -154,13 +138,7 @@ const ApplicationTracker = () => {
 
       // Map application status to outcome for the feedback loop
       if (app?.job?.title) {
-        const outcomeMap: Record<string, string> = {
-          hired: 'success',
-          offered: 'success',
-          rejected: 'rejected',
-          withdrawn: 'withdrawn',
-        };
-        const outcome = outcomeMap[newStatus];
+        const outcome = STATUS_OUTCOME_MAP[newStatus];
         if (outcome) {
           updateOutcome({
             itemTitle: app.job.title,
@@ -223,21 +201,6 @@ const ApplicationTracker = () => {
   };
 
   const statusCounts = getStatusCounts();
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const getDaysAgo = (dateString: string) => {
-    const days = Math.floor((Date.now() - new Date(dateString).getTime()) / (1000 * 60 * 60 * 24));
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Yesterday';
-    return `${days} days ago`;
-  };
 
   return (
     <PageLayout title="Application Tracker">
@@ -337,7 +300,7 @@ const ApplicationTracker = () => {
                           )}
                           <span className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
-                            Applied {formatDate(app.created_at)}
+                            Applied {formatShortDate(app.created_at)}
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />

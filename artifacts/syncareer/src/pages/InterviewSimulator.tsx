@@ -25,14 +25,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import AnimatedSection from '@/components/landing/AnimatedSection';
 
 import type { InterviewSetupConfig } from '@/types/interview';
+import { SESSION_OPTIONS } from '@/features/interview/constants';
+import type { SessionLengthOption } from '@/features/interview/constants';
 
-type SessionLength = 'quick' | 'standard' | 'extended';
+type SessionLength = SessionLengthOption['value'];
 
-const SESSION_OPTIONS: Array<{ value: SessionLength; label: string; description: string; questions: number; icon: typeof Zap }> = [
-  { value: 'quick', label: 'Quick', description: '~15 min · 8 questions', questions: 8, icon: Zap },
-  { value: 'standard', label: 'Standard', description: '~30 min · 15 questions', questions: 15, icon: Target },
-  { value: 'extended', label: 'Deep Dive', description: '~45 min · 20 questions', questions: 20, icon: Clock },
-];
+const SESSION_ICONS: Record<SessionLength, typeof Zap> = {
+  quick: Zap,
+  standard: Target,
+  extended: Clock,
+};
 
 const InterviewSimulator = () => {
   const { studentDetails } = useUserProfile();
@@ -271,7 +273,7 @@ const InterviewSimulator = () => {
                     <Label>Session Length</Label>
                     <div className="grid grid-cols-3 gap-3">
                       {SESSION_OPTIONS.map((opt) => {
-                        const Icon = opt.icon;
+                        const Icon = SESSION_ICONS[opt.value];
                         return (
                           <button
                             key={opt.value}

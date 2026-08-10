@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { format, isBefore, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { DAYS_OF_WEEK, formatTime } from '@/features/counsellor/constants';
 
 interface Counsellor {
   id: string;
@@ -55,8 +56,6 @@ const bookingSchema = z.object({
 });
 
 type Step = 'form' | 'list' | 'profile' | 'time';
-
-const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const AskCounsellorDialog: React.FC<AskCounsellorDialogProps> = ({ open, onOpenChange }) => {
   const [step, setStep] = useState<Step>('form');
@@ -201,14 +200,6 @@ const AskCounsellorDialog: React.FC<AskCounsellorDialogProps> = ({ open, onOpenC
   const getTimeSlotsForDate = (date: Date): TimeSlot[] => {
     const dayOfWeek = date.getDay();
     return availability.filter(slot => slot.day_of_week === dayOfWeek);
-  };
-
-  const formatTime = (time: string) => {
-    const [hours = '0', minutes = '0'] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const formattedHour = hour % 12 || 12;
-    return `${formattedHour}:${minutes} ${ampm}`;
   };
 
   const handleBook = async () => {

@@ -5,7 +5,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Sparkles, Send, Loader2, Lightbulb, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import type { CVData } from '@/pages/CVBuilder';
+import type { CVData } from '@/features/cv-builder/types';
+import { SECTION_TIPS, QUICK_PROMPTS } from '@/features/cv-builder/constants';
 
 interface CVAIAssistantProps {
   cvData: CVData;
@@ -21,46 +22,6 @@ export const CVAIAssistant: React.FC<CVAIAssistantProps> = ({
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-
-  const sectionTips: Record<string, string[]> = {
-    personal: [
-      'Use a professional email address',
-      'Include country code in phone number',
-      'LinkedIn URL should be customized',
-    ],
-    education: [
-      'List your most recent education first',
-      'Include relevant coursework if applicable',
-      'GPA above 3.0 is worth mentioning',
-    ],
-    experience: [
-      'Start bullet points with action verbs',
-      'Quantify achievements with numbers',
-      'Focus on impact, not just duties',
-    ],
-    projects: [
-      'Highlight technical skills used',
-      'Mention team size and your role',
-      'Include measurable outcomes',
-    ],
-    activities: [
-      'Show leadership and initiative',
-      'Connect activities to career goals',
-      'Demonstrate soft skills',
-    ],
-    skills: [
-      'List both technical and soft skills',
-      'Be specific about proficiency levels',
-      'Include relevant certifications',
-    ],
-  };
-
-  const quickPrompts = [
-    { label: 'Improve bullet points', prompt: 'Help me write stronger bullet points for my experience section' },
-    { label: 'Suggest skills', prompt: 'Suggest relevant skills based on my background' },
-    { label: 'Professional summary', prompt: 'Help me write a compelling professional summary' },
-    { label: 'Action verbs', prompt: 'Give me powerful action verbs for my CV' },
-  ];
 
   const handleAIRequest = async (customPrompt?: string) => {
     const finalPrompt = customPrompt || prompt;
@@ -94,7 +55,7 @@ export const CVAIAssistant: React.FC<CVAIAssistantProps> = ({
     }
   };
 
-  const currentTips = sectionTips[activeSection] || sectionTips.personal;
+  const currentTips = SECTION_TIPS[activeSection] || SECTION_TIPS.personal;
 
   return (
     <div className="space-y-4">
@@ -131,7 +92,7 @@ export const CVAIAssistant: React.FC<CVAIAssistantProps> = ({
           </Button>
 
           <div className="flex flex-wrap gap-2">
-            {quickPrompts.map((qp) => (
+            {QUICK_PROMPTS.map((qp) => (
               <Button
                 key={qp.label}
                 variant="outline"

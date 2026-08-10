@@ -5,25 +5,11 @@ import { CheckCircle, TrendingUp, Target } from 'lucide-react';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import type { CVStrengthResult } from '@/hooks/useCVStrengthScore';
+import { LABEL_CONFIG, CATEGORY_LABELS } from '@/features/cv-builder/constants';
 
 interface CVStrengthScoreProps {
   result: CVStrengthResult;
 }
-
-const LABEL_CONFIG: Record<CVStrengthResult['label'], { color: string; ring: string }> = {
-  Weak: { color: 'text-destructive', ring: 'stroke-destructive' },
-  Developing: { color: 'text-orange-500', ring: 'stroke-orange-500' },
-  Strong: { color: 'text-primary', ring: 'stroke-primary' },
-  Excellent: { color: 'text-green-600', ring: 'stroke-green-600' },
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  completeness: 'Completeness',
-  contentQuality: 'Content Quality',
-  skillsRelevance: 'Skills Relevance',
-  presentation: 'Presentation',
-  competitiveness: 'Competitiveness',
-};
 
 export const CVStrengthScore: React.FC<CVStrengthScoreProps> = ({ result }) => {
   const { totalScore, label, breakdown, strengths, suggestions } = result;

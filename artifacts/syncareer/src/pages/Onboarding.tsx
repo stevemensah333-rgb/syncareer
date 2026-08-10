@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
@@ -15,64 +15,16 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { z } from 'zod';
 import { countries } from '@/utils/countries';
-
-// Validation schemas
-const studentSchema = z.object({
-  school: z.string().max(200, 'School name must be less than 200 characters').optional(),
-  major: z.string().min(1, 'Major is required'),
-  degreeType: z.string().min(1, 'Degree type is required'),
-});
-
-const counsellorSchema = z.object({
-  fullName: z.string().trim().min(1, 'Full name is required').max(100, 'Name must be less than 100 characters'),
-  countryCode: z.string().min(1, 'Country code is required'),
-  phoneNumber: z.string().trim().min(1, 'Phone number is required').max(20, 'Phone number must be less than 20 characters'),
-});
-
-const MAJORS = [
-  'Computer Science',
-  'Business Administration',
-  'Law',
-  'Electrical Engineering',
-  'Mechanical Engineering',
-  'Civil Engineering',
-  'Chemical Engineering',
-  'Information Technology',
-  'Data Science',
-  'Finance',
-  'Accounting',
-  'Marketing',
-  'Human Resources',
-  'Economics',
-  'Psychology',
-  'Medicine',
-  'Nursing',
-  'Pharmacy',
-  'Architecture',
-  'Graphic Design',
-  'Communications',
-  'Education',
-  'Environmental Science',
-  'Agriculture',
-  'Other',
-];
-
-const DEGREE_TYPES = [
-  'Certificate',
-  'Diploma',
-  'Associate Degree',
-  'Bachelor\'s Degree',
-  'Honours Degree',
-  'Postgraduate Diploma',
-  'Master\'s Degree',
-  'Doctoral Degree (PhD)',
-  'Professional Degree',
-];
-
-const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 20 }, (_, i) => currentYear - 10 + i);
+import { OnboardingShell } from '@/features/onboarding/OnboardingShell';
+import { WelcomeScreen } from '@/features/onboarding/WelcomeScreen';
+import {
+  MAJORS,
+  DEGREE_TYPES,
+  ADMISSION_YEARS,
+  studentSchema,
+  counsellorSchema,
+} from '@/features/onboarding/constants';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -338,7 +290,7 @@ const Onboarding = () => {
                     <SelectValue placeholder="Select year" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border shadow-lg z-50">
-                    {years.map((y) => (
+                    {ADMISSION_YEARS.map((y) => (
                       <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
                     ))}
                   </SelectContent>
@@ -352,7 +304,7 @@ const Onboarding = () => {
                     <SelectValue placeholder="Select year" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border shadow-lg z-50">
-                    {years
+                    {ADMISSION_YEARS
                       .filter((y) => !yearOfAdmission || y >= parseInt(yearOfAdmission))
                       .map((y) => (
                         <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
@@ -453,131 +405,5 @@ const Onboarding = () => {
     </OnboardingShell>
   );
 };
-
-function OnboardingShell({
-  eyebrow,
-  title,
-  italicWord,
-  subtitle,
-  children,
-}: {
-  eyebrow: string;
-  title: string;
-  italicWord: string;
-  subtitle: string;
-  children: React.ReactNode;
-}) {
-  const titleParts = title.split(italicWord);
-  return (
-    <div
-      className="relative min-h-screen flex items-start sm:items-center justify-center px-4 py-12 overflow-hidden"
-      style={{ backgroundColor: 'hsl(var(--landing-cream))' }}
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full blur-3xl"
-        style={{ backgroundColor: 'hsl(var(--landing-amber) / 0.18)' }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-40 -right-40 h-[32rem] w-[32rem] rounded-full blur-3xl"
-        style={{ backgroundColor: 'hsl(var(--primary) / 0.07)' }}
-      />
-      <div className="relative z-10 w-full max-w-2xl flex flex-col items-center">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-3.5 py-1.5 text-[11px] font-medium text-foreground/70 shadow-sm ring-1 ring-black/[0.04] mb-6">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          {eyebrow}
-        </span>
-        <h1 className="font-serif text-4xl sm:text-5xl font-normal leading-[1.05] tracking-[-0.02em] text-foreground text-center">
-          {titleParts[0]}
-          <span className="italic text-primary">{italicWord}</span>
-          {titleParts[1]}
-        </h1>
-        {subtitle && (
-          <p className="mt-4 max-w-md text-center text-foreground/60 text-sm sm:text-base leading-relaxed">
-            {subtitle}
-          </p>
-        )}
-        <div className="mt-10 w-full">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function WelcomeScreen({
-  firstName,
-  userType,
-  onContinue,
-}: {
-  firstName: string;
-  userType: string;
-  onContinue: () => void;
-}) {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const greetingName = firstName ? `, ${firstName}` : '';
-  const benefits =
-    userType === 'career_counsellor'
-      ? [
-          'Set up your practice and accept bookings',
-          'Run sessions with built-in scheduling',
-          'Build your reputation through ratings',
-        ]
-      : [
-          'A 5-minute assessment to surface careers that fit',
-          'An ATS-ready CV and an AI interview coach',
-          'Real jobs, mentors, and a community to grow with',
-        ];
-
-  useEffect(() => {
-    buttonRef.current?.focus();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
-        const target = e.target as HTMLElement | null;
-        const tag = target?.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) {
-          return;
-        }
-        e.preventDefault();
-        onContinue();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onContinue]);
-
-  return (
-    <OnboardingShell
-      eyebrow="Welcome to Syncareer"
-      title={`Glad you're here${greetingName}`}
-      italicWord="here"
-      subtitle="Take a moment — here's what's waiting for you on the other side of setup."
-    >
-      <div className="bg-white/95 backdrop-blur rounded-3xl shadow-[0_20px_60px_-30px_rgba(20,20,20,0.25)] ring-1 ring-black/[0.04] p-6 sm:p-10">
-        <ul className="space-y-5">
-          {benefits.map((b, i) => (
-            <li key={i} className="flex items-start gap-4">
-              <span className="mt-1 flex h-7 w-7 flex-none items-center justify-center rounded-full bg-primary/10 font-serif text-sm text-primary">
-                {i + 1}
-              </span>
-              <span className="text-foreground/80 leading-relaxed text-base">{b}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="flex items-center justify-between gap-4 pt-8">
-          <span className="text-xs text-foreground/50 hidden sm:inline">
-            Tip: press Enter to continue
-          </span>
-          <Button
-            ref={buttonRef}
-            onClick={onContinue}
-            className="rounded-full px-8 h-12 bg-foreground text-background hover:bg-foreground/90 ml-auto"
-          >
-            Let's go
-          </Button>
-        </div>
-      </div>
-    </OnboardingShell>
-  );
-}
 
 export default Onboarding;
