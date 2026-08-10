@@ -306,9 +306,9 @@ For project reference `fsorkxlcasekndigezlx`:
 | `pnpm schema:repo:smoke` | Passed its RLS/SECURITY DEFINER assertions; emitted the expected incomplete-baseline and nested-migration warnings. |
 | `pnpm schema:types:check` | Failed as designed because the two generated copies have the documented drift. |
 | Unguarded `pnpm schema:types:sync` | Refused to write and left the application type hash unchanged. The confirmed copy mode was not run because no fresh Lovable regeneration exists. |
-| Application tests | Passed: 2 files, 36 tests. |
+| Application tests | Passed: 11 files, 99 tests (post-repair). |
 | Production Vite build | Passed. Existing dynamic/static import chunk warnings remain. |
-| TypeScript typecheck | Failed with 205 diagnostics across 57 files. At least 22 diagnostics mention the known schema/type seams (`counsellor_credentials`, `counsellor_messages`, `get_my_referral_code`, or `meeting_platform`); many unrelated strictness/unused-code diagnostics are pre-existing. |
+| TypeScript typecheck | Passed with 0 diagnostics (post-repair) under the strict compiler settings. The historical 205-diagnostic baseline in `TYPECHECK_TRACKING.md` is resolved; the known schema/type seams (`counsellor_credentials`, `counsellor_messages`, `get_my_referral_code`, `meeting_platform`) are handled in the application type copy at `artifacts/syncareer/src/integrations/supabase/types.ts`, which is why the two copies remain intentionally out of sync until a fresh Lovable regeneration cycle. |
 | Live metadata SQL | Not run: this Arena session has no Lovable project-session SQL editor access. |
 | Isolated schema restore + SQL smoke | Blocked: no complete Lovable schema-only export was available, and no SQL was invented. |
 | Lovable safe schema-change regeneration cycle | Blocked until the owner confirms an existing Test environment or another approved non-production Lovable workflow. |
