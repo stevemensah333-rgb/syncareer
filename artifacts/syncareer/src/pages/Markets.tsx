@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
   Briefcase, MapPin, DollarSign, CheckCircle2, XCircle,
-  ExternalLink, Search, Bookmark, BookmarkCheck, MessageSquare, FileText, X, AlertCircle,
+  ExternalLink, Search, Bookmark, BookmarkCheck, MessageSquare, FileText, X, AlertCircle, BarChart3,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useUserProfile } from '@/contexts/UserProfileContext';
@@ -467,6 +467,15 @@ const Opportunities = () => {
             <Input value={locationFilter} onChange={e => setLocationFilter(e.target.value)}
               placeholder="Location" className="pl-9" />
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/analysis')}
+            className="h-10 shrink-0 gap-1.5 text-muted-foreground"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Market Intelligence
+          </Button>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           <Select value={typeFilter} onValueChange={setTypeFilter}>

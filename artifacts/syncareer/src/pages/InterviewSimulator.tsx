@@ -182,7 +182,7 @@ const InterviewSimulator = () => {
   };
 
   return (
-    <PageLayout title="Interview Simulator">
+    <PageLayout title="Interview Simulator" breadcrumbs={[{ label: "Home", to: "/dashboard" }, { label: "Practice", to: "/practice" }, { label: "Interview Simulator" }]}>
       {step === 'setup' && (
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header — editorial */}

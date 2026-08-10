@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import {
   ClipboardList, Sparkles, Settings,
-  Calendar, Users, LayoutDashboard, Hammer, Target, Briefcase, MoreHorizontal
+  Calendar, Users, LayoutDashboard, Target, Briefcase, FileText, MoreHorizontal
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -21,12 +21,13 @@ interface NavTab {
 
 const studentTabs: NavTab[] = [
   { title: 'Home', icon: LayoutDashboard, href: '/dashboard' },
-  { title: 'Build', icon: Hammer, href: '/build' },
-  { title: 'Practice', icon: Target, href: '/practice' },
-  { title: 'Apply', icon: Briefcase, href: '/apply' },
+  { title: 'Opportunities', icon: Briefcase, href: '/opportunities' },
+  { title: 'Applications', icon: ClipboardList, href: '/applications' },
 ];
 
 const studentMoreItems: NavTab[] = [
+  { title: 'Practice', icon: Target, href: '/practice' },
+  { title: 'CV Builder', icon: FileText, href: '/cv-builder' },
   { title: 'SynAI', icon: Sparkles, href: '/ai-coach' },
   { title: 'Settings', icon: Settings, href: '/settings' },
 ];
@@ -65,8 +66,9 @@ export function MobileBottomNav() {
             <Link
               key={tab.href}
               to={tab.href}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 rounded-lg transition-colors",
+                "flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
@@ -80,8 +82,9 @@ export function MobileBottomNav() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
+                aria-label="More navigation"
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 rounded-lg transition-colors",
+                  "flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 transition-colors",
                   isMoreActive ? "text-primary" : "text-muted-foreground"
                 )}
               >

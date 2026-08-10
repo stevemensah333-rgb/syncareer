@@ -83,6 +83,10 @@ export default {
 					DEFAULT: 'hsl(var(--danger))',
 					foreground: 'hsl(var(--danger-foreground))'
 				},
+				info: {
+					DEFAULT: 'hsl(var(--info))',
+					foreground: 'hsl(var(--info-foreground))'
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -146,8 +150,8 @@ export default {
 				'blur': 'blur(20px)'
 			},
 			boxShadow: {
-				'card': '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
-				'card-hover': '0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)',
+				'card': '0 1px 2px 0 rgba(16, 24, 40, 0.05), 0 1px 3px 0 rgba(16, 24, 40, 0.06)',
+				'card-hover': '0 8px 20px -4px rgba(16, 24, 40, 0.14), 0 2px 6px -2px rgba(16, 24, 40, 0.08)',
 				'neomorphic': '10px 10px 20px #d1d1d1, -10px -10px 20px #ffffff',
 				'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.1)'
 			}
