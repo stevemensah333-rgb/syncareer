@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useUserProfile } from '@/contexts/UserProfileContext';
 import { ImageCropper } from '@/components/profile/ImageCropper';
 import { MeetingLinkManager } from '@/components/counsellor/MeetingLinkManager';
 import AnimatedSection from '@/components/landing/AnimatedSection';
@@ -55,7 +54,6 @@ interface EarningsSummary {
 }
 
 const CounsellorDashboard = () => {
-  const { } = useUserProfile();
   const [counsellorDetails, setCounsellorDetails] = useState<CounsellorDetails | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);

@@ -24,6 +24,7 @@ import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { useCareerRecommendations } from '@/hooks/useCareerRecommendations';
 import { ASSESSMENT_QUESTIONS, LIKERT_OPTIONS, RIASEC_LABELS, RIASEC_DESCRIPTIONS } from '@/data/assessmentQuestions';
+import { personalityRadarData, skillsBarData } from '@/features/assessment/chartData';
 import CareerRecommendations from '@/components/assessment/CareerRecommendations';
 import { format, differenceInDays } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -357,38 +358,13 @@ const Assessment = () => {
     }))
     .sort((a, b) => b.score - a.score);
 
-  const personalityKeys = [
-    { label: 'Leadership', qIds: [1, 7, 14] },
-    { label: 'Independence', qIds: [2, 8] },
-    { label: 'Adaptability', qIds: [3, 13] },
-    { label: 'Social', qIds: [4, 9, 11, 15] },
-    { label: 'Detail', qIds: [5, 12] },
-    { label: 'Drive', qIds: [10, 6] },
-  ];
+  const personalityRadar = personalityRadarData(
+    activeResult.personality_score_json as Record<string, number>,
+  );
 
-  const personalityRadar = personalityKeys.map(({ label, qIds }) => {
-    const vals = qIds.map(id => (activeResult.personality_score_json as Record<string, number>)[`q${id}`] || 0);
-    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-    return { axis: label, value: Math.round((avg / 5) * 100) };
-  });
-
-  const skillsMap = [
-    { label: 'Writing', qIds: [16] },
-    { label: 'Data', qIds: [17, 24] },
-    { label: 'Tech', qIds: [18, 28] },
-    { label: 'Presenting', qIds: [19] },
-    { label: 'Planning', qIds: [20, 27] },
-    { label: 'Problem Solving', qIds: [21, 26] },
-    { label: 'Design', qIds: [22] },
-    { label: 'Negotiation', qIds: [23] },
-    { label: 'Relationships', qIds: [25, 29, 30] },
-  ];
-
-  const skillsChartData = skillsMap.map(({ label, qIds }) => {
-    const vals = qIds.map(id => (activeResult.skills_score_json as Record<string, number>)[`q${id}`] || 0);
-    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-    return { name: label, score: Math.round((avg / 5) * 100) };
-  }).sort((a, b) => b.score - a.score);
+  const skillsChartData = skillsBarData(
+    activeResult.skills_score_json as Record<string, number>,
+  );
 
   return (
     <PageLayout title="Assessment">

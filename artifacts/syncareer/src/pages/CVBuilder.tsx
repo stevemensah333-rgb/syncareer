@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useAuth } from '@/lib/auth';
 
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,85 +25,13 @@ import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { supabase } from '@/integrations/supabase/client';
 import AnimatedSection from '@/components/landing/AnimatedSection';
+import type { CVData } from '@/features/cv-builder/types';
+import { initialCVData } from '@/features/cv-builder/types';
 
-export interface CVData {
-  personal: {
-    firstName: string;
-    lastName: string;
-    phone: string;
-    nationality: string;
-    email: string;
-    schoolEmail: string;
-    linkedIn: string;
-  };
-  education: {
-    university: string;
-    location: string;
-    degree: string;
-    graduationDate: string;
-    gpa: string;
-  };
-  achievements: Array<{
-    id: string;
-    title: string;
-    organization: string;
-    date: string;
-  }>;
-  experience: Array<{
-    id: string;
-    company: string;
-    location: string;
-    date: string;
-    role: string;
-    bullets: string[];
-  }>;
-  projects: Array<{
-    id: string;
-    organization: string;
-    date: string;
-    projectName: string;
-    role: string;
-    bullets: string[];
-  }>;
-  activities: Array<{
-    id: string;
-    organization: string;
-    activity: string;
-    date: string;
-    role: string;
-    bullets: string[];
-  }>;
-  skills: string[];
-  references: string;
-}
 
-const initialCVData: CVData = {
-  personal: {
-    firstName: '',
-    lastName: '',
-    phone: '',
-    nationality: '',
-    email: '',
-    schoolEmail: '',
-    linkedIn: '',
-  },
-  education: {
-    university: '',
-    location: '',
-    degree: '',
-    graduationDate: '',
-    gpa: '',
-  },
-  achievements: [],
-  experience: [],
-  projects: [],
-  activities: [],
-  skills: [],
-  references: 'Available upon request',
-};
 
 const CVBuilder = () => {
-  const [cvData, setCVDataRaw] = useState<CVData>(initialCVData);
+  const [cvData, setCVData] = useState<CVData>(initialCVData);
   const [activeTab, setActiveTab] = useState('personal');
   const [showPreview, setShowPreview] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -115,8 +42,7 @@ const CVBuilder = () => {
   const feedbackModal = useFeedbackModal('cv_builder');
   const [uploadOpen, setUploadOpen] = useState(false);
   const cvAnalysis = useCVAnalysis();
-  
-  const { } = useAuth();
+
   const [searchParams] = useSearchParams();
   const targetRole = searchParams.get('targetRole') || searchParams.get('role') || '';
   const targetCompany = searchParams.get('company') || '';
@@ -129,16 +55,6 @@ const CVBuilder = () => {
     const have = new Set(cvData.skills.map(s => s.toLowerCase()));
     return targetSkills.filter(s => !have.has(s.toLowerCase()));
   }, [targetSkills, cvData.skills]);
-
-  const setCVData: typeof setCVDataRaw = (updater) => {
-    setCVDataRaw((prev) => {
-      const next =
-        typeof updater === 'function'
-          ? (updater as (p: CVData) => CVData)(prev)
-          : updater;
-      return next;
-    });
-  };
 
   // Auto-load saved CV on mount from cloud copy.
   useEffect(() => {

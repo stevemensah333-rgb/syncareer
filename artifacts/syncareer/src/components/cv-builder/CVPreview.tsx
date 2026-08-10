@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import type { CVData } from '@/pages/CVBuilder';
+import type { CVData } from '@/features/cv-builder/types';
 
 interface CVPreviewProps {
   data: CVData;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import type { CVData } from '@/pages/CVBuilder';
+import type { CVData } from '@/features/cv-builder/types';
 import { useCVStrengthScore } from './useCVStrengthScore';
 
 /**

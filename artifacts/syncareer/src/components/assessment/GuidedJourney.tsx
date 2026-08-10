@@ -23,6 +23,51 @@ interface GuidedJourneyProps {
   isGuest?: boolean;
 }
 
+function buildSteps(
+  assessment: boolean,
+  cv: boolean,
+  interview: boolean,
+  applied: boolean,
+  topCareerTitle?: string,
+  topCareerIndustry?: string,
+): JourneyStep[] {
+  return [
+    {
+      id: 'assessment',
+      title: 'Complete Assessment',
+      description: 'Discover your career interests and strengths',
+      icon: ClipboardList,
+      href: '/assessment',
+      completed: assessment,
+    },
+    {
+      id: 'cv',
+      title: 'Build Your CV',
+      description: 'Create an ATS-friendly CV for your target roles',
+      icon: FileText,
+      href: '/cv-builder',
+      completed: cv,
+    },
+    {
+      id: 'interview',
+      title: 'Practice Interview',
+      description: `Prepare for ${topCareerIndustry || 'your target'} industry roles`,
+      icon: Mic,
+      href: '/interview-simulator',
+      state: { prefillRole: topCareerTitle, prefillIndustry: topCareerIndustry },
+      completed: interview,
+    },
+    {
+      id: 'apply',
+      title: 'Apply to Jobs',
+      description: 'Find and apply to matching opportunities',
+      icon: Briefcase,
+      href: '/opportunities',
+      completed: applied,
+    },
+  ];
+}
+
 export const GuidedJourney: React.FC<GuidedJourneyProps> = ({
   topCareerTitle,
   topCareerIndustry,
@@ -36,7 +81,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({
     const checkCompletion = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        setSteps(getSteps(false, false, false, false));
+        setSteps(buildSteps(false, false, false, false, topCareerTitle, topCareerIndustry));
         setLoading(false);
         return;
       }
@@ -49,50 +94,16 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({
         supabase.from('job_applications').select('id').eq('applicant_id', userId).limit(1),
       ]);
 
-      setSteps(getSteps(
+      setSteps(buildSteps(
         (assessmentRes.data?.length || 0) > 0,
         (resumeRes.data?.length || 0) > 0,
         (interviewRes.data?.length || 0) > 0,
         (applicationRes.data?.length || 0) > 0,
+        topCareerTitle,
+        topCareerIndustry,
       ));
       setLoading(false);
     };
-
-    const getSteps = (assessment: boolean, cv: boolean, interview: boolean, applied: boolean): JourneyStep[] => [
-      {
-        id: 'assessment',
-        title: 'Complete Assessment',
-        description: 'Discover your career interests and strengths',
-        icon: ClipboardList,
-        href: '/assessment',
-        completed: assessment,
-      },
-      {
-        id: 'cv',
-        title: 'Build Your CV',
-        description: 'Create an ATS-friendly CV for your target roles',
-        icon: FileText,
-        href: '/cv-builder',
-        completed: cv,
-      },
-      {
-        id: 'interview',
-        title: 'Practice Interview',
-        description: `Prepare for ${topCareerIndustry || 'your target'} industry roles`,
-        icon: Mic,
-        href: '/interview-simulator',
-        state: { prefillRole: topCareerTitle, prefillIndustry: topCareerIndustry },
-        completed: interview,
-      },
-      {
-        id: 'apply',
-        title: 'Apply to Jobs',
-        description: 'Find and apply to matching opportunities',
-        icon: Briefcase,
-        href: '/opportunities',
-        completed: applied,
-      },
-    ];
 
     checkCompletion();
   }, [topCareerTitle, topCareerIndustry]);

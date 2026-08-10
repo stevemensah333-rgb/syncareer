@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Wrench, Plus, X } from 'lucide-react';
+import { SUGGESTED_SKILLS } from '@/features/cv-builder/constants';
 
 interface CVFormSkillsProps {
   skills: string[];
@@ -30,25 +31,6 @@ export const CVFormSkills: React.FC<CVFormSkillsProps> = ({ skills, onChange }) 
       addSkill();
     }
   };
-
-  const suggestedSkills = [
-    'Advanced Proficiency in French',
-    'Microsoft Office Suite',
-    'Java',
-    'Python',
-    'C++',
-    'SQL',
-    'HTML/CSS',
-    'JavaScript',
-    'React',
-    'Node.js',
-    'Git',
-    'Agile/Scrum',
-    'Data Analysis',
-    'Machine Learning',
-    'Public Speaking',
-    'Team Leadership',
-  ];
 
   const addSuggestedSkill = (skill: string) => {
     if (!skills.includes(skill)) {
@@ -104,7 +86,7 @@ export const CVFormSkills: React.FC<CVFormSkillsProps> = ({ skills, onChange }) 
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">Suggested Skills:</p>
           <div className="flex flex-wrap gap-2">
-            {suggestedSkills
+            {SUGGESTED_SKILLS
               .filter((skill) => !skills.includes(skill))
               .slice(0, 10)
               .map((skill) => (

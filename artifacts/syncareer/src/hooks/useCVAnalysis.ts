@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { CVData } from '@/pages/CVBuilder';
+import type { CVData } from '@/features/cv-builder/types';
+import { MAX_UPLOAD_FILE_SIZE, ALLOWED_UPLOAD_TYPES } from '@/features/cv-builder/constants';
 
 export type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done' | 'error';
 
@@ -59,13 +60,6 @@ export interface AnalysisResult {
   extractedExperience: ExtractedExperience[];
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = [
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/msword',
-];
-
 const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -87,13 +81,13 @@ export const useCVAnalysis = () => {
   const analyzeFile = useCallback(async (file: File) => {
     setError(null);
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!(ALLOWED_UPLOAD_TYPES as readonly string[]).includes(file.type)) {
       const msg = 'Only PDF and DOCX files are supported.';
       setError(msg);
       toast.error(msg);
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > MAX_UPLOAD_FILE_SIZE) {
       const msg = 'File is too large. Max size is 5 MB.';
       setError(msg);
       toast.error(msg);
