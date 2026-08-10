@@ -76,11 +76,26 @@ const STRONG_CV = makeCV({
 });
 
 describe('useCVStrengthScore', () => {
-  it('returns a Weak score for an empty CV', () => {
+  it('returns exactly 0% for an empty CV (no fallback / default percentage added)', () => {
     const { result } = renderHook(() => useCVStrengthScore(EMPTY_CV));
+    expect(result.current.totalScore).toBe(0);
     expect(result.current.label).toBe('Weak');
-    expect(result.current.totalScore).toBeLessThanOrEqual(40);
-    expect(result.current.totalScore).toBeGreaterThanOrEqual(0);
+  });
+
+  it('does not restore a stale 17% when an empty draft is reloaded', () => {
+    // Re-running the hook on the same empty input (the equivalent of a remount
+    // after reload) must stay at 0 — there is no hidden default floor.
+    const { result: first } = renderHook(() => useCVStrengthScore(EMPTY_CV));
+    const { result: second } = renderHook(() => useCVStrengthScore(EMPTY_CV));
+    expect(first.current.totalScore).toBe(0);
+    expect(second.current.totalScore).toBe(0);
+  });
+
+  it('preserves meaningful saved data after reload', () => {
+    const { result: first } = renderHook(() => useCVStrengthScore(STRONG_CV));
+    const { result: second } = renderHook(() => useCVStrengthScore(STRONG_CV));
+    expect(second.current.totalScore).toBe(first.current.totalScore);
+    expect(second.current.totalScore).toBeGreaterThan(0);
   });
 
   it('scores a strong CV as Strong or Excellent', () => {
