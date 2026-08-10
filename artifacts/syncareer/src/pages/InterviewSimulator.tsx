@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Mic, CheckCircle, Phone, Clock, Zap, Target, Lock, Sparkles, Trash2, History, Briefcase, MapPin, ArrowRight } from 'lucide-react';
-import { WhatsAppShareButton } from '@/components/shared/WhatsAppShareButton';
+
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/contexts/UserProfileContext';
@@ -127,7 +127,7 @@ const InterviewSimulator = () => {
     }));
   }, [searchParams]);
 
-  const { data: interviewHistory, isLoading: historyLoading } = useQuery({
+  const { data: interviewHistory, isLoading: _historyLoading } = useQuery({
     queryKey: ['mock_interviews_history'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -476,7 +476,6 @@ const InterviewSimulator = () => {
           </div>
         </div>
       )}
-
 
       {step === 'interview' && (
         <div className="max-w-3xl mx-auto">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth, useClerk } from '@/lib/auth';
 import { NotificationSettingsPanel } from '@/components/notifications/NotificationSettingsPanel';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
-import { countries } from '@/utils/countries';
+import { } from '@/utils/countries';
 import { languages } from '@/utils/languages';
 import { ProfileSection } from '@/components/settings/ProfileSection';
 import { useUserProfile } from '@/contexts/UserProfileContext';
@@ -68,7 +68,6 @@ const Settings = () => {
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialTab);
   const { profile, studentDetails, loading: profileLoading } = useUserProfile();
   const isStudentRole = !profile?.user_type || profile.user_type === 'student';
-  const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>('');
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -370,7 +369,6 @@ const Settings = () => {
                         </div>
                       </div>
                     )}
-
 
                     <div className="pt-4 border-t">
                       <p className="text-sm text-muted-foreground mb-4">

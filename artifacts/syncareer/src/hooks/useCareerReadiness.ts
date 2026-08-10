@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getCareerSkills, getCareerFramework } from '@/utils/careerSkillFramework';
+import { getCareerSkills } from '@/utils/careerSkillFramework';
 
 export interface SkillReadiness {
   skillName: string;
@@ -16,7 +16,6 @@ export interface PillarScore {
   weightedScore: number;
   description: string;
 }
-
 
 export interface ReadinessData {
   overallScore: number;
@@ -99,7 +98,6 @@ export const useCareerReadiness = (major: string | null | undefined) => {
       const resume = resumeRes.data;
       const interviews = interviewsRes.data || [];
       const projectCount = Array.isArray(resume?.projects) ? resume.projects.length : 0;
-
 
       // === Technical Skills (50%) ===
       const skillGaps: SkillReadiness[] = careerSkills.map(skill => {

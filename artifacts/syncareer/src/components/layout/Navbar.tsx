@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Users, LogOut, MessageCircle, Menu, HelpCircle, Phone, Mail, CreditCard, Sparkles, Shield } from 'lucide-react';
+import { User, Users, LogOut, MessageCircle, HelpCircle, Phone, Mail, CreditCard, Sparkles, Shield } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Badge } from '@/components/ui/badge';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/contexts/UserProfileContext';
-import { useAuth, useClerk } from '@/lib/auth';
+import { useClerk } from '@/lib/auth';
 import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 import {
   DropdownMenu,
@@ -35,14 +35,13 @@ interface NavbarProps {
   onMobileMenuClick?: () => void;
 }
 
-export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
+export function Navbar({ className }: NavbarProps) {
   const [askCounsellorOpen, setAskCounsellorOpen] = useState(false);
   
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const { profile } = useUserProfile();
   const { isPremium, loading: subLoading } = useSubscription();
-  const { isSignedIn } = useAuth();
+  
   const supabaseUserId = useSupabaseUserId();
   const { signOut } = useClerk();
 
@@ -229,7 +228,6 @@ export function Navbar({ className, onMobileMenuClick }: NavbarProps) {
           </div>
         </div>
       </header>
-
 
       {/* Ask a Counsellor Dialog */}
       <AskCounsellorDialog open={askCounsellorOpen} onOpenChange={setAskCounsellorOpen} />

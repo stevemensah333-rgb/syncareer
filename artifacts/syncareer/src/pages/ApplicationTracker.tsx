@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, MapPin, Calendar, Clock, ExternalLink, Trash2, Search, Video, User, Star } from 'lucide-react';
+import { Briefcase, MapPin, Calendar, Clock, Trash2, Search, Video, User, Star } from 'lucide-react';
 import { RateCounsellorDialog } from '@/components/counsellor/RateCounsellorDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';

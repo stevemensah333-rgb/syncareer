@@ -116,7 +116,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {steps.map((step, idx) => {
+          {steps.map((step, _idx) => {
             const isNext = step.id === nextStep?.id;
             return (
               <div

@@ -21,7 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from '@/utils/notifications';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { format, addDays, isBefore, startOfDay } from 'date-fns';
+import { format, isBefore, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface Counsellor {

@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Copy, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
-import { useState as useStateCallback } from 'react';
 
 interface MeetingLinkDisplayProps {
   counsellorId: string;

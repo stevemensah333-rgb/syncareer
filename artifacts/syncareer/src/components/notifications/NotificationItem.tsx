@@ -41,7 +41,7 @@ function getPriorityLabel(priority: string): string | null {
   return null;
 }
 
-export function NotificationItem({ notification, onRead, onDelete, onClick }: NotificationItemProps) {
+export function NotificationItem({ notification, onDelete, onClick }: NotificationItemProps) {
   const priorityLabel = getPriorityLabel(notification.priority);
 
   return (

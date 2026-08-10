@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
-  Briefcase, MapPin, Clock, DollarSign, Building2, CheckCircle2, XCircle,
+  Briefcase, MapPin, _Clock, DollarSign, _Building2, CheckCircle2, XCircle,
   ExternalLink, Search, Bookmark, BookmarkCheck, MessageSquare, FileText, X, AlertCircle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';

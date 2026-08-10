@@ -5,7 +5,6 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
@@ -15,17 +14,8 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Search, MessageCircle, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { Search, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-
-interface ClientSession {
-  id: string;
-  booking_date: string;
-  session_type: string;
-  status: string;
-  client_name: string;
-  session_notes?: string;
-}
 
 interface ClientProfile {
   student_id: string;
@@ -35,11 +25,6 @@ interface ClientProfile {
   last_session_date?: string;
   notes?: string;
   tags: string[];
-}
-
-interface ClientNote {
-  client_id: string;
-  text: string;
 }
 
 export default function CounsellorClients() {

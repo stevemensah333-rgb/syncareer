@@ -16,11 +16,6 @@ import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 export type MeetingPlatform = 'zoom' | 'google_meet' | 'teams' | 'custom';
 
-interface MeetingLinkSettings {
-  meeting_platform: MeetingPlatform;
-  meeting_link: string;
-}
-
 interface MeetingLinkManagerProps {
   onSave?: () => void;
 }

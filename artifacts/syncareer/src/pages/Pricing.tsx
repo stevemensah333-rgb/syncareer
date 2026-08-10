@@ -25,11 +25,6 @@ export default function PricingPage() {
     });
   }, []);
 
-  const pricing = {
-    monthly: { price: 30, amount: 3000 }, // pesewas
-    yearly: { price: 300, amount: 30000 },
-  };
-
   const features = {
     free: [
       

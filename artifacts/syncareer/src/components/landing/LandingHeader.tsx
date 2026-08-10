@@ -14,7 +14,7 @@ const NAV = [
   { label: "FAQs", href: "#faqs" },
 ];
 
-export default function LandingHeader({ onSignIn, onSignUp }: LandingHeaderProps) {
+export default function LandingHeader({ onSignIn }: LandingHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();

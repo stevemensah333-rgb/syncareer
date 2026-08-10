@@ -12,7 +12,7 @@ import { QuickActions } from "@/components/ai-coach/QuickActions";
 import { CareerInsightsPanel } from "@/components/ai-coach/CareerInsightsPanel";
 import { useAICoachAccess } from "@/hooks/useSubscription";
 import { checkFeatureAccessServer, FREE_LIMITS } from "@/lib/featureAccess";
-import { Badge } from "@/components/ui/badge";
+import { } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, AlertCircle } from "lucide-react";
