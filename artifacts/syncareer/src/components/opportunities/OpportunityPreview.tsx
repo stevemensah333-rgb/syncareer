@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
 import { Bookmark, BookmarkCheck, Briefcase, CalendarClock, ExternalLink, GraduationCap, MapPin, ShieldQuestion } from 'lucide-react';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { useHoverCapability } from '@/hooks/useHoverCapability';
+import {
+  ContextualPreview,
+  PreviewContent,
+  PreviewLine,
+} from '@/components/ui/contextual-preview';
 import {
   experienceLevelLabel,
   formatPostedAgo,
@@ -21,15 +24,6 @@ interface OpportunityPreviewProps {
   children: ReactNode;
 }
 
-function PreviewLine({ icon, children }: { icon: ReactNode; children: ReactNode }) {
-  return (
-    <p className="flex items-start gap-2 text-xs text-muted-foreground">
-      <span className="mt-0.5 shrink-0 text-foreground/70">{icon}</span>
-      <span className="min-w-0">{children}</span>
-    </p>
-  );
-}
-
 /**
  * Progressive-disclosure preview for an opportunity row.
  *
@@ -44,10 +38,6 @@ function PreviewLine({ icon, children }: { icon: ReactNode; children: ReactNode 
  *   than covering the list's controls.
  */
 export function OpportunityPreview({ job, saved, application, children }: OpportunityPreviewProps) {
-  const canHover = useHoverCapability();
-
-  if (!canHover) return <>{children}</>;
-
   const organisation = getOrganisation(job);
   const deadline = getDeadlineState(job.application_deadline);
   const level = experienceLevelLabel(job.experience_level);
@@ -64,17 +54,9 @@ export function OpportunityPreview({ job, saved, application, children }: Opport
         : 'Apply with Syncareer to start tracking';
 
   return (
-    <HoverCard openDelay={250} closeDelay={120}>
-      <HoverCardTrigger asChild>{children}</HoverCardTrigger>
-      <HoverCardContent
-        side="right"
-        align="start"
-        sideOffset={10}
-        collisionPadding={16}
-        className="hidden w-80 max-w-[calc(100vw-2rem)] lg:block"
-      >
-        <div className="space-y-3">
-          <div className="space-y-0.5">
+    <ContextualPreview content={
+      <PreviewContent>
+        <div className="space-y-0.5">
             <p className="text-sm font-semibold leading-tight">{job.title}</p>
             {organisation && <p className="text-xs text-muted-foreground">{organisation}</p>}
           </div>
@@ -124,8 +106,10 @@ export function OpportunityPreview({ job, saved, application, children }: Opport
               Original posting on {provenance.sourceLabel}
             </p>
           )}
-        </div>
-      </HoverCardContent>
-    </HoverCard>
+        </PreviewContent>
+      }
+    >
+      {children}
+    </ContextualPreview>
   );
 }
