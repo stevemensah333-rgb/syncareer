@@ -100,11 +100,21 @@ Format per feature: identity & ownership → data → usage/burden/cost/security
 
 ### 3.4 Job discovery / application tracking — **CORE**
 
-- **Routes/ownership:** `/opportunities` (`pages/Markets.tsx`, 536 lines), `/applications` (`pages/ApplicationTracker.tsx`, 487 lines), `hooks/useOutcomeTracking.ts`, `features/application-tracker/constants.ts`.
+> **Status update (2026-08-11):** the opportunity-to-application workflow described by the
+> frontend audit is now implemented. External postings apply on the source site and then
+> "I applied — start tracking" creates a `job_applications` row through the shared
+> duplicate-safe write seam (`features/application-tracker/tracking.ts`), so the
+> discovery→tracking loop closes for every rendered job. A tracker detail sheet
+> (`components/applications/ApplicationDetailSheet.tsx`) shows the status journey
+> (`features/application-tracker/workflow.ts`), next recommended action, deadline,
+> targeted CV, interview-practice entry point, notes, and outcome recording. The
+> classification and decisions below are unchanged.
+
+- **Routes/ownership:** `/opportunities` (`pages/Markets.tsx`, 614 lines), `/applications` (`pages/ApplicationTracker.tsx`, 618 lines), `hooks/useOutcomeTracking.ts`, `features/application-tracker/` (`workflow.ts`, `tracking.ts`, `constants.ts`), `components/opportunities/*`, `components/applications/ApplicationDetailSheet.tsx`.
 - **Data:** `job_postings`, `job_posting_skills`, `saved_jobs`, `job_applications`, `recommendation_outcomes`.
-- **Usage/burden/cost:** Events defined (`job_view`, `job_apply`, `application_status_update`), none emitted. External cost: daily Firecrawl crawl via tracked `aggregate-external-jobs` cron (6 job-board domains × majors; `FIRECRAWL_API_KEY`). Legacy `scrape-jobs` cron superseded (removal candidate RC-2).
+- **Usage/burden/cost:** Events defined (`job_view`, `job_apply`, `application_status_update`); apply/outcome feedback is emitted through `useOutcomeTracking` (`trackAction` / `updateOutcome`) from the opportunity and tracker pages. External cost: daily Firecrawl crawl via tracked `aggregate-external-jobs` cron (6 job-board domains × majors; `FIRECRAWL_API_KEY`). Legacy `scrape-jobs` cron superseded (removal candidate RC-2).
 - **Security/privacy:** RLS owner-scoped write paths; external job content is scraped third-party HTML feed into LLM extraction — prompt-injection-resistant handling lives in the tracked function's schema-constrained extraction.
-- **Tests:** No dedicated UI tests; outcome tracking is covered only at hook level indirectly. Gap worth noting (Layer 5 coverage is thin here).
+- **Tests:** Dedicated coverage added for the later application contract: opportunity facts and provenance honesty (`opportunity.test.ts`), status journey/next-action logic (`workflow.test.ts`), tracker write seam + error classification (`tracking.test.ts`), preview progressive disclosure (`OpportunityPreview.test.tsx`), and the application detail sheet (`ApplicationDetailSheet.test.tsx`). See `TEST_MATRIX.md` Layers 1.7–1.11 and 5.6–5.9.
 - **Platform deps:** Tracked cron function + Firecrawl + pg_cron/pg_net.
 - **Centrality/AI:** The "Apply" pillar — without supply of jobs the tracker is empty, so the Firecrawl spend is load-bearing. AI extraction from scraped pages is genuinely needed.
 - **Classification: CORE.** Verify the daily cron's success rate from Jobs evidence (§1 action 3); a silently failing crawler would change this to "CORE but broken".
