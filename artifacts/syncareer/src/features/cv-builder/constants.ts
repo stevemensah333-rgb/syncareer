@@ -10,8 +10,16 @@ export const ACTION_VERBS = [
 ] as const;
 
 export const PLACEHOLDER_PATTERNS: readonly RegExp[] = [
-  /lorem ipsum/i, /placeholder/i, /xxx/i, /tbd/i,
-  /enter your/i, /your .* here/i,
+  /lorem ipsum/i,
+  /placeholder/i,
+  /xxx/i,
+  /tbd/i,
+  /enter your/i,
+  /your .* here/i,
+  /^describe your/i,
+  /^(first\s*name|last\s*name|full name|university name|degree program|month year|company name|organization name|project name)$/i,
+  /^email@(gmail\.com|school\.edu)$/i,
+  /^0\.00\/4\.00$/,
 ];
 
 // ── Display config ───────────────────────────────────────────────
@@ -26,11 +34,10 @@ export const LABEL_CONFIG: Record<StrengthLabel, { color: string; ring: string }
 };
 
 export const CATEGORY_LABELS: Record<string, string> = {
-  completeness: 'Completeness',
-  contentQuality: 'Content Quality',
-  skillsRelevance: 'Skills Relevance',
-  presentation: 'Presentation',
-  competitiveness: 'Competitiveness',
+  contentQuality: 'Writing quality',
+  skillsCoverage: 'Skills coverage',
+  presentation: 'Structure',
+  evidence: 'Evidence',
 };
 
 // ── Skills suggestions ───────────────────────────────────────────

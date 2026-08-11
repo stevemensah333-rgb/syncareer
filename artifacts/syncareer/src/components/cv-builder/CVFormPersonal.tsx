@@ -17,9 +17,14 @@ interface PersonalData {
 interface CVFormPersonalProps {
   data: PersonalData;
   onChange: (data: Partial<PersonalData>) => void;
+  errors?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
 }
 
-export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange }) => {
+export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, errors = {} }) => {
   return (
     <Card>
       <CardHeader>
@@ -31,13 +36,16 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange }
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
+            <Label htmlFor="firstName">First Name <span aria-hidden>*</span></Label>
             <Input
               id="firstName"
               placeholder="John"
               value={data.firstName}
+              aria-invalid={!!errors.firstName}
+              aria-describedby={errors.firstName ? 'firstName-error' : undefined}
               onChange={(e) => onChange({ firstName: e.target.value })}
             />
+            {errors.firstName && <p id="firstName-error" className="text-xs text-destructive" role="alert">{errors.firstName}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="lastName">Last Name</Label>

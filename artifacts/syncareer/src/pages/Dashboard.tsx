@@ -55,7 +55,7 @@ export default function Dashboard() {
   const [primaryInterest, setPrimaryInterest] = useState<string | null>(null);
   const [applications, setApplications] = useState<AppRow[]>([]);
   const [savedJobs, setSavedJobs] = useState<SavedRow[]>([]);
-  const [cvScore, setCvScore] = useState(0);
+  const [cvCompletion, setCvCompletion] = useState(0);
   const [cvUpdatedAt, setCvUpdatedAt] = useState<string | null>(null);
   const [interviewScore, setInterviewScore] = useState(0);
   const [interviews, setInterviews] = useState<InterviewRow[]>([]);
@@ -145,10 +145,10 @@ export default function Dashboard() {
 
         const resumeData = resumeRes.data as any;
         if (resumeData) {
-          setCvScore(scoreResume(resumeData));
+          setCvCompletion(scoreResume(resumeData));
           setCvUpdatedAt(resumeData.updated_at ?? null);
         } else {
-          setCvScore(0);
+          setCvCompletion(0);
         }
 
         const interviewRows: InterviewRow[] = (interviewsRes.data as any[] | null) ?? [];
@@ -300,13 +300,13 @@ export default function Dashboard() {
       }
     }
 
-    if (cvScore < 60) {
+    if (cvCompletion < 60) {
       actions.push({
         id: 'cv',
-        title: cvScore === 0 ? 'Build your CV' : 'Improve your CV',
-        description: cvScore === 0
-          ? 'Create an ATS-friendly CV — it unlocks better matches and applications.'
-          : `Your CV strength is ${cvScore}%. Add experience or projects to push past 60%.`,
+        title: cvCompletion === 0 ? 'Build your CV' : 'Improve your CV',
+        description: cvCompletion === 0
+          ? 'Create a clear, role-focused CV for your applications.'
+          : `Your CV is ${cvCompletion}% complete. Use the section checklist to decide what to add next.`,
         href: '/cv-builder',
         icon: 'cv',
       });
@@ -379,7 +379,7 @@ export default function Dashboard() {
       if (uniq.length >= 3) break;
     }
     return uniq;
-  }, [assessmentDone, cvScore, interviewScore, applications, savedJobs]);
+  }, [assessmentDone, cvCompletion, interviewScore, applications, savedJobs]);
 
   const recentCompleted = useMemo<CompletedItem[]>(() => {
     const items: CompletedItem[] = [];
@@ -400,7 +400,7 @@ export default function Dashboard() {
         date: iv.completed_at ?? iv.created_at,
       });
     }
-    if (cvScore > 0 && cvUpdatedAt) {
+    if (cvCompletion > 0 && cvUpdatedAt) {
       items.push({
         id: 'cv',
         type: 'cv',
@@ -410,7 +410,7 @@ export default function Dashboard() {
     }
     items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return items.slice(0, 3);
-  }, [applications, interviews, cvScore, cvUpdatedAt]);
+  }, [applications, interviews, cvCompletion, cvUpdatedAt]);
 
   const onboardingSteps = useMemo<OnboardingStep[]>(() => {
     return [
@@ -431,12 +431,12 @@ export default function Dashboard() {
       {
         id: 'cv',
         label: 'Build your CV',
-        description: cvScore > 0 ? `CV strength ${cvScore}%` : 'Create an ATS-ready CV',
-        done: cvScore > 0,
+        description: cvCompletion > 0 ? `CV completion ${cvCompletion}%` : 'Create your primary CV',
+        done: cvCompletion > 0,
         href: '/cv-builder',
       },
     ];
-  }, [major, university, assessmentDone, primaryInterest, cvScore]);
+  }, [major, university, assessmentDone, primaryInterest, cvCompletion]);
 
   const showOnboarding = useMemo(() => {
     const onboardingIncomplete = profile?.onboarding_completed === false;
@@ -446,8 +446,8 @@ export default function Dashboard() {
   }, [profile?.onboarding_completed, onboardingSteps, applications.length, savedJobs.length]);
 
   const isNewUser = useMemo(() => {
-    return applications.length === 0 && savedJobs.length === 0 && cvScore === 0 && interviewScore === 0 && !assessmentDone;
-  }, [applications.length, savedJobs.length, cvScore, interviewScore, assessmentDone]);
+    return applications.length === 0 && savedJobs.length === 0 && cvCompletion === 0 && interviewScore === 0 && !assessmentDone;
+  }, [applications.length, savedJobs.length, cvCompletion, interviewScore, assessmentDone]);
 
   return (
     <StudentLayout title="">

@@ -12,6 +12,7 @@ import {
   loadPrimaryCV,
   classifySaveError,
   cvSaveToast,
+  logCvPersistenceFailure,
 } from './persistence';
 import { useCVPersistence } from '@/hooks/useCVPersistence';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,7 +57,11 @@ type Row = {
  */
 class FakeResumeDb {
   rows: Row[] = [];
-  failOp: 'update' | 'insert' | null = null;
+  failOp: 'select' | 'update' | 'insert' | null = null;
+  failError: { code: string; message: string } = {
+    code: '42501',
+    message: 'new row violates row-level security policy',
+  };
   private seq = 0;
 
   seed(row: Partial<Row>): Row {
@@ -110,6 +115,8 @@ class FakeResumeDb {
         filters.push({ col, val });
         return self;
       },
+      order: () => self,
+      limit: () => self,
       update: (data: unknown) => {
         mode = 'update';
         writeData = data;
@@ -124,7 +131,7 @@ class FakeResumeDb {
         mode = 'upsert';
         return self;
       },
-      maybeSingle: () => this.execute(mode, selectCols, filters, writeData, false),
+      maybeSingle: () => this.execute(mode, selectCols, filters, writeData, true),
       single: () => this.execute(mode, selectCols, filters, writeData, true),
     };
     return self;
@@ -138,10 +145,7 @@ class FakeResumeDb {
     single: boolean,
   ): Promise<{ data: unknown; error: unknown }> {
     if (this.failOp && this.failOp === mode) {
-      return Promise.resolve({
-        data: null,
-        error: { code: '42501', message: 'new row violates row-level security policy' },
-      });
+      return Promise.resolve({ data: null, error: this.failError });
     }
 
     if (mode === 'select') {
@@ -251,6 +255,14 @@ describe('savePrimaryCV', () => {
     expect(db.rows).toHaveLength(0);
   });
 
+  it('rejects a missing ownership context before any persistence', async () => {
+    const db = new FakeResumeDb();
+    const result = await savePrimaryCV(db.client, '   ', validCV());
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.category).toBe('auth-expired');
+    expect(db.rows).toHaveLength(0);
+  });
+
   it('does not read, update, or create rows for another user', async () => {
     const db = new FakeResumeDb();
     db.seed({ user_id: 'u2', is_primary: true, personal_info: { firstName: 'Other' } });
@@ -275,6 +287,30 @@ describe('savePrimaryCV', () => {
     }
     // Editor state is never mutated by persistence — and the DB row is intact.
     expect((db.rows[0].personal_info as { firstName?: string }).firstName).toBe('Original');
+  });
+
+  it('reports a database failure without claiming persistence', async () => {
+    const db = new FakeResumeDb();
+    db.failOp = 'insert';
+    db.failError = { code: 'XX000', message: 'database unavailable' };
+    const result = await savePrimaryCV(db.client, 'u1', validCV());
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.category).toBe('server');
+      expect(result.code).toBe('XX000');
+    }
+    expect(db.rows).toHaveLength(0);
+  });
+
+  it('reports a thrown network failure and leaves the draft untouched', async () => {
+    const client = {
+      from: () => { throw new Error('Failed to fetch'); },
+    } as unknown as Db;
+    const draft = validCV({ skills: ['React'] });
+    const result = await savePrimaryCV(client, 'u1', draft);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.category).toBe('network');
+    expect(draft.skills).toEqual(['React']);
   });
 });
 
@@ -301,11 +337,15 @@ describe('loadPrimaryCV (reload after refresh)', () => {
     cv.experience = [
       { id: 'e1', company: 'Acme', location: '', date: '2023', role: 'Engineer', bullets: ['Built a thing'] },
     ];
+    cv.activities = [
+      { id: 'a1', organization: 'Robotics Club', activity: 'Mentoring', date: '2024', role: 'Mentor', bullets: ['Guided 5 students'] },
+    ];
     const cols = cvDataToResumeColumns(cv);
     const reloaded = resumeRowToCVData(cols);
     expect(reloaded.personal.firstName).toBe('John');
     expect(reloaded.references).toBe('Available on request');
     expect(reloaded.experience[0].company).toBe('Acme');
+    expect(reloaded.activities[0]).toMatchObject({ organization: 'Robotics Club', role: 'Mentor' });
     expect(reloaded.skills).toEqual(['React', 'SQL']);
     expect(computeFullScore(cv).totalScore).toBe(computeFullScore(reloaded).totalScore);
   });
@@ -339,18 +379,23 @@ describe('classifySaveError (safe, actionable errors)', () => {
     expect(e.userMessage.toLowerCase()).not.toContain('row-level');
     expect(e.userMessage.toLowerCase()).not.toContain('abc');
   });
+
+  it('logs only safe diagnostic context in development', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    logCvPersistenceFailure('save', { category: 'permission', code: '42501' });
+    expect(consoleSpy).toHaveBeenCalledWith('[CV persistence]', {
+      operation: 'save', table: 'resumes', category: 'permission', code: '42501',
+    });
+    expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain('john@example.com');
+    consoleSpy.mockRestore();
+  });
 });
 
 describe('cvSaveToast (success only after confirmation)', () => {
   it('returns success only for a confirmed save', () => {
     const t = cvSaveToast({ ok: true, resumeId: 'r1' });
     expect(t.type).toBe('success');
-    expect(t.message).toBe('CV saved successfully!');
-  });
-
-  it('includes job-match enrichment when provided', () => {
-    const t = cvSaveToast({ ok: true, resumeId: 'r1' }, { jobs: 3 });
-    expect(t.message).toContain('3 open positions');
+    expect(t.message).toBe('CV saved successfully.');
   });
 
   it('offers a retry action for safe network/server failures', () => {
@@ -392,14 +437,24 @@ describe('useCVPersistence', () => {
     expect(fromMock).not.toHaveBeenCalled();
   });
 
-  it('coalesces repeated Save clicks into a single in-flight mutation', async () => {
-    getSessionMock.mockReturnValue(new Promise(() => {})); // first save hangs in-flight
+  it('coalesces repeated Save clicks into the same in-flight request', async () => {
+    let releaseSession: ((value: { data: { session: null }; error: null }) => void) | undefined;
+    getSessionMock.mockReturnValue(new Promise((resolve) => { releaseSession = resolve; }));
     const { result } = renderHook(() => useCVPersistence());
-    await act(async () => {
-      void result.current.save(validCV()); // starts and stays in flight
-      const second = await result.current.save(validCV()); // must be rejected as concurrent
-      expect(second.ok).toBe(false);
-      if (second.ok === false) expect(second.code).toBe('CONCURRENT');
+
+    let first!: ReturnType<typeof result.current.save>;
+    let second!: ReturnType<typeof result.current.save>;
+    act(() => {
+      first = result.current.save(validCV());
+      second = result.current.save(validCV());
     });
+    expect(second).toBe(first);
+    expect(getSessionMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      releaseSession?.({ data: { session: null }, error: null });
+      await Promise.all([first, second]);
+    });
+    expect(fromMock).not.toHaveBeenCalled();
   });
 });

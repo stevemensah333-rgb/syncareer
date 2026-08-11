@@ -12,7 +12,7 @@ describe('NextActionsList', () => {
             {
               id: 'cv',
               title: 'Improve your CV',
-              description: 'Your CV strength is 40%',
+              description: 'Your CV is 40% complete',
               href: '/cv-builder',
               icon: 'cv',
             },

@@ -64,13 +64,19 @@ Assessment.tsx
                Career Readiness / Next Best Action
 ```
 
-### CV strength flow
+### CV completion and quality flow
 
 ```
-CVBuilder.tsx ──► useCVStrengthScore.ts (pure, deterministic 0–100 + label)
-  ├── save/load via supabase (resumes)
+CVBuilder.tsx ──► useCVStrengthScore.ts
+  ├── completion: pure deterministic meaningful-content percentage (0–100%)
+  ├── quality: separate deterministic writing/evidence guidance (0–100)
+  ├── confirmed save/load via Supabase (resumes)
   └── AI assistant + skill-gap via deployed-only edge functions
 ```
+
+The score rules, create/update contract, save states, JSON compatibility for
+Activities, and schema evidence boundary are documented in
+[`CV_BUILDER_PERSISTENCE.md`](./CV_BUILDER_PERSISTENCE.md).
 
 ### Opportunity → application flow
 

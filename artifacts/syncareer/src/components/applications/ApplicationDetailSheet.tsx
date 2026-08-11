@@ -178,7 +178,7 @@ export function ApplicationDetailSheet({
   )}`;
   const cvHref = `/cv-builder?targetRole=${encodeURIComponent(role)}${
     organisation ? `&company=${encodeURIComponent(organisation)}` : ''
-  }&skills=${encodeURIComponent((job?.skills ?? []).join(','))}`;
+  }&skills=${encodeURIComponent((job?.skills ?? []).join(','))}&application=${encodeURIComponent(application.id)}`;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -331,11 +331,11 @@ export function ApplicationDetailSheet({
                       <Badge variant="secondary" className="text-[10px]">Primary CV</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Your primary CV is the one this application points to
+                      This is your primary CV
                       {primaryCv.updated_at
                         ? ` · last updated ${formatShortDate(primaryCv.updated_at)}`
                         : ''}
-                      .
+                      . The current application schema does not link a specific saved CV version, so confirm which version you submitted.
                     </p>
                   </>
                 ) : (

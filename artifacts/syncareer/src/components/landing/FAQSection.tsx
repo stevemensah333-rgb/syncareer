@@ -12,8 +12,8 @@ const FAQS = [
     a: "About 5 minutes. It uses a research-backed RIASEC diagnostic plus a short skills and interests pass, then maps you against 25+ career paths with an explanation for every recommendation.",
   },
   {
-    q: "Will the CV actually pass ATS filters?",
-    a: "Yes. The templates are engineered for African graduate hiring filters: clean structure, quantified achievements, no graphics-heavy layouts. A built-in strength score tells you exactly what to tighten before you export.",
+    q: "Will the CV pass ATS filters?",
+    a: "No builder can guarantee an ATS outcome. Syncareer uses a clear single-column template and provides separate, deterministic completion and quality guidance so you can review your content before applying.",
   },
   {
     q: "What is SynAssist and how does the interview practice work?",

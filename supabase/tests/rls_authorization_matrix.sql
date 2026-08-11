@@ -196,7 +196,54 @@ BEGIN
 END $$;
 
 -- ---------------------------------------------------------------------------
--- 8. SECURITY DEFINER functions must not be executable by anon/PUBLIC
+-- 8. resumes / job_applications — owner-only CRUD
+-- ---------------------------------------------------------------------------
+DO $$
+DECLARE
+  resume_select integer; resume_insert integer; resume_update integer; resume_delete integer;
+  app_select integer; app_insert integer; app_update integer; app_delete integer;
+BEGIN
+  SELECT count(*) INTO resume_select FROM pg_policies
+    WHERE schemaname='public' AND tablename='resumes' AND cmd IN ('SELECT', 'ALL')
+      AND qual LIKE '%auth.uid()%user_id%';
+  SELECT count(*) INTO resume_insert FROM pg_policies
+    WHERE schemaname='public' AND tablename='resumes' AND cmd IN ('INSERT', 'ALL')
+      AND with_check LIKE '%auth.uid()%user_id%';
+  SELECT count(*) INTO resume_update FROM pg_policies
+    WHERE schemaname='public' AND tablename='resumes' AND cmd IN ('UPDATE', 'ALL')
+      AND qual LIKE '%auth.uid()%user_id%'
+      AND with_check LIKE '%auth.uid()%user_id%';
+  SELECT count(*) INTO resume_delete FROM pg_policies
+    WHERE schemaname='public' AND tablename='resumes' AND cmd IN ('DELETE', 'ALL')
+      AND qual LIKE '%auth.uid()%user_id%';
+
+  IF resume_select=0 OR resume_insert=0 OR resume_update=0 OR resume_delete=0 THEN
+    RAISE EXCEPTION 'RLS: resumes owner CRUD policies missing (s=% i=% u=% d=%)',
+      resume_select, resume_insert, resume_update, resume_delete;
+  END IF;
+
+  SELECT count(*) INTO app_select FROM pg_policies
+    WHERE schemaname='public' AND tablename='job_applications' AND cmd IN ('SELECT', 'ALL')
+      AND qual LIKE '%auth.uid()%applicant_id%';
+  SELECT count(*) INTO app_insert FROM pg_policies
+    WHERE schemaname='public' AND tablename='job_applications' AND cmd IN ('INSERT', 'ALL')
+      AND with_check LIKE '%auth.uid()%applicant_id%';
+  SELECT count(*) INTO app_update FROM pg_policies
+    WHERE schemaname='public' AND tablename='job_applications' AND cmd IN ('UPDATE', 'ALL')
+      AND qual LIKE '%auth.uid()%applicant_id%'
+      AND with_check LIKE '%auth.uid()%applicant_id%';
+  SELECT count(*) INTO app_delete FROM pg_policies
+    WHERE schemaname='public' AND tablename='job_applications' AND cmd IN ('DELETE', 'ALL')
+      AND qual LIKE '%auth.uid()%applicant_id%';
+
+  IF app_select=0 OR app_insert=0 OR app_update=0 OR app_delete=0 THEN
+    RAISE EXCEPTION 'RLS: job_applications owner CRUD policies missing (s=% i=% u=% d=%)',
+      app_select, app_insert, app_update, app_delete;
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
+-- 9. SECURITY DEFINER functions must not be executable by anon/PUBLIC
 --    (revenue + role helpers). Defensive re-assert alongside the smoke test.
 -- ---------------------------------------------------------------------------
 DO $$
