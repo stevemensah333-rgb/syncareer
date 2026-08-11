@@ -10,8 +10,7 @@ autoInstallPeers: false
 
 minimumReleaseAge: 1440
 
-minimumReleaseAgeExclude:
-  - '@replit/*'
+minimumReleaseAgeExclude: []
 
 onlyBuiltDependencies:
   - core-js
