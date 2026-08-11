@@ -85,7 +85,7 @@ export function PrimaryFocusCard(props: Props) {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => navigate('/opportunities')} className="gap-1.5">
+              <Button onClick={() => navigate(`/opportunities?job=${encodeURIComponent(props.data.job_id)}`)} className="gap-1.5">
                 Continue application <ArrowRight className="h-4 w-4" />
               </Button>
               <Button variant="outline" onClick={() => navigate(`/cv-builder?targetRole=${encodeURIComponent(job.title)}`)}>
@@ -162,7 +162,7 @@ export function PrimaryFocusCard(props: Props) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => navigate('/applications')} className="gap-1.5">
+            <Button onClick={() => navigate(`/applications?application=${encodeURIComponent(app.id)}`)} className="gap-1.5">
               Open tracker <ArrowRight className="h-4 w-4" />
             </Button>
             <Button variant="outline" onClick={() => navigate(next.href)}>

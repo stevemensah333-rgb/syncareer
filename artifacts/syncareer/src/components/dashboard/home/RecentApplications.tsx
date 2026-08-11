@@ -66,7 +66,7 @@ export function RecentApplications({ items }: { items: RecentApp[] }) {
                   <span>· {timeAgo(app.updated_at)}</span>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" className="h-8 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity" onClick={() => navigate('/applications')}>
+              <Button variant="ghost" size="sm" className="h-8 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity" onClick={() => navigate(`/applications?application=${encodeURIComponent(app.id)}`)}>
                 Open
               </Button>
             </div>
