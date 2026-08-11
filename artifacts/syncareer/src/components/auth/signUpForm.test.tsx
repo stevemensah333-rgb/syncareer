@@ -36,6 +36,12 @@ async function submitAsStudent() {
   fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'ama@example.com' } });
   fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'ValidPass1' } });
   fireEvent.click(screen.getByRole('button', { name: /Create account/i }));
+  await waitFor(() => expect(signUp).toHaveBeenCalledTimes(1));
+  await waitFor(() => {
+    const button = screen.queryByRole('button', { name: /Create account/i });
+    const confirmation = screen.queryByRole('status');
+    expect(confirmation || button?.getAttribute('aria-busy') === 'false').toBeTruthy();
+  });
 }
 
 describe('SignUpForm (email sign-up contract)', () => {
@@ -53,6 +59,26 @@ describe('SignUpForm (email sign-up contract)', () => {
         },
       });
     });
+  });
+
+  it('preserves counsellor role through email signup and does not offer role-losing Google signup', async () => {
+    renderForm();
+    fireEvent.click(screen.getByRole('combobox', { name: /I'm joining as/i }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Career counsellor' }));
+
+    expect(screen.queryByRole('button', { name: /Sign up with Google/i })).toBeNull();
+    expect(screen.getByText(/Counsellor accounts use email sign-up/i)).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Kojo Asante' } });
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'kojo@example.com' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'ValidPass1' } });
+    fireEvent.click(screen.getByRole('button', { name: /Create account/i }));
+
+    await waitFor(() => expect(signUp).toHaveBeenCalledWith(expect.objectContaining({
+      options: expect.objectContaining({
+        data: { full_name: 'Kojo Asante', user_type: 'career_counsellor' },
+      }),
+    })));
   });
 
   it('rejects passwords shorter than 8 chars without calling auth', async () => {

@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
-// ── Data options ──────────────────────────────────────────────────
+export const ONBOARDING_ROLES = ['student', 'career_counsellor'] as const;
+export type OnboardingRole = (typeof ONBOARDING_ROLES)[number];
+
+export function isOnboardingRole(value: unknown): value is OnboardingRole {
+  return typeof value === 'string' && ONBOARDING_ROLES.includes(value as OnboardingRole);
+}
 
 export const MAJORS = [
   'Computer Science',
@@ -45,19 +50,26 @@ export const DEGREE_TYPES = [
 const CURRENT_YEAR = new Date().getFullYear();
 export const ADMISSION_YEARS = Array.from(
   { length: 20 },
-  (_, i) => CURRENT_YEAR - 10 + i,
+  (_, index) => CURRENT_YEAR - 10 + index,
 );
-
-// ── Validation schemas ────────────────────────────────────────────
 
 export const studentSchema = z.object({
   school: z
     .string()
+    .trim()
     .max(200, 'School name must be less than 200 characters')
     .optional(),
   major: z.string().min(1, 'Major is required'),
   degreeType: z.string().min(1, 'Degree type is required'),
-});
+  yearOfAdmission: z.string().optional(),
+  expectedCompletion: z.string().optional(),
+}).refine(
+  ({ yearOfAdmission, expectedCompletion }) => {
+    if (!yearOfAdmission || !expectedCompletion) return true;
+    return Number(expectedCompletion) >= Number(yearOfAdmission);
+  },
+  { message: 'Expected completion cannot be before your admission year' },
+);
 
 export const counsellorSchema = z.object({
   fullName: z
@@ -69,6 +81,7 @@ export const counsellorSchema = z.object({
   phoneNumber: z
     .string()
     .trim()
-    .min(1, 'Phone number is required')
-    .max(20, 'Phone number must be less than 20 characters'),
+    .min(6, 'Enter a valid phone number')
+    .max(20, 'Phone number must be less than 20 characters')
+    .regex(/^[0-9 ()-]+$/, 'Phone number can only contain numbers, spaces, brackets, or hyphens'),
 });

@@ -156,7 +156,7 @@ BEGIN
 END $$;
 
 -- ---------------------------------------------------------------------------
--- 6. counsellor_details — INSERT requires a counsellor profile
+-- 6. counsellor_details — INSERT requires the canonical career-counsellor profile
 -- ---------------------------------------------------------------------------
 DO $$
 DECLARE v_count integer;
@@ -164,9 +164,10 @@ BEGIN
   SELECT count(*) INTO v_count
   FROM pg_policies
   WHERE schemaname='public' AND tablename='counsellor_details'
-    AND cmd='INSERT' AND with_check LIKE '%get_profile_user_type%counsellor%';
+    AND cmd='INSERT'
+    AND with_check LIKE '%get_profile_user_type%career_counsellor%';
   IF v_count = 0 THEN
-    RAISE EXCEPTION 'RLS: counsellor_details INSERT not restricted to counsellor profiles';
+    RAISE EXCEPTION 'RLS: counsellor_details INSERT does not require the canonical career_counsellor profile role';
   END IF;
 END $$;
 

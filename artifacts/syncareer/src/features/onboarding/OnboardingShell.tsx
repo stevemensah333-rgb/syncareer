@@ -1,53 +1,82 @@
-import React from 'react';
+import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { Check } from 'lucide-react';
 
 interface OnboardingShellProps {
   eyebrow: string;
   title: string;
-  italicWord: string;
-  subtitle: string;
-  children: React.ReactNode;
+  subtitle?: string;
+  currentStep?: number;
+  totalSteps?: number;
+  children: ReactNode;
 }
 
 export function OnboardingShell({
   eyebrow,
   title,
-  italicWord,
   subtitle,
+  currentStep,
+  totalSteps,
   children,
 }: OnboardingShellProps) {
-  const titleParts = title.split(italicWord);
+  const hasProgress = Boolean(currentStep && totalSteps);
+  const progress = hasProgress ? Math.min(100, Math.round((currentStep! / totalSteps!) * 100)) : 0;
+
   return (
     <main
       id="main-content"
-      className="relative min-h-screen flex items-start sm:items-center justify-center px-4 py-12 overflow-hidden"
-      style={{ backgroundColor: 'hsl(var(--landing-cream))' }}
+      tabIndex={-1}
+      className="min-h-screen bg-background px-4 py-6 text-foreground focus:outline-none sm:px-6 sm:py-10"
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full blur-3xl"
-        style={{ backgroundColor: 'hsl(var(--landing-amber) / 0.18)' }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-40 -right-40 h-[32rem] w-[32rem] rounded-full blur-3xl"
-        style={{ backgroundColor: 'hsl(var(--primary) / 0.07)' }}
-      />
-      <div className="relative z-10 w-full max-w-2xl flex flex-col items-center">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-3.5 py-1.5 text-[11px] font-medium text-foreground/70 shadow-sm ring-1 ring-black/[0.04] mb-6">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          {eyebrow}
-        </span>
-        <h1 className="font-serif text-4xl sm:text-5xl font-normal leading-[1.05] tracking-[-0.02em] text-foreground text-center">
-          {titleParts[0]}
-          <span className="italic text-primary">{italicWord}</span>
-          {titleParts[1]}
-        </h1>
-        {subtitle && (
-          <p className="mt-4 max-w-md text-center text-foreground/60 text-sm sm:text-base leading-relaxed">
-            {subtitle}
-          </p>
-        )}
-        <div className="mt-10 w-full">{children}</div>
+      <div className="mx-auto w-full max-w-2xl">
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 rounded-md text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Syncareer home"
+          >
+            <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+              S
+            </span>
+            Syncareer
+          </Link>
+          <span className="text-xs font-medium text-muted-foreground">Account setup</span>
+        </div>
+
+        <header className="mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">{eyebrow}</p>
+            {hasProgress && (
+              <p className="text-xs font-medium text-muted-foreground">
+                Step {currentStep} of {totalSteps}
+              </p>
+            )}
+          </div>
+          <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">{title}</h1>
+          {subtitle && (
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
+              {subtitle}
+            </p>
+          )}
+          {hasProgress && (
+            <div className="mt-5" aria-label={`Onboarding progress: step ${currentStep} of ${totalSteps}`}>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-150 motion-reduce:transition-none"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                {currentStep === totalSteps ? (
+                  <Check className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                ) : null}
+                <span>{currentStep === totalSteps ? 'Profile details' : 'Welcome'}</span>
+              </div>
+            </div>
+          )}
+        </header>
+
+        {children}
       </div>
     </main>
   );

@@ -1,6 +1,8 @@
 # Dashboard continuation rules
 
-The signed-in home page is a read-only continuation surface. It fetches assessment completion, applications, saved opportunities, and the primary CV concurrently. It does not create activity, update application state, or infer recommendations.
+The signed-in home page is a read-only continuation surface. It fetches assessment completion, applications, saved opportunities, and the most recently updated primary CV from the authenticated user's real Supabase rows. It does not create activity, update application state, or infer recommendations.
+
+The loader follows the verified 2026-08-11 Live schema rather than the separately proposed application-workspace migration. `job_applications` is read only through currently deployed columns. Because Live `saved_jobs` has no foreign key to `job_postings`, Home first reads the user's saved job IDs and then fetches those posting rows with a second owner-safe/shared-data query; it does not request a PostgREST embedded relationship that Live cannot resolve. A `limit(1)` ordered by `updated_at` makes the primary-CV read tolerant of legacy duplicate-primary rows.
 
 ## Primary focus
 

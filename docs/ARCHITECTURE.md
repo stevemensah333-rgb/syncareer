@@ -54,6 +54,38 @@ There is **no Express/Node API server**. All server-side work is Supabase.
 4. AI / payment / email operations call edge functions (JWT-verified) which use
    `service_role` only for legitimate system operations, then return typed JSON.
 
+### Onboarding flow
+
+`/onboarding` restores `profiles` plus the role-specific `student_details` or
+`counsellor_details` row before editing. It uses the role already provisioned at
+signup and never treats a browser role selector as authorization. Role details
+are upserted first; only after that succeeds is `profiles.onboarding_completed`
+updated. Initial read failures, unsupported roles, validation failures, RLS
+failures, and network failures have visible retry-safe states.
+
+The canonical counsellor profile role is `career_counsellor`. Repository
+migration `20260811153000_fix_counsellor_onboarding_role.sql` corrects the
+`counsellor_details` INSERT policy while retaining both `auth.uid() = user_id`
+and the stored-profile role check. It does not permit client-side role changes.
+As with every Lovable Cloud migration, repository presence is not proof of Live
+application; an approved Lovable change and post-apply RLS verification are
+still required. Before an approved apply, use a verified isolated restore and
+confirm that an owner with stored role `career_counsellor` can insert their own
+row while students and cross-owner writes remain denied; then run
+`supabase/tests/rls_authorization_matrix.sql`. The compensating SQL is
+`supabase/rollback/counsellor_onboarding_role_policy_rollback.sql`; it restores
+the previous policy and therefore deliberately restores the counsellor setup
+failure.
+
+### Home/dashboard flow
+
+`features/dashboard/data.ts` is the read seam for `/dashboard`. It settles
+assessment, application, save, and CV requests independently so a secondary
+source cannot discard data from successful sources. It reads only verified Live
+columns. Since Live `saved_jobs` does not currently expose a foreign-key
+relationship to PostgREST, saved IDs and shared `job_postings` details are read
+in two queries. See [`DASHBOARD_CONTINUATION_RULES.md`](./DASHBOARD_CONTINUATION_RULES.md).
+
 ### Assessment flow
 
 ```
