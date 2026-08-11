@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
 import { CalendarClock, Compass, MapPin, NotebookPen, ShieldQuestion } from 'lucide-react';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { useHoverCapability } from '@/hooks/useHoverCapability';
+import {
+  ContextualPreview,
+  PreviewCallout,
+  PreviewContent,
+  PreviewLine,
+} from '@/components/ui/contextual-preview';
 import {
   getApplicationNextAction,
   stageForStatus,
@@ -25,15 +29,6 @@ interface ApplicationRowPreviewProps {
   children: ReactNode;
 }
 
-function PreviewLine({ icon, children }: { icon: ReactNode; children: ReactNode }) {
-  return (
-    <p className="flex items-start gap-2 text-xs text-muted-foreground">
-      <span className="mt-0.5 shrink-0 text-foreground/70">{icon}</span>
-      <span className="min-w-0">{children}</span>
-    </p>
-  );
-}
-
 /**
  * Progressive-disclosure preview for a tracked application row, mirroring the
  * opportunity preview rules:
@@ -44,10 +39,6 @@ function PreviewLine({ icon, children }: { icon: ReactNode; children: ReactNode 
  * - every fact here also appears in the full detail sheet.
  */
 export function ApplicationRowPreview({ application, hasCv, children }: ApplicationRowPreviewProps) {
-  const canHover = useHoverCapability();
-
-  if (!canHover) return <>{children}</>;
-
   const job = application.job;
   const organisation = job ? getOrganisation(job) : null;
   const deadline = getDeadlineState(job?.application_deadline);
@@ -63,17 +54,9 @@ export function ApplicationRowPreview({ application, hasCv, children }: Applicat
   });
 
   return (
-    <HoverCard openDelay={250} closeDelay={120}>
-      <HoverCardTrigger asChild>{children}</HoverCardTrigger>
-      <HoverCardContent
-        side="right"
-        align="start"
-        sideOffset={10}
-        collisionPadding={16}
-        className="hidden w-80 max-w-[calc(100vw-2rem)] lg:block"
-      >
-        <div className="space-y-3">
-          <div className="space-y-1">
+    <ContextualPreview content={
+      <PreviewContent>
+        <div className="space-y-1">
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold leading-tight truncate">
                 {job?.title || 'Tracked application'}
@@ -117,12 +100,11 @@ export function ApplicationRowPreview({ application, hasCv, children }: Applicat
             )}
           </div>
 
-          <div className="rounded-md bg-primary/5 border border-primary/10 px-3 py-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">Next</p>
-            <p className="text-xs text-foreground">{nextAction.title}</p>
-          </div>
-        </div>
-      </HoverCardContent>
-    </HoverCard>
+          <PreviewCallout label="Next">{nextAction.title}</PreviewCallout>
+        </PreviewContent>
+      }
+    >
+      {children}
+    </ContextualPreview>
   );
 }
