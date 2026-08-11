@@ -391,7 +391,7 @@ const Onboarding = () => {
                 onClick={() => setUserType(role.value)}
                 className="group p-6 rounded-2xl bg-white ring-1 ring-black/[0.06] hover:ring-primary/40 hover:shadow-[0_12px_32px_-20px_rgba(20,20,20,0.25)] text-left transition-all space-y-2"
               >
-                <h3 className="font-serif text-2xl font-normal text-foreground tracking-[-0.01em]">{role.label}</h3>
+                <h3 className="text-xl font-semibold tracking-tight text-foreground">{role.label}</h3>
                 <p className="text-sm text-foreground/60 leading-relaxed">{role.description}</p>
                 <span className="inline-flex items-center gap-1 pt-2 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                   Continue →

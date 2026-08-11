@@ -78,10 +78,8 @@ function SignInPage() {
   if (pathname.endsWith("/forgot-password")) {
     return (
       <AuthShell
-        eyebrow="No worries"
         title="Reset your password"
-        italicWord="your password"
-        subtitle="Tell us the email on your account and we'll send you a reset link."
+        subtitle="Enter your email and we'll send instructions if it matches an account."
       >
         <ForgotPasswordForm />
       </AuthShell>
@@ -89,10 +87,8 @@ function SignInPage() {
   }
   return (
     <AuthShell
-      eyebrow="Welcome back"
-      title="Sign in to keep going"
-      italicWord="keep going"
-      subtitle="Pick up where you left off — your assessments, CV, and saved roles are waiting."
+      title="Welcome back"
+      subtitle="Sign in to continue your applications."
     >
       <SignInForm />
     </AuthShell>
@@ -102,10 +98,8 @@ function SignInPage() {
 function SignUpPage() {
   return (
     <AuthShell
-      eyebrow="For African graduates"
-      title="Start your career story"
-      italicWord="career story"
-      subtitle="Take the free assessment, build an ATS-ready CV, and practise interviews — all in one place."
+      title="Create your account"
+      subtitle="Start building stronger, evidence-based applications."
     >
       <SignUpForm />
     </AuthShell>
@@ -115,10 +109,8 @@ function SignUpPage() {
 function ResetPasswordPage() {
   return (
     <AuthShell
-      eyebrow="Almost there"
       title="Choose a new password"
-      italicWord="new password"
-      subtitle="Pick something memorable — you'll use it next time you sign in to Syncareer."
+      subtitle="Use at least eight characters and save it securely."
     >
       <ResetPasswordForm />
     </AuthShell>

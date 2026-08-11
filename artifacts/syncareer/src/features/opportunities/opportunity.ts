@@ -15,14 +15,7 @@ import type { Database } from '@/integrations/supabase/types';
 
 export type OpportunityJob = Database['public']['Tables']['job_postings']['Row'];
 
-/** Client-side skill-match enrichment computed against the user's skills. */
-export interface OpportunityMatchInfo {
-  matchPercentage: number;
-  matchedSkills: string[];
-  missingSkills: string[];
-}
-
-export type MatchedOpportunityJob = OpportunityJob & OpportunityMatchInfo;
+export type MatchedOpportunityJob = OpportunityJob;
 
 /** Minimal shape accepted by the fact helpers (works for partial joins too). */
 export interface OpportunityJobFacts {
@@ -173,7 +166,7 @@ export function getProvenanceFacts(job: OpportunityJobFacts): ProvenanceFacts {
   };
 }
 
-// ── Relative timestamps ───────────────────────────────────────────
+// ── Ingestion timestamps ──────────────────────────────────────────
 
 /** "Today" / "Yesterday" / "3d ago" / ...; null for missing or unparseable input. */
 export function formatPostedAgo(createdAt: string | null | undefined, now: number = Date.now()): string | null {
@@ -188,9 +181,34 @@ export function formatPostedAgo(createdAt: string | null | undefined, now: numbe
   return `${Math.floor(days / 30)}mo ago`;
 }
 
+export type FreshnessKind = 'recent' | 'stale' | 'unknown';
+
+export interface FreshnessState {
+  kind: FreshnessKind;
+  label: string;
+}
+
+/**
+ * `updated_at` is an ingestion/database timestamp, not proof that the source
+ * posting was republished or remains open. The UI labels it accordingly.
+ */
+export function getIngestionFreshness(
+  updatedAt: string | null | undefined,
+  now: number = Date.now(),
+): FreshnessState {
+  if (!updatedAt) return { kind: 'unknown', label: 'Ingestion freshness unknown' };
+  const time = new Date(updatedAt).getTime();
+  if (Number.isNaN(time)) return { kind: 'unknown', label: 'Ingestion freshness unknown' };
+  const days = Math.max(0, Math.floor((now - time) / 86400000));
+  if (days > 14) return { kind: 'stale', label: `Listing data last ingested ${days} days ago` };
+  if (days === 0) return { kind: 'recent', label: 'Listing data ingested today' };
+  if (days === 1) return { kind: 'recent', label: 'Listing data ingested yesterday' };
+  return { kind: 'recent', label: `Listing data ingested ${days} days ago` };
+}
+
 // ── Opportunity-level call to action ──────────────────────────────
 
-export type OpportunityCtaKind = 'apply-external' | 'apply-native' | 'open-tracker';
+export type OpportunityCtaKind = 'apply-external' | 'apply-native' | 'open-tracker' | 'source-unavailable';
 
 export interface OpportunityCtaInput {
   isExternal: boolean;
@@ -207,5 +225,6 @@ export interface OpportunityCtaInput {
 export function getOpportunityCta(input: OpportunityCtaInput): OpportunityCtaKind {
   if (input.tracked) return 'open-tracker';
   if (input.isExternal && input.hasSourceUrl) return 'apply-external';
+  if (input.isExternal) return 'source-unavailable';
   return 'apply-native';
 }

@@ -1,154 +1,35 @@
-import React, { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Lightbulb } from 'lucide-react';
+import { ContextualAssistantDrawer } from '@/components/assistant/ContextualAssistantDrawer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Sparkles, Send, Loader2, Lightbulb, Wand2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { CVData } from '@/features/cv-builder/types';
-import { SECTION_TIPS, QUICK_PROMPTS } from '@/features/cv-builder/constants';
+import { SECTION_TIPS } from '@/features/cv-builder/constants';
+import type { CVAIProposal } from '@/features/cv-builder/aiProposal';
 
-interface CVAIAssistantProps {
-  cvData: CVData;
-  activeSection: string;
-  onSuggestion: (section: string, content: string) => void;
+interface Props { cvData: CVData; activeSection: string; onSuggestion: (proposal: CVAIProposal) => boolean; onUndo: () => void; }
+interface BulletOption { path: string; value: string; label: string; }
+
+export function CVAIAssistant({ cvData, activeSection, onSuggestion, onUndo }: Props) {
+  const bullets = useMemo<BulletOption[]>(() => {
+    if (!['experience', 'projects', 'activities'].includes(activeSection)) return [];
+    const rows = cvData[activeSection as 'experience' | 'projects' | 'activities'];
+    return rows.flatMap((row) => row.bullets.map((value, index) => ({
+      path: `${activeSection}.${row.id}.bullets.${index}`,
+      value,
+      label: `${'company' in row ? row.company : 'projectName' in row ? row.projectName : row.organization || activeSection} · bullet ${index + 1}`,
+    }))).filter((item) => item.value.trim());
+  }, [activeSection, cvData]);
+  const [selectedPath, setSelectedPath] = useState('');
+  const selected = bullets.find((item) => item.path === selectedPath) ?? bullets[0] ?? null;
+  const tips = SECTION_TIPS[activeSection] || SECTION_TIPS.personal;
+
+  return <div className="space-y-4">
+    <Card><CardHeader className="pb-3"><CardTitle className="text-base">Assistant for a selected bullet</CardTitle></CardHeader><CardContent className="space-y-3">
+      {bullets.length ? <><div className="space-y-2"><Label htmlFor="assistant-cv-bullet">Bullet to improve</Label><Select value={selected?.path ?? ''} onValueChange={setSelectedPath}><SelectTrigger id="assistant-cv-bullet"><SelectValue /></SelectTrigger><SelectContent>{bullets.map((bullet) => <SelectItem key={bullet.path} value={bullet.path}>{bullet.label}</SelectItem>)}</SelectContent></Select></div>
+      {selected && <ContextualAssistantDrawer task="cv.rewrite_bullet" description="Propose a rewrite using only the selected bullet. No other CV fields are sent." suggestedPrompt="Rewrite this bullet for clarity and impact without adding facts, metrics, skills or outcomes." context={[{ id: 'selected-bullet', label: 'Selected CV bullet', provenance: 'selected_cv_text', content: selected.value, personal: true }]} acceptLabel="Apply to draft" onAccept={(text) => onSuggestion({ fieldPath: selected.path, before: selected.value, after: text, rationale: 'Contextual assistant proposal using only the selected bullet.' })} onUndo={onUndo} />}</> : <p className="text-sm text-muted-foreground">Open Experience, Projects or Activities and enter a bullet before requesting a rewrite.</p>}
+    </CardContent></Card>
+    <Card><CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><Lightbulb className="h-4 w-4 text-info" />Tips for {activeSection}</CardTitle></CardHeader><CardContent><ul className="space-y-2">{(tips ?? []).map((tip) => <li key={tip} className="text-sm text-muted-foreground">• {tip}</li>)}</ul></CardContent></Card>
+  </div>;
 }
-
-export const CVAIAssistant: React.FC<CVAIAssistantProps> = ({
-  cvData,
-  activeSection,
-  onSuggestion,
-}) => {
-  const [prompt, setPrompt] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-
-  const handleAIRequest = async (customPrompt?: string) => {
-    const finalPrompt = customPrompt || prompt;
-    if (!finalPrompt.trim()) {
-      toast.error('Please enter a prompt');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('cv-ai-assistant', {
-        body: {
-          prompt: finalPrompt,
-          cvData,
-          section: activeSection,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.suggestions) {
-        setSuggestions(data.suggestions);
-      }
-      
-      toast.success('AI suggestions generated!');
-    } catch (error) {
-      console.error('AI request error:', error);
-      toast.error('Failed to get AI suggestions. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const currentTips = SECTION_TIPS[activeSection] || SECTION_TIPS.personal;
-
-  return (
-    <div className="space-y-4">
-      <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Sparkles className="h-5 w-5 text-primary" />
-            AI Writing Assistant
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Textarea
-            placeholder="Ask AI for help with your CV (e.g., 'Help me write better bullet points for my internship')"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="min-h-[80px]"
-          />
-          <Button
-            onClick={() => handleAIRequest()}
-            disabled={isLoading || !prompt.trim()}
-            className="w-full"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4 mr-2" />
-                Get AI Help
-              </>
-            )}
-          </Button>
-
-          <div className="flex flex-wrap gap-2">
-            {QUICK_PROMPTS.map((qp) => (
-              <Button
-                key={qp.label}
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setPrompt(qp.prompt);
-                  handleAIRequest(qp.prompt);
-                }}
-                disabled={isLoading}
-                className="text-xs"
-              >
-                <Wand2 className="h-3 w-3 mr-1" />
-                {qp.label}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {suggestions.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">AI Suggestions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {suggestions.map((suggestion, index) => (
-              <div
-                key={index}
-                className="p-3 bg-muted rounded-md text-sm cursor-pointer hover:bg-muted/80 transition-colors"
-                onClick={() => onSuggestion(activeSection, suggestion)}
-              >
-                {suggestion}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Lightbulb className="h-5 w-5 text-accent" />
-            Tips for {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
-            {(currentTips ?? []).map((tip, index) => (
-              <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-                <span className="text-primary">•</span>
-                {tip}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};

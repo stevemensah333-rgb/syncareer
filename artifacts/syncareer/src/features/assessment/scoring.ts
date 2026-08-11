@@ -10,6 +10,10 @@ export interface RiasecScoreResult {
   tertiary_interest: string | null;
 }
 
+export function validateAssessmentAnswers(answers: Record<number, number>, questions: AssessmentQuestion[]): boolean {
+  return questions.length === 45 && questions.every((question) => Number.isInteger(answers[question.id]) && answers[question.id]! >= 1 && answers[question.id]! <= 5);
+}
+
 /**
  * Pure RIASEC scoring — canonical implementation shared by guest and
  * authenticated paths.  Takes an answers map and the question bank.

@@ -28,9 +28,6 @@ function makeJob(overrides: Partial<MatchedOpportunityJob> = {}): MatchedOpportu
     external_id: null,
     status: 'active',
     updated_at: new Date().toISOString(),
-    matchPercentage: 90,
-    matchedSkills: ['TypeScript'],
-    missingSkills: [],
     ...overrides,
   };
 }
@@ -89,7 +86,7 @@ describe('OpportunityPreview progressive disclosure', () => {
     fireEvent.focus(row);
     fireEvent.mouseEnter(row);
 
-    const provenance = await screen.findByText(/not verified/i, undefined, { timeout: 2000 });
+    const provenance = await screen.findByText(/not independently verified/i, undefined, { timeout: 2000 });
     expect(provenance).toBeTruthy();
     expect(screen.getByText(/Entry level/i)).toBeTruthy();
     expect(screen.getByText(/Deadline/i)).toBeTruthy();

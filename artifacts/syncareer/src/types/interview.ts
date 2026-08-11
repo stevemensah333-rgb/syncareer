@@ -43,7 +43,10 @@ export type InterviewPhase =
   | 'ai_speaking'   // AI is speaking via TTS
   | 'user_speaking' // User mic is active
   | 'processing'    // Waiting for AI response
+  | 'paused'        // User deliberately paused local capture/playback
+  | 'reconnecting'  // Recovering after a transient response failure
   | 'completed'     // Interview finished
+  | 'ended'         // User ended before or after completion
   | 'error';        // Recoverable error state
 
 export interface VoiceInterviewState {

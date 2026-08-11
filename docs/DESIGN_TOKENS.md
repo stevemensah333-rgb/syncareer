@@ -16,42 +16,57 @@ calm, bright, recognisable surface system.
 
 | Token | Role | Hue |
 |---|---|---|
-| `--background` | warm near-white canvas | `39 38% 97%` |
+| `--background` | cool near-white workspace canvas | `216 33% 98%` |
 | `--card` / `--popover` | white content surfaces | `0 0% 100%` |
 | `--foreground` | dark navy-charcoal text | `222 26% 15%` |
 | `--primary` | cobalt primary actions | `221 83% 53%` |
-| `--secondary` | deep navy-slate secondary actions | `221 22% 30%` |
+| `--secondary` | quiet blue-slate secondary surface | `216 24% 95%` |
 | `--success` | teal-mint progress/success | `166 70% 36%` |
 | `--warning` | restrained amber attention/deadline | `38 90% 42%` |
 | `--danger` / `--destructive` | accessible red errors | `0 72% 51%` |
 | `--info` | lavender contextual guidance | `258 62% 50%` |
-| `--accent` | lavender accent fill/guidance | `255 58% 58%` |
-| `--border` / `--input` | quiet neutral borders | `222 20% 89%` / `222 22% 86%` |
+| `--accent` | soft lavender contextual fill | `252 55% 96%` |
+| `--border` / `--input` | quiet cool neutral borders | `218 22% 89%` / `218 22% 84%` |
 | `--ring` | cobalt keyboard-focus ring | `221 83% 53%` |
 
 `--info` is exposed as the Tailwind `info` color for badges/alerts; `--accent`
-is reserved for contextual lavender (icons, guidance fills, hovers), so generic
-hovers stay calm while guidance reads as lavender.
+is a pale contextual lavender surface. Generic navigation and row hovers use
+muted/sidebar surfaces rather than lavender.
 
 ## Application shell
 
-- **Desktop:** fixed top `Navbar` (`h-16`) + collapsible `AppSidebar` rail
-  (`w-64` expanded, `w-[68px]` collapsed). Active destinations get
-  `bg-primary/10 text-primary` plus a left indicator bar and `aria-current`.
-- **Mobile/tablet:** `MobileBottomNav` (bottom bar, `md:hidden`) with
-  ≥44px touch targets (`min-h-11`) and an overflow "More" menu.
+- **Shared shell:** `AuthenticatedLayout` owns the fixed global bar, responsive
+  content geometry, page header, and mobile navigation. `StudentLayout` and
+  `CounsellorLayout` supply only their role-specific navigation model.
+- **Desktop:** the full-height `AppSidebar` owns Syncareer branding and all
+  signed-in navigation (`w-64` expanded, `w-[68px]` collapsed). The top bar is
+  offset by the rail and contains only counselling/help, notifications, and
+  profile/account controls. Active destinations get `bg-primary/10
+  text-primary`, a left indicator, and `aria-current`.
+- **Mobile:** `MobileBottomNav` (`md:hidden`) derives from the same canonical
+  role navigation groups as desktop. Three primary destinations remain visible
+  and every remaining destination is reachable from "More". Targets are at
+  least 44px high and use `min-w-0` so narrow labels cannot push controls off
+  screen.
 - **Page header:** shared `PageHeader` (compact title + optional breadcrumb
   trail + optional actions). Empty titles render nothing so pages like
   Dashboard that own their greeting stay clean.
-- **Content:** `max-w-[1400px]` gutter container with responsive `px-4 lg:px-8`
-  padding and `py-6` vertical rhythm.
-- **Canvas:** `.app-canvas` applies the warm near-white background plus a very
-  subtle blue/lavender radial wash to authenticated shells only — the landing
-  page keeps its own editorial background.
+- **Content:** `max-w-[1440px]` gutter container with responsive
+  `px-4 sm:px-6 lg:px-8` padding and compact `py-5 lg:py-6` rhythm.
+- **Canvas:** `.workspace-shell` is a flat cool near-white canvas with crisp
+  white working surfaces. `.app-canvas` remains available to public/editorial
+  surfaces and is not used by the authenticated shell.
+- **Surfaces:** shared cards use a quiet border and no default shadow. Dialogs,
+  sheets, popovers, and toasts retain shadows because they represent elevation.
+  `workspace-panel` and `workspace-row` provide explicit dense panel/list
+  treatments without introducing another component library.
 
 ## Interaction & accessibility
 
 - All motion uses ~120–180ms transitions (`duration-150`).
+- Dialogs and destructive confirmations fade without scale/zoom; sheets use a
+  150ms directional transition. Shared scroll reveal is limited to 150ms and an
+  8px offset.
 - Visible keyboard focus: Radix/shadcn widgets draw their own `ring`; a global
   `:focus-visible` outline covers every other interactive element.
 - `prefers-reduced-motion` collapses animations/transitions to near-instant
@@ -59,3 +74,18 @@ hovers stay calm while guidance reads as lavender.
 - Skip links, `aria-current` on active nav, `aria-expanded` on the collapse
   control, and accessible labels on icon-only controls are used throughout the
   shell.
+- Operational workspace typography is the established Inter/sans stack.
+  Decorative serif styling remains scoped to public/editorial surfaces.
+
+## Authentication shell
+
+Authentication routes use the same `app-canvas`, sans-serif type, semantic
+colours, 8–12px radii, quiet borders, and 150ms interaction rhythm as the
+application. They intentionally use one compact working surface rather than
+the landing-page cream/amber palette, decorative serif type, blurred ornaments,
+or marketing motion.
+
+Auth feedback stays visible inline: pending buttons retain an action-specific
+label, errors use `destructive`, confirmation uses `success`, and expired-link
+guidance uses `warning`. Password visibility is a named, keyboard-reachable
+button; fields keep browser-compatible labels, names, and autocomplete values.

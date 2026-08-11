@@ -41,9 +41,10 @@ describe('AppSidebar (navigation)', () => {
   it('exposes the core student destinations', () => {
     renderSidebar();
     const links = screen.getAllByRole('link').map((l) => (l as HTMLAnchorElement).getAttribute('href'));
-    for (const href of ['/dashboard', '/opportunities', '/applications', '/practice', '/cv-builder', '/ai-coach', '/settings']) {
+    for (const href of ['/dashboard', '/opportunities', '/applications', '/practice', '/cv-builder', '/interview-simulator', '/settings']) {
       expect(links).toContain(href);
     }
+    expect(links).not.toContain('/ai-coach');
   });
 
   it('collapses and expands via the toggle, updating its accessible state', () => {
@@ -57,8 +58,17 @@ describe('AppSidebar (navigation)', () => {
     // Collapsed: narrower rail, toggle announces "expand".
     expect(aside.className).toContain('w-[68px]');
     expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Opportunities' }).getAttribute('title')).toBe('Opportunities');
 
     fireEvent.click(screen.getByRole('button', { name: 'Expand sidebar' }));
     expect(screen.getByRole('button', { name: 'Collapse sidebar' })).toBeTruthy();
+  });
+
+  it('keeps navigation links keyboard-focusable with a visible focus treatment', () => {
+    renderSidebar('/dashboard');
+    const opportunities = screen.getByRole('link', { name: 'Opportunities' });
+    opportunities.focus();
+    expect(document.activeElement).toBe(opportunities);
+    expect(opportunities.className).toContain('focus-visible:ring-2');
   });
 });

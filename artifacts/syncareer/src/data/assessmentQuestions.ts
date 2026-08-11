@@ -79,12 +79,12 @@ export const RIASEC_LABELS: Record<string, string> = {
 };
 
 export const RIASEC_DESCRIPTIONS: Record<string, string> = {
-  R: 'You prefer hands-on, practical work — building, repairing, or working with tangible outcomes. Careers in engineering, trades, agriculture, or athletics suit you well.',
-  I: 'You thrive on investigation and analysis — solving complex problems and exploring ideas. Research, science, technology, and data-driven roles align with your strengths.',
-  A: 'You value creativity, self-expression, and originality. Careers in design, writing, media, performing arts, and content creation energize you.',
-  S: 'You are people-oriented and driven to help others. Teaching, counseling, healthcare, social work, and community development are natural fits.',
-  E: 'You are ambitious, persuasive, and drawn to leadership. Business, sales, entrepreneurship, management, and politics match your enterprising spirit.',
-  C: 'You excel at organization, structure, and systematic work. Finance, administration, logistics, compliance, and data management roles suit you.',
+  R: 'Interest in hands-on, practical activity and tangible tools, systems or outcomes.',
+  I: 'Interest in investigating questions, analysing evidence and exploring ideas.',
+  A: 'Interest in creativity, expression, interpretation and original approaches.',
+  S: 'Interest in helping, teaching, supporting or collaborating with people.',
+  E: 'Interest in influencing, initiating, coordinating or leading toward goals.',
+  C: 'Interest in structure, records, organisation and clearly defined processes.',
 };
 
 export const LIKERT_OPTIONS = [

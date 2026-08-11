@@ -1,60 +1,70 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getAuthErrorMessage } from './authUtils';
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const submissionInFlight = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submissionInFlight.current) return;
+    if (!email.trim()) {
+      setErrorMessage('Enter your email address.');
+      return;
+    }
+    submissionInFlight.current = true;
     setSubmitting(true);
+    setErrorMessage('');
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
       setSent(true);
-      toast.success('Reset link sent — check your inbox.');
-    } catch (err: any) {
-      toast.error(err?.message ?? 'Could not send reset link');
+    } catch (error) {
+      setErrorMessage(getAuthErrorMessage(error, 'reset'));
     } finally {
+      submissionInFlight.current = false;
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur rounded-3xl shadow-[0_20px_60px_-30px_rgba(20,20,20,0.25)] ring-1 ring-black/[0.04] p-8">
+    <div>
       {sent ? (
         <div className="space-y-4 text-center">
           <p className="text-sm text-foreground/70">
-            If an account exists for <strong>{email}</strong>, a reset link is on its way.
+            If an account matches <strong>{email}</strong>, reset instructions are on their way.
           </p>
           <Link to="/sign-in" className="text-primary hover:text-primary/80 text-sm font-medium">Back to sign in</Link>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-foreground/70 text-xs uppercase tracking-wider">Email</Label>
+            <Label htmlFor="reset-email">Email</Label>
             <Input
-              id="email"
+              id="reset-email" name="email"
               type="email"
               autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="!rounded-xl bg-white border border-black/[0.08] h-11"
+              className="h-11"
             />
           </div>
+          {errorMessage ? <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive">{errorMessage}</div> : null}
           <Button
             type="submit"
             disabled={submitting}
-            className="w-full !rounded-full bg-foreground hover:bg-foreground/90 text-background h-11 shadow-sm"
+            aria-busy={submitting} className="h-11 w-full"
           >
             {submitting ? 'Sending…' : 'Send reset link'}
           </Button>

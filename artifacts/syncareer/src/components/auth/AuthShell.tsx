@@ -1,45 +1,27 @@
 import React from 'react';
 
 interface AuthShellProps {
-  eyebrow: string;
   title: string;
-  italicWord: string;
   subtitle: string;
   children: React.ReactNode;
 }
 
-export default function AuthShell({ eyebrow, title, italicWord, subtitle, children }: AuthShellProps) {
-  const titleParts = title.split(italicWord);
+export default function AuthShell({ title, subtitle, children }: AuthShellProps) {
   return (
-    <div
-      className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden"
-      style={{ backgroundColor: 'hsl(var(--landing-cream))' }}
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full blur-3xl"
-        style={{ backgroundColor: 'hsl(var(--landing-amber) / 0.18)' }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-40 -right-40 h-[32rem] w-[32rem] rounded-full blur-3xl"
-        style={{ backgroundColor: 'hsl(var(--primary) / 0.07)' }}
-      />
-      <div className="relative z-10 w-full max-w-md flex flex-col items-center">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-3.5 py-1.5 text-[11px] font-medium text-foreground/70 shadow-sm ring-1 ring-black/[0.04] mb-6">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          {eyebrow}
-        </span>
-        <h1 className="font-serif text-4xl sm:text-5xl font-normal leading-[1.05] tracking-[-0.02em] text-foreground text-center">
-          {titleParts[0]}
-          <span className="italic text-primary">{italicWord}</span>
-          {titleParts[1]}
-        </h1>
-        <p className="mt-4 max-w-sm text-center text-foreground/60 text-sm sm:text-base leading-relaxed">
+    <main className="app-canvas flex min-h-screen items-start justify-center overflow-x-hidden px-4 py-8 sm:items-center sm:py-12">
+      <div className="w-full max-w-md">
+        <a href="/" className="mb-8 inline-flex items-center gap-2 rounded-md text-sm font-semibold text-foreground focus-visible:outline-none">
+          <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">S</span>
+          Syncareer
+        </a>
+        <header>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{title}</h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
           {subtitle}
-        </p>
-        <div className="mt-10 w-full">{children}</div>
+          </p>
+        </header>
+        <div className="mt-6 rounded-xl border bg-card p-5 sm:p-7">{children}</div>
       </div>
-    </div>
+    </main>
   );
 }

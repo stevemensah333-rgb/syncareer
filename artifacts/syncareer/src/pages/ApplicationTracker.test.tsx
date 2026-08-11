@@ -139,7 +139,7 @@ describe('Application Tracker page', () => {
     renderPage();
 
     expect(await screen.findByText(/Posting unavailable/)).toBeTruthy();
-    expect(screen.getByText('Tracked application')).toBeTruthy();
+    expect(screen.getAllByText('Tracked application').length).toBeGreaterThan(0);
   });
 
   it('recovers from a data error via Try again', async () => {
@@ -158,7 +158,7 @@ describe('Application Tracker page', () => {
       maybeSingle: { resumes: { data: null, error: null } },
     });
     fireEvent.click(screen.getByRole('button', { name: /Try again/i }));
-    expect(await screen.findByText('Graduate Analyst')).toBeTruthy();
+    expect((await screen.findAllByText('Graduate Analyst')).length).toBeGreaterThan(0);
   });
 
   it('shows a permission-denied state without a retry control', async () => {
@@ -189,5 +189,19 @@ describe('Application Tracker page', () => {
 
     expect(await screen.findByText('No applications yet')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Browse Opportunities/i })).toBeTruthy();
+  });
+
+  it('supports keyboard navigation between applications', async () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+    installSupabaseMock({ tables: {
+      job_applications: { data: [makeAppRow({ id: 'app-1' }), makeAppRow({ id: 'app-2', job: { ...makeAppRow().job, title: 'Second role' } })], error: null },
+      resumes: { data: [], error: null }, mock_interviews: { data: [], error: null },
+    }});
+    renderPage();
+    const first = await screen.findByRole('button', { name: /Graduate Analyst.*Open details/i });
+    fireEvent.keyDown(first, { key: 'ArrowDown' });
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(document.activeElement?.getAttribute('data-application-id')).toBe('app-2');
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1024 });
   });
 });

@@ -29,11 +29,11 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        'border-b border-border/60 bg-background/70',
+        'border-b border-border bg-card',
         className
       )}
     >
-      <div className="mx-auto w-full max-w-[1400px] px-4 py-5 lg:px-8">
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-4 sm:px-6 lg:px-8">
         {breadcrumbs && breadcrumbs.length > 0 && (
           <nav aria-label="Breadcrumb" className="mb-1.5 flex items-center gap-1 text-xs text-muted-foreground">
             {breadcrumbs.map((crumb, i) => {
@@ -60,7 +60,7 @@ export function PageHeader({
         )}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-xl font-semibold tracking-tight text-foreground md:text-2xl">
+            <h1 className="text-xl font-semibold tracking-[-0.015em] text-foreground md:text-[22px]">
               {title}
             </h1>
             {description && (

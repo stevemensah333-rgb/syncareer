@@ -31,7 +31,7 @@ interface UsageData {
 }
 
 const PREMIUM_PLAN_FEATURES = [
-  'AI Coach sessions: Unlimited',
+  'Assistant proposals: Unlimited',
   'Mock interviews: Unlimited + advanced roles',
   'CV downloads: Unlimited (multiple formats)',
   'Career assessments: Unlimited retakes',
@@ -121,7 +121,7 @@ export default function SubscriptionManager() {
   };
 
   const usageRows: { key: keyof UsageData; label: string; limit: number; period: string }[] = [
-    { key: 'ai_coach_session',  label: 'AI Coach Sessions',      limit: FREE_LIMITS.ai_coach_session.limit,  period: '/mo' },
+    { key: 'ai_coach_session',  label: 'Assistant proposals',      limit: FREE_LIMITS.ai_coach_session.limit,  period: '/mo' },
     { key: 'mock_interview',    label: 'Mock Interviews',         limit: FREE_LIMITS.mock_interview.limit,    period: '/mo' },
     { key: 'cv_export',         label: 'CV Exports',              limit: FREE_LIMITS.cv_export.limit,         period: '/mo' },
     { key: 'career_assessment', label: 'Career Assessments',      limit: FREE_LIMITS.career_assessment.limit, period: ' total' },
@@ -186,7 +186,7 @@ export default function SubscriptionManager() {
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              5 AI sessions/month · 3 mock interviews/month · 10 job applications tracked
+              5 assistant proposals/month · 3 mock interviews/month · 10 job applications tracked
             </p>
            <PaystackButton
               plan="monthly"

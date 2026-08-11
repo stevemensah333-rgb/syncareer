@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,11 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Mic, CheckCircle, Phone, Clock, Zap, Target, Lock, Sparkles, Trash2, History, Briefcase, MapPin, ArrowRight } from 'lucide-react';
+import { CheckCircle, Phone, Clock, Zap, Target, Lock, Sparkles, Trash2, History, Briefcase, MapPin, ArrowRight } from 'lucide-react';
 
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { useUserProfile } from '@/contexts/UserProfileContext';
 import { InterviewErrorBoundary } from '@/components/interview/InterviewErrorBoundary';
 import { VoiceInterviewMode } from '@/components/interview/VoiceInterviewMode';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
@@ -27,6 +26,7 @@ import AnimatedSection from '@/components/landing/AnimatedSection';
 import type { InterviewSetupConfig } from '@/types/interview';
 import { SESSION_OPTIONS } from '@/features/interview/constants';
 import type { SessionLengthOption } from '@/features/interview/constants';
+import { classifyMicrophoneError, type DeviceReadiness } from '@/features/interview/setup';
 
 type SessionLength = SessionLengthOption['value'];
 
@@ -37,13 +37,15 @@ const SESSION_ICONS: Record<SessionLength, typeof Zap> = {
 };
 
 const InterviewSimulator = () => {
-  const { studentDetails } = useUserProfile();
   const { isPremium } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const [step, setStep] = useState<'setup' | 'interview'>('setup');
+  const [step, setStep] = useState<'setup' | 'readiness' | 'interview'>('setup');
+  const [readiness, setReadiness] = useState<DeviceReadiness>('unchecked');
+  const startRequested = useRef(false);
   const [sessionLength, setSessionLength] = useState<SessionLength>('standard');
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(searchParams.get('application'));
   const feedbackModal = useFeedbackModal('interview_simulator');
   
   const [config, setConfig] = useState<InterviewSetupConfig>({
@@ -54,65 +56,6 @@ const InterviewSimulator = () => {
     resumeText: '',
     jobDescription: '',
   });
-
-  // Dynamic pre-fill from assessment results + saved CV
-  useEffect(() => {
-    const prefill = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Load assessment-based role/industry
-      const { data: assessment } = await supabase
-        .from('assessments')
-        .select('primary_interest')
-        .eq('user_id', user.id)
-        .not('completed_at', 'is', null)
-        .order('completed_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (assessment?.primary_interest) {
-        setConfig(prev => ({
-          ...prev,
-          jobRole: prev.jobRole || assessment.primary_interest || '',
-          industry: prev.industry || assessment.primary_interest || '',
-        }));
-      } else if (studentDetails?.major) {
-        // Fallback: use major as a rough guide
-        setConfig(prev => ({
-          ...prev,
-          jobRole: prev.jobRole || studentDetails.major,
-          industry: prev.industry || studentDetails.major,
-        }));
-      }
-
-      // Load saved CV as resume context
-      const { data: resume } = await supabase
-        .from('resumes')
-        .select('personal_info, education, experience, skills, projects')
-        .eq('user_id', user.id)
-        .eq('is_primary', true)
-        .maybeSingle();
-
-      if (resume) {
-        const pi = resume.personal_info as any;
-        const skills = Array.isArray(resume.skills) ? (resume.skills as string[]).join(', ') : '';
-        const expSummary = Array.isArray(resume.experience)
-          ? (resume.experience as any[]).map((e: any) => `${e.role || ''} at ${e.company || ''}`).filter(Boolean).join('; ')
-          : '';
-        const resumeText = [
-          pi?.firstName ? `${pi.firstName} ${pi.lastName || ''}` : '',
-          skills ? `Skills: ${skills}` : '',
-          expSummary ? `Experience: ${expSummary}` : '',
-        ].filter(Boolean).join('\n');
-
-        if (resumeText.trim()) {
-          setConfig(prev => ({ ...prev, resumeText: prev.resumeText || resumeText }));
-        }
-      }
-    };
-    prefill();
-  }, [studentDetails]);
 
   // Prefill from query params (?role=&industry=&skills=&jd=) when arriving from Opportunities
   useEffect(() => {
@@ -145,13 +88,27 @@ const InterviewSimulator = () => {
     },
   });
 
+  const { data: applications } = useQuery({
+    queryKey: ['applications_for_interview_setup'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      const { data } = await supabase.from('job_applications')
+        .select('id, job:job_postings(title, company_name, department, description, skills)')
+        .eq('applicant_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      return data ?? [];
+    },
+  });
+
   // Fetch active job postings for "Practice for a real job"
   const { data: liveJobs } = useQuery({
     queryKey: ['live_jobs_for_interview'],
     queryFn: async () => {
       const { data } = await supabase
         .from('job_postings')
-        .select('id, title, location, employment_type, skills, description')
+        .select('id, title, location, employment_type, skills, description, company_name, department')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(5);
@@ -178,34 +135,34 @@ const InterviewSimulator = () => {
       toast.error('Please enter a job role');
       return;
     }
+    setReadiness('unchecked');
+    setStep('readiness');
+  };
+
+  const checkReadiness = async () => {
+    if (readiness === 'checking') return;
+    setReadiness('checking');
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) throw { name: 'NotFoundError' };
+      if (!('speechSynthesis' in window)) throw new Error('Audio output unavailable');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+      setReadiness('ready');
+    } catch (error) {
+      setReadiness(classifyMicrophoneError(error));
+    }
+  };
+
+  const beginReadyInterview = () => {
+    if (readiness !== 'ready' || startRequested.current) return;
+    startRequested.current = true;
     setStep('interview');
   };
 
   return (
-    <PageLayout title="Interview Simulator" breadcrumbs={[{ label: "Home", to: "/dashboard" }, { label: "Practice", to: "/practice" }, { label: "Interview Simulator" }]}>
+    <PageLayout title="Interview Simulator" description="Practise a role-specific voice interview and review your feedback." breadcrumbs={[{ label: "Home", to: "/dashboard" }, { label: "Practice", to: "/practice" }, { label: "Interview Simulator" }]}>
       {step === 'setup' && (
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header — editorial */}
-          <AnimatedSection y={20}>
-          <Card className="bg-landing-cream border-primary/20 overflow-hidden">
-            <CardContent className="pt-8 pb-8">
-              <div className="flex items-center gap-5">
-                <div className="h-16 w-16 rounded-full bg-primary/15 flex items-center justify-center shrink-0" aria-hidden="true">
-                  <Mic className="h-8 w-8 text-primary" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em] leading-tight">
-                    AI <span className="italic text-primary">voice</span> interview
-                  </h2>
-                  <p className="text-muted-foreground mt-1">
-                    Practice with a realistic AI interviewer using voice conversation
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          </AnimatedSection>
-
           <div className="max-w-2xl mx-auto space-y-6">
             {/* Setup Form */}
               <AnimatedSection delay={0.08} y={20}>
@@ -217,6 +174,18 @@ const InterviewSimulator = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Practice context</Label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <Button type="button" variant="outline" onClick={() => { setSelectedApplicationId(null); setConfig({ jobRole: '', industry: '', difficulty: config.difficulty, interviewType: config.interviewType, resumeText: '', jobDescription: '' }); }}>Standalone practice</Button>
+                      {(applications ?? []).map((application) => {
+                        const job = Array.isArray(application.job) ? application.job[0] : application.job;
+                        if (!job?.title) return null;
+                        const organisation = job.company_name || job.department || '';
+                        return <Button key={application.id} type="button" variant="outline" className="h-auto justify-start whitespace-normal text-left" onClick={() => { setSelectedApplicationId(application.id); setConfig((previous) => ({ ...previous, jobRole: job.title, industry: organisation, jobDescription: job.description || (job.skills?.length ? `Role skills: ${job.skills.join(', ')}` : ''), resumeText: '' })); }}>{job.title}{organisation ? ` · ${organisation}` : ''}</Button>;
+                      })}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="jobRole">Target Job Role *</Label>
@@ -229,7 +198,7 @@ const InterviewSimulator = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="industry">Industry</Label>
+                      <Label htmlFor="industry">Organisation or industry</Label>
                       <Input
                         id="industry"
                         value={config.industry}
@@ -361,10 +330,11 @@ const InterviewSimulator = () => {
                       <button
                         key={job.id}
                         onClick={() => {
+                          setSelectedApplicationId(null);
                           setConfig(prev => ({
                             ...prev,
                             jobRole: job.title,
-                            industry: job.employment_type,
+                            industry: job.company_name || job.department || '',
                             jobDescription: job.description || '',
                             difficulty: 'beginner',
                           }));
@@ -479,6 +449,22 @@ const InterviewSimulator = () => {
         </div>
       )}
 
+      {step === 'readiness' && (
+        <div className="mx-auto max-w-xl rounded-lg border bg-card p-6 space-y-5">
+          <div><h2 className="text-lg font-semibold">Check your microphone</h2><p className="mt-1 text-sm text-muted-foreground">Syncareer uses your microphone to transcribe answers during this AI practice interview. Camera and screen sharing are never requested. Interview responses and feedback are stored with your account by the existing interview service.</p></div>
+          <div role="status" className="rounded-md bg-muted p-3 text-sm">
+            {readiness === 'unchecked' && 'Your microphone has not been checked.'}
+            {readiness === 'checking' && 'Requesting microphone access…'}
+            {readiness === 'ready' && 'Microphone is ready. Audio output uses your browser text-to-speech support.'}
+            {readiness === 'denied' && 'Microphone permission was denied. Update browser permissions, then try again.'}
+            {readiness === 'missing' && 'No usable microphone or browser media-device support was found.'}
+            {readiness === 'failed' && 'The microphone check failed. Close other apps using the device and retry.'}
+          </div>
+          <p className="text-xs text-muted-foreground">Typed-answer fallback is not exposed because the current active interview UI and supported contract have not been verified for typed sessions.</p>
+          <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => setStep('setup')}>Back</Button><Button variant="outline" disabled={readiness === 'checking'} onClick={() => void checkReadiness()}>{readiness === 'checking' ? 'Checking…' : readiness === 'ready' ? 'Check again' : 'Check microphone'}</Button><Button disabled={readiness !== 'ready' || startRequested.current} onClick={beginReadyInterview}>Start interview</Button></div>
+        </div>
+      )}
+
       {step === 'interview' && (
         <div className="max-w-3xl mx-auto">
           <InterviewErrorBoundary
@@ -493,19 +479,19 @@ const InterviewSimulator = () => {
               resumeText={config.resumeText}
               jobDescription={config.jobDescription}
               sessionLength={sessionLength}
+              applicationId={selectedApplicationId}
+              autoStart
+              onRetry={() => {
+                startRequested.current = false;
+                setReadiness('unchecked');
+                setStep('readiness');
+              }}
               onEnd={() => {
+                startRequested.current = false;
                 setStep('setup');
                 queryClient.invalidateQueries({ queryKey: ['mock_interviews_history'] });
                 feedbackModal.triggerFeedback();
-                toast.success('Interview complete! Share your achievement.', {
-                  action: {
-                    label: 'Share on WhatsApp',
-                    onClick: () => {
-                      const msg = encodeURIComponent(`I just completed a mock interview for "${config.jobRole}" on Syncareer! Practice yours free: ${window.location.origin}`);
-                      window.open(`https://wa.me/?text=${msg}`, '_blank');
-                    },
-                  },
-                });
+                toast.success('Interview session closed.');
               }}
             />
           </InterviewErrorBoundary>

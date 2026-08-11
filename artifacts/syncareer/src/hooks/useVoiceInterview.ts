@@ -5,6 +5,8 @@ import type {
   InterviewMessage,
   InterviewPhase,
 } from '@/types/interview';
+import { updateInterviewApplicationLink } from '@/features/application-tracker/tracking';
+import { START_INTERVIEW_RETRY_CONFIG, isSessionActive, releaseInterviewResources, responseRecovery } from '@/features/interview/lifecycle';
 
 interface UseVoiceInterviewOptions {
   jobRole: string;
@@ -14,6 +16,7 @@ interface UseVoiceInterviewOptions {
   resumeContext?: string;
   jobDescription?: string;
   sessionLength?: 'quick' | 'standard' | 'extended';
+  applicationId?: string | null;
 }
 
 export interface InterviewProgress {
@@ -81,11 +84,14 @@ export function useVoiceInterview({
   resumeContext,
   jobDescription,
   sessionLength = 'standard',
+  applicationId = null,
 }: UseVoiceInterviewOptions) {
   const [phase, setPhase] = useState<InterviewPhase>('idle');
   const [messages, setMessages] = useState<InterviewMessage[]>([]);
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState('');
+  const [silenceWarning, setSilenceWarning] = useState(false);
   const [progress, setProgress] = useState<InterviewProgress>({
     answered: 0,
     total: 15,
@@ -99,12 +105,15 @@ export function useVoiceInterview({
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
   const interviewIdRef = useRef<string | null>(null);
   const questionCountRef = useRef(0);
   const conversationHistoryRef = useRef<Array<{ role: string; content: string }>>([]);
   const isMountedRef = useRef(true);
   const isStoppingRef = useRef(false);
+  const startInFlightRef = useRef(false);
+  const silenceWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ─── Cleanup on unmount ──────────────────────────────────────────
   useEffect(() => {
@@ -126,30 +135,16 @@ export function useVoiceInterview({
   // ─── Resource cleanup ────────────────────────────────────────────
 
   const cleanupResources = useCallback(() => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.onresult = null;
-        recognitionRef.current.onerror = null;
-        recognitionRef.current.onend = null;
-        recognitionRef.current.onstart = null;
-        recognitionRef.current.abort();
-      } catch (e) {
-        console.warn('[Interview] Recognition cleanup error:', e);
-      }
-      recognitionRef.current = null;
+    if (silenceWarningTimerRef.current) clearTimeout(silenceWarningTimerRef.current);
+    silenceWarningTimerRef.current = null;
+    try {
+      releaseInterviewResources({ recognition: recognitionRef.current, audio: audioRef.current, mediaStream: mediaStreamRef.current });
+    } catch (e) {
+      console.warn('[Interview] Resource cleanup error:', e);
     }
-
-    if (audioRef.current) {
-      try {
-        audioRef.current.pause();
-        if (audioRef.current.src) {
-          URL.revokeObjectURL(audioRef.current.src);
-        }
-      } catch (e) {
-        console.warn('[Interview] Audio cleanup error:', e);
-      }
-      audioRef.current = null;
-    }
+    recognitionRef.current = null;
+    audioRef.current = null;
+    mediaStreamRef.current = null;
   }, []);
 
   // ─── Safe state update ───────────────────────────────────────────
@@ -279,6 +274,10 @@ export function useVoiceInterview({
         safeSetPhase('user_speaking');
         setCurrentTranscript('');
         finalTranscriptAccumulator = '';
+        setSilenceWarning(false);
+        silenceWarningTimerRef.current = setTimeout(() => {
+          if (isMountedRef.current && !isStoppingRef.current) setSilenceWarning(true);
+        }, 8000);
       }
     };
 
@@ -298,6 +297,9 @@ export function useVoiceInterview({
         }
 
         setCurrentTranscript(finalTranscriptAccumulator + interimTranscript);
+        setSilenceWarning(false);
+        if (silenceWarningTimerRef.current) clearTimeout(silenceWarningTimerRef.current);
+        silenceWarningTimerRef.current = null;
 
         if (silenceTimer) clearTimeout(silenceTimer);
         silenceTimer = setTimeout(() => {
@@ -325,6 +327,9 @@ export function useVoiceInterview({
     };
 
     recognition.onend = () => {
+      if (silenceWarningTimerRef.current) clearTimeout(silenceWarningTimerRef.current);
+      silenceWarningTimerRef.current = null;
+      if (isMountedRef.current) setSilenceWarning(false);
       if (silenceTimer) clearTimeout(silenceTimer);
       if (finalTranscriptAccumulator.trim() && isMountedRef.current && !isStoppingRef.current) {
         handleUserResponse(finalTranscriptAccumulator.trim());
@@ -413,6 +418,7 @@ export function useVoiceInterview({
 
       if (!data.isComplete && data.nextQuestion) {
         responseText = safeString(data.nextQuestion);
+        setCurrentQuestion(responseText);
         conversationHistoryRef.current.push({ role: 'assistant', content: responseText });
       } else if (data.isComplete) {
         responseText = "Excellent! You've completed all the interview questions. Let me prepare your comprehensive feedback report...";
@@ -461,23 +467,24 @@ export function useVoiceInterview({
 
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
 
-      if (errorMsg.includes('Rate limit') || errorMsg.includes('429')) {
+      const recovery = responseRecovery(errorMsg);
+      safeSetPhase(recovery.phase);
+      if (recovery.rateLimited) {
         toast.error('Too many requests. Please wait a moment before continuing.');
-        setTimeout(() => {
-          if (isMountedRef.current && !isStoppingRef.current) {
-            startListening();
-          }
-        }, 5000);
       } else {
         toast.error('Failed to get AI response. You can try speaking again.');
-        startListening();
       }
+      setTimeout(() => {
+        if (isMountedRef.current && !isStoppingRef.current) startListening();
+      }, recovery.delayMs);
     }
   }, [speakText, stopListening, startListening, sessionLength]);
 
   // ─── Start interview ─────────────────────────────────────────────
 
   const start = useCallback(async () => {
+    if (startInFlightRef.current || interviewIdRef.current) return;
+    startInFlightRef.current = true;
     isStoppingRef.current = false;
     setMessages([]);
     setError(null);
@@ -499,7 +506,9 @@ export function useVoiceInterview({
     });
 
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
 
       const { data, error: fnError } = await withRetry(
         () => supabase.functions.invoke('mock-interview', {
@@ -514,7 +523,9 @@ export function useVoiceInterview({
             sessionLength,
           },
         }),
-        { maxRetries: 2, baseDelayMs: 2000, maxDelayMs: 8000 },
+        // Starting can create a billable persisted session. Do not retry an
+        // ambiguous start without a server-supported idempotency key.
+        START_INTERVIEW_RETRY_CONFIG,
         'Start interview'
       );
 
@@ -523,6 +534,15 @@ export function useVoiceInterview({
 
       interviewIdRef.current = data.interview?.id ?? null;
       const greeting = safeString(data.currentQuestion);
+      setCurrentQuestion(greeting);
+
+      if (applicationId && interviewIdRef.current) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const linkResult = await updateInterviewApplicationLink(supabase, interviewIdRef.current, user.id, applicationId);
+          if (!linkResult.ok) toast.error('Interview started, but it could not be linked to the application.');
+        }
+      }
 
       if (data.totalQuestions) {
         setProgress(prev => ({
@@ -559,8 +579,10 @@ export function useVoiceInterview({
         setError('Failed to start interview. Please check your connection and try again.');
       }
       safeSetPhase('error');
+    } finally {
+      startInFlightRef.current = false;
     }
-  }, [jobRole, industry, difficulty, interviewType, resumeContext, jobDescription, speakText, sessionLength]);
+  }, [jobRole, industry, difficulty, interviewType, resumeContext, jobDescription, speakText, sessionLength, applicationId]);
 
   // ─── Stop interview ──────────────────────────────────────────────
 
@@ -570,9 +592,28 @@ export function useVoiceInterview({
     window.speechSynthesis?.cancel();
     setCurrentTranscript('');
     setError(null);
-    safeSetPhase('idle');
+    setPhase('ended');
     interviewIdRef.current = null;
   }, [cleanupResources]);
+
+  const pause = useCallback(() => {
+    if (phase !== 'user_speaking' && phase !== 'ai_speaking') return;
+    cleanupResources();
+    window.speechSynthesis?.cancel();
+    setPhase('paused');
+  }, [cleanupResources, phase]);
+
+  const resume = useCallback(() => {
+    if (phase !== 'paused' || !currentQuestion) return;
+    void speakText(currentQuestion);
+  }, [currentQuestion, phase, speakText]);
+
+  const replayQuestion = useCallback(() => {
+    if (!currentQuestion || phase === 'processing' || phase === 'connecting') return;
+    cleanupResources();
+    window.speechSynthesis?.cancel();
+    void speakText(currentQuestion);
+  }, [cleanupResources, currentQuestion, phase, speakText]);
 
   // ─── Retry from error state ──────────────────────────────────────
 
@@ -584,8 +625,8 @@ export function useVoiceInterview({
 
   // ─── Derived state ───────────────────────────────────────────────
 
-  const isActive = phase !== 'idle' && phase !== 'error';
-  const isLoading = phase === 'connecting' || phase === 'processing';
+  const isActive = isSessionActive(phase);
+  const isLoading = phase === 'connecting' || phase === 'processing' || phase === 'reconnecting';
   const isSpeaking = phase === 'ai_speaking';
   const isListening = phase === 'user_speaking';
   const isCompleted = phase === 'completed';
@@ -599,10 +640,15 @@ export function useVoiceInterview({
     isCompleted,
     messages,
     currentTranscript,
+    currentQuestion,
+    silenceWarning,
     error,
     progress,
     start,
     stop,
+    pause,
+    resume,
+    replayQuestion,
     retry,
   };
 }

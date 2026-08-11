@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 
 interface HeroSectionProps {
   onGetStarted: () => void;
+  onAssessment: () => void;
 }
 
 const journey = [
@@ -27,7 +28,7 @@ const journey = [
  * Product-led hero. The interface composition mirrors the real opportunity,
  * CV, interview, and application states without pretending to be live data.
  */
-export default function HeroSection({ onGetStarted }: HeroSectionProps) {
+export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionProps) {
   return (
     <section className="relative overflow-hidden border-b" aria-labelledby="landing-hero-title">
       <div
@@ -54,11 +55,12 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
             that matter along the way.
           </p>
 
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col gap-2 sm:flex-row">
             <Button size="lg" onClick={onGetStarted} className="min-h-12 w-full gap-2 px-6 sm:w-auto">
-              Start career assessment
+              Explore real opportunities
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
+            <Button size="lg" variant="outline" onClick={onAssessment} className="min-h-12 w-full px-6 sm:w-auto">Still choosing? Explore interests</Button>
           </div>
 
           <ul className="mt-7 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2" aria-label="Product foundations">

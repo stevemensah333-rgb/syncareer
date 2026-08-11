@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ASSESSMENT_QUESTIONS } from '@/data/assessmentQuestions';
-import { calculateRiasec } from '@/features/assessment/scoring';
+import { calculateRiasec, validateAssessmentAnswers } from '@/features/assessment/scoring';
 import { toast } from 'sonner';
 
 export interface AssessmentResult {
@@ -73,7 +73,7 @@ export function useAssessment() {
       if (!session) throw new Error('Not authenticated');
 
       // Validate all 45 answered
-      if (Object.keys(answers).length !== 45) {
+      if (!validateAssessmentAnswers(answers, ASSESSMENT_QUESTIONS)) {
         throw new Error('Please answer all 45 questions');
       }
 

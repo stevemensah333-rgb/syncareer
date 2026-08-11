@@ -12,13 +12,16 @@ afterEach(() => cleanup());
 describe('landing page content and navigation', () => {
   it('leads with one primary hero action and the opportunity-first promise', () => {
     const onGetStarted = vi.fn();
-    const { container } = render(<HeroSection onGetStarted={onGetStarted} />);
+    const onAssessment = vi.fn();
+    const { container } = render(<HeroSection onGetStarted={onGetStarted} onAssessment={onAssessment} />);
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(
       /real opportunity.*stronger, evidence-based application/i,
     );
     const actions = screen.getAllByRole('button');
-    expect(actions).toHaveLength(1);
+    expect(actions).toHaveLength(2);
+    expect(actions[0]!.textContent).toMatch(/explore real opportunities/i);
+    expect(actions[1]!.textContent).toMatch(/still choosing/i);
     fireEvent.click(actions[0]!);
     expect(onGetStarted).toHaveBeenCalledOnce();
     expect(container.textContent).toMatch(/Illustrative product state/i);

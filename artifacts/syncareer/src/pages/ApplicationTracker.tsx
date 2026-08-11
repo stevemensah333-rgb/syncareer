@@ -1,624 +1,163 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { AlertTriangle, Briefcase, Lock, Search } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AlertTriangle, Briefcase, Calendar, ChevronRight, Clock, Lock,
-  MapPin, RefreshCw, Search, Star, Trash2, User, Video,
-} from 'lucide-react';
-import { RateCounsellorDialog } from '@/components/counsellor/RateCounsellorDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useOutcomeTracking } from '@/hooks/useOutcomeTracking';
-import AnimatedSection from '@/components/landing/AnimatedSection';
-import { STATUS_COLORS, STATUS_OUTCOME_MAP, formatShortDate, getDaysAgo } from '@/features/application-tracker/constants';
-import {
-  stageForStatus,
-  statusLabel,
-  statusesForStage,
-  STAGE_LABELS,
-  STAGE_ORDER,
-  type ApplicationStage,
-} from '@/features/application-tracker/workflow';
-import {
-  classifyTrackerError,
-  removeApplicationRecord,
-  saveApplicationNotes,
-  updateApplicationStatus,
-} from '@/features/application-tracker/tracking';
-import { getDeadlineState, getOrganisation } from '@/features/opportunities/opportunity';
-import { DeadlinePill } from '@/components/opportunities/DeadlinePill';
-import {
-  ApplicationDetailSheet,
-  type CvSummary,
-  type TrackedApplication,
-} from '@/components/applications/ApplicationDetailSheet';
-import { ApplicationRowPreview } from '@/components/applications/ApplicationRowPreview';
+import { ApplicationWorkspaceDetail } from '@/components/applications/ApplicationWorkspaceDetail';
+import { STATUS_COLORS } from '@/features/application-tracker/constants';
+import { classifyTrackerError, saveApplicationNotes, updateApplicationStatus, updateApplicationWorkspace, updateInterviewApplicationLink } from '@/features/application-tracker/tracking';
+import { STAGE_LABELS, STAGE_ORDER, stageForStatus, statusLabel, statusesForStage, type ApplicationStage } from '@/features/application-tracker/workflow';
+import { applicationFacts, ownedWorkspaceLinks, type WorkspaceApplication, type WorkspaceInterview, type WorkspaceResume } from '@/features/application-tracker/workspace';
+import { getOrganisation } from '@/features/opportunities/opportunity';
 
 type StageFilter = 'all' | ApplicationStage | 'other';
+type LoadState = 'loading' | 'ready' | 'error';
+type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
 
-type LoadStatus = 'loading' | 'error' | 'ready';
-
-interface CounsellorBooking {
-  id: string;
-  counsellor_id: string;
-  status: string;
-  scheduled_date: string | null;
-  scheduled_time: string | null;
-  created_at: string;
-  counsellor?: { full_name: string | null; meeting_link: string | null };
-}
-
-const ApplicationTracker = () => {
-  const { updateOutcome, triggerIntelligenceRefresh } = useOutcomeTracking();
+export default function ApplicationTracker() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [params, setParams] = useSearchParams();
+  const [applications, setApplications] = useState<WorkspaceApplication[]>([]);
+  const [resumes, setResumes] = useState<WorkspaceResume[]>([]);
+  const [interviews, setInterviews] = useState<WorkspaceInterview[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [loadError, setLoadError] = useState<ReturnType<typeof classifyTrackerError> | null>(null);
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [notesState, setNotesState] = useState<SaveState>('idle');
+  const [workspaceState, setWorkspaceState] = useState<SaveState>('idle');
+  const rowRefs = useRef(new Map<string, HTMLButtonElement>());
 
-  const [applications, setApplications] = useState<TrackedApplication[]>([]);
-  const [loadStatus, setLoadStatus] = useState<LoadStatus>('loading');
-  const [loadError, setLoadError] = useState<{ category: string; userMessage: string } | null>(null);
-  const [primaryCv, setPrimaryCv] = useState<CvSummary | null>(null);
-  const [cvLoadFailed, setCvLoadFailed] = useState(false);
+  const selectedId = params.get('application');
+  const search = params.get('q') ?? '';
+  const rawStage = params.get('stage') ?? 'all';
+  const stage = (rawStage === 'all' || rawStage === 'other' || STAGE_ORDER.includes(rawStage as ApplicationStage) ? rawStage : 'all') as StageFilter;
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [stageFilter, setStageFilter] = useState<StageFilter>('all');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [savingStatus, setSavingStatus] = useState(false);
-  const [savingNotes, setSavingNotes] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const updateParams = useCallback((values: Record<string, string | null>, replace = true) => {
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      for (const [key, value] of Object.entries(values)) value ? next.set(key, value) : next.delete(key);
+      return next;
+    }, { replace });
+  }, [setParams]);
 
-  const [counsellorBookings, setCounsellorBookings] = useState<CounsellorBooking[]>([]);
-  const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
-  const [selectedBookingForRating, setSelectedBookingForRating] = useState<CounsellorBooking | null>(null);
-
-  const fetchCounsellorBookings = useCallback(async () => {
+  const load = useCallback(async () => {
+    setLoadState('loading');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setLoadError(classifyTrackerError({ code: 'NO_SESSION' }));
+      setLoadState('error');
+      return;
+    }
+    setUserId(session.user.id);
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data } = await supabase
-        .from('counsellor_bookings')
-        .select('id, counsellor_id, status, scheduled_date, scheduled_time, created_at')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
-
-      if (data && data.length > 0) {
-        // Fetch counsellor details (name + meeting link) for each booking
-        const enriched = await Promise.all(
-          data.map(async (b) => {
-            const { data: cd } = (await supabase
-              .from('counsellor_booking_view' as any)
-              .select('full_name, meeting_link')
-              .eq('id', b.counsellor_id)
-              .single() as any) as { data: { full_name: string; meeting_link: string | null } | null };
-            return { ...b, counsellor: cd };
-          }),
-        );
-        setCounsellorBookings(enriched as any);
-      }
-    } catch (err) {
-      console.error('Error fetching counsellor bookings:', err);
+      const [appsResult, resumesResult, interviewsResult] = await Promise.all([
+        supabase.from('job_applications').select(`*, job:job_postings(title, location, employment_type, company_name, department, source, source_url, application_deadline, skills, experience_level, updated_at)`).eq('applicant_id', session.user.id).order('created_at', { ascending: false }),
+        supabase.from('resumes').select('id, user_id, title, updated_at').eq('user_id', session.user.id).order('updated_at', { ascending: false }),
+        supabase.from('mock_interviews').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
+      ]);
+      if (appsResult.error) throw appsResult.error;
+      setApplications((appsResult.data ?? []) as unknown as WorkspaceApplication[]);
+      setResumes(resumesResult.error ? [] : ownedWorkspaceLinks((resumesResult.data ?? []) as WorkspaceResume[], session.user.id));
+      setInterviews(interviewsResult.error ? [] : ownedWorkspaceLinks((interviewsResult.data ?? []) as unknown as WorkspaceInterview[], session.user.id));
+      setLoadState('ready');
+    } catch (error) {
+      setLoadError(classifyTrackerError(error));
+      setLoadState('error');
     }
   }, []);
 
-  const fetchApplications = useCallback(async () => {
-    setLoadStatus('loading');
-    setLoadError(null);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        setLoadStatus('error');
-        setLoadError({ category: 'auth-expired', userMessage: 'Please sign in again to view your applications.' });
-        return;
-      }
+  useEffect(() => { void load(); }, [load]);
 
-      const { data, error } = await supabase
-        .from('job_applications')
-        .select(
-          `
-          id, job_id, status, notes, resume_url, created_at, updated_at,
-          job:job_postings(title, location, employment_type, salary_min, salary_max, company_name, department, source, source_url, application_deadline, skills, experience_level, updated_at)
-        `,
-        )
-        .eq('applicant_id', session.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setApplications((data ?? []) as unknown as TrackedApplication[]);
-      setLoadStatus('ready');
-    } catch (err) {
-      const classified = classifyTrackerError(err);
-      setLoadError({ category: classified.category, userMessage: classified.userMessage });
-      setLoadStatus('error');
-    }
-  }, []);
-
-  // Targeted CV: the user's primary CV (missing/error is non-blocking).
-  const fetchPrimaryCv = useCallback(async () => {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
-      const { data, error } = await supabase
-        .from('resumes')
-        .select('id, title, updated_at')
-        .eq('user_id', session.user.id)
-        .eq('is_primary', true)
-        .maybeSingle();
-      if (error) throw error;
-      setPrimaryCv(data);
-      setCvLoadFailed(false);
-    } catch {
-      setCvLoadFailed(true);
-    }
-  }, []);
+  const filtered = useMemo(() => applications.filter((application) => {
+    const facts = applicationFacts(application);
+    const term = search.trim().toLowerCase();
+    if (term && !`${facts.title ?? ''} ${getOrganisation(facts) ?? ''} ${application.notes ?? ''}`.toLowerCase().includes(term)) return false;
+    if (stage === 'all') return true;
+    if (stage === 'other') return stageForStatus(application.status) === null;
+    return statusesForStage(stage).includes(application.status);
+  }), [applications, search, stage]);
 
   useEffect(() => {
-    fetchApplications();
-    fetchPrimaryCv();
-    fetchCounsellorBookings();
-  }, [fetchApplications, fetchPrimaryCv, fetchCounsellorBookings]);
+    if (loadState !== 'ready' || selectedId || filtered.length === 0 || window.innerWidth < 1024) return;
+    const first = filtered[0];
+    if (first) updateParams({ application: first.id });
+  }, [filtered, loadState, selectedId, updateParams]);
 
-  const selectedApplication = useMemo(
-    () => applications.find((a) => a.id === selectedId) ?? null,
-    [applications, selectedId],
-  );
+  const selected = applications.find((application) => application.id === selectedId) ?? null;
 
-  const openDetail = (id: string) => {
-    setSelectedId(id);
-    setDetailOpen(true);
+  const handleStatus = async (status: string) => {
+    if (!selected || !userId) return;
+    setStatusSaving(true);
+    const result = await updateApplicationStatus(supabase, selected.id, status, userId);
+    setStatusSaving(false);
+    if (!result.ok) { toast.error(result.userMessage); return; }
+    setApplications((items) => items.map((item) => item.id === selected.id ? { ...item, status } : item));
+    toast.success(`Stage updated to ${statusLabel(status)}`);
   };
 
-  const closeDetail = () => {
-    setDetailOpen(false);
-    if (searchParams.get('application')) setSearchParams({}, { replace: true });
+  const handleNotes = async (notes: string) => {
+    if (!selected || !userId) return;
+    setNotesState('saving');
+    const result = await saveApplicationNotes(supabase, selected.id, notes, userId);
+    if (!result.ok) { setNotesState('failed'); return; }
+    setApplications((items) => items.map((item) => item.id === selected.id ? { ...item, notes: notes.trim() || null } : item));
+    setNotesState('saved');
   };
 
-  // Deep link: /applications?application=<id> opens that record's detail.
-  useEffect(() => {
-    const target = searchParams.get('application');
-    if (!target || loadStatus !== 'ready') return;
-    if (applications.some((a) => a.id === target)) {
-      openDetail(target);
-    } else {
-      toast.error('That application could not be found in your tracker.');
+  const handleWorkspace = async (update: { resume_id?: string | null; next_action?: string | null; next_action_due?: string | null }) => {
+    if (!selected || !userId) return;
+    if (update.resume_id && !resumes.some((resume) => resume.id === update.resume_id && resume.user_id === userId)) {
+      toast.error('That CV is not available to link.');
+      return;
     }
-    setSearchParams({}, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadStatus, searchParams]);
-
-  const handleRecordStatus = async (status: string) => {
-    const app = selectedApplication;
-    if (!app) return;
-    setSavingStatus(true);
-    try {
-      const result = await updateApplicationStatus(supabase, app.id, status);
-      if (!result.ok) {
-        toast.error(result.userMessage);
-        return;
-      }
-      setApplications((apps) => apps.map((a) => (a.id === app.id ? { ...a, status } : a)));
-      toast.success(`Status updated to “${statusLabel(status)}”`);
-
-      // Map application status to outcome for the feedback loop
-      const jobTitle = app.job?.title;
-      const outcome = STATUS_OUTCOME_MAP[status];
-      if (jobTitle && outcome) {
-        updateOutcome({
-          itemTitle: jobTitle,
-          outcome: outcome as 'success' | 'rejected' | 'withdrawn',
-          details: { status, updated_at: new Date().toISOString() },
-        });
-        triggerIntelligenceRefresh();
-      }
-    } catch (err) {
-      toast.error(classifyTrackerError(err).userMessage);
-    } finally {
-      setSavingStatus(false);
-    }
+    setWorkspaceState('saving');
+    const result = await updateApplicationWorkspace(supabase, selected.id, userId, update);
+    if (!result.ok) { setWorkspaceState('failed'); return; }
+    setApplications((items) => items.map((item) => item.id === selected.id ? { ...item, ...update, next_action: update.next_action?.trim() || (update.next_action === undefined ? item.next_action : null), next_action_due: update.next_action?.trim() === '' ? null : update.next_action_due === undefined ? item.next_action_due : update.next_action_due } : item));
+    setWorkspaceState('saved');
   };
 
-  const handleSaveNotes = async (notes: string) => {
-    const app = selectedApplication;
-    if (!app) return;
-    setSavingNotes(true);
-    try {
-      const result = await saveApplicationNotes(supabase, app.id, notes);
-      if (!result.ok) {
-        toast.error(result.userMessage);
-        return;
-      }
-      setApplications((apps) =>
-        apps.map((a) => (a.id === app.id ? { ...a, notes: notes.trim() ? notes.trim() : null } : a)),
-      );
-      toast.success('Notes saved');
-    } catch (err) {
-      toast.error(classifyTrackerError(err).userMessage);
-    } finally {
-      setSavingNotes(false);
-    }
+  const handleKey = (event: React.KeyboardEvent, index: number) => {
+    let target = index;
+    if (event.key === 'ArrowDown') target = Math.min(index + 1, filtered.length - 1);
+    else if (event.key === 'ArrowUp') target = Math.max(index - 1, 0);
+    else if (event.key === 'Home') target = 0;
+    else if (event.key === 'End') target = filtered.length - 1;
+    else return;
+    event.preventDefault();
+    const application = filtered[target];
+    if (!application) return;
+    updateParams({ application: application.id }, false);
+    requestAnimationFrame(() => rowRefs.current.get(application.id)?.focus());
   };
 
-  const handleDelete = async () => {
-    const app = selectedApplication;
-    if (!app) return;
-    setDeleting(true);
-    try {
-      const result = await removeApplicationRecord(supabase, app.id);
-      if (!result.ok) {
-        toast.error(result.userMessage);
-        return;
-      }
-      setApplications((apps) => apps.filter((a) => a.id !== app.id));
-      setDetailOpen(false);
-      toast.success('Application removed');
-    } catch (err) {
-      toast.error(classifyTrackerError(err).userMessage);
-    } finally {
-      setDeleting(false);
-    }
+  const handleInterviewLink = async (interviewId: string, linked: boolean) => {
+    if (!selected || !userId || !interviews.some((interview) => interview.id === interviewId && interview.user_id === userId)) return;
+    const result = await updateInterviewApplicationLink(supabase, interviewId, userId, linked ? selected.id : null);
+    if (!result.ok) { toast.error(result.userMessage); return; }
+    setInterviews((items) => items.map((item) => item.id === interviewId ? { ...item, application_id: linked ? selected.id : null } : item));
   };
 
-  // ── Filtering / grouping ────────────────────────────────────────
-
-  const stageCounts = useMemo(() => {
-    const counts: Record<StageFilter, number> = {
-      all: applications.length,
-      applied: 0,
-      review: 0,
-      interview: 0,
-      offer: 0,
-      outcome: 0,
-      other: 0,
-    };
-    for (const app of applications) {
-      const stage = stageForStatus(app.status);
-      if (stage) counts[stage] += 1;
-      else counts.other += 1;
-    }
-    return counts;
-  }, [applications]);
-
-  const filteredApplications = useMemo(() => {
-    return applications.filter((app) => {
-      const term = searchTerm.toLowerCase();
-      const matchesSearch =
-        !term ||
-        app.job?.title?.toLowerCase().includes(term) ||
-        getOrganisation(app.job ?? {})?.toLowerCase().includes(term) ||
-        app.notes?.toLowerCase().includes(term);
-      if (!matchesSearch) return false;
-      if (stageFilter === 'all') return true;
-      if (stageFilter === 'other') return stageForStatus(app.status) === null;
-      return statusesForStage(stageFilter).includes(app.status);
-    });
-  }, [applications, searchTerm, stageFilter]);
-
-  const chipDefs: { key: StageFilter; label: string }[] = useMemo(() => {
-    const defs: { key: StageFilter; label: string }[] = [
-      { key: 'all', label: 'All' },
-      ...STAGE_ORDER.map((s) => ({ key: s as StageFilter, label: STAGE_LABELS[s] })),
-    ];
-    if (stageCounts.other > 0) defs.push({ key: 'other', label: 'Other' });
-    return defs;
-  }, [stageCounts.other]);
-
-  const hasAnyApplications = applications.length > 0;
-
-  return (
-    <PageLayout
-      title="Application Tracker"
-      breadcrumbs={[{ label: 'Home', to: '/dashboard' }, { label: 'Applications' }]}
-    >
-      <div className="space-y-6">
-        {/* Stage filter chips */}
-        <AnimatedSection y={20}>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter applications by stage">
-            {chipDefs.map((chip) => (
-              <button
-                key={chip.key}
-                onClick={() => setStageFilter(chip.key)}
-                aria-pressed={stageFilter === chip.key}
-                className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
-                  stageFilter === chip.key
-                    ? 'border-primary bg-primary/10 text-primary font-medium'
-                    : 'border-border bg-card text-muted-foreground hover:border-primary/40'
-                }`}
-              >
-                {chip.label}
-                <span className="text-xs tabular-nums">{stageCounts[chip.key]}</span>
-              </button>
-            ))}
-          </div>
-        </AnimatedSection>
-
-        {/* Search */}
-        <AnimatedSection delay={0.08} y={20}>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by role, organisation, or notes..."
-              className="pl-10"
-            />
-          </div>
-        </AnimatedSection>
-
-        {/* Applications List */}
-        <AnimatedSection delay={0.12} y={20}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Applications</CardTitle>
-              <CardDescription>
-                Select an application to see its journey, next step, notes, and outcome.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loadStatus === 'loading' ? (
-                <div className="space-y-3" aria-busy="true" aria-label="Loading applications">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="p-4 border rounded-lg space-y-3">
-                      <Skeleton className="h-5 w-1/3" />
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-4 w-2/3" />
-                    </div>
-                  ))}
-                </div>
-              ) : loadStatus === 'error' ? (
-                <div className="text-center py-10 max-w-md mx-auto" role="alert">
-                  {loadError?.category === 'permission' || loadError?.category === 'auth-expired' ? (
-                    <Lock className="h-10 w-10 mx-auto mb-3 text-muted-foreground/60" />
-                  ) : (
-                    <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-destructive/70" />
-                  )}
-                  <h3 className="text-lg font-medium mb-1">
-                    {loadError?.category === 'permission'
-                      ? 'You do not have access to applications'
-                      : loadError?.category === 'auth-expired'
-                        ? 'Your session has expired'
-                        : 'Applications could not be loaded'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {loadError?.userMessage ?? 'Something went wrong while loading your applications.'}
-                  </p>
-                  {loadError?.category !== 'permission' && (
-                    <Button onClick={fetchApplications} variant="outline" className="gap-1.5">
-                      <RefreshCw className="h-4 w-4" />
-                      Try again
-                    </Button>
-                  )}
-                </div>
-              ) : filteredApplications.length === 0 ? (
-                <div className="text-center py-12">
-                  <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-                  <h3 className="text-lg font-medium mb-2">
-                    {hasAnyApplications ? 'No applications match' : 'No applications yet'}
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    {hasAnyApplications
-                      ? 'No applications match your search or stage filter.'
-                      : 'Find a role in Opportunities, apply, and it will appear here for tracking.'}
-                  </p>
-                  {!hasAnyApplications && (
-                    <Button onClick={() => navigate('/opportunities')}>Browse Opportunities</Button>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredApplications.map((app) => {
-                    const organisation = app.job ? getOrganisation(app.job) : null;
-                    const deadline = getDeadlineState(app.job?.application_deadline);
-                    return (
-                      <ApplicationRowPreview
-                        key={app.id}
-                        application={app}
-                        hasCv={primaryCv ? true : cvLoadFailed ? null : false}
-                      >
-                        <button
-                          onClick={() => openDetail(app.id)}
-                          className="w-full text-left p-4 border rounded-lg hover:border-primary/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          aria-label={`${app.job?.title || 'Tracked application'}. Status ${statusLabel(app.status)}. Open details.`}
-                        >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                              <h3 className="font-semibold text-base leading-tight truncate">
-                                {app.job?.title || 'Tracked application'}
-                              </h3>
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded-full ${
-                                  STATUS_COLORS[app.status] ?? 'bg-muted text-muted-foreground'
-                                }`}
-                              >
-                                {statusLabel(app.status)}
-                              </span>
-                              {app.job === null && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-[10px] border-warning/50 text-warning"
-                                >
-                                  <AlertTriangle className="h-3 w-3 mr-1" />
-                                  Posting unavailable
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                              {organisation && <span>{organisation}</span>}
-                              {app.job?.location && (
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3.5 w-3.5" />
-                                  {app.job.location}
-                                </span>
-                              )}
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3.5 w-3.5" />
-                                Applied {formatShortDate(app.created_at)}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5" />
-                                {getDaysAgo(app.updated_at)}
-                              </span>
-                            </div>
-                            <div className="mt-2 flex items-center gap-2 flex-wrap">
-                              <DeadlinePill state={deadline} />
-                            </div>
-                            {app.notes && (
-                              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{app.notes}</p>
-                            )}
-                          </div>
-                          <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 mt-1" />
-                        </div>
-                      </button>
-                      </ApplicationRowPreview>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </AnimatedSection>
-
-        {/* Counsellor Sessions */}
-        <AnimatedSection delay={0.16} y={20}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Counsellor Sessions
-              </CardTitle>
-              <CardDescription>Your booked career counselling sessions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {counsellorBookings.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No counsellor sessions booked yet.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {counsellorBookings.map((b) => (
-                    <div
-                      key={b.id}
-                      className="p-4 border rounded-lg flex items-center justify-between gap-4"
-                    >
-                      <div className="space-y-1 min-w-0">
-                        <p className="font-medium">{b.counsellor?.full_name || 'Counsellor'}</p>
-                        {b.scheduled_date && b.scheduled_time && (
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {new Date(b.scheduled_date).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              month: 'short',
-                              day: 'numeric',
-                            })}{' '}
-                            at {b.scheduled_time.toString().slice(0, 5)}
-                          </p>
-                        )}
-                        <Badge
-                          variant={
-                            b.status === 'confirmed'
-                              ? 'default'
-                              : b.status === 'cancelled'
-                                ? 'destructive'
-                                : 'outline'
-                          }
-                          className="text-xs"
-                        >
-                          {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {b.status === 'confirmed' && b.counsellor?.meeting_link && (
-                          <Button size="sm" asChild>
-                            <a href={b.counsellor.meeting_link} target="_blank" rel="noopener noreferrer">
-                              <Video className="h-4 w-4 mr-1" />
-                              Join Session
-                            </a>
-                          </Button>
-                        )}
-                        {b.status === 'confirmed' && !b.counsellor?.meeting_link && (
-                          <span className="text-xs text-muted-foreground">Link pending</span>
-                        )}
-                        {(b.status === 'confirmed' || b.status === 'cancelled') && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedBookingForRating(b);
-                              setRatingDialogOpen(true);
-                            }}
-                          >
-                            <Star className="h-4 w-4 mr-1" />
-                            Rate
-                          </Button>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive ml-2"
-                        onClick={async () => {
-                          try {
-                            const { error } = await supabase
-                              .from('counsellor_bookings')
-                              .delete()
-                              .eq('id', b.id);
-                            if (error) throw error;
-                            setCounsellorBookings((prev) => prev.filter((x) => x.id !== b.id));
-                            toast.success('Session removed');
-                          } catch (err) {
-                            console.error(err);
-                            toast.error('Failed to remove session');
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </AnimatedSection>
-      </div>
-
-      <ApplicationDetailSheet
-        application={selectedApplication}
-        open={detailOpen}
-        onOpenChange={(open) => (open ? setDetailOpen(true) : closeDetail())}
-        primaryCv={primaryCv}
-        cvLoadFailed={cvLoadFailed}
-        savingStatus={savingStatus}
-        savingNotes={savingNotes}
-        deleting={deleting}
-        onRecordStatus={handleRecordStatus}
-        onSaveNotes={handleSaveNotes}
-        onDelete={handleDelete}
-      />
-
-      {selectedBookingForRating && (
-        <RateCounsellorDialog
-          open={ratingDialogOpen}
-          onOpenChange={setRatingDialogOpen}
-          counsellorId={selectedBookingForRating.counsellor_id}
-          counsellorName={selectedBookingForRating.counsellor?.full_name || 'Counsellor'}
-          onRatingSubmitted={() => setSelectedBookingForRating(null)}
-        />
-      )}
-    </PageLayout>
-  );
-};
-
-export default ApplicationTracker;
+  return <PageLayout title="Applications" description="Keep each role, CV, preparation and next action in one workspace.">
+    <div className="-mx-4 -mb-6 overflow-hidden border-y bg-card sm:mx-0 sm:rounded-lg sm:border lg:grid lg:h-[calc(100vh-10rem)] lg:grid-cols-[320px_minmax(0,1fr)]">
+      <aside className={`${selected ? 'hidden lg:flex' : 'flex'} min-h-[70vh] flex-col border-r`}>
+        <div className="space-y-3 border-b p-3">
+          <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input aria-label="Search applications" className="pl-9" value={search} onChange={(e) => updateParams({ q: e.target.value || null })} placeholder="Search applications" /></div>
+          <div className="flex gap-1 overflow-x-auto" aria-label="Filter by stage">{(['all', ...STAGE_ORDER] as StageFilter[]).map((value) => <Button key={value} size="sm" variant={stage === value ? 'secondary' : 'ghost'} aria-pressed={stage === value} onClick={() => updateParams({ stage: value === 'all' ? null : value })}>{value === 'all' ? 'All' : STAGE_LABELS[value as ApplicationStage]}</Button>)}</div>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {loadState === 'loading' && <div className="space-y-2 p-3" aria-busy="true">{[1,2,3].map((n) => <Skeleton key={n} className="h-20" />)}</div>}
+          {loadState === 'error' && <div role="alert" className="p-6 text-center"><Lock className="mx-auto mb-2 h-8 w-8" /><p className="font-medium">{loadError?.category === 'permission' ? 'You do not have access to applications' : 'Applications could not be loaded'}</p><p className="mt-1 text-sm text-muted-foreground">{loadError?.userMessage}</p>{loadError?.category !== 'permission' && <Button className="mt-3" variant="outline" onClick={load}>Try again</Button>}</div>}
+          {loadState === 'ready' && filtered.length === 0 && <div className="p-8 text-center"><Briefcase className="mx-auto mb-2 h-8 w-8 text-muted-foreground" /><p className="font-medium">{applications.length ? 'No applications match' : 'No applications yet'}</p><p className="mt-1 text-sm text-muted-foreground">{applications.length ? 'Try another search or stage.' : 'Mark an opportunity as applied to start a workspace.'}</p>{!applications.length && <Button className="mt-4" onClick={() => navigate('/opportunities')}>Browse Opportunities</Button>}</div>}
+          {filtered.map((application, index) => { const facts = applicationFacts(application); return <button key={application.id} aria-label={`${facts.title || 'Application'}. Status ${statusLabel(application.status)}. Open details.`} ref={(node) => { if (node) rowRefs.current.set(application.id, node); else rowRefs.current.delete(application.id); }} data-application-id={application.id} onKeyDown={(event) => handleKey(event, index)} onClick={() => updateParams({ application: application.id }, false)} aria-current={selectedId === application.id ? 'true' : undefined} className={`w-full border-b p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${selectedId === application.id ? 'bg-primary/5 border-l-4 border-l-primary' : 'hover:bg-muted/50'}`}><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-medium">{facts.title || 'Application'}</p><p className="truncate text-xs text-muted-foreground">{getOrganisation(facts) || 'Organisation not specified'}</p></div><span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] ${STATUS_COLORS[application.status] ?? 'bg-muted'}`}>{statusLabel(application.status)}</span></div>{application.job === null && <p className="mt-2 flex items-center gap-1 text-xs text-warning"><AlertTriangle className="h-3 w-3" />Posting unavailable · using saved role details</p>}{application.next_action && <p className="mt-2 truncate text-xs text-muted-foreground">Next: {application.next_action}</p>}</button>; })}
+        </div>
+      </aside>
+      <section className={`${selected ? 'block' : 'hidden lg:block'} min-w-0`}>{selected ? <ApplicationWorkspaceDetail application={selected} resumes={resumes} interviews={interviews} statusSaving={statusSaving} notesState={notesState} workspaceState={workspaceState} onBack={() => updateParams({ application: null }, false)} onStatus={handleStatus} onNotes={handleNotes} onWorkspace={handleWorkspace} onInterviewLink={handleInterviewLink} /> : <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Select an application to open its workspace.</div>}</section>
+    </div>
+  </PageLayout>;
+}

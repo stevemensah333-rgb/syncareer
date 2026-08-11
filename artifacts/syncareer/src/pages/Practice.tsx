@@ -2,7 +2,7 @@ import React from 'react';
 import { StudentLayout } from '@/components/layout/StudentLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ClipboardList, Mic, Sparkles, ArrowRight } from 'lucide-react';
+import { ClipboardList, Mic, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const sections = [
@@ -18,12 +18,6 @@ const sections = [
     icon: Mic,
     href: '/interview-simulator',
   },
-  {
-    title: 'SynAI Coach',
-    description: 'Ask career questions and get context-aware guidance.',
-    icon: Sparkles,
-    href: '/ai-coach',
-  },
 ];
 
 export default function Practice() {
@@ -33,7 +27,7 @@ export default function Practice() {
       <p className="text-muted-foreground mb-6 max-w-2xl">
         Sharpen what matters before applying — assessments, interviews, and on-demand coaching.
       </p>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {sections.map((s) => (
           <Card key={s.href} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(s.href)}>
             <CardContent className="p-6 space-y-4">

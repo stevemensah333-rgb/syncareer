@@ -77,7 +77,7 @@ export interface TrackedJobSummary {
 
 export interface TrackedApplication {
   id: string;
-  job_id: string;
+  job_id: string | null;
   status: string;
   notes: string | null;
   resume_url: string | null;

@@ -34,7 +34,7 @@ function renderForm() {
 async function submitAsStudent() {
   fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Ama Mensah' } });
   fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'ama@example.com' } });
-  fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'ValidPass1' } });
+  fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'ValidPass1' } });
   fireEvent.click(screen.getByRole('button', { name: /Create account/i }));
 }
 
@@ -59,7 +59,7 @@ describe('SignUpForm (email sign-up contract)', () => {
     renderForm();
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Ama Mensah' } });
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'ama@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'short' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'short' } });
     fireEvent.click(screen.getByRole('button', { name: /Create account/i }));
 
     await waitFor(() => expect(signUp).not.toHaveBeenCalled());

@@ -2,9 +2,7 @@
 
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Users, LogOut, MessageCircle, HelpCircle, Phone, Mail, CreditCard, Sparkles, Shield } from 'lucide-react';
-import { useSubscription } from '@/hooks/useSubscription';
-import { Badge } from '@/components/ui/badge';
+import { User, LogOut, MessageCircle, HelpCircle, Phone, Mail, CreditCard, Shield } from 'lucide-react';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
 
 import { cn } from '@/lib/utils';
@@ -41,7 +39,6 @@ function preloadAskCounsellor() {
 
 interface NavbarProps {
   className?: string;
-  onMobileMenuClick?: () => void;
 }
 
 export function Navbar({ className }: NavbarProps) {
@@ -56,7 +53,6 @@ export function Navbar({ className }: NavbarProps) {
 
   const navigate = useNavigate();
   const { profile } = useUserProfile();
-  const { isPremium, loading: subLoading } = useSubscription();
   
   const supabaseUserId = useSupabaseUserId();
   const { signOut } = useAuth();
@@ -89,107 +85,44 @@ export function Navbar({ className }: NavbarProps) {
 
   return (
     <>
-      <header className={cn("bg-background/95 backdrop-blur-sm fixed top-0 left-0 right-0 z-30 border-b", className)}>
-        <div className="container flex items-center justify-between h-16 px-4">
-          <div className="flex items-center gap-2 lg:gap-6">
-            
-            <div className="flex items-center gap-2">
-              <img src={syncareerLogo} alt="Syncareer logo" className="h-8 w-auto object-contain" />
-              <span className="text-base font-semibold tracking-tight lg:text-lg">Syncareer</span>
-            </div>
-            
-
-            <div className="hidden lg:flex items-center gap-2">
-              {isCounsellor ? (
-                // Counsellors see their role indicator
-                <Button
-                  variant="ghost"
-                  className="text-sm"
-                >
-                  <Users className="h-4 w-4 mr-1" />
-                  Counsellor Portal
-                </Button>
-              ) : (
-                // Job seekers see both buttons
-                <>
-                  <Button
-                    variant="ghost"
-                    className="text-sm"
-                  >
-                    <Users className="h-4 w-4 mr-1" />
-                    For Job Seekers
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    className="text-sm"
-                    onMouseEnter={preloadAskCounsellor}
-                    onFocus={preloadAskCounsellor}
-                    onClick={openAskCounsellor}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-1" />
-                    Ask a Counsellor
-                  </Button>
-                </>
-              )}
-            </div>
+      <header className={cn("fixed left-0 right-0 top-0 z-30 h-14 border-b bg-card/95 backdrop-blur-sm transition-[left] duration-150 ease-out motion-reduce:transition-none", className)}>
+        <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2 md:hidden">
+            <img src={syncareerLogo} alt="" className="h-7 w-auto object-contain" />
+            <span className="text-sm font-semibold tracking-tight">Syncareer</span>
           </div>
+          <div className="hidden md:block" aria-hidden="true" />
           
-          <div className="flex items-center gap-2 sm:gap-4">
-
-            {/* Pricing link — students only */}
-            {!isCounsellor && (
-              <Button
-                variant="ghost"
-                className="text-sm hidden sm:flex"
-                onClick={() => navigate('/pricing')}
-              >
-                <CreditCard className="h-4 w-4 mr-1" />
-                Pricing
-              </Button>
-            )}
-
-            {/* Mobile Ask Counsellor Button - Only for students */}
+          <div className="flex items-center gap-1.5">
             {!isCounsellor && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden h-9 w-9"
+                className="h-9 w-9"
                 onMouseEnter={preloadAskCounsellor}
                 onFocus={preloadAskCounsellor}
                 onClick={openAskCounsellor}
+                aria-label="Ask a counsellor"
               >
-                <MessageCircle className="h-5 w-5" />
+                <MessageCircle className="h-4 w-4" />
               </Button>
             )}
 
             <NotificationsDropdown />
-
-            {/* Plan badge — students only */}
-            {!isCounsellor && !subLoading && (
-              isPremium ? (
-                <Badge variant="outline" className="hidden sm:flex items-center gap-1 border-primary/40 text-primary text-xs px-2 py-0.5">
-                  <Sparkles className="h-3 w-3" />
-                  Premium
-                </Badge>
-              ) : (
-                <Badge
-                  variant="outline"
-                  className="hidden sm:flex items-center gap-1 border-border text-muted-foreground text-xs px-2 py-0.5 cursor-pointer hover:border-primary/40 hover:text-primary transition-colors"
-                  onClick={() => navigate('/pricing')}
-                >
-                  Free
-                </Badge>
-              )
-            )}
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Avatar className="h-9 w-9 transition-transform duration-200 hover:scale-105 cursor-pointer">
+                <button
+                  type="button"
+                  aria-label="Open account menu"
+                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                <Avatar className="h-9 w-9 cursor-pointer border transition-colors duration-150 hover:border-primary/50">
                   <AvatarFallback className="bg-primary/10 text-primary">
                     <User className="h-5 w-5" />
                   </AvatarFallback>
                 </Avatar>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>

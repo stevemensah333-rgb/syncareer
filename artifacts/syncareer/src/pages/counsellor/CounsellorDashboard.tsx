@@ -264,9 +264,9 @@ const CounsellorDashboard = () => {
             <div className="flex-1 pt-4 md:pt-8">
               <div className="flex items-start justify-between">
                 <div>
-                  <h1 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em] leading-tight">
+                  <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
                     {counsellorDetails.full_name}
-                  </h1>
+                  </h2>
                   <p className="text-muted-foreground flex items-center gap-1 mt-1">
                     <Phone className="h-4 w-4" />
                     {counsellorDetails.country_code} {counsellorDetails.phone_number}

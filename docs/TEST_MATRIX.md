@@ -28,21 +28,28 @@ suite below was implemented so each test has an explicit intent.
 | 1.4 | Progress %, milestones, next-action ordering | `progressCalculations.test.ts` | |
 | 1.5 | Auth validation contracts: email/password/name/phone, signup & login schemas | `validationSchemas.test.ts` | |
 | 1.6 | Subscription access gating (`isPremiumUser`), active/expired/canceled tiers | `subscriptionService.test.ts` | Deterministic fakes around `subscriptions` |
-| 1.7 | Opportunity facts: organisation fallback, work mode (remote-only evidence), eligibility labels, deadline classification (none/passed/today/closing-soon/upcoming), provenance honesty (`verified: false`, no fabricated claims), posted-ago, CTA routing (external/native/tracked) | `features/opportunities/opportunity.test.ts` | Pure functions; no DB |
+| 1.7 | Opportunity facts: organisation fallback, work mode (remote-only evidence), eligibility labels, deadline classification (none/passed/today/closing-soon/upcoming), provenance honesty (`verified: false`, no fabricated claims), ingestion freshness, and CTA routing (external/native/tracked/source unavailable) | `features/opportunities/opportunity.test.ts` | Pure functions; no DB |
 | 1.8 | Application status vocabulary & journey: labels, stage mapping, honest terminal/unknown handling, status-editor grouping, notes normalisation, context-aware next actions (missing posting / expired deadline / no CV / offer outcome) | `features/application-tracker/workflow.test.ts` | Pure functions; no DB |
 | 1.9 | Tracker write seam: create-on-first-track, per-user duplicate detection, unique-violation race → alreadyTracked, status/notes updates (blank → null), remove, and error classification (auth-expired / permission / network / server) with no internal leakage | `features/application-tracker/tracking.test.ts` | In-memory fake table; asserts emitted RLS scoping |
-| 1.10 | Opportunity preview progressive disclosure: no hover surface on touch devices; hover/focus reveals deadline, eligibility, provenance, next action; tracked state; expired-deadline warning | `components/opportunities/OpportunityPreview.test.tsx` | happy-dom; gated by `(hover: hover) and (pointer: fine)` |
+| 1.10 | Opportunity preview progressive disclosure: no hover surface on touch devices; hover/focus reveals factual deadline, source, provenance and next action without a fabricated match score; tracked state; expired-deadline warning | `components/opportunities/OpportunityPreview.test.tsx` | happy-dom; gated by `(hover: hover) and (pointer: fine)` |
 | 1.11 | Application detail sheet: full context (status, journey, deadline, CV, practice, notes), missing-posting banner, unknown status, expired deadline, CV-creation recommendation, CV-load failure, note save, delete confirmation, outcome copy | `components/applications/ApplicationDetailSheet.test.tsx` | happy-dom + MemoryRouter |
+| 1.12 | Application workspace: durable snapshot fallback, owner-filtered link choices, next-action due semantics, explicit CV linking, failed-note draft/retry, desktop workspace, deep links, keyboard selection and mobile tabs/back | `features/application-tracker/workspace.test.ts`, `components/applications/ApplicationWorkspaceDetail.test.tsx`, `pages/ApplicationTracker.test.tsx` | Accepted migration contract; live RLS remains Layer 3 |
+| 1.13 | CV AI proposal boundary: strict field path, before/after change, rationale, unchanged/generic/skills-claim rejection | `features/cv-builder/aiProposal.test.ts` | Deployed assistant format compliance remains unverified |
+| 1.14 | Interview setup context and readiness: no RIASEC mapping, factual listing prefill, denied/missing/failed microphone classification | `features/interview/setup.test.ts` | Browser media and deployed quota remain manual/integration checks |
+| 1.15 | Interview lifecycle: distinct accessible phase labels, paused/reconnecting/ended semantics, media/audio/listener cleanup, no retry of ambiguous billable start, question/answer evidence pairing, partial transcript report, qualitative rubric and non-fabricated retry outline | `features/interview/lifecycle.test.ts`, `features/interview/sessionReport.test.ts`, `components/interview/VoiceInterviewMode.test.tsx` | Real browser speech APIs and deployed AI remain manual/integration checks |
+| 1.16 | Contextual assistant: minimum explicit context, removable personal context chips, strict v2 output validation, no-op/malformed rejection, 401/402/429 mapping, accept/reject/undo, legacy-route transition, navigation removal, keyboard and narrow drawer | `features/contextual-assistant/contract.test.ts`, `components/assistant/ContextualAssistantDrawer.test.tsx`, `pages/AICoach.test.tsx`, layout navigation tests | Requires the Lovable v2 server handoff before live requests can succeed |
 
 ## Layer 2 — Auth & onboarding contract tests (local CI)
 
 | ID | Behavior protected | Test | Notes |
 |----|--------------------|------|-------|
 | 2.1 | Email sign-up contract: `signUp({email,password,options:{data:{full_name,user_type},emailRedirectTo}})` + welcome email + redirect | `signUpForm.test.ts` | Happy-dom; mocked supabase |
-| 2.2 | Email sign-in contract: `signInWithPassword({email,password})` + navigation | `signInForm.test.ts` | Happy-dom; mocked supabase |
+| 2.2 | Email sign-in contract: `signInWithPassword({email,password})`, safe protected-route return intent, generic invalid-credential copy, pending/duplicate protection, autocomplete, and password visibility | `signInForm.test.tsx`, `authFlows.test.tsx`, `authUtils.test.ts` | Happy-dom; mocked Supabase; no production credentials |
 | 2.3 | Reset-password contract + password-strength rules | `validationSchemas.test.ts` / `ResetPasswordForm.test.ts` | |
-| 2.4 | **Lovable Google OAuth session handoff boundary**: calls `lovable.auth.signInWithOAuth('google', {redirect_uri})`, consumes `redirected` / `error` / tokens into a Supabase session | `googleSignInContract.test.ts` | Mocked Lovable + supabase |
+| 2.4 | **Lovable Google OAuth session handoff boundary**: calls `lovable.auth.signInWithOAuth('google', {redirect_uri})`, consumes `redirected` / `error` / tokens into a Supabase session, coalesces duplicate clicks, validates local return intent, and exposes cancellation/timeout recovery | `googleSignInContract.test.tsx`, `OAuthReturnState.test.tsx`, `authUtils.test.ts` | Mocked Lovable + Supabase; remote provider configuration is not exercised |
 | 2.5 | Student vs counsellor onboarding selection is preserved into `user_type` metadata | `signUpForm.test.ts` | Role-route UX |
+| 2.5a | Password recovery uses enumeration-neutral confirmation, the configured reset destination, an expired/missing recovery-session state, and a new-link recovery action | `authFlows.test.tsx` | Mocked Supabase; email delivery is not exercised |
+| 2.5b | Signed-out route protection preserves the requested local location for later safe redirect | `ProtectedRoute.test.tsx` | Memory router; route guard is UX only |
 | 2.6 | Role-route behavior is **UX only** — server authorization is enforced by RLS (Layer 3), not tested here | — | Documented boundary |
 
 ## Layer 3 — Database / RLS integration (isolated Supabase DB; NOT local CI)
@@ -73,7 +80,7 @@ These exercise **deterministic contracts** only — never exact LLM prose.
 | 4.1 | `verify-paystack-payment`: confirms provider status, amount, currency, plan, ownership, replay/idempotency before granting premium | Deployed-only; source not in repo. Contract asserted via `PaystackButton` verification boundary test. |
 | 4.2 | `check-feature-access`: server-side usage enforcement + increment | Deployed-only; covered indirectly by `featureAccess.test.ts` + `useAICoachAccess.test.ts` |
 | 4.3 | `delete-account`: owner-only deletion contract | Deployed-only; frontend contract in `Settings.tsx` |
-| 4.4 | `mock-interview` / `interview-tts`: state-machine stub, retry/backoff; **LLM prose excluded** | Covered by deterministic retry/backoff + phase contract tests |
+| 4.4 | `mock-interview` / `interview-tts`: state-machine stub, retry/backoff, cleanup, and ambiguous-start duplicate-billing guard; **LLM prose excluded** | Covered by deterministic retry/backoff + phase/resource contract tests |
 | 4.5 | Email queue RPCs restricted to `service_role` | SQL-level (Layer 3.5) |
 
 ## Layer 5 — Minimal E2E (browser driver not installed; NOT local CI)
@@ -90,9 +97,9 @@ level in `happy-dom`:
 | 5.3 | Save/reopen CV (completion + quality + create/update/failure/repeated-click states) | `features/cv-builder/scoring.test.ts`, `features/cv-builder/persistence.test.ts`, `useCVStrengthScore.test.ts` |
 | 5.4 | Start a permitted interview via a deterministic stub | `interviewContract.test.ts` (retry/backoff + phase) |
 | 5.5 | Book/cancel a counsellor session | SQL (Layer 3.9) + `counsellor` booking contracts |
-| 5.6 | External job → apply on source → mark as applied → tracker row created (duplicate-safe) | Layer 1.9 (`tracking.test.ts`) |
+| 5.6 | External job → source handoff remains non-mutating → explicit `I applied` → tracker row created (duplicate-safe) | `pages/Markets.test.tsx`, Layer 1.9 (`tracking.test.ts`) |
 | 5.7 | Status update / outcome recording on a tracked application (progress + terminal) | Layers 1.8–1.9, 1.11 |
-| 5.8 | Save/unsave an opportunity (saved state visible in list and detail) | Layer 1.10 (saved-state rendering); `saved_jobs` toggle logic exercised via the page |
+| 5.8 | Save/unsave an opportunity (visible state, optimistic update, rollback and duplicate-click coalescing) | `pages/Markets.test.tsx`, Layer 1.10 |
 | 5.9 | Application empty / expired-deadline / permission / partial-data states | Layers 1.7–1.11 (facts, seam errors, detail-sheet partial states); page-level render not asserted in local CI (see gaps) |
 
 ## What remains unverified (documented gaps)

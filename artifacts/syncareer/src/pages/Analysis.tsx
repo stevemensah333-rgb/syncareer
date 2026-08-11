@@ -68,7 +68,7 @@ const Analysis = () => {
   }
 
   return (
-    <PageLayout title="">
+    <PageLayout title="Market Analysis" description={`Current market signals for ${major}.`}>
       <div className="space-y-6 print:space-y-4">
 
         {/* Intelligence Header */}

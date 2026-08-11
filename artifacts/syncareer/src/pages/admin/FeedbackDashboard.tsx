@@ -238,8 +238,7 @@ const FeedbackDashboard = () => {
           <AnimatedSection delay={0.1} y={20}>
           <Card>
             <CardHeader>
-              <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
-                Feedback by <em className="italic font-normal">feature</em>
+              <CardTitle>Feedback by feature
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -266,8 +265,7 @@ const FeedbackDashboard = () => {
           <AnimatedSection delay={0.14} y={20}>
           <Card>
             <CardHeader>
-              <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
-                Overall <em className="italic font-normal">sentiment</em>
+              <CardTitle>Overall sentiment
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -296,8 +294,7 @@ const FeedbackDashboard = () => {
           <AnimatedSection delay={0.18} y={20}>
           <Card>
             <CardHeader>
-              <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
-                Top complaint <em className="italic font-normal">keywords</em>
+              <CardTitle>Top complaint keywords
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -317,8 +314,7 @@ const FeedbackDashboard = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
-                Recent <em className="italic font-normal">comments</em>
+              <CardTitle>Recent comments
               </CardTitle>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

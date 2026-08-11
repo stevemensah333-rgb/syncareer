@@ -133,8 +133,10 @@ export const EVENTS = {
   ONBOARDING_SKIPPED: "onboarding_skipped",
 
   ASSESSMENT_STARTED: "assessment_started",
+  ASSESSMENT_QUESTION_PROGRESS: "assessment_question_progress",
   ASSESSMENT_COMPLETED: "assessment_completed",
   ASSESSMENT_ABANDONED: "assessment_abandoned",
+  ASSESSMENT_RESUMED: "assessment_resumed",
 
   CV_BUILDER_OPENED: "cv_builder_opened",
   CV_SECTION_COMPLETED: "cv_section_completed",

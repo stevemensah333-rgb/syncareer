@@ -13,7 +13,7 @@ export type FeatureKey =
 // ─── Quantified Free Tier Limits ─────────────────────────────────────────
 export const FREE_LIMITS: Record<FeatureKey, { limit: number; period: 'monthly' | 'total' | 'active'; label: string }> = {
   
-  ai_coach_session:               { limit: 5,  period: 'monthly', label: 'AI Coach sessions' },
+  ai_coach_session:               { limit: 5,  period: 'monthly', label: 'Assistant proposals' },
   mock_interview:                 { limit: 3,  period: 'monthly', label: 'Mock interviews' },
   cv_export:                      { limit: 2,  period: 'monthly', label: 'CV exports' },
   career_assessment:              { limit: 2,  period: 'total',   label: 'Career assessments' },
@@ -79,7 +79,7 @@ export async function getMonthlyUsage(userId: string, featureKey: string): Promi
 // ─── Human-readable labels ────────────────────────────────────────────────
 export const FEATURE_LABELS: Record<string, string> = {
   
-  ai_coach_session: 'AI Coach Sessions',
+  ai_coach_session: 'Assistant Proposals',
   mock_interview: 'Mock Interviews',
   cv_export: 'CV Exports',
   career_assessment: 'Career Assessments',

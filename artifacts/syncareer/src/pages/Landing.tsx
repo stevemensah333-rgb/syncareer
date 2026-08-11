@@ -15,6 +15,7 @@ import ProductStory from "@/components/landing/ProductStory";
 import FAQSection, { LANDING_FAQS } from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
+import OAuthReturnState, { hasOAuthReturnState } from "@/components/auth/OAuthReturnState";
 
 const SITE_URL = "https://syncareer.me";
 const SEO_DESCRIPTION =
@@ -24,15 +25,16 @@ export default function Landing() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
   const { profile, loading: profileLoading } = useUserProfile();
+  const oauthReturn = hasOAuthReturnState();
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || profileLoading) return;
+    if (oauthReturn || !isLoaded || !isSignedIn || profileLoading) return;
     if (!profile || !profile.onboarding_completed) {
       navigate("/onboarding", { replace: true });
       return;
     }
     navigate(getHomeRouteForRole(profile.user_type || null), { replace: true });
-  }, [isSignedIn, isLoaded, profile, profileLoading, navigate]);
+  }, [isSignedIn, isLoaded, profile, profileLoading, navigate, oauthReturn]);
 
   useEffect(() => {
     setMetaTags({
@@ -71,6 +73,8 @@ export default function Landing() {
     });
   }, []);
 
+  if (oauthReturn) return <OAuthReturnState />;
+
   if (!isLoaded || isSignedIn) {
     return (
       <div className="grid min-h-screen place-items-center bg-background" role="status" aria-live="polite">
@@ -81,6 +85,7 @@ export default function Landing() {
 
   const goToSignIn = () => navigate("/sign-in");
   const startAssessment = () => navigate("/assessment");
+  const startWithOpportunity = () => navigate("/sign-up?returnTo=%2Fopportunities");
 
   return (
     <div className="app-canvas min-h-screen bg-background text-foreground">
@@ -92,14 +97,14 @@ export default function Landing() {
       </a>
       <LandingHeader
         onSignIn={goToSignIn}
-        onSignUp={startAssessment}
-        primaryActionLabel="Start assessment"
+        onSignUp={startWithOpportunity}
+        primaryActionLabel="Explore opportunities"
       />
       <main id="main-content" tabIndex={-1} className="focus:outline-none">
-        <HeroSection onGetStarted={startAssessment} />
+        <HeroSection onGetStarted={startWithOpportunity} onAssessment={startAssessment} />
         <ProductStory />
         <FAQSection />
-        <FinalCTASection onGetStarted={startAssessment} />
+        <FinalCTASection onGetStarted={startWithOpportunity} onAssessment={startAssessment} />
       </main>
       <LandingFooter />
     </div>

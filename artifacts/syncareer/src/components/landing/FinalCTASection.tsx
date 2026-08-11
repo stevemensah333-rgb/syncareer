@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 
 interface FinalCTASectionProps {
   onGetStarted: () => void;
+  onAssessment: () => void;
 }
 
-export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) {
+export default function FinalCTASection({ onGetStarted, onAssessment }: FinalCTASectionProps) {
   return (
     <section className="bg-card" aria-labelledby="final-cta-title">
       <div className="mx-auto w-full max-w-[1400px] px-4 py-20 sm:px-6 md:py-24 lg:px-8">
@@ -32,10 +33,7 @@ export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) 
                 </li>
               </ul>
             </div>
-            <Button size="lg" onClick={onGetStarted} className="min-h-12 w-full gap-2 px-6 sm:w-auto">
-              Start career assessment
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Button>
+            <div className="flex flex-col gap-2"><Button size="lg" onClick={onGetStarted} className="min-h-12 w-full gap-2 px-6 sm:w-auto">Explore opportunities<ArrowRight className="h-4 w-4" aria-hidden="true" /></Button><Button variant="outline" onClick={onAssessment}>Still choosing? Explore interests</Button></div>
           </div>
         </div>
       </div>

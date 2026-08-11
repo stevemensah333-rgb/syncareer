@@ -1,77 +1,85 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import PasswordField from './PasswordField';
+import { getAuthErrorMessage } from './authUtils';
 
 export default function ResetPasswordForm() {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [checkingLink, setCheckingLink] = useState(true);
+  const [linkIsValid, setLinkIsValid] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const submissionInFlight = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setLinkIsValid(Boolean(data.session));
+      setCheckingLink(false);
+    }).catch(() => {
+      if (!active) return;
+      setLinkIsValid(false);
+      setCheckingLink(false);
+    });
+    return () => { active = false; };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submissionInFlight.current) return;
     if (password.length < 8) {
-      toast.error('Password must be at least 8 characters');
+      setErrorMessage('Use a password with at least 8 characters.');
       return;
     }
     if (password !== confirm) {
-      toast.error('Passwords do not match');
+      setErrorMessage('The passwords do not match.');
       return;
     }
+    submissionInFlight.current = true;
     setSubmitting(true);
+    setErrorMessage('');
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast.success('Password updated. Signing you in…');
       navigate('/', { replace: true });
-    } catch (err: any) {
-      toast.error(err?.message ?? 'Could not update password');
+    } catch (error) {
+      setErrorMessage(getAuthErrorMessage(error, 'reset'));
     } finally {
+      submissionInFlight.current = false;
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur rounded-3xl shadow-[0_20px_60px_-30px_rgba(20,20,20,0.25)] ring-1 ring-black/[0.04] p-8">
+    <div>
+      {checkingLink ? (
+        <div role="status" aria-live="polite" className="py-6 text-center text-sm text-muted-foreground">Checking your reset link…</div>
+      ) : !linkIsValid ? (
+        <div className="space-y-4" role="alert">
+          <div className="rounded-lg border border-warning/30 bg-warning/5 p-4">
+            <h2 className="font-semibold">This reset link is invalid or expired</h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">Reset links can only be used once and expire for your security.</p>
+          </div>
+          <Button className="w-full" onClick={() => navigate('/sign-in/forgot-password')}>Request a new link</Button>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="space-y-1.5">
-          <Label htmlFor="new-password" className="text-foreground/70 text-xs uppercase tracking-wider">New password</Label>
-          <Input
-            id="new-password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="!rounded-xl bg-white border border-black/[0.08] h-11"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="confirm-password" className="text-foreground/70 text-xs uppercase tracking-wider">Confirm password</Label>
-          <Input
-            id="confirm-password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className="!rounded-xl bg-white border border-black/[0.08] h-11"
-          />
-        </div>
+        <PasswordField id="new-password" label="New password" value={password} onChange={setPassword} autoComplete="new-password" minLength={8} description="At least 8 characters." />
+        <PasswordField id="confirm-password" label="Confirm password" value={confirm} onChange={setConfirm} autoComplete="new-password" minLength={8} />
+        {errorMessage ? <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive">{errorMessage}</div> : null}
         <Button
           type="submit"
           disabled={submitting}
-          className="w-full !rounded-full bg-foreground hover:bg-foreground/90 text-background h-11 shadow-sm"
+          aria-busy={submitting} className="h-11 w-full"
         >
           {submitting ? 'Saving…' : 'Update password'}
         </Button>
-      </form>
+      </form>)}
     </div>
   );
 }

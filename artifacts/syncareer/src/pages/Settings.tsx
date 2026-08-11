@@ -182,9 +182,8 @@ const Settings = () => {
     <PageLayout title={t('settings.title')}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <AnimatedSection y={20} className="lg:col-span-1">
-          <div className="bg-card rounded-lg p-6 shadow">
-            <h2 className="text-xl font-semibold mb-4">{t('settings.title')}</h2>
-            <nav className="space-y-2">
+          <div className="rounded-lg border bg-card p-4">
+            <nav aria-label="Settings sections" className="space-y-1">
               <Button 
                 variant={activeSection === 'profile' ? 'secondary' : 'ghost'} 
                 className="w-full justify-start" 

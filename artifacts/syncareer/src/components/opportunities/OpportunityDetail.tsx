@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
+  ArrowLeft,
   Bookmark,
   BookmarkCheck,
   Briefcase,
@@ -7,12 +8,10 @@ import {
   DollarSign,
   ExternalLink,
   FileText,
-  GraduationCap,
   Loader2,
   MapPin,
   MessageSquare,
   ShieldQuestion,
-  XCircle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,7 @@ import {
   experienceLevelLabel,
   formatPostedAgo,
   getDeadlineState,
+  getIngestionFreshness,
   getOpportunityCta,
   getOrganisation,
   getProvenanceFacts,
@@ -31,6 +31,7 @@ import {
 import { statusLabel, type ApplicationRef } from '@/features/application-tracker/workflow';
 import { CompanyLogo } from './CompanyLogo';
 import { DeadlinePill } from './DeadlinePill';
+import { ContextualAssistantDrawer } from '@/components/assistant/ContextualAssistantDrawer';
 
 interface OpportunityDetailProps {
   job: MatchedOpportunityJob;
@@ -42,6 +43,7 @@ interface OpportunityDetailProps {
   onToggleSave: () => void;
   /** Create the tracker row (native apply, or "mark as applied" for external). */
   onTrack: () => void;
+  onBack?: () => void;
 }
 
 function formatSalary(min: number | null, max: number | null, currency: string | null): string | null {
@@ -78,6 +80,7 @@ export function OpportunityDetail({
   tracking,
   onToggleSave,
   onTrack,
+  onBack,
 }: OpportunityDetailProps) {
   const organisation = getOrganisation(job);
   const deadline = getDeadlineState(job.application_deadline);
@@ -85,6 +88,7 @@ export function OpportunityDetail({
   const workMode = getWorkModeLabel(job);
   const provenance = getProvenanceFacts(job);
   const posted = formatPostedAgo(job.created_at);
+  const freshness = getIngestionFreshness(job.updated_at);
   const salary = formatSalary(job.salary_min, job.salary_max, job.salary_currency);
   const cta = getOpportunityCta({
     isExternal: job.is_external,
@@ -98,7 +102,13 @@ export function OpportunityDetail({
   }&skills=${encodeURIComponent((job.skills ?? []).join(','))}`;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
+      {onBack ? (
+        <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 gap-1.5 lg:hidden">
+          <ArrowLeft className="h-4 w-4" />
+          Back to opportunities
+        </Button>
+      ) : null}
       {/* Header: role, organisation, key facts */}
       <div className="flex items-start gap-4">
         <CompanyLogo job={job} size={56} />
@@ -106,7 +116,7 @@ export function OpportunityDetail({
           <h2 className="text-xl font-bold leading-tight">{job.title}</h2>
           <p className="text-sm text-muted-foreground mt-1">
             {organisation ?? 'Organisation not specified'}
-            {posted ? ` · Posted ${posted}` : ''}
+            {posted ? ` · Added to Syncareer ${posted}` : ''}
           </p>
           <div className="flex items-center gap-3 mt-3 text-sm text-muted-foreground flex-wrap">
             <span className="flex items-center gap-1">
@@ -164,6 +174,11 @@ export function OpportunityDetail({
           check the original posting before spending time on an application.
         </div>
       )}
+      {freshness.kind === 'stale' && (
+        <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm text-muted-foreground">
+          {freshness.label}. Confirm that the role is still open on the original source.
+        </div>
+      )}
 
       {/* Primary actions */}
       {cta === 'open-tracker' && application ? (
@@ -190,6 +205,10 @@ export function OpportunityDetail({
             there, mark it here so your tracker stays accurate.
           </p>
         </div>
+      ) : cta === 'source-unavailable' ? (
+        <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+          The original source link is unavailable, so Syncareer cannot send you to the application page. Try finding the role directly on {provenance.sourceLabel}.
+        </div>
       ) : (
         <Button className="w-full gap-2" onClick={onTrack} disabled={tracking}>
           {tracking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Briefcase className="h-4 w-4" />}
@@ -212,58 +231,34 @@ export function OpportunityDetail({
           </Link>
         </Button>
       </div>
+      <div className="flex justify-end">
+        <ContextualAssistantDrawer
+          task="opportunity.explain_requirement"
+          description="Explain a listed requirement or suggest questions to research. Syncareer receives only the opportunity context shown below."
+          suggestedPrompt="Explain the most important requirement in plain language and suggest two questions I should research before applying."
+          context={[
+            { id: 'role', label: job.title, provenance: 'opportunity', content: [job.title, organisation, job.location, job.employment_type].filter(Boolean).join(' · ') },
+            { id: 'description', label: 'Job description', provenance: 'job_description', content: job.description ?? '' },
+          ]}
+        />
+      </div>
 
-      {/* Eligibility & match */}
+      {/* Eligibility facts — no inferred match score */}
       <Card>
         <CardContent className="p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-sm">Match &amp; eligibility</span>
-            <span
-              className={`text-xl font-bold ${
-                job.matchPercentage >= 80
-                  ? 'text-green-600'
-                  : job.matchPercentage >= 60
-                    ? 'text-yellow-600'
-                    : 'text-muted-foreground'
-              }`}
-            >
-              {job.matchPercentage}%
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <GraduationCap className="h-4 w-4" />
-            {level ?? 'Experience level not specified in the posting'}
-          </div>
-          {job.matchedSkills.length > 0 && (
+          <p className="font-semibold text-sm">Role facts</p>
+          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FactRow label="Level" value={level ?? 'Not provided'} />
+            <FactRow label="Type" value={job.employment_type || 'Not provided'} />
+          </dl>
+          {job.skills && job.skills.length > 0 ? (
             <div>
-              <p className="text-xs font-medium text-green-700 mb-1.5 flex items-center gap-1">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Skills you have
-              </p>
+              <p className="text-xs font-medium text-muted-foreground mb-1.5">Skills listed by the source</p>
               <div className="flex flex-wrap gap-1.5">
-                {job.matchedSkills.map((s) => (
-                  <span key={s} className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                    {s}
-                  </span>
-                ))}
+                {job.skills.map((skill) => <Badge key={skill} variant="secondary">{skill}</Badge>)}
               </div>
             </div>
-          )}
-          {job.missingSkills.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-orange-700 mb-1.5 flex items-center gap-1">
-                <XCircle className="h-3.5 w-3.5" />
-                Skills to develop
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {job.missingSkills.map((s) => (
-                  <span key={s} className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
-                    {s}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          ) : <p className="text-sm text-muted-foreground">No skills were provided by the source.</p>}
         </CardContent>
       </Card>
 
@@ -272,7 +267,7 @@ export function OpportunityDetail({
         <CardContent className="p-4 space-y-2">
           <p className="font-semibold text-sm flex items-center gap-1.5">
             <ShieldQuestion className="h-4 w-4 text-muted-foreground" />
-            Source &amp; verification
+            Source details
           </p>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
             <FactRow label="Source" value={provenance.sourceLabel} />
@@ -294,19 +289,9 @@ export function OpportunityDetail({
                 )
               }
             />
-            <FactRow label="Posted" value={posted ?? 'Unknown'} />
-            <FactRow
-              label="Listing last updated"
-              value={
-                job.updated_at
-                  ? new Date(job.updated_at).toLocaleDateString('en-GB', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })
-                  : 'Unknown'
-              }
-            />
+            <FactRow label="Published by source" value="Not provided" />
+            <FactRow label="Added to Syncareer" value={posted ?? 'Unknown'} />
+            <FactRow label="Ingestion freshness" value={freshness.label} />
           </dl>
           <p className="text-xs text-muted-foreground leading-relaxed">{PROVENANCE_NOTE}</p>
         </CardContent>

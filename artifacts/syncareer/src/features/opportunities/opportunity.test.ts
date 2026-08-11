@@ -9,6 +9,7 @@ import {
   PROVENANCE_NOTE,
   formatPostedAgo,
   getOpportunityCta,
+  getIngestionFreshness,
   type OpportunityJobFacts,
 } from './opportunity';
 
@@ -135,6 +136,18 @@ describe('formatPostedAgo', () => {
   });
 });
 
+describe('getIngestionFreshness', () => {
+  it('labels ingestion timestamps without claiming publication freshness', () => {
+    expect(getIngestionFreshness('2026-08-10T06:00:00Z', NOW)).toEqual({
+      kind: 'recent', label: 'Listing data ingested today',
+    });
+    expect(getIngestionFreshness('2026-07-01T00:00:00Z', NOW).kind).toBe('stale');
+    expect(getIngestionFreshness(null, NOW)).toEqual({
+      kind: 'unknown', label: 'Ingestion freshness unknown',
+    });
+  });
+});
+
 describe('getOpportunityCta', () => {
   it('routes tracked opportunities to the tracker', () => {
     expect(getOpportunityCta({ isExternal: true, hasSourceUrl: true, tracked: true })).toBe('open-tracker');
@@ -142,7 +155,7 @@ describe('getOpportunityCta', () => {
 
   it('applies externally only when a source URL exists', () => {
     expect(getOpportunityCta({ isExternal: true, hasSourceUrl: true, tracked: false })).toBe('apply-external');
-    expect(getOpportunityCta({ isExternal: true, hasSourceUrl: false, tracked: false })).toBe('apply-native');
+    expect(getOpportunityCta({ isExternal: true, hasSourceUrl: false, tracked: false })).toBe('source-unavailable');
     expect(getOpportunityCta({ isExternal: false, hasSourceUrl: false, tracked: false })).toBe('apply-native');
   });
 });

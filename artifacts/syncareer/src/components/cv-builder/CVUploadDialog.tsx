@@ -62,7 +62,7 @@ export const CVUploadDialog: React.FC<CVUploadDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Upload existing CV</DialogTitle>
           <DialogDescription>
-            We'll extract your details and pre-fill the form. PDF or DOCX, max 5 MB.
+            With your explicit selection, the file is sent to Syncareer's AI analysis service to extract suggested fields. Nothing is applied until you review and choose “Apply to CV”. PDF or DOCX, max 5 MB.
           </DialogDescription>
         </DialogHeader>
 

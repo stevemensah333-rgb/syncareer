@@ -2,10 +2,12 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/contexts/UserProfileContext';
+import { MoreHorizontal } from 'lucide-react';
 import {
-  ClipboardList, Sparkles, Settings,
-  Calendar, Users, LayoutDashboard, Target, Briefcase, FileText, MoreHorizontal
-} from 'lucide-react';
+  studentNavGroups,
+  counsellorNavGroups,
+  type NavItem,
+} from '@/components/layout/AppSidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,78 +15,57 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface NavTab {
-  title: string;
-  icon: React.ElementType;
-  href: string;
+function flattenNavigation(groups: typeof studentNavGroups): NavItem[] {
+  return groups.flatMap((group) => group.items);
 }
 
-const studentTabs: NavTab[] = [
-  { title: 'Home', icon: LayoutDashboard, href: '/dashboard' },
-  { title: 'Opportunities', icon: Briefcase, href: '/opportunities' },
-  { title: 'Applications', icon: ClipboardList, href: '/applications' },
-];
+export function getMobileNavigation(userType?: string | null) {
+  const items = flattenNavigation(
+    userType === 'career_counsellor' ? counsellorNavGroups : studentNavGroups,
+  );
+  return { tabs: items.slice(0, 3), moreItems: items.slice(3) };
+}
 
-const studentMoreItems: NavTab[] = [
-  { title: 'Practice', icon: Target, href: '/practice' },
-  { title: 'CV Builder', icon: FileText, href: '/cv-builder' },
-  { title: 'SynAI', icon: Sparkles, href: '/ai-coach' },
-  { title: 'Settings', icon: Settings, href: '/settings' },
-];
-
-const counsellorTabs: NavTab[] = [
-  { title: 'Profile', icon: Users, href: '/counsellor-dashboard' },
-  { title: 'Availability', icon: Calendar, href: '/counsellor-availability' },
-  { title: 'Sessions', icon: ClipboardList, href: '/counsellor-sessions' },
-  { title: 'Settings', icon: Settings, href: '/settings' },
-];
+function isRouteActive(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function MobileBottomNav() {
   const location = useLocation();
   const { profile } = useUserProfile();
   const userType = profile?.user_type;
 
-  let tabs: NavTab[];
-  let moreItems: NavTab[] | null;
-
-  if (userType === 'career_counsellor') {
-    tabs = counsellorTabs;
-    moreItems = null; // 4 items, no overflow
-  } else {
-    tabs = studentTabs;
-    moreItems = studentMoreItems;
-  }
-
-  const isMoreActive = moreItems?.some(item => location.pathname === item.href) ?? false;
+  const { tabs, moreItems } = getMobileNavigation(userType);
+  const isMoreActive = moreItems.some((item) => isRouteActive(location.pathname, item.href));
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-sm border-t border-border md:hidden">
-      <div className="flex items-center justify-around h-14 px-1 safe-area-bottom">
+    <nav aria-label="Mobile workspace navigation" className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-card/95 backdrop-blur-sm md:hidden">
+      <div className="safe-area-bottom flex h-[3.75rem] items-center justify-around px-1">
         {tabs.map((tab) => {
-          const isActive = location.pathname === tab.href;
+          const isActive = isRouteActive(location.pathname, tab.href);
           return (
             <Link
               key={tab.href}
               to={tab.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                "flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 transition-colors",
+                "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
               <tab.icon className={cn("h-5 w-5", isActive && "text-primary")} />
-              <span className="text-[10px] font-medium leading-tight">{tab.title}</span>
+              <span className="max-w-full truncate text-[10px] font-medium leading-tight">{tab.title}</span>
             </Link>
           );
         })}
 
-        {moreItems && (
+        {moreItems.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 aria-label="More navigation"
                 className={cn(
-                  "flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 transition-colors",
+                  "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                   isMoreActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -94,7 +75,7 @@ export function MobileBottomNav() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="top" className="w-48 mb-2 bg-popover z-50">
               {moreItems.map((item) => {
-                const isActive = location.pathname === item.href;
+                const isActive = isRouteActive(location.pathname, item.href);
                 return (
                   <DropdownMenuItem key={item.href} asChild>
                     <Link

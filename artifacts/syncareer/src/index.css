@@ -7,8 +7,8 @@
 
 @layer base {
   :root {
-    /* Canvas: warm near-white */
-    --background: 39 38% 97%;
+    /* Workspace canvas: cool near-white */
+    --background: 216 33% 98%;
     /* Text: dark navy-charcoal */
     --foreground: 222 26% 15%;
 
@@ -23,16 +23,16 @@
     --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary action: deep navy-slate */
-    --secondary: 221 22% 30%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary action / quiet working surface */
+    --secondary: 216 24% 95%;
+    --secondary-foreground: 222 26% 19%;
 
-    --muted: 40 22% 96%;
-    --muted-foreground: 220 12% 44%;
+    --muted: 216 24% 96%;
+    --muted-foreground: 220 12% 42%;
 
     /* Accent: restrained lavender for contextual guidance */
-    --accent: 255 58% 58%;
-    --accent-foreground: 260 55% 26%;
+    --accent: 252 55% 96%;
+    --accent-foreground: 252 44% 31%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -52,8 +52,8 @@
     --info: 258 62% 50%;
     --info-foreground: 0 0% 100%;
 
-    --border: 222 20% 89%;
-    --input: 222 22% 86%;
+    --border: 218 22% 89%;
+    --input: 218 22% 84%;
     --ring: 221 83% 53%;
 
     --radius: 0.625rem;
@@ -62,7 +62,7 @@
     --sidebar-foreground: 222 26% 15%;
     --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 255 58% 96%;
+    --sidebar-accent: 216 30% 96%;
     --sidebar-accent-foreground: 222 26% 15%;
     --sidebar-border: 222 20% 90%;
     --sidebar-ring: 221 83% 53%;
@@ -180,6 +180,26 @@
       );
   }
 
+  /* Operational UI is deliberately flatter and denser than public/auth
+     surfaces. The shell also prevents decorative display typography from
+     leaking into signed-in workspaces. */
+  .workspace-shell {
+    background-color: hsl(var(--background));
+    font-family: theme('fontFamily.sans');
+  }
+
+  .workspace-shell .font-serif {
+    font-family: theme('fontFamily.sans');
+  }
+
+  .workspace-panel {
+    @apply rounded-lg border bg-card;
+  }
+
+  .workspace-row {
+    @apply border-b px-3 py-2.5 last:border-b-0 sm:px-4;
+  }
+
   /* Glass morphism */
   .glass {
     @apply bg-white/10 backdrop-blur-lg border border-white/20 shadow-glass;
@@ -191,7 +211,7 @@
 
   /* Card transitions — short, calm, and reserved for interactivity */
   .card-hover-effect {
-    @apply transition-all duration-150 ease-out;
+    @apply transition-colors duration-150 ease-out;
   }
   
   /* Custom scrollbar for webkit browsers */

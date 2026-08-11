@@ -31,7 +31,7 @@ describe('SignInForm (email sign-in contract)', () => {
   it('calls signInWithPassword with the entered credentials', async () => {
     renderForm();
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'ama@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'ValidPass1' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'ValidPass1' } });
     fireEvent.click(screen.getByRole('button', { name: /^Sign in$/i }));
 
     await waitFor(() => {
@@ -46,7 +46,7 @@ describe('SignInForm (email sign-in contract)', () => {
     signInWithPassword.mockResolvedValue({ error: { message: 'Invalid login credentials' } });
     renderForm();
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'ama@example.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrong' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'wrong' } });
     fireEvent.click(screen.getByRole('button', { name: /^Sign in$/i }));
 
     await waitFor(() => expect(signInWithPassword).toHaveBeenCalled());

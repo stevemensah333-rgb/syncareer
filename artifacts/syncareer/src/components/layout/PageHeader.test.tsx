@@ -14,6 +14,7 @@ describe('PageHeader', () => {
     render(<PageHeader title="Opportunities" description="Browse ranked roles" />);
     expect(screen.getByRole('heading', { name: 'Opportunities', level: 1 })).toBeTruthy();
     expect(screen.getByText('Browse ranked roles')).toBeTruthy();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
   it('renders a breadcrumb trail with the current page marked', () => {
@@ -33,5 +34,6 @@ describe('PageHeader', () => {
     expect((home as HTMLAnchorElement).getAttribute('href')).toBe('/dashboard');
     const current = screen.getByText('CV Builder', { selector: 'span[aria-current="page"]' });
     expect(current.getAttribute('aria-current')).toBe('page');
+    expect(home.className).toContain('focus-visible:ring-2');
   });
 });

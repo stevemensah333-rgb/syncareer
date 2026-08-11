@@ -190,8 +190,7 @@ const UsersDashboard = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-3">
-              <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
-                All <em className="italic font-normal">users</em>
+              <CardTitle>All users
               </CardTitle>
               <div className="flex items-center gap-2">
                 <div className="relative">

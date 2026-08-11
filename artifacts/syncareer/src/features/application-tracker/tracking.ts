@@ -154,12 +154,15 @@ export async function updateApplicationStatus(
   client: TrackerClient,
   applicationId: string,
   status: string,
+  userId?: string,
 ): Promise<TrackerWriteResult> {
   try {
-    const { error } = await client
+    let query = client
       .from('job_applications')
       .update({ status })
       .eq('id', applicationId);
+    if (userId) query = query.eq('applicant_id', userId);
+    const { error } = await query;
     if (error) return classifyTrackerError(error);
     return { ok: true };
   } catch (err) {
@@ -172,12 +175,15 @@ export async function saveApplicationNotes(
   client: TrackerClient,
   applicationId: string,
   notes: string,
+  userId?: string,
 ): Promise<TrackerWriteResult> {
   try {
-    const { error } = await client
+    let query = client
       .from('job_applications')
       .update({ notes: normalizeApplicationNotes(notes) })
       .eq('id', applicationId);
+    if (userId) query = query.eq('applicant_id', userId);
+    const { error } = await query;
     if (error) return classifyTrackerError(error);
     return { ok: true };
   } catch (err) {
@@ -195,6 +201,60 @@ export async function removeApplicationRecord(
       .from('job_applications')
       .delete()
       .eq('id', applicationId);
+    if (error) return classifyTrackerError(error);
+    return { ok: true };
+  } catch (err) {
+    return classifyTrackerError(err);
+  }
+}
+
+export interface ApplicationWorkspaceUpdate {
+  resume_id?: string | null;
+  next_action?: string | null;
+  next_action_due?: string | null;
+}
+
+/**
+ * Updates accepted workspace fields with explicit owner scoping. The generated
+ * database types must be regenerated after the accepted migration is applied;
+ * the narrow cast is isolated here until that supported regeneration occurs.
+ */
+export async function updateApplicationWorkspace(
+  client: TrackerClient,
+  applicationId: string,
+  userId: string,
+  update: ApplicationWorkspaceUpdate,
+): Promise<TrackerWriteResult> {
+  try {
+    const normalized: ApplicationWorkspaceUpdate = { ...update };
+    if ('next_action' in normalized) normalized.next_action = normalized.next_action?.trim() || null;
+    if (!normalized.next_action && 'next_action' in normalized) normalized.next_action_due = null;
+    const table = client.from('job_applications') as unknown as {
+      update: (value: ApplicationWorkspaceUpdate) => {
+        eq: (column: string, value: string) => { eq: (column: string, value: string) => Promise<{ error: unknown }> };
+      };
+    };
+    const { error } = await table.update(normalized).eq('id', applicationId).eq('applicant_id', userId);
+    if (error) return classifyTrackerError(error);
+    return { ok: true };
+  } catch (err) {
+    return classifyTrackerError(err);
+  }
+}
+
+export async function updateInterviewApplicationLink(
+  client: TrackerClient,
+  interviewId: string,
+  userId: string,
+  applicationId: string | null,
+): Promise<TrackerWriteResult> {
+  try {
+    const table = client.from('mock_interviews') as unknown as {
+      update: (value: { application_id: string | null }) => {
+        eq: (column: string, value: string) => { eq: (column: string, value: string) => Promise<{ error: unknown }> };
+      };
+    };
+    const { error } = await table.update({ application_id: applicationId }).eq('id', interviewId).eq('user_id', userId);
     if (error) return classifyTrackerError(error);
     return { ok: true };
   } catch (err) {

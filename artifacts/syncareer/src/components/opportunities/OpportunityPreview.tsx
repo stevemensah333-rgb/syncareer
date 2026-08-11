@@ -75,7 +75,7 @@ export function OpportunityPreview({ job, saved, application, children }: Opport
             </PreviewLine>
             <PreviewLine icon={<ShieldQuestion className="h-3.5 w-3.5" />}>
               via {provenance.sourceLabel}
-              {posted ? ` · posted ${posted}` : ''} · not verified
+              {posted ? ` · added ${posted}` : ''} · not independently verified
             </PreviewLine>
             <PreviewLine
               icon={
@@ -91,14 +91,6 @@ export function OpportunityPreview({ job, saved, application, children }: Opport
               {application ? nextHint : saved ? `Saved · ${nextHint}` : nextHint}
             </PreviewLine>
           </div>
-
-          {(job.matchedSkills.length > 0 || job.missingSkills.length > 0) && (
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{job.matchPercentage}% match</span>
-              {job.matchedSkills.length > 0 ? ` · ${job.matchedSkills.length} skill${job.matchedSkills.length > 1 ? 's' : ''} matched` : ''}
-              {job.missingSkills.length > 0 ? ` · ${job.missingSkills.length} to develop` : ''}
-            </p>
-          )}
 
           {provenance.sourceUrl && (
             <p className="flex items-center gap-1 text-[11px] text-muted-foreground/80">

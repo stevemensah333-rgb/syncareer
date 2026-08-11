@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,11 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Briefcase, MapPin, Search, Bookmark, BookmarkCheck, X, BarChart3,
-  AlertCircle, RefreshCw, Lock,
+  AlertCircle, RefreshCw, Lock, AlertTriangle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useUserProfile } from '@/contexts/UserProfileContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useOutcomeTracking } from '@/hooks/useOutcomeTracking';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CompanyLogo } from '@/components/opportunities/CompanyLogo';
 import { DeadlinePill } from '@/components/opportunities/DeadlinePill';
@@ -23,9 +21,11 @@ import { OpportunityPreview } from '@/components/opportunities/OpportunityPrevie
 import { OpportunityDetail } from '@/components/opportunities/OpportunityDetail';
 import {
   getDeadlineState,
+  getIngestionFreshness,
   getOrganisation,
+  getProvenanceFacts,
   getWorkModeLabel,
-  type MatchedOpportunityJob,
+  type OpportunityJob,
 } from '@/features/opportunities/opportunity';
 import { classifyTrackerError, startTrackingApplication } from '@/features/application-tracker/tracking';
 import { STATUS_COLORS } from '@/features/application-tracker/constants';
@@ -40,72 +40,40 @@ const DEADLINE_FILTERS = [
 ];
 
 type LoadStatus = 'loading' | 'error' | 'ready';
-
-function matchTone(percentage: number): string {
-  if (percentage >= 80) return 'text-green-600';
-  if (percentage >= 60) return 'text-yellow-600';
-  return 'text-muted-foreground';
-}
+const SCROLL_STORAGE_KEY = 'syncareer.opportunities.scrollTop';
 
 const Opportunities = () => {
-  const { studentDetails, loading: profileLoading } = useUserProfile();
-  const { trackAction, triggerIntelligenceRefresh } = useOutcomeTracking();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [jobs, setJobs] = useState<MatchedOpportunityJob[]>([]);
+  const [jobs, setJobs] = useState<OpportunityJob[]>([]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [applicationsByJob, setApplicationsByJob] = useState<Map<string, ApplicationRef>>(new Map());
   const [loadStatus, setLoadStatus] = useState<LoadStatus>('loading');
   const [loadError, setLoadError] = useState<{ category: string; userMessage: string } | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => searchParams.get('job'));
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
-  const [savingBookmark, setSavingBookmark] = useState(false);
-  const [tracking, setTracking] = useState(false);
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const [trackingIds, setTrackingIds] = useState<Set<string>>(new Set());
+  const [partialWarning, setPartialWarning] = useState<string | null>(null);
+  const pendingSaveIds = useRef(new Set<string>());
+  const saveRequestVersions = useRef(new Map<string, number>());
+  const pendingTrackingIds = useRef(new Set<string>());
+  const listRef = useRef<HTMLDivElement>(null);
+  const openMobileOnSelection = useRef(Boolean(searchParams.get('job')));
 
   // Filters
-  const [search, setSearch] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [experienceFilter, setExperienceFilter] = useState('all');
-  const [deadlineFilter, setDeadlineFilter] = useState('all');
-  const [tab, setTab] = useState<'all' | 'saved'>('all');
-
-  const getUserSkills = useCallback(
-    (dbSkills: string[] | null): string[] => {
-      if (dbSkills && dbSkills.length > 0) return dbSkills;
-      const major = studentDetails?.major?.toLowerCase() || '';
-      if (major.includes('computer') || major.includes('software') || major.includes('data'))
-        return ['JavaScript', 'React', 'Python', 'SQL', 'Git', 'TypeScript', 'Node.js', 'HTML', 'CSS'];
-      if (major.includes('business') || major.includes('finance') || major.includes('marketing'))
-        return ['Excel', 'Financial Analysis', 'Marketing', 'Communication', 'Project Management', 'Data Analysis'];
-      if (major.includes('design') || major.includes('graphic'))
-        return ['Figma', 'Adobe Creative Suite', 'UI/UX', 'Prototyping', 'Visual Design'];
-      if (major.includes('engineering'))
-        return ['CAD', 'Project Management', 'Technical Writing', 'Problem Solving', 'Mathematics'];
-      return ['Communication', 'Problem Solving', 'Teamwork', 'Microsoft Office'];
-    },
-    [studentDetails?.major],
-  );
-
-  const calculateMatch = useCallback((jobSkills: string[] | null, userSkills: string[]) => {
-    if (!jobSkills || jobSkills.length === 0)
-      return { percentage: 75, matched: [] as string[], missing: [] as string[] };
-    const norm = userSkills.map((s) => s.toLowerCase());
-    const matched: string[] = [];
-    const missing: string[] = [];
-    jobSkills.forEach((skill) => {
-      const ns = skill.toLowerCase();
-      if (norm.some((us) => us.includes(ns) || ns.includes(us))) matched.push(skill);
-      else missing.push(skill);
-    });
-    const percentage = Math.max(Math.round((matched.length / jobSkills.length) * 100), 20);
-    return { percentage, matched, missing };
-  }, []);
+  const [search, setSearch] = useState(() => searchParams.get('q') ?? '');
+  const [locationFilter, setLocationFilter] = useState(() => searchParams.get('location') ?? '');
+  const [typeFilter, setTypeFilter] = useState(() => searchParams.get('type') ?? 'all');
+  const [experienceFilter, setExperienceFilter] = useState(() => searchParams.get('level') ?? 'all');
+  const [deadlineFilter, setDeadlineFilter] = useState(() => searchParams.get('deadline') ?? 'all');
+  const [tab, setTab] = useState<'all' | 'saved'>(() => searchParams.get('view') === 'saved' ? 'saved' : 'all');
 
   const load = useCallback(async () => {
     setLoadStatus('loading');
     setLoadError(null);
+    setPartialWarning(null);
     try {
       const {
         data: { session },
@@ -119,7 +87,7 @@ const Opportunities = () => {
         return;
       }
 
-      const [jobsRes, savedRes, appsRes, skillsRes] = await Promise.all([
+      const [jobsRes, savedRes, appsRes] = await Promise.all([
         supabase
           .from('job_postings')
           .select('*')
@@ -131,33 +99,25 @@ const Opportunities = () => {
           .from('job_applications')
           .select('id, job_id, status')
           .eq('applicant_id', session.user.id),
-        supabase.from('user_skills').select('skill_name').eq('user_id', session.user.id),
       ]);
 
-      const firstError =
-        jobsRes.error ?? savedRes.error ?? appsRes.error ?? skillsRes.error ?? null;
-      if (firstError) throw firstError;
+      if (jobsRes.error) throw jobsRes.error;
 
-      const dbSkills = (skillsRes.data ?? []).map((s) => s.skill_name);
-      setSavedIds(new Set((savedRes.data ?? []).map((s) => s.job_id)));
+      setSavedIds(new Set(savedRes.error ? [] : (savedRes.data ?? []).map((s) => s.job_id)));
       setApplicationsByJob(
-        new Map((appsRes.data ?? []).map((a) => [a.job_id, { id: a.id, status: a.status }])),
+        new Map((appsRes.error ? [] : (appsRes.data ?? [])).map((a) => [a.job_id, { id: a.id, status: a.status }])),
       );
-
-      const userSkills = getUserSkills(dbSkills.length > 0 ? dbSkills : null);
-      const enriched: MatchedOpportunityJob[] = (jobsRes.data ?? []).map((j) => {
-        const m = calculateMatch(j.skills, userSkills);
-        return { ...j, matchPercentage: m.percentage, matchedSkills: m.matched, missingSkills: m.missing };
-      });
-      enriched.sort((a, b) => b.matchPercentage - a.matchPercentage);
-      setJobs(enriched);
+      if (savedRes.error || appsRes.error) {
+        setPartialWarning('Opportunities loaded, but saved or applied state could not be refreshed. Retry before changing those records.');
+      }
+      setJobs(jobsRes.data ?? []);
       setLoadStatus('ready');
     } catch (err) {
       const classified = classifyTrackerError(err);
       setLoadError({ category: classified.category, userMessage: classified.userMessage });
       setLoadStatus('error');
     }
-  }, [calculateMatch, getUserSkills]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -177,7 +137,7 @@ const Opportunities = () => {
       }
       if (typeFilter !== 'all' && j.employment_type !== typeFilter) return false;
       if (experienceFilter !== 'all' && j.experience_level !== experienceFilter) return false;
-      if (deadlineFilter !== 'all' && j.application_deadline) {
+      if (deadlineFilter !== 'all') {
         const state = getDeadlineState(j.application_deadline);
         if (state.daysLeft === null || state.daysLeft > Number(deadlineFilter) || state.daysLeft < 0)
           return false;
@@ -194,21 +154,36 @@ const Opportunities = () => {
     }
   }, [filtered, selectedId]);
 
-  // Deep link: /opportunities?job=<id> preselects the opportunity; on
-  // touch/small screens it also opens the detail sheet (the desktop pane
-  // shows it automatically).
+  // Keep inspection context in the URL so protected-route auth redirects and
+  // browser history retain filters and selection.
   useEffect(() => {
-    const jobParam = searchParams.get('job');
-    if (!jobParam || jobs.length === 0) return;
-    const found = jobs.find((j) => j.id === jobParam);
-    if (found) {
-      setSelectedId(found.id);
-      if (window.innerWidth < 1024) setMobileDetailOpen(true);
-      setSearchParams({}, { replace: true });
+    const next = new URLSearchParams();
+    if (selectedId) next.set('job', selectedId);
+    if (search) next.set('q', search);
+    if (locationFilter) next.set('location', locationFilter);
+    if (typeFilter !== 'all') next.set('type', typeFilter);
+    if (experienceFilter !== 'all') next.set('level', experienceFilter);
+    if (deadlineFilter !== 'all') next.set('deadline', deadlineFilter);
+    if (tab === 'saved') next.set('view', 'saved');
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [deadlineFilter, experienceFilter, locationFilter, search, searchParams, selectedId, setSearchParams, tab, typeFilter]);
+
+  useEffect(() => {
+    if (!selectedId || jobs.length === 0) return;
+    if (openMobileOnSelection.current && jobs.some((job) => job.id === selectedId) && window.innerWidth < 1024) {
+      setMobileDetailOpen(true);
+      openMobileOnSelection.current = false;
     }
-  }, [jobs, searchParams, setSearchParams]);
+  }, [jobs, searchParams, selectedId]);
+
+  useEffect(() => {
+    if (loadStatus !== 'ready' || !listRef.current) return;
+    const stored = Number(sessionStorage.getItem(SCROLL_STORAGE_KEY));
+    if (Number.isFinite(stored) && stored > 0) listRef.current.scrollTop = stored;
+  }, [loadStatus]);
 
   const toggleSave = async (jobId: string) => {
+    if (pendingSaveIds.current.has(jobId) || partialWarning) return;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -216,32 +191,49 @@ const Opportunities = () => {
       toast.error('Please sign in to save opportunities');
       return;
     }
-    setSavingBookmark(true);
+    const wasSaved = savedIds.has(jobId);
+    const version = (saveRequestVersions.current.get(jobId) ?? 0) + 1;
+    saveRequestVersions.current.set(jobId, version);
+    pendingSaveIds.current.add(jobId);
+    setSavingIds((current) => new Set(current).add(jobId));
+    setSavedIds((current) => {
+      const next = new Set(current);
+      if (wasSaved) next.delete(jobId); else next.add(jobId);
+      return next;
+    });
     try {
-      if (savedIds.has(jobId)) {
+      if (wasSaved) {
         const { error } = await supabase
           .from('saved_jobs')
           .delete()
           .eq('user_id', user.id)
           .eq('job_id', jobId);
         if (error) throw error;
-        setSavedIds((prev) => {
-          const next = new Set(prev);
-          next.delete(jobId);
-          return next;
-        });
       } else {
         const { error } = await supabase
           .from('saved_jobs')
           .insert({ user_id: user.id, job_id: jobId });
-        if (error) throw error;
-        setSavedIds((prev) => new Set(prev).add(jobId));
+        if (error && error.code !== '23505') throw error;
         toast.success('Saved — find it under the Saved tab');
       }
     } catch (err) {
+      if (saveRequestVersions.current.get(jobId) === version) {
+        setSavedIds((current) => {
+          const next = new Set(current);
+          if (wasSaved) next.add(jobId); else next.delete(jobId);
+          return next;
+        });
+      }
       toast.error(classifyTrackerError(err).userMessage);
     } finally {
-      setSavingBookmark(false);
+      if (saveRequestVersions.current.get(jobId) === version) {
+        pendingSaveIds.current.delete(jobId);
+        setSavingIds((current) => {
+          const next = new Set(current);
+          next.delete(jobId);
+          return next;
+        });
+      }
     }
   };
 
@@ -251,8 +243,10 @@ const Opportunities = () => {
    * after the user applies on the source site; native postings submit
    * directly.
    */
-  const trackApplication = async (job: MatchedOpportunityJob) => {
-    setTracking(true);
+  const trackApplication = async (job: OpportunityJob) => {
+    if (pendingTrackingIds.current.has(job.id)) return;
+    pendingTrackingIds.current.add(job.id);
+    setTrackingIds((current) => new Set(current).add(job.id));
     try {
       const {
         data: { session },
@@ -278,18 +272,15 @@ const Opportunities = () => {
         });
       }
       toast.success('Now tracking this application');
-      trackAction({
-        itemTitle: job.title,
-        itemId: job.id,
-        type: 'job',
-        action: 'applied',
-        confidence: job.matchPercentage / 100,
-      });
-      triggerIntelligenceRefresh();
     } catch (err) {
       toast.error(classifyTrackerError(err).userMessage);
     } finally {
-      setTracking(false);
+      pendingTrackingIds.current.delete(job.id);
+      setTrackingIds((current) => {
+        const next = new Set(current);
+        next.delete(job.id);
+        return next;
+      });
     }
   };
 
@@ -308,25 +299,49 @@ const Opportunities = () => {
     setDeadlineFilter('all');
   };
 
-  const isLoading = profileLoading || loadStatus === 'loading';
+  const isLoading = loadStatus === 'loading';
 
-  const renderJobRow = (job: MatchedOpportunityJob) => {
+  const handleRowKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, jobId: string) => {
+    const index = filtered.findIndex((job) => job.id === jobId);
+    if (index < 0) return;
+    let target = index;
+    if (event.key === 'ArrowDown') target = Math.min(filtered.length - 1, index + 1);
+    else if (event.key === 'ArrowUp') target = Math.max(0, index - 1);
+    else if (event.key === 'Home') target = 0;
+    else if (event.key === 'End') target = filtered.length - 1;
+    else return;
+    event.preventDefault();
+    const next = filtered[target];
+    if (!next) return;
+    setSelectedId(next.id);
+    requestAnimationFrame(() => {
+      listRef.current?.querySelector<HTMLButtonElement>(`[data-opportunity-id="${next.id}"]`)?.focus();
+    });
+  };
+
+  const renderJobRow = (job: OpportunityJob) => {
     const deadline = getDeadlineState(job.application_deadline);
     const organisation = getOrganisation(job);
     const workMode = getWorkModeLabel(job);
+    const provenance = getProvenanceFacts(job);
+    const freshness = getIngestionFreshness(job.updated_at);
     const application = applicationsByJob.get(job.id) ?? null;
     const saved = savedIds.has(job.id);
     const isSelected = selected?.id === job.id;
     return (
-      <OpportunityPreview key={job.id} job={job} saved={saved} application={application}>
+      <div key={job.id} className="relative">
+      <OpportunityPreview job={job} saved={saved} application={application}>
         <button
           onClick={() => {
+            openMobileOnSelection.current = true;
             setSelectedId(job.id);
             if (window.innerWidth < 1024) setMobileDetailOpen(true);
           }}
+          onKeyDown={(event) => handleRowKeyDown(event, job.id)}
+          data-opportunity-id={job.id}
           aria-label={`${job.title}${organisation ? ` at ${organisation}` : ''}. Open details.`}
           aria-current={isSelected ? 'true' : undefined}
-          className={`w-full text-left p-4 border-l-4 transition-colors ${
+          className={`w-full text-left p-4 pr-12 border-l-4 transition-colors ${
             isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50'
           }`}
         >
@@ -335,9 +350,7 @@ const Opportunities = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-semibold text-sm leading-tight truncate">{job.title}</h3>
-                <span className={`text-xs font-bold shrink-0 ${matchTone(job.matchPercentage)}`}>
-                  {job.matchPercentage}%
-                </span>
+                {saved ? <BookmarkCheck className="h-4 w-4 shrink-0 text-primary" aria-label="Saved" /> : null}
               </div>
               <p className="text-xs text-muted-foreground truncate mt-0.5">
                 {organisation ?? 'Organisation not specified'}
@@ -351,12 +364,13 @@ const Opportunities = () => {
                 <span className="capitalize">{job.employment_type}</span>
               </div>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <DeadlinePill state={deadline} />
-                {job.is_external && job.source && (
+                {deadline.kind === 'none' ? <span className="text-xs text-muted-foreground">Deadline not provided</span> : <DeadlinePill state={deadline} />}
+                {job.is_external && (
                   <Badge variant="outline" className="text-[10px] capitalize px-1.5 py-0">
-                    via {job.source}
+                    via {provenance.sourceLabel}
                   </Badge>
                 )}
+                <span className={`text-[10px] ${freshness.kind === 'stale' ? 'text-warning' : 'text-muted-foreground'}`}>{freshness.label}</span>
                 {application && (
                   <span
                     className={`text-[10px] px-1.5 py-0 rounded-full font-medium ${
@@ -366,7 +380,7 @@ const Opportunities = () => {
                     Tracked · {statusLabel(application.status)}
                   </span>
                 )}
-                {saved && !application && (
+                {saved && (
                   <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
                     <BookmarkCheck className="h-3 w-3 text-primary" />
                     Saved
@@ -377,6 +391,19 @@ const Opportunities = () => {
           </div>
         </button>
       </OpportunityPreview>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="absolute right-2 top-2 h-9 w-9"
+          onClick={() => toggleSave(job.id)}
+          disabled={savingIds.has(job.id) || Boolean(partialWarning)}
+          aria-label={saved ? `Unsave ${job.title}` : `Save ${job.title}`}
+          aria-pressed={saved}
+        >
+          {saved ? <BookmarkCheck className="h-4 w-4 text-primary" /> : <Bookmark className="h-4 w-4" />}
+        </Button>
+      </div>
     );
   };
 
@@ -400,7 +427,7 @@ const Opportunities = () => {
   };
 
   return (
-    <PageLayout title="Opportunities">
+    <PageLayout title="Latest opportunities" description="External listings ordered by when Syncareer ingested them. Confirm details on the original source.">
       {/* Search + filter bar */}
       <div className="space-y-3 mb-4">
         <div className="flex gap-2">
@@ -409,7 +436,8 @@ const Opportunities = () => {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search jobs, companies, or skills..."
+              placeholder="Search titles, organisations, or skills"
+              aria-label="Search opportunities"
               className="pl-9"
             />
           </div>
@@ -419,6 +447,7 @@ const Opportunities = () => {
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
               placeholder="Location"
+              aria-label="Filter by location"
               className="pl-9"
             />
           </div>
@@ -434,7 +463,7 @@ const Opportunities = () => {
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-auto min-w-[130px]">
+            <SelectTrigger aria-label="Filter by opportunity type" className="w-auto min-w-[130px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -446,7 +475,7 @@ const Opportunities = () => {
             </SelectContent>
           </Select>
           <Select value={experienceFilter} onValueChange={setExperienceFilter}>
-            <SelectTrigger className="w-auto min-w-[140px]">
+            <SelectTrigger aria-label="Filter by experience level" className="w-auto min-w-[140px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -458,7 +487,7 @@ const Opportunities = () => {
             </SelectContent>
           </Select>
           <Select value={deadlineFilter} onValueChange={setDeadlineFilter}>
-            <SelectTrigger className="w-auto min-w-[160px]">
+            <SelectTrigger aria-label="Filter by deadline" className="w-auto min-w-[160px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -481,7 +510,7 @@ const Opportunities = () => {
         </div>
         <Tabs value={tab} onValueChange={(v) => setTab(v as 'all' | 'saved')}>
           <TabsList>
-            <TabsTrigger value="all">All Jobs</TabsTrigger>
+            <TabsTrigger value="all">Latest</TabsTrigger>
             <TabsTrigger value="saved" className="gap-1.5">
               <Bookmark className="h-3.5 w-3.5" />
               Saved ({savedIds.size})
@@ -489,6 +518,13 @@ const Opportunities = () => {
           </TabsList>
         </Tabs>
       </div>
+
+      {partialWarning ? (
+        <div role="status" className="mb-3 flex flex-col gap-2 rounded-lg border border-warning/30 bg-warning/5 px-3 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <span className="flex items-start gap-2 text-muted-foreground"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />{partialWarning}</span>
+          <Button variant="outline" size="sm" onClick={load}>Refresh state</Button>
+        </div>
+      ) : null}
 
       {isLoading ? (
         <div className="grid lg:grid-cols-[minmax(340px,420px)_1fr] gap-4 h-[calc(100vh-280px)] min-h-[500px]">
@@ -540,7 +576,12 @@ const Opportunities = () => {
           {/* Two-pane layout */}
           <div className="grid lg:grid-cols-[minmax(340px,420px)_1fr] gap-4 h-[calc(100vh-280px)] min-h-[500px]">
             <Card className="overflow-hidden flex flex-col">
-              <div className="flex-1 overflow-y-auto divide-y">
+              <div
+                ref={listRef}
+                className="flex-1 overflow-y-auto divide-y"
+                aria-label="Latest opportunities"
+                onScroll={(event) => sessionStorage.setItem(SCROLL_STORAGE_KEY, String(event.currentTarget.scrollTop))}
+              >
                 {filtered.length === 0 ? (
                   <div className="p-8 text-center text-muted-foreground">
                     <Briefcase className="h-10 w-10 mx-auto mb-3 opacity-50" />
@@ -565,8 +606,8 @@ const Opportunities = () => {
                     job={selected}
                     saved={savedIds.has(selected.id)}
                     application={applicationsByJob.get(selected.id) ?? null}
-                    savingBookmark={savingBookmark}
-                    tracking={tracking}
+                    savingBookmark={savingIds.has(selected.id)}
+                    tracking={trackingIds.has(selected.id)}
                     onToggleSave={() => toggleSave(selected.id)}
                     onTrack={() => trackApplication(selected)}
                   />
@@ -597,10 +638,11 @@ const Opportunities = () => {
                   job={selected}
                   saved={savedIds.has(selected.id)}
                   application={applicationsByJob.get(selected.id) ?? null}
-                  savingBookmark={savingBookmark}
-                  tracking={tracking}
+                  savingBookmark={savingIds.has(selected.id)}
+                  tracking={trackingIds.has(selected.id)}
                   onToggleSave={() => toggleSave(selected.id)}
                   onTrack={() => trackApplication(selected)}
+                  onBack={() => setMobileDetailOpen(false)}
                 />
               )}
             </SheetContent>

@@ -133,16 +133,8 @@ export default function CounsellorClients() {
   };
 
   return (
-    <PageLayout title="My Clients">
+    <PageLayout title="My Clients" description="Manage and track the students you have worked with.">
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold mb-1">My Clients</h1>
-          <p className="text-muted-foreground">
-            Manage and track all the students you&apos;ve worked with
-          </p>
-        </div>
-
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

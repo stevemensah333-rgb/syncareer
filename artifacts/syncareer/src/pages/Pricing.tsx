@@ -16,9 +16,9 @@ export default function PricingPage() {
   useEffect(() => {
     setMetaTags({
       title: 'Pricing — Syncareer Free & Premium Plans',
-      description: 'Simple pricing for African graduates. Start free; upgrade to Premium for unlimited assessments, CV exports, mock interviews, and AI coaching.',
+      description: 'Simple pricing for African graduates. Start free; upgrade to Premium for unlimited assessments, CV exports, mock interviews, and contextual assistance.',
       ogTitle: 'Syncareer Pricing — Free & Premium Plans',
-      ogDescription: 'Free forever tier plus a Premium plan with unlimited assessments, interviews, and AI coaching.',
+      ogDescription: 'Free forever tier plus a Premium plan with unlimited assessments, interviews, and contextual assistance.',
       ogUrl: 'https://syncareer.me/pricing',
       canonical: 'https://syncareer.me/pricing',
       twitterCard: 'summary_large_image',
@@ -28,7 +28,7 @@ export default function PricingPage() {
   const features = {
     free: [
       
-      'AI Coach sessions: 5 per month',
+      'Assistant proposals: 5 per month',
       'Mock interviews: 3 per month (basic roles only)',
       'CV downloads: 2 exports per month (PDF only)',
       'Career assessments: 2 full assessments',
@@ -37,7 +37,7 @@ export default function PricingPage() {
     ],
     premium: [
       
-      'AI Coach sessions: Unlimited',
+      'Assistant proposals: Unlimited',
       'Mock interviews: Unlimited + advanced role simulation',
       'CV downloads: Unlimited (multiple formats)',
       'Career assessments: Unlimited retakes',

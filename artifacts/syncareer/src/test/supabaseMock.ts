@@ -19,10 +19,13 @@ export interface TableResult {
   data: unknown;
   error: unknown;
 }
+type TableResultSource = TableResult | Promise<TableResult>;
 
 export interface SupabaseMockConfig {
   sessionUserId?: string | null;
   tables?: Record<string, TableResult>;
+  /** Per-call table results, useful when initial load succeeds and a later write fails. */
+  tableSequences?: Record<string, TableResultSource[]>;
   maybeSingle?: Record<string, TableResult>;
   single?: Record<string, TableResult>;
   insertSpies?: Record<string, (value: unknown) => void>;
@@ -66,12 +69,15 @@ export function installSupabaseMock(config: SupabaseMockConfig = {}): void {
 
   const from = supabase.from as unknown as ReturnType<typeof vi.fn>;
   from.mockImplementation((table: string) => {
-    const awaitResult: TableResult = config.tables?.[table] ?? { data: [], error: null };
+    const sequence = config.tableSequences?.[table];
+    const awaitResult: TableResultSource = sequence && sequence.length > 0
+      ? sequence.shift()!
+      : config.tables?.[table] ?? { data: [], error: null };
     const builder: Record<string, unknown> = {};
     const chain = () => builder;
     for (const method of CHAIN_METHODS) builder[method] = chain;
     builder.maybeSingle = async () => config.maybeSingle?.[table] ?? { data: null, error: null };
-    builder.single = async () => config.single?.[table] ?? awaitResult;
+    builder.single = async () => config.single?.[table] ?? await awaitResult;
     builder.insert = (value: unknown) => {
       config.insertSpies?.[table]?.(value);
       return builder;

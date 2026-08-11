@@ -25,6 +25,7 @@ beforeEach(() => {
   (supabase.auth as unknown as Record<string, unknown>).setSession = setSession;
   setSession.mockResolvedValue({ error: null });
   vi.spyOn(window.location, 'assign').mockImplementation(() => {});
+  sessionStorage.clear();
 });
 
 async function clickSignIn() {
@@ -55,6 +56,7 @@ describe('GoogleSignInButton OAuth handoff', () => {
     await clickSignIn();
     expect(setSession).not.toHaveBeenCalled();
     expect(window.location.assign).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toMatch(/cancelled/i);
   });
 
   it('writes returned tokens into a Supabase session, then navigates to /', async () => {
@@ -81,5 +83,17 @@ describe('GoogleSignInButton OAuth handoff', () => {
     lovableSignIn.mockRejectedValue(new Error('network down'));
     await clickSignIn();
     expect(window.location.assign).not.toHaveBeenCalled();
+  });
+
+  it('prevents a duplicate click while the provider request is pending', async () => {
+    let resolve!: (value: unknown) => void;
+    lovableSignIn.mockReturnValue(new Promise((done) => { resolve = done; }));
+    render(<GoogleSignInButton />);
+    const button = screen.getByRole('button', { name: /Continue with Google/i });
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(lovableSignIn).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: /opening Google/i }).getAttribute('aria-busy')).toBe('true');
+    resolve({ redirected: true, error: null });
   });
 });

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -37,6 +38,8 @@ import {
   SECTION_START_PAGES,
   calculateScoresLocally,
 } from './assessment/assessmentConstants';
+import { assessmentResumeCapability, hasAssessmentAnalyticsConsent, setAssessmentAnalyticsConsent, trackAssessmentLifecycle } from '@/features/assessment/lifecycle';
+import { validateAssessmentAnswers } from '@/features/assessment/scoring';
 
 const Assessment = () => {
   const { profile, studentDetails } = useUserProfile();
@@ -48,10 +51,10 @@ const Assessment = () => {
   useEffect(() => {
     setMetaTags({
       title: 'Free RIASEC Career Assessment | Syncareer',
-      description: 'Take our comprehensive career assessment to discover your personality, skills, and ideal career paths. Free, no sign-up required.',
-      keywords: 'career assessment, RIASEC, personality test, career test, skills assessment',
-      ogTitle: 'Discover Your Career Profile — Free Assessment',
-      ogDescription: 'Find your ideal career path with our AI-powered RIASEC assessment.',
+      description: 'Explore RIASEC interest themes and broad work environments. This assessment does not measure skills, readiness or hiring probability.',
+      keywords: 'career interests, RIASEC, work environments, career direction',
+      ogTitle: 'Explore Your Work Interest Themes — Syncareer',
+      ogDescription: 'Use a 45-question RIASEC assessment as one input while choosing a direction.',
       ogUrl: 'https://syncareer.me/assessment',
       ogImage: 'https://syncareer.me/og-image.png',
       canonical: 'https://syncareer.me/assessment',
@@ -81,6 +84,11 @@ const Assessment = () => {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [showIntro, setShowIntro] = useState<string | null>(null);
   const [guestSubmitting, setGuestSubmitting] = useState(false);
+  const [analyticsConsent, setAnalyticsConsent] = useState(() => hasAssessmentAnalyticsConsent());
+  const startedAtRef = useRef<number | null>(null);
+  const takingRef = useRef(false);
+  const answeredRef = useRef(0);
+  const completedRef = useRef(false);
 
   const totalPages = Math.ceil(TOTAL_QUESTIONS / QUESTIONS_PER_PAGE);
   const currentQuestions = ASSESSMENT_QUESTIONS.slice(
@@ -94,7 +102,24 @@ const Assessment = () => {
   const sectionLabel = currentSection === 'personality' ? 'Personality' : currentSection === 'skills' ? 'Skills Preference' : 'Work Interest';
 
   const handleAnswer = useCallback((questionId: number, value: number) => {
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
+    setAnswers(prev => {
+      const next = { ...prev, [questionId]: value };
+      const count = Object.keys(next).length;
+      if (count !== Object.keys(prev).length) trackAssessmentLifecycle('progress', { answered: count, total: TOTAL_QUESTIONS });
+      answeredRef.current = count;
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    takingRef.current = takingAssessment;
+    answeredRef.current = answeredCount;
+  }, [takingAssessment, answeredCount]);
+
+  useEffect(() => () => {
+    if (takingRef.current && answeredRef.current > 0 && !completedRef.current) {
+      trackAssessmentLifecycle('abandonment', { answered: answeredRef.current, total: TOTAL_QUESTIONS, elapsedSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : undefined });
+    }
   }, []);
 
   // Auto-advance
@@ -132,6 +157,9 @@ const Assessment = () => {
   };
 
   const handleStartAssessment = () => {
+    completedRef.current = false;
+    startedAtRef.current = Date.now();
+    trackAssessmentLifecycle('start', { answered: 0, total: TOTAL_QUESTIONS });
     setTakingAssessment(true);
     setShowIntro('personality');
   };
@@ -141,7 +169,7 @@ const Assessment = () => {
       // Guest: calculate results locally without requiring an account.
       setGuestSubmitting(true);
       try {
-        if (Object.keys(answers).length !== 45) {
+        if (!validateAssessmentAnswers(answers, ASSESSMENT_QUESTIONS)) {
           return;
         }
         const result = calculateScoresLocally(answers);
@@ -150,6 +178,8 @@ const Assessment = () => {
           created_at: new Date().toISOString(),
           ...result,
         });
+        completedRef.current = true;
+        trackAssessmentLifecycle('completion', { answered: TOTAL_QUESTIONS, total: TOTAL_QUESTIONS, elapsedSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : undefined });
         setTakingAssessment(false);
         setAnswers({});
         setCurrentPage(0);
@@ -159,6 +189,8 @@ const Assessment = () => {
     } else {
       const success = await submitAssessment(answers);
       if (success) {
+        completedRef.current = true;
+        trackAssessmentLifecycle('completion', { answered: TOTAL_QUESTIONS, total: TOTAL_QUESTIONS, elapsedSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : undefined });
         setTakingAssessment(false);
         setAnswers({});
         setCurrentPage(0);
@@ -212,7 +244,7 @@ const Assessment = () => {
               </div>
               <div className="space-y-1">
                 <Badge variant="secondary" className="text-xs mb-2">Questions {intro.questionRange}</Badge>
-                <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em]">{intro.title}</h2>
+                <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">{intro.title}</h2>
               </div>
               <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">{intro.description}</p>
               <Button size="lg" onClick={handleIntroNext} className="mt-2 rounded-full px-6">
@@ -317,14 +349,14 @@ const Assessment = () => {
               <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
                 <Brain className="h-8 w-8 text-primary" />
               </div>
-              <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em]">
-                Discover your <span className="italic text-primary">career profile</span>
+              <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                Still choosing a direction?
               </h2>
               <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                Answer 45 questions across Personality, Skills Preference, and Work Interest to discover your RIASEC career profile and unlock personalized recommendations.
+                Answer all 45 questions to explore interest themes, preferred work environments and broad role families. This does not measure your skills, readiness, employability or hiring chances.
               </p>
               {isGuest && (
-                <p className="text-xs text-primary font-medium">✨ No sign-up required — take it free right now</p>
+                <p className="text-xs text-primary font-medium">No sign-up required. Guest results remain on this page only.</p>
               )}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
                 {SECTION_INTROS.map(s => {
@@ -339,6 +371,8 @@ const Assessment = () => {
                   );
                 })}
               </div>
+              <div className="mx-auto flex max-w-md items-start gap-2 rounded-lg border p-3 text-left"><Checkbox id="assessment-analytics-consent" checked={analyticsConsent} onCheckedChange={(checked) => { const granted = checked === true; setAnalyticsConsent(granted); setAssessmentAnalyticsConsent(granted); }} /><div><Label htmlFor="assessment-analytics-consent" className="text-sm">Share anonymous assessment progress events</Label><p className="mt-1 text-xs text-muted-foreground">Optional. Sends start, answered-count, abandonment and completion timing only—never answers or result themes.</p></div></div>
+              <p className="text-xs text-muted-foreground">{assessmentResumeCapability.explanation}</p>
               <Button size="lg" onClick={handleStartAssessment} className="rounded-full px-6">
                 Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -420,7 +454,7 @@ const Assessment = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-primary" />
-              Your Top Interest Areas
+              Your strongest interest themes
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -519,7 +553,7 @@ const Assessment = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <p className="text-xs text-muted-foreground text-center mt-1">Scores aggregated from skills questions (16–30)</p>
+              <p className="text-xs text-muted-foreground text-center mt-1">Task-preference responses from questions 16–30; not verified skill level</p>
             </CardContent>
           </Card>
         </div>
@@ -569,8 +603,8 @@ const Assessment = () => {
         {isGuest && (
           <Card className="border-primary/30 bg-landing-cream text-center">
             <CardContent className="pt-8 pb-8 space-y-3">
-              <h3 className="font-serif text-2xl md:text-3xl font-normal tracking-[-0.02em]">
-                Ready for the <span className="italic text-primary">next step?</span>
+              <h3 className="text-xl font-semibold tracking-tight md:text-2xl">
+                Ready for the next step?
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 Create a free account to save your results, build your CV, practice interviews, and apply to jobs.

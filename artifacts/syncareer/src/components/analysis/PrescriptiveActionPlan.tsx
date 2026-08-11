@@ -48,8 +48,8 @@ export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) =>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-2">Your action plan</p>
-            <h2 className="font-serif text-2xl md:text-3xl font-normal leading-tight tracking-[-0.02em] text-foreground">
-              You're <span className="italic text-primary">{readiness}% ready</span> for {major} roles
+            <h2 className="text-xl font-semibold leading-tight tracking-tight text-foreground md:text-2xl">
+              You're {readiness}% ready for {major} roles
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Based on the top 5 most-demanded skills in this market right now.

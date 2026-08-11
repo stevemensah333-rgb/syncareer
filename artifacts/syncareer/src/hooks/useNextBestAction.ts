@@ -17,17 +17,17 @@ interface Inputs {
 
 /**
  * Returns the single next best action a student should take based on their
- * current progress. Tiered: Assessment -> CV -> Interview -> Apply -> Iterate.
+ * current progress. Opportunity exploration is primary; assessment is optional.
  */
 export function useNextBestAction({ hasAssessment, cvScore, interviewScore, applications }: Inputs): NextBestAction {
   return useMemo(() => {
     if (!hasAssessment) {
       return {
-        title: 'Take the career assessment',
-        description: '10 minutes to discover your top 3 career fits using the RIASEC model.',
-        ctaLabel: 'Start assessment',
-        href: '/assessment',
-        reason: 'You haven\'t completed an assessment yet.',
+        title: 'Explore a real opportunity',
+        description: 'Start with current external listings and choose a role worth investigating.',
+        ctaLabel: 'Browse opportunities',
+        href: '/opportunities',
+        reason: 'The assessment remains available if you are still choosing a direction.',
       };
     }
     if (cvScore < 60) {

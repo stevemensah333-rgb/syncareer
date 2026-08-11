@@ -2,9 +2,10 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import syncareerLogo from '@/assets/syncareer-logo.svg';
 import {
   LayoutDashboard, Briefcase, ClipboardList, Target,
-  FileText, Mic, Sparkles, Settings,
+  FileText, Mic, Settings,
   Users, Calendar, UserCheck, ChevronRight, ChevronLeft,
 } from 'lucide-react';
 
@@ -25,8 +26,8 @@ interface AppSidebarProps {
   onToggleCollapsed: () => void;
 }
 
-/** Student destinations — one source of truth for the desktop rail and (via
- *  MobileBottomNav) the mobile navigation. Deep routes for `/build`, `/apply`,
+/** Student destinations — one source of truth for desktop and mobile
+ *  navigation. Deep routes for `/build`, `/apply`,
  *  and `/analysis` remain live; they are reached from here or via their hubs. */
 export const studentNavGroups: NavGroup[] = [
   {
@@ -43,7 +44,6 @@ export const studentNavGroups: NavGroup[] = [
     items: [
       { title: 'CV Builder', icon: FileText, href: '/cv-builder' },
       { title: 'Interview Simulator', icon: Mic, href: '/interview-simulator' },
-      { title: 'SynAI', icon: Sparkles, href: '/ai-coach' },
     ],
   },
   {
@@ -90,20 +90,21 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed }: AppSideba
   return (
     <aside
       className={cn(
-        'app-canvas relative flex h-full flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground',
+        'relative flex h-full flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground',
         'transition-[width] duration-150 ease-out',
         isCollapsed ? 'w-[68px]' : 'w-64'
       )}
     >
-      <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-2">
-        <span
+      <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-2.5">
+        <div
           className={cn(
-            'px-2 text-sm font-semibold tracking-tight text-sidebar-foreground',
+            'flex min-w-0 items-center gap-2 px-1.5 text-sm font-semibold tracking-tight text-sidebar-foreground',
             isCollapsed && 'sr-only'
           )}
         >
-          Syncareer
-        </span>
+          <img src={syncareerLogo} alt="" className="h-7 w-auto shrink-0" />
+          <span>Syncareer</span>
+        </div>
         <Button
           variant="ghost"
           size="icon"
@@ -120,7 +121,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed }: AppSideba
         </Button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      <nav aria-label="Workspace navigation" className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-6">
           {groups.map((group) => (
             <li key={group.label}>

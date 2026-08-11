@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Download,
   Eye,
-  FileText,
   Loader2,
   Save,
   Upload,
@@ -37,6 +36,7 @@ import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { supabase } from '@/integrations/supabase/client';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 import type { CVData } from '@/features/cv-builder/types';
+import type { CVAIProposal } from '@/features/cv-builder/aiProposal';
 import { initialCVData } from '@/features/cv-builder/types';
 import {
   classifyLoadError,
@@ -67,6 +67,9 @@ const CVBuilder = () => {
   const [cvData, setCVData] = useState<CVData>(initialCVData);
   const [activeTab, setActiveTab] = useState('personal');
   const [showPreview, setShowPreview] = useState(false);
+  const [showAIAssistance, setShowAIAssistance] = useState(false);
+  const [dismissedTargetSkills, setDismissedTargetSkills] = useState<string[]>([]);
+  const [undoCVData, setUndoCVData] = useState<CVData | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isLoadingCV, setIsLoadingCV] = useState(true);
   const [loadFailure, setLoadFailure] = useState<CvPersistenceFailure | null>(null);
@@ -95,12 +98,6 @@ const CVBuilder = () => {
     const raw = searchParams.get('skills') || '';
     return raw ? raw.split(',').map((skill) => skill.trim()).filter(Boolean) : [];
   }, [searchParams]);
-  const missingTargetSkills = useMemo(() => {
-    if (!targetSkills.length) return [];
-    const have = new Set(cvData.skills.map((skill) => skill.toLocaleLowerCase()));
-    return targetSkills.filter((skill) => !have.has(skill.toLocaleLowerCase()));
-  }, [targetSkills, cvData.skills]);
-
   const loadSavedCV = useCallback(async () => {
     setIsLoadingCV(true);
     setLoadFailure(null);
@@ -205,15 +202,18 @@ const CVBuilder = () => {
   };
 
   const handleDownloadPDF = async () => {
-    if (!previewRef.current) {
-      toast.error('Please preview your CV first');
-      setShowPreview(true);
+    if (strengthResult.completion.percentage === 0) {
+      toast.error('Add meaningful CV content before exporting a PDF.');
+      return;
+    }
+    const element = previewRef.current;
+    if (!element) {
+      toast.error('The PDF renderer is unavailable. Please retry.');
       return;
     }
 
     setIsGeneratingPDF(true);
     try {
-      const element = previewRef.current;
       const opt = {
         margin: 0,
         filename: `${cvData.personal.firstName}_${cvData.personal.lastName}_CV.pdf`,
@@ -299,16 +299,34 @@ const CVBuilder = () => {
     saveActionInFlightRef.current = false;
   };
 
-  const handleAISuggestion = (section: string, content: string) => {
-    if (section === 'skills') {
-      const newSkills = content.split(',').map((skill) => skill.trim()).filter(Boolean);
-      updateSkills([...cvData.skills, ...newSkills]);
-    }
-    toast.success('AI suggestion applied.');
+  const handleAISuggestion = (proposal: CVAIProposal): boolean => {
+    const parts = proposal.fieldPath.split('.');
+    const beforeSnapshot = cvDataRef.current;
+    let changed = false;
+    updateDraft((previous) => {
+      const next = structuredClone(previous);
+      if ((parts[0] === 'personal' || parts[0] === 'education') && parts[1] && parts[1] in next[parts[0]]) {
+        const section = next[parts[0]] as unknown as Record<string, string>;
+        if (section[parts[1]] === proposal.before && proposal.after !== proposal.before) { section[parts[1]] = proposal.after; changed = true; }
+      } else if ((parts[0] === 'experience' || parts[0] === 'projects' || parts[0] === 'activities') && parts[1]) {
+        const rows = next[parts[0]] as Array<{ id: string; bullets: string[] } & Record<string, unknown>>;
+        const row = rows.find((item) => item.id === parts[1]);
+        if (row && parts[2] === 'bullets' && parts[3]) {
+          const index = Number(parts[3]);
+          if (Number.isInteger(index) && row.bullets[index] === proposal.before) { row.bullets[index] = proposal.after; changed = true; }
+        }
+      }
+      return changed ? next : previous;
+    });
+    if (!changed) { toast.error('The source field changed or the proposal was invalid. Nothing was applied.'); return false; }
+    setUndoCVData(beforeSnapshot);
+    markChanged();
+    toast.success('AI proposal applied.');
+    return true;
   };
 
   return (
-    <PageLayout title="CV Builder" breadcrumbs={[{ label: "Home", to: "/dashboard" }, { label: "Build", to: "/build" }, { label: "CV Builder" }]}>
+    <PageLayout title="CV Builder" description="Create, review, and save your primary CV." breadcrumbs={[{ label: "Home", to: "/dashboard" }, { label: "Build", to: "/build" }, { label: "CV Builder" }]}>
       {isLoadingCV ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
@@ -359,36 +377,18 @@ const CVBuilder = () => {
                     <Link to={`/applications?application=${encodeURIComponent(applicationId)}`}>Back to application</Link>
                   </Button>
                 )}
-                {targetSkills.length > 0 && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                    onClick={() => {
-                      if (!missingTargetSkills.length) {
-                        toast.info('Your CV already lists all highlighted skills.');
-                        return;
-                      }
-                      updateSkills([...cvData.skills, ...missingTargetSkills]);
-                      toast.success(`Added ${missingTargetSkills.length} target skill${missingTargetSkills.length > 1 ? 's' : ''} to your CV.`);
-                    }}
-                  >
-                    {missingTargetSkills.length
-                      ? `Add ${missingTargetSkills.length} missing skill${missingTargetSkills.length > 1 ? 's' : ''}`
-                      : 'All highlighted skills present'}
-                  </Button>
-                )}
               </div>
               {targetSkills.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {targetSkills.map(s => {
+                  {targetSkills.filter((skill) => !dismissedTargetSkills.includes(skill)).map(s => {
                     const present = cvData.skills.some(c => c.toLowerCase() === s.toLowerCase());
                     return (
                       <span
                         key={s}
                         className={`text-xs px-2 py-0.5 rounded-full border ${present ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}
                       >
-                        {present ? '✓ ' : '+ '}{s}
+                        {present ? '✓ ' : ''}{s}
+                        {!present && <span className="ml-2 inline-flex gap-1"><button type="button" className="underline" onClick={() => { setActiveTab('skills'); toast.info(`Add ${s} only if you can describe evidence for it.`); }}>Add evidence I have</button><button type="button" className="underline" onClick={() => toast.info(`Record ${s} as a learning goal outside your CV until you can support it.`)}>I'm learning this</button><button type="button" className="underline" onClick={() => setDismissedTargetSkills((items) => [...items, s])}>Not relevant</button><a className="underline" href={`https://www.google.com/search?q=${encodeURIComponent(`learn ${s}`)}`} target="_blank" rel="noopener noreferrer">Find a resource</a></span>}
                       </span>
                     );
                   })}
@@ -396,14 +396,9 @@ const CVBuilder = () => {
               )}
             </div>
           )}
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <FileText className="h-6 w-6 text-primary" />
-              <h2 className="font-serif text-3xl md:text-4xl font-normal tracking-[-0.02em]">
-                Build your <span className="italic text-primary">CV</span>
-              </h2>
-            </div>
-            <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="flex flex-wrap gap-2">
+              {undoCVData && <Button variant="ghost" onClick={() => { setCVData(undoCVData); cvDataRef.current = undoCVData; setUndoCVData(null); markChanged(); }}>Undo AI change</Button>}
               <Button
                 variant="outline"
                 onClick={() => setUploadOpen(true)}
@@ -462,7 +457,7 @@ const CVBuilder = () => {
               </div>
               <Button
                 onClick={handleDownloadPDF}
-                disabled={isGeneratingPDF}
+                disabled={isGeneratingPDF || strengthResult.completion.percentage === 0}
                 className="rounded-full px-5"
               >
                 <Download className="h-4 w-4 mr-2" />
@@ -472,6 +467,7 @@ const CVBuilder = () => {
           </div>
           </AnimatedSection>
 
+          {Object.keys(fieldErrors).length > 0 && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4"><p className="font-medium">Fix the following before saving:</p><ul className="mt-2 list-disc pl-5 text-sm">{Object.entries(fieldErrors).map(([field, message]) => <li key={field}><button className="underline" onClick={() => setActiveTab('personal')}>{message}</button></li>)}</ul></div>}
           <AnimatedSection delay={0.08} y={20}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="flex w-full overflow-x-auto">
@@ -548,16 +544,13 @@ const CVBuilder = () => {
         </div>
 
         {/* Sidebar: Score + Skill Gap + AI Assistant */}
-        <AnimatedSection delay={0.12} y={20} className="space-y-6">
+        <AnimatedSection delay={0.12} y={20} className="space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
           <CVStrengthScore result={strengthResult} />
           {cvAnalysis.result && (
             <CVSkillGapPanel result={cvAnalysis.result} />
           )}
-          <CVAIAssistant
-            cvData={cvData}
-            activeSection={activeTab}
-            onSuggestion={handleAISuggestion}
-          />
+          <Button variant="outline" className="w-full" onClick={() => setShowAIAssistance((open) => !open)}>{showAIAssistance ? 'Close AI assistance' : `AI help for ${activeTab}`}</Button>
+          {showAIAssistance && <CVAIAssistant cvData={cvData} activeSection={activeTab} onSuggestion={handleAISuggestion} onUndo={() => { if (undoCVData) { setCVData(undoCVData); cvDataRef.current = undoCVData; setUndoCVData(null); markChanged(); } }} />}
         </AnimatedSection>
       </div>
       )}
@@ -578,7 +571,7 @@ const CVBuilder = () => {
               </div>
             </div>
             <div className="p-4">
-              <CVPreview ref={previewRef} data={cvData} />
+              <CVPreview data={cvData} />
             </div>
           </div>
         </div>
@@ -604,6 +597,9 @@ const CVBuilder = () => {
         }}
         onReset={cvAnalysis.reset}
       />
+      <div className="fixed -left-[10000px] top-0 w-[794px] bg-white" aria-hidden="true">
+        <CVPreview ref={previewRef} data={cvData} />
+      </div>
     </PageLayout>
   );
 };
