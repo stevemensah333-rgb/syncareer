@@ -6,6 +6,7 @@ import {
   practiceIdeaFor,
   resourcesForRequirement,
 } from "@/features/learning/requirementLearning";
+import { ANALYTICS_EVENTS, captureProductEvent } from "@/services/analytics";
 
 type Decision = "learning" | "practice" | "resource" | "not-relevant" | null;
 
@@ -15,6 +16,7 @@ interface Props {
   evidenceHref?: string;
   onAddEvidence?: () => void;
   onNotRelevant?: () => void;
+  surface?: 'opportunity' | 'application' | 'cv';
 }
 
 export function RequirementEvidenceActions({
@@ -23,13 +25,40 @@ export function RequirementEvidenceActions({
   evidenceHref,
   onAddEvidence,
   onNotRelevant,
+  surface = 'opportunity',
 }: Props) {
   const [decision, setDecision] = useState<Decision>(null);
   const practice = practiceIdeaFor(requirement, role);
   const resources = resourcesForRequirement(requirement);
+
+  const emitLearning = (action: 'already_know' | 'learning' | 'practice_selected' | 'resource_requested' | 'not_relevant' | 'evidence_opened') => {
+    try {
+      captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_LEARNING_ACTIONED, {
+        surface,
+        action,
+      });
+    } catch { /* never break product */ }
+  };
+
   const choose = (next: Decision) => {
     setDecision(next);
-    if (next === "not-relevant") onNotRelevant?.();
+    if (next === "not-relevant") {
+      emitLearning('not_relevant');
+      onNotRelevant?.();
+      return;
+    }
+    if (next === "learning") emitLearning('learning');
+    if (next === "practice") emitLearning('practice_selected');
+    if (next === "resource") emitLearning('resource_requested');
+  };
+
+  const handleAddEvidence = () => {
+    emitLearning('already_know');
+    onAddEvidence?.();
+  };
+
+  const handleEvidenceLink = () => {
+    emitLearning('evidence_opened');
   };
 
   const evidenceButton = (
@@ -38,7 +67,7 @@ export function RequirementEvidenceActions({
       size="sm"
       variant="outline"
       className="h-auto min-h-9 whitespace-normal text-left"
-      onClick={onAddEvidence}
+      onClick={handleAddEvidence}
     >
       I have this — add evidence
     </Button>
@@ -67,7 +96,7 @@ export function RequirementEvidenceActions({
             className="h-auto min-h-9 whitespace-normal text-left"
             asChild
           >
-            <Link to={evidenceHref}>I have this — add evidence</Link>
+            <Link to={evidenceHref} onClick={handleEvidenceLink}>I have this — add evidence</Link>
           </Button>
         ) : (
           evidenceButton
@@ -165,6 +194,7 @@ export function RequirementEvidenceActions({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 inline-flex items-center gap-1 text-primary hover:underline"
+                  onClick={() => emitLearning('resource_requested')}
                 >
                   Open external resource{" "}
                   <ExternalLink className="h-3.5 w-3.5" />

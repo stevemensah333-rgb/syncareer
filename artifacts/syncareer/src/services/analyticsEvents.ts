@@ -1,3 +1,23 @@
+/**
+ * Typed analytics catalogue — single source of truth.
+ *
+ * Design constraints (from Prompt 0):
+ * - No free-text payloads, no CV content, messages, transcripts, job descriptions, names, emails.
+ * - Coarse enums/counts only.
+ * - All properties validated at runtime via ANALYTICS_PROPERTY_KEYS.
+ * - Owner and product question documented in docs/ANALYTICS.md; this file holds the type contract.
+ *
+ * Event ownership summary (detailed in docs/ANALYTICS.md):
+ * - Growth: public_cta_selected, sign_up_started, account_created
+ * - Product: onboarding_completed, opportunities_*, application_*, cv_*, interview_*, assessment_*, contextual_*
+ * - Eng: device checks, save failures, session failures
+ * - AI: contextual_ai_*
+ * - Learning: contextual_learning_actioned
+ *
+ * Retention assumption (needs owner confirmation): 30d raw, 90d aggregated, then deletion.
+ * PostHog project must have autocapture=false, pageview=false, session recording disabled (enforced in analytics.ts).
+ */
+
 export const ANALYTICS_EVENTS = {
   PAGE_VIEWED: 'page_viewed',
   PUBLIC_CTA_SELECTED: 'public_cta_selected',
@@ -35,8 +55,8 @@ export const ANALYTICS_EVENTS = {
 export type AnalyticsEventName = typeof ANALYTICS_EVENTS[keyof typeof ANALYTICS_EVENTS];
 type AuthMethod = 'email' | 'google';
 type UserRole = 'student' | 'career_counsellor' | 'unknown';
-type Surface = 'opportunity' | 'application' | 'cv';
-type AssistantTask = 'opportunity.explain_requirement' | 'opportunity.compare_evidence' | 'opportunity.research_questions' | 'cv.rewrite_bullet' | 'application.draft_follow_up' | 'application.clarify_next_action' | 'application.organise_notes' | 'interview.explain_feedback' | 'interview.practice_question';
+export type Surface = 'opportunity' | 'application' | 'cv';
+export type AssistantTask = 'opportunity.explain_requirement' | 'opportunity.compare_evidence' | 'opportunity.research_questions' | 'cv.rewrite_bullet' | 'application.draft_follow_up' | 'application.clarify_next_action' | 'application.organise_notes' | 'interview.explain_feedback' | 'interview.practice_question';
 
 export interface AnalyticsEventProperties {
   page_viewed: { route: 'landing' | 'auth' | 'onboarding' | 'dashboard' | 'opportunities' | 'applications' | 'cv_builder' | 'interview' | 'assessment' | 'pricing' | 'settings' | 'other' };

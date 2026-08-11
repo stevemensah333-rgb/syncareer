@@ -98,8 +98,19 @@ export default function ApplicationTracker() {
     setStatusSaving(false);
     if (!result.ok) { toast.error(result.userMessage); return; }
     setApplications((items) => items.map((item) => item.id === selected.id ? { ...item, status } : item));
-    if (status === 'rejected' || status === 'withdrawn' || status === 'offered') captureProductEvent(ANALYTICS_EVENTS.APPLICATION_OUTCOME_RECORDED, { outcome: status });
-    else captureProductEvent(ANALYTICS_EVENTS.APPLICATION_STAGE_RECORDED, { stage: stageForStatus(status) ?? 'other' });
+    if (status === 'rejected' || status === 'withdrawn' || status === 'offered') {
+      captureProductEvent(ANALYTICS_EVENTS.APPLICATION_OUTCOME_RECORDED, { outcome: status as 'offered' | 'rejected' | 'withdrawn' });
+    } else {
+      const mapped = (() => {
+        const s = stageForStatus(status);
+        if (s === 'applied') return 'applied' as const;
+        if (s === 'review') return 'considering' as const;
+        if (s === 'interview') return 'interview' as const;
+        if (s === 'offer') return 'offer' as const;
+        return 'other' as const;
+      })();
+      captureProductEvent(ANALYTICS_EVENTS.APPLICATION_STAGE_RECORDED, { stage: mapped });
+    }
     toast.success(`Stage updated to ${statusLabel(status)}`);
   };
 
