@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { memo, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,115 @@ const DEADLINE_FILTERS = [
 
 type LoadStatus = 'loading' | 'error' | 'ready';
 const SCROLL_STORAGE_KEY = 'syncareer.opportunities.scrollTop';
+
+interface OpportunityRowProps {
+  job: OpportunityJob;
+  saved: boolean;
+  saving: boolean;
+  isSelected: boolean;
+  bookmarkDisabled: boolean;
+  application: ApplicationRef | null;
+  onSelect: (jobId: string) => void;
+  onToggleSave: (jobId: string) => void;
+  onRowKeyDown: (event: React.KeyboardEvent<HTMLButtonElement>, jobId: string) => void;
+}
+
+/**
+ * One opportunity row. Memoized so typing in the search box only re-renders
+ * rows whose inputs actually changed — with an unbounded feed this list can
+ * hold hundreds of rows, and re-rendering all of them per keystroke made
+ * search visibly lag.
+ */
+const OpportunityRow = memo(function OpportunityRow({
+  job,
+  saved,
+  saving,
+  isSelected,
+  bookmarkDisabled,
+  application,
+  onSelect,
+  onToggleSave,
+  onRowKeyDown,
+}: OpportunityRowProps) {
+  const deadline = getDeadlineState(job.application_deadline);
+  const organisation = getOrganisation(job);
+  const workMode = getWorkModeLabel(job);
+  const provenance = getProvenanceFacts(job);
+  const freshness = getIngestionFreshness(job.updated_at);
+  return (
+    <div className="relative">
+      <OpportunityPreview job={job} saved={saved} application={application}>
+        <button
+          onClick={() => onSelect(job.id)}
+          onKeyDown={(event) => onRowKeyDown(event, job.id)}
+          data-opportunity-id={job.id}
+          aria-label={`${job.title}${organisation ? ` at ${organisation}` : ''}. Open details.`}
+          aria-current={isSelected ? 'true' : undefined}
+          className={`w-full text-left p-4 pr-12 border-l-4 transition-colors ${
+            isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50'
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <CompanyLogo job={job} size={40} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-semibold text-sm leading-tight truncate">{job.title}</h3>
+                {saved ? <BookmarkCheck className="h-4 w-4 shrink-0 text-primary" aria-label="Saved" /> : null}
+              </div>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                {organisation ?? 'Organisation not specified'}
+              </p>
+              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {job.location}
+                </span>
+                {workMode && <span>{workMode}</span>}
+                <span className="capitalize">{job.employment_type}</span>
+              </div>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {deadline.kind === 'none' ? <span className="text-xs text-muted-foreground">Deadline not provided</span> : <DeadlinePill state={deadline} />}
+                {job.is_external && (
+                  <Badge variant="outline" className="text-[10px] capitalize px-1.5 py-0">
+                    via {provenance.sourceLabel}
+                  </Badge>
+                )}
+                <span className={`text-[10px] ${freshness.kind === 'stale' ? 'text-warning' : 'text-muted-foreground'}`}>{freshness.label}</span>
+                {application && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                      STATUS_COLORS[application.status] ?? 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    Tracked · {statusLabel(application.status)}
+                  </span>
+                )}
+                {saved && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <BookmarkCheck className="h-3 w-3 text-primary" />
+                    Saved
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </button>
+      </OpportunityPreview>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="absolute right-2 top-2 h-9 w-9"
+        onClick={() => onToggleSave(job.id)}
+        disabled={saving || bookmarkDisabled}
+        aria-label={saved ? `Unsave ${job.title}` : `Save ${job.title}`}
+        aria-pressed={saved}
+      >
+        {saved ? <BookmarkCheck className="h-4 w-4 text-primary" /> : <Bookmark className="h-4 w-4" />}
+      </Button>
+    </div>
+  );
+});
 
 const Opportunities = () => {
   const navigate = useNavigate();
@@ -187,8 +296,19 @@ const Opportunities = () => {
     if (loadStatus === 'ready') captureProductEvent(ANALYTICS_EVENTS.OPPORTUNITIES_VIEWED, { view: tab });
   }, [loadStatus, tab]);
 
-  const toggleSave = async (jobId: string) => {
-    if (pendingSaveIds.current.has(jobId) || partialWarning) return;
+  // Rows are memoized and receive stable callbacks. These refs let the
+  // callbacks read the latest state without being recreated on every render.
+  const savedIdsRef = useRef(savedIds);
+  savedIdsRef.current = savedIds;
+  const jobsRef = useRef(jobs);
+  jobsRef.current = jobs;
+  const partialWarningRef = useRef(partialWarning);
+  partialWarningRef.current = partialWarning;
+  const filteredRef = useRef(filtered);
+  filteredRef.current = filtered;
+
+  const toggleSave = useCallback(async (jobId: string) => {
+    if (pendingSaveIds.current.has(jobId) || partialWarningRef.current) return;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -196,7 +316,7 @@ const Opportunities = () => {
       toast.error('Please sign in to save opportunities');
       return;
     }
-    const wasSaved = savedIds.has(jobId);
+    const wasSaved = savedIdsRef.current.has(jobId);
     const version = (saveRequestVersions.current.get(jobId) ?? 0) + 1;
     saveRequestVersions.current.set(jobId, version);
     pendingSaveIds.current.add(jobId);
@@ -219,7 +339,7 @@ const Opportunities = () => {
           .from('saved_jobs')
           .insert({ user_id: user.id, job_id: jobId });
         if (error && error.code !== '23505') throw error;
-        const job = jobs.find((item) => item.id === jobId);
+        const job = jobsRef.current.find((item) => item.id === jobId);
         captureProductEvent(ANALYTICS_EVENTS.OPPORTUNITY_SAVED, { source_kind: job?.is_external ? 'external' : 'native' });
         toast.success('Saved — find it under the Saved tab');
       }
@@ -242,7 +362,7 @@ const Opportunities = () => {
         });
       }
     }
-  };
+  }, []);
 
   /**
    * Turn an opportunity into a tracked application. This is the single
@@ -310,111 +430,30 @@ const Opportunities = () => {
 
   const isLoading = loadStatus === 'loading';
 
-  const handleRowKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, jobId: string) => {
-    const index = filtered.findIndex((job) => job.id === jobId);
+  const handleRowKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>, jobId: string) => {
+    const rows = filteredRef.current;
+    const index = rows.findIndex((job) => job.id === jobId);
     if (index < 0) return;
     let target = index;
-    if (event.key === 'ArrowDown') target = Math.min(filtered.length - 1, index + 1);
+    if (event.key === 'ArrowDown') target = Math.min(rows.length - 1, index + 1);
     else if (event.key === 'ArrowUp') target = Math.max(0, index - 1);
     else if (event.key === 'Home') target = 0;
-    else if (event.key === 'End') target = filtered.length - 1;
+    else if (event.key === 'End') target = rows.length - 1;
     else return;
     event.preventDefault();
-    const next = filtered[target];
+    const next = rows[target];
     if (!next) return;
     setSelectedId(next.id);
     requestAnimationFrame(() => {
       listRef.current?.querySelector<HTMLButtonElement>(`[data-opportunity-id="${next.id}"]`)?.focus();
     });
-  };
+  }, []);
 
-  const renderJobRow = (job: OpportunityJob) => {
-    const deadline = getDeadlineState(job.application_deadline);
-    const organisation = getOrganisation(job);
-    const workMode = getWorkModeLabel(job);
-    const provenance = getProvenanceFacts(job);
-    const freshness = getIngestionFreshness(job.updated_at);
-    const application = applicationsByJob.get(job.id) ?? null;
-    const saved = savedIds.has(job.id);
-    const isSelected = selected?.id === job.id;
-    return (
-      <div key={job.id} className="relative">
-      <OpportunityPreview job={job} saved={saved} application={application}>
-        <button
-          onClick={() => {
-            openMobileOnSelection.current = true;
-            setSelectedId(job.id);
-            if (window.innerWidth < 1024) setMobileDetailOpen(true);
-          }}
-          onKeyDown={(event) => handleRowKeyDown(event, job.id)}
-          data-opportunity-id={job.id}
-          aria-label={`${job.title}${organisation ? ` at ${organisation}` : ''}. Open details.`}
-          aria-current={isSelected ? 'true' : undefined}
-          className={`w-full text-left p-4 pr-12 border-l-4 transition-colors ${
-            isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50'
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <CompanyLogo job={job} size={40} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-semibold text-sm leading-tight truncate">{job.title}</h3>
-                {saved ? <BookmarkCheck className="h-4 w-4 shrink-0 text-primary" aria-label="Saved" /> : null}
-              </div>
-              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                {organisation ?? 'Organisation not specified'}
-              </p>
-              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {job.location}
-                </span>
-                {workMode && <span>{workMode}</span>}
-                <span className="capitalize">{job.employment_type}</span>
-              </div>
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
-                {deadline.kind === 'none' ? <span className="text-xs text-muted-foreground">Deadline not provided</span> : <DeadlinePill state={deadline} />}
-                {job.is_external && (
-                  <Badge variant="outline" className="text-[10px] capitalize px-1.5 py-0">
-                    via {provenance.sourceLabel}
-                  </Badge>
-                )}
-                <span className={`text-[10px] ${freshness.kind === 'stale' ? 'text-warning' : 'text-muted-foreground'}`}>{freshness.label}</span>
-                {application && (
-                  <span
-                    className={`text-[10px] px-1.5 py-0 rounded-full font-medium ${
-                      STATUS_COLORS[application.status] ?? 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    Tracked · {statusLabel(application.status)}
-                  </span>
-                )}
-                {saved && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                    <BookmarkCheck className="h-3 w-3 text-primary" />
-                    Saved
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </button>
-      </OpportunityPreview>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="absolute right-2 top-2 h-9 w-9"
-          onClick={() => toggleSave(job.id)}
-          disabled={savingIds.has(job.id) || Boolean(partialWarning)}
-          aria-label={saved ? `Unsave ${job.title}` : `Save ${job.title}`}
-          aria-pressed={saved}
-        >
-          {saved ? <BookmarkCheck className="h-4 w-4 text-primary" /> : <Bookmark className="h-4 w-4" />}
-        </Button>
-      </div>
-    );
-  };
+  const handleSelect = useCallback((jobId: string) => {
+    openMobileOnSelection.current = true;
+    setSelectedId(jobId);
+    if (window.innerWidth < 1024) setMobileDetailOpen(true);
+  }, []);
 
   const emptyState = () => {
     if (tab === 'saved' && savedIds.size === 0) {
@@ -604,7 +643,20 @@ const Opportunities = () => {
                     )}
                   </div>
                 ) : (
-                  filtered.map(renderJobRow)
+                  filtered.map((job) => (
+                    <OpportunityRow
+                      key={job.id}
+                      job={job}
+                      saved={savedIds.has(job.id)}
+                      saving={savingIds.has(job.id)}
+                      isSelected={selected?.id === job.id}
+                      bookmarkDisabled={Boolean(partialWarning)}
+                      application={applicationsByJob.get(job.id) ?? null}
+                      onSelect={handleSelect}
+                      onToggleSave={toggleSave}
+                      onRowKeyDown={handleRowKeyDown}
+                    />
+                  ))
                 )}
               </div>
             </Card>

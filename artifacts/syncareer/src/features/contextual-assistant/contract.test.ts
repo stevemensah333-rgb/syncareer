@@ -25,6 +25,41 @@ describe('contextual assistant v2 contract', () => {
     await expect(requestContextualAssistance('cv.rewrite_bullet', 'Rewrite', [{ id: 'bullet', label: 'Selected CV bullet', provenance: 'selected_cv_text', content: 'Built a tool' }])).rejects.toMatchObject({ code });
   });
 
+  it('passes the abort signal to fetch and maps cancellation to a cancelled error', async () => {
+    const controller = new AbortController();
+    const fetchMock = vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      expect(init.signal).toBe(controller.signal);
+      return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(
+      requestContextualAssistance('cv.rewrite_bullet', 'Rewrite', [{ id: 'bullet', label: 'Selected CV bullet', provenance: 'selected_cv_text', content: 'Built a tool' }], controller.signal),
+    ).rejects.toMatchObject({ code: 'cancelled' });
+  });
+
+  it('rejects immediately when the signal is already aborted', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const controller = new AbortController();
+    controller.abort();
+    await expect(
+      requestContextualAssistance('cv.rewrite_bullet', 'Rewrite', [{ id: 'bullet', label: 'Selected CV bullet', provenance: 'selected_cv_text', content: 'Built a tool' }], controller.signal),
+    ).rejects.toMatchObject({ code: 'cancelled' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('drops a response that arrives after the caller aborted', async () => {
+    const controller = new AbortController();
+    const fetchMock = vi.fn().mockImplementation(async () => {
+      controller.abort();
+      return response({ version: 2, requestId: '00000000-0000-4000-8000-000000000001', proposal: { kind: 'explanation', text: 'Stale', sourceContextIds: ['bullet'] }, usage: { consumed: true, used: 1, limit: 5 } });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(
+      requestContextualAssistance('cv.rewrite_bullet', 'Rewrite', [{ id: 'bullet', label: 'Selected CV bullet', provenance: 'selected_cv_text', content: 'Built a tool' }], controller.signal),
+    ).rejects.toMatchObject({ code: 'cancelled' });
+  });
+
   it('rejects malformed, empty and context-inventing output', async () => {
     for (const payload of [
       { version: 2, requestId: '00000000-0000-4000-8000-000000000001', proposal: null, usage: { consumed: false, used: 0, limit: 5 } },

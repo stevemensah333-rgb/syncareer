@@ -61,4 +61,29 @@ describe('ApplicationWorkspaceDetail', () => {
     fireEvent.click(screen.getByRole('button', { name: /Back to applications/i }));
     expect(props.onBack).toHaveBeenCalledTimes(1);
   });
+
+  // Regression: the sections used to be defined as nested component functions,
+  // which gave them a fresh type identity on every parent render. Each
+  // keystroke then unmounted and remounted the whole workspace subtree,
+  // dropping focus from the input being typed into.
+  it('keeps the notes textarea mounted and focused while typing', () => {
+    renderDetail();
+    const notes = screen.getByLabelText('Application notes') as HTMLTextAreaElement;
+    fireEvent.focus(notes);
+    fireEvent.change(notes, { target: { value: 'Original note, still typing' } });
+
+    // The same DOM node must survive the re-render caused by typing.
+    expect(screen.getByLabelText('Application notes')).toBe(notes);
+    expect(notes.value).toBe('Original note, still typing');
+  });
+
+  it('keeps the next-action input mounted while typing', () => {
+    renderDetail();
+    const action = screen.getByLabelText('Next action') as HTMLInputElement;
+    fireEvent.focus(action);
+    fireEvent.change(action, { target: { value: 'Follow up with the panel' } });
+
+    expect(screen.getByLabelText('Next action')).toBe(action);
+    expect(action.value).toBe('Follow up with the panel');
+  });
 });
