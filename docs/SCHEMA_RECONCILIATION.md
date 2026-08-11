@@ -314,3 +314,48 @@ For project reference `fsorkxlcasekndigezlx`:
 | Lovable safe schema-change regeneration cycle | Blocked until the owner confirms an existing Test environment or another approved non-production Lovable workflow. |
 
 No production migration, row write, schema write, function deployment, migration repair, remote type generation, or personal-account Supabase link was performed.
+
+## 13. Follow-up migrations reported by the opportunity→application workflow work (NOT applied)
+
+The opportunity-to-application workflow implemented on 2026-08-10 runs entirely within the
+current schema (`job_postings`, `saved_jobs`, `job_applications` incl. `notes`/`resume_url`,
+`resumes`). During that work the following schema limitations were identified. They are
+**reported, not applied**, per the prohibitions above; each would need the usual migration +
+rollback plan + verification before any remote change.
+
+1. **Listing verification/freshness evidence.** `job_postings` has no verification columns,
+   so the UI never claims a listing is verified or current and shows provenance
+   (source, source URL, posted/updated timestamps) plus an explicit
+   "not independently verified" note instead. To support a real freshness signal the
+   aggregator would eventually need:
+
+   ```sql
+   ALTER TABLE public.job_postings
+     ADD COLUMN last_seen_at timestamptz NULL,
+     ADD COLUMN verification_source text NULL;
+   -- populated by the aggregate-external-jobs Edge Function; NULL = no evidence (honest default)
+   ```
+
+2. **Per-application targeted CV.** The tracker surfaces the user's *primary* CV
+   (`resumes.user_id + is_primary` convention) because `job_applications` cannot reference a
+   specific resume row (`resume_url` is a free-text URL). To target one CV per application:
+
+   ```sql
+   ALTER TABLE public.job_applications
+     ADD COLUMN resume_id uuid NULL REFERENCES public.resumes(id) ON DELETE SET NULL;
+   CREATE INDEX idx_job_applications_resume ON public.job_applications(resume_id);
+   ```
+
+3. **Status vocabulary constraint (optional hardening).** `job_applications.status` is
+   unconstrained text; the app tolerates unknown values and groups the known ones
+   (pending/reviewing/shortlisted/interview/offered + terminal hired/rejected/withdrawn).
+   A CHECK constraint would formalise this but must first reconcile any legacy/unknown
+   stored values, so it remains a live-data decision:
+
+   ```sql
+   ALTER TABLE public.job_applications
+     ADD CONSTRAINT job_applications_status_known CHECK (
+       status IN ('pending','reviewing','shortlisted','interview','offered','hired','rejected','withdrawn')
+     );
+   -- Requires: audit stored statuses first (SELECT DISTINCT status, count(*) FROM job_applications GROUP BY 1)
+   ```

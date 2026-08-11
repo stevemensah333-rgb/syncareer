@@ -1,51 +1,19 @@
 // Pure helpers for the Home journey — no React, no Supabase IO.
+//
+// The application-status vocabulary (labels, ordering, next-step copy) is
+// canonical in `features/application-tracker/workflow.ts`; it is re-exported
+// here so existing Home imports and tests keep a single stable surface.
 
-export type ApplicationStatus =
-  | 'pending'
-  | 'reviewing'
-  | 'shortlisted'
-  | 'interview'
-  | 'offered'
-  | 'hired'
-  | 'rejected'
-  | 'withdrawn'
-  | string;
+export {
+  ACTIVE_STATUSES,
+  ORDERED_STATUSES,
+  STATUS_LABELS,
+  isActiveStatus,
+  nextStepForApplicationStatus,
+  statusLabel,
+} from '@/features/application-tracker/workflow';
 
-export const ACTIVE_STATUSES: ApplicationStatus[] = [
-  'pending',
-  'reviewing',
-  'shortlisted',
-  'interview',
-  'offered',
-];
-
-export const ORDERED_STATUSES: ApplicationStatus[] = [
-  'pending',
-  'reviewing',
-  'shortlisted',
-  'interview',
-  'offered',
-  'hired',
-];
-
-export const STATUS_LABELS: Record<string, string> = {
-  pending: 'Applied',
-  reviewing: 'Under review',
-  shortlisted: 'Shortlisted',
-  interview: 'Interview',
-  offered: 'Offered',
-  hired: 'Hired',
-  rejected: 'Closed',
-  withdrawn: 'Withdrawn',
-};
-
-export function statusLabel(status: string): string {
-  return STATUS_LABELS[status] ?? status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-export function isActiveStatus(status: string): boolean {
-  return ACTIVE_STATUSES.includes(status);
-}
+export type { ApplicationStatus, NextStepForStatus } from '@/features/application-tracker/workflow';
 
 export function getDaysUntilDeadline(deadline: string | null | undefined): number | null {
   if (!deadline) return null;
@@ -87,85 +55,6 @@ export function scoreResume(resume: any): number {
   // clamp + round down to avoid fake precision, also handle achievements as bonus
   if (Array.isArray(resume.achievements) && resume.achievements.length > 0) score += 5;
   return Math.min(100, score);
-}
-
-export interface NextStepForStatus {
-  title: string;
-  description: string;
-  ctaLabel: string;
-  href: string;
-}
-
-export function nextStepForApplicationStatus(
-  status: string,
-  jobTitle: string
-): NextStepForStatus {
-  const role = jobTitle || 'this role';
-  switch (status) {
-    case 'pending':
-      return {
-        title: 'Application under review',
-        description: `Your application for ${role} has been received. Use this time to tailor your CV for similar roles or practise interview questions for ${role}.`,
-        ctaLabel: 'Practise interview',
-        href: '/interview-simulator',
-      };
-    case 'reviewing':
-      return {
-        title: 'Recruiter is reviewing',
-        description: `The team is reviewing your application for ${role}. Prepare for the next stage by rehearsing role-specific answers.`,
-        ctaLabel: 'Prepare for interview',
-        href: '/practice',
-      };
-    case 'shortlisted':
-      return {
-        title: 'You have been shortlisted',
-        description: `Great progress on ${role}. Focus your next hour on interview practice and refining your key stories.`,
-        ctaLabel: 'Practise interview',
-        href: `/interview-simulator?role=${encodeURIComponent(role)}`,
-      };
-    case 'interview':
-      return {
-        title: 'Interview stage',
-        description: `You're in interviews for ${role}. Run a mock interview and review your CV alignment with the posting.`,
-        ctaLabel: 'Run mock interview',
-        href: `/interview-simulator?role=${encodeURIComponent(role)}`,
-      };
-    case 'offered':
-      return {
-        title: 'Offer received',
-        description: `You have an offer for ${role}. When you're ready, record the outcome so your tracker stays accurate.`,
-        ctaLabel: 'Record outcome',
-        href: '/applications',
-      };
-    case 'hired':
-      return {
-        title: 'Hired — congratulations',
-        description: `Your application for ${role} is marked as hired. Keep your CV updated for future opportunities.`,
-        ctaLabel: 'Update CV',
-        href: '/cv-builder',
-      };
-    case 'rejected':
-      return {
-        title: 'Application closed',
-        description: `Your application for ${role} has been closed. Review feedback if available and apply your learnings to the next role.`,
-        ctaLabel: 'Find new roles',
-        href: '/opportunities',
-      };
-    case 'withdrawn':
-      return {
-        title: 'Application withdrawn',
-        description: `You withdrew from ${role}. Your other applications are still active.`,
-        ctaLabel: 'Browse opportunities',
-        href: '/opportunities',
-      };
-    default:
-      return {
-        title: 'Keep momentum',
-        description: `Stay active on ${role} — review the posting, improve your CV, and practise key interview answers.`,
-        ctaLabel: 'Open tracker',
-        href: '/applications',
-      };
-  }
 }
 
 export function timeAgo(dateString: string): string {
