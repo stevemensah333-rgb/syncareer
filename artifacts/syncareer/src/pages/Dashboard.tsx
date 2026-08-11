@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/dashboard/home/EmptyState';
 import { ACTIVE_STATUSES, scoreResume, getDaysUntilDeadline } from '@/components/dashboard/home/utils';
 import { SavedDecisions } from '@/components/dashboard/home/SavedDecisions';
 import { applicationCompany, applicationTitle, dashboardDataState, selectPrimaryFocus, type DashboardApplication, type DashboardSavedJob } from '@/features/dashboard/continuation';
+import { loadDashboardData, type DashboardLoadError } from '@/features/dashboard/data';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -22,7 +23,7 @@ export default function Dashboard() {
 
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
-  const [loadErrors, setLoadErrors] = useState<string[]>([]);
+  const [loadErrors, setLoadErrors] = useState<DashboardLoadError[]>([]);
   const [assessmentDone, setAssessmentDone] = useState(false);
   const [applications, setApplications] = useState<DashboardApplication[]>([]);
   const [savedJobs, setSavedJobs] = useState<DashboardSavedJob[]>([]);
@@ -43,84 +44,30 @@ export default function Dashboard() {
       setLoading(true);
       setLoadErrors([]);
       try {
-        const [assessmentRes, appsRes, savedRes, resumeRes] = await Promise.all([
-          supabase
-            .from('assessments')
-            .select('completed_at')
-            .eq('user_id', userId)
-            .not('completed_at', 'is', null)
-            .order('completed_at', { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-          supabase
-            .from('job_applications')
-            .select(`
-              id, status, created_at, updated_at, next_action, next_action_due, resume_id,
-              job_title_snapshot, company_name_snapshot,
-              job:job_postings(id, title, company_name, location, employment_type, application_deadline)
-            `)
-            .eq('applicant_id', userId)
-            .order('updated_at', { ascending: false })
-            .limit(12),
-          supabase
-            .from('saved_jobs')
-            .select(`
-              job_id, created_at,
-              job:job_postings(id, title, company_name, location, employment_type, application_deadline)
-            `)
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(8),
-          supabase
-            .from('resumes')
-            .select('personal_info, education, experience, skills, projects, achievements, updated_at')
-            .eq('user_id', userId)
-            .eq('is_primary', true)
-            .maybeSingle(),
-        ]);
-
+        const bundle = await loadDashboardData(supabase, userId);
         if (cancelled) return;
 
-        const failures = [
-          assessmentRes.error && 'assessment', appsRes.error && 'applications', savedRes.error && 'saved opportunities',
-          resumeRes.error && 'CV',
-        ].filter((value): value is string => Boolean(value));
-        setLoadErrors(failures);
+        setLoadErrors(bundle.errors);
+        setAssessmentDone(bundle.assessmentDone);
+        setApplications(bundle.applications);
+        setSavedJobs(bundle.savedJobs);
+        setCvCompletion(bundle.resume ? scoreResume(bundle.resume) : 0);
 
-        if (assessmentRes.data) {
-          setAssessmentDone(true);
+        if (bundle.errors.length > 0) {
+          console.warn('[Dashboard] Some data sources were unavailable', {
+            sources: bundle.errors,
+          });
         }
-
-        const appRows: DashboardApplication[] = (appsRes.data as any[] | null)?.map((r: any) => ({
-          id: r.id,
-          status: r.status,
-          created_at: r.created_at,
-          updated_at: r.updated_at,
-          next_action: r.next_action ?? null,
-          next_action_due: r.next_action_due ?? null,
-          resume_id: r.resume_id ?? null,
-          job_title_snapshot: r.job_title_snapshot ?? null,
-          company_name_snapshot: r.company_name_snapshot ?? null,
-          job: r.job ?? null,
-        })) ?? [];
-        setApplications(appRows);
-
-        const savedRows: DashboardSavedJob[] = (savedRes.data as any[] | null)?.map((r: any) => ({
-          job_id: r.job_id,
-          created_at: r.created_at,
-          job: r.job ?? null,
-        })) ?? [];
-        setSavedJobs(savedRows);
-
-        const resumeData = resumeRes.data as any;
-        if (resumeData) {
-          setCvCompletion(scoreResume(resumeData));
-        } else {
-          setCvCompletion(0);
-        }
-      } catch (e) {
-        console.error('Dashboard load error', e);
-        setLoadErrors(['dashboard']);
+      } catch {
+        // The loader settles each database request independently. Reaching this
+        // branch means the aggregation itself failed, so the application source
+        // is treated as unavailable rather than presenting a false empty state.
+        console.error('[Dashboard] Data aggregation failed');
+        setLoadErrors(['applications']);
+        setAssessmentDone(false);
+        setApplications([]);
+        setSavedJobs([]);
+        setCvCompletion(0);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -155,7 +102,7 @@ export default function Dashboard() {
       const days = getDaysUntilDeadline(dl);
       if (days === null || days < 0 || days > 30) continue;
       // avoid duplicating if already tracked via application for same job id
-      if (applications.some(a => (a.job as any)?.id === saved.job_id)) continue;
+      if (applications.some((application) => application.job?.id === saved.job_id)) continue;
       all.push({
         id: `saved-${saved.job_id}`,
         title: saved.job?.title ?? 'Saved role',
@@ -187,11 +134,11 @@ export default function Dashboard() {
     const actions: NextAction[] = [];
     const activeApplication = primaryFocus.type === 'application' ? primaryFocus.data : null;
 
-    if (activeApplication && !activeApplication.resume_id) {
+    if (activeApplication) {
       actions.push({
-        id: 'link-cv',
-        title: cvCompletion === 0 ? 'Create a CV for this application' : 'Link and review your CV',
-        description: `Prepare evidence for ${applicationTitle(activeApplication)} and link the right CV from its workspace.`,
+        id: 'review-cv',
+        title: cvCompletion === 0 ? 'Create a CV for this application' : 'Review your CV for this application',
+        description: `Prepare evidence for ${applicationTitle(activeApplication)} and tailor your CV to the role requirements.`,
         href: `/cv-builder?application=${encodeURIComponent(activeApplication.id)}&targetRole=${encodeURIComponent(applicationTitle(activeApplication))}`,
         icon: 'cv',
       });

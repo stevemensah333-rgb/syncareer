@@ -104,11 +104,30 @@ export default function SignUpForm() {
           <Button asChild className="w-full"><Link to="/sign-in">Continue to sign in</Link></Button>
         </div>
       ) : <>
-      <div className="space-y-4 mb-5">
-        <GoogleSignInButton label="Sign up with Google" returnTo={returnTo === '/' ? '/onboarding' : returnTo} />
+      <div className="mb-5 space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="user-type">I'm joining as</Label>
+          <Select value={userType} onValueChange={setUserType}>
+            <SelectTrigger id="user-type" className="h-11">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ROLE_OPTIONS.map((role) => (
+                <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {userType === 'student' ? (
+          <GoogleSignInButton label="Sign up with Google" returnTo={returnTo === '/' ? '/onboarding' : returnTo} />
+        ) : (
+          <p className="rounded-lg border bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">
+            Counsellor accounts use email sign-up so the selected account role is preserved for verification.
+          </p>
+        )}
         <div className="flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
           <div className="h-px flex-1 bg-border" />
-          <span>or</span>
+          <span>{userType === 'student' ? 'or use email' : 'continue with email'}</span>
           <div className="h-px flex-1 bg-border" />
         </div>
       </div>
@@ -138,19 +157,6 @@ export default function SignUpForm() {
           />
         </div>
         <PasswordField id="sign-up-password" label="Password" value={password} onChange={setPassword} autoComplete="new-password" minLength={8} description="At least 8 characters." />
-        <div className="space-y-1.5">
-          <Label htmlFor="user-type">I'm joining as</Label>
-          <Select value={userType} onValueChange={setUserType}>
-            <SelectTrigger id="user-type" className="h-11">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-background z-50">
-              {ROLE_OPTIONS.map((r) => (
-                <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
         {errorMessage ? <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive">{errorMessage}</div> : null}
         <Button
           type="submit"

@@ -77,13 +77,22 @@ muted/sidebar surfaces rather than lavender.
 - Operational workspace typography is the established Inter/sans stack.
   Decorative serif styling remains scoped to public/editorial surfaces.
 
-## Authentication shell
+## Authentication and onboarding shells
 
 Authentication routes use the same `app-canvas`, sans-serif type, semantic
 colours, 8–12px radii, quiet borders, and 150ms interaction rhythm as the
-application. They intentionally use one compact working surface rather than
-the landing-page cream/amber palette, decorative serif type, blurred ornaments,
-or marketing motion.
+application. Onboarding uses a flat `--background` workspace canvas, the same
+compact Syncareer identity treatment, standard bordered cards, and the shared
+form controls. Both intentionally avoid the landing-page cream/amber palette,
+decorative serif or italic headings, blurred ornaments, pill-shaped marketing
+cards, and marketing motion.
+
+Onboarding is a two-step welcome → role-specific profile flow. Progress is
+explicit, previously saved details are restored before editing, and the form
+uses the canonical `student` / `career_counsellor` role supplied at signup; it
+does not offer client-side privileged role reassignment. Initial-load and save
+failures remain visible with a retry path instead of leaving the user on a
+spinner or an empty surface.
 
 Auth feedback stays visible inline: pending buttons retain an action-specific
 label, errors use `destructive`, confirmation uses `success`, and expired-link
