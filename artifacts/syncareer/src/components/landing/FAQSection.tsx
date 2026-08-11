@@ -1,80 +1,63 @@
-import { useState } from "react";
-import { Plus, Minus } from "lucide-react";
-import AnimatedSection from "./AnimatedSection";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
-const FAQS = [
+export const LANDING_FAQS = [
   {
-    q: "Is Syncareer really free?",
-    a: "Yes. The career assessment, CV builder starter, and interview practice starter are free forever. There is no card required to start and no upsell inside the assessment.",
+    q: "Do I need an account to use Syncareer?",
+    a: "You can take the career assessment without an account. Saving opportunities, building a CV, tracking applications, using interview practice, and checking in-app counsellor availability require you to sign in. Some features also depend on your account's access level.",
   },
   {
-    q: "How long does the assessment take?",
-    a: "About 5 minutes. It uses a research-backed RIASEC diagnostic plus a short skills and interests pass, then maps you against 25+ career paths with an explanation for every recommendation.",
+    q: "Does Syncareer apply to roles for me?",
+    a: "No. For externally sourced opportunities, you apply on the original posting. You can then record that you applied so the role, deadline, notes, preparation, stage, and outcome stay organised in your workspace.",
   },
   {
-    q: "Will the CV pass ATS filters?",
-    a: "No builder can guarantee an ATS outcome. Syncareer uses a clear single-column template and provides separate, deterministic completion and quality guidance so you can review your content before applying.",
+    q: "Are the opportunities verified by Syncareer?",
+    a: "No. Opportunities can be aggregated from external sources and are not independently verified by Syncareer. The product shows the stored source and original link where available so you can confirm the role, requirements, and deadline before applying.",
   },
   {
-    q: "What is SynAssist and how does the interview practice work?",
-    a: "SynAssist is our voice-based interview coach. You pick the role, it runs a structured, role-specific session, and you get calm, actionable feedback the same day — no theatrics, just rehearsal you can measure.",
+    q: "Does the CV quality score guarantee that my CV will pass an applicant tracking system?",
+    a: "No. Completion and quality are deterministic guidance based on meaningful fields and visible writing or evidence patterns. They do not predict applicant tracking system acceptance, interviews, or hiring outcomes.",
   },
   {
-    q: "Who are the career counsellors?",
-    a: "Vetted, experienced counsellors — many of them alumni from Ghanaian universities. You can browse profiles, read what they focus on, and book a one-on-one session directly through the platform.",
+    q: "How is interview practice made specific to a job?",
+    a: "You configure the target role, industry, interview type, session length, and optional job-description and CV context. Questions and feedback are AI-generated from that setup, so they should be reviewed critically rather than treated as an employer assessment.",
   },
   {
-    q: "Which universities and students is this built for?",
-    a: "Syncareer is built for senior high school, university, TVET students, and recent graduates across Ghana and the broader region. We currently work with 12+ partner universities and are expanding.",
+    q: "Can I book a career counsellor?",
+    a: "Signed-in students can check the in-app counsellor flow. A booking request is possible only when a published counsellor profile and an available time slot are returned. Availability varies, and the request remains pending until the counsellor responds.",
   },
 ];
 
 export default function FAQSection() {
-  const [open, setOpen] = useState<number | null>(0);
   return (
-    <section id="faqs" className="relative py-24 lg:py-32 bg-[#0a1512] text-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <AnimatedSection>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#00c4cc] text-center">
-            FAQs
-          </p>
-          <h2 className="mt-3 text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-center leading-[1.05]">
-            Questions students ask.
+    <section id="faqs" className="scroll-mt-24 border-b" aria-labelledby="faq-title">
+      <div className="mx-auto grid w-full max-w-[1400px] gap-10 px-4 py-20 sm:px-6 md:py-24 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16 lg:px-8">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">FAQ</p>
+          <h2 id="faq-title" className="mt-3 text-balance text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-4xl">
+            Questions worth answering before you start.
           </h2>
-        </AnimatedSection>
-
-        <div className="mt-14 divide-y divide-white/10 border-y border-white/10">
-          {FAQS.map((f, i) => {
-            const isOpen = open === i;
-            return (
-              <div key={f.q}>
-                <button
-                  onClick={() => setOpen(isOpen ? null : i)}
-                  className="w-full flex items-center justify-between gap-6 py-6 text-left group"
-                  aria-expanded={isOpen}
-                >
-                  <span className="text-lg font-medium text-white group-hover:text-[#00c4cc] transition-colors">
-                    {f.q}
-                  </span>
-                  <span className="h-8 w-8 grid place-items-center rounded-full border border-white/15 text-white/70 shrink-0 group-hover:border-[#00c4cc] group-hover:text-[#00c4cc] transition-colors">
-                    {isOpen ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                  </span>
-                </button>
-                <div
-                  className={`grid transition-all duration-300 ease-out ${
-                    isOpen ? "grid-rows-[1fr] opacity-100 pb-6" : "grid-rows-[0fr] opacity-0"
-                  }`}
-                >
-                  <div className="overflow-hidden">
-                    <p className="text-[15px] text-white/70 leading-relaxed max-w-3xl pr-12">
-                      {f.a}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">
+            Syncareer is designed to support your judgement, not replace it. These are the boundaries that matter most.
+          </p>
         </div>
+
+        <Accordion type="single" collapsible className="rounded-xl border bg-card px-4 sm:px-6">
+          {LANDING_FAQS.map((item, index) => (
+            <AccordionItem key={item.q} value={`faq-${index}`}>
+              <AccordionTrigger className="min-h-14 py-4 text-left text-sm font-semibold hover:no-underline sm:text-base">
+                {item.q}
+              </AccordionTrigger>
+              <AccordionContent className="max-w-3xl pb-5 pr-6 text-sm leading-6 text-muted-foreground">
+                {item.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
     </section>
   );

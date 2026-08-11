@@ -1,109 +1,114 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import syncareerLogo from "@/assets/syncareer-logo.svg";
 
 interface LandingHeaderProps {
   onSignIn: () => void;
   onSignUp: () => void;
+  primaryActionLabel?: string;
 }
 
 const NAV = [
-  { label: "How it works", href: "#how" },
-  { label: "What you get", href: "#tracks" },
-  { label: "FAQs", href: "#faqs" },
+  { label: "How it works", href: "/#workflow" },
+  { label: "Workspace", href: "/#workspace" },
+  { label: "Method", href: "/#method" },
+  { label: "FAQ", href: "/#faqs" },
 ];
 
-export default function LandingHeader({ onSignIn }: LandingHeaderProps) {
-  const [scrolled, setScrolled] = useState(false);
+export default function LandingHeader({
+  onSignIn,
+  onSignUp,
+  primaryActionLabel = "Get started",
+}: LandingHeaderProps) {
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
 
   return (
-    <>
-      {/* Header */}
-      <header
-        className={`sticky top-0 z-50 bg-[#f7f5ef] transition-all duration-300 ${
-          scrolled ? "border-b border-black/10 shadow-sm" : "border-b border-black/5"
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-6">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 shrink-0">
-            <img src={syncareerLogo} alt="Syncareer logo" className="h-7 w-7" />
-            <span className="text-[#0a1512] font-semibold tracking-tight text-lg">
-              Syncareer
-            </span>
-          </button>
+    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+      <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <Link to="/" className="flex min-h-11 items-center gap-2 rounded-md" aria-label="Syncareer home">
+          <img src={syncareerLogo} alt="" className="h-7 w-7" />
+          <span className="text-lg font-semibold tracking-tight">Syncareer</span>
+        </Link>
 
-          <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
+          {NAV.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Button variant="ghost" size="sm" onClick={onSignIn} className="hidden sm:inline-flex">
+            Sign in
+          </Button>
+          <Button size="sm" onClick={onSignUp} className="hidden sm:inline-flex">
+            {primaryActionLabel}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpen((value) => !value)}
+            className="lg:hidden"
+            aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={open}
+            aria-controls="landing-mobile-navigation"
+          >
+            {open ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+          </Button>
+        </div>
+      </div>
+
+      {open && (
+        <div id="landing-mobile-navigation" className="border-t bg-card lg:hidden">
+          <nav className="mx-auto flex w-full max-w-[1400px] flex-col px-4 py-3 sm:px-6" aria-label="Mobile navigation">
             {NAV.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="px-3 py-2 text-sm text-[#0a1512]/70 hover:text-[#0a1512] transition-colors rounded-full"
+                onClick={() => setOpen(false)}
+                className="flex min-h-11 items-center border-b text-sm font-medium text-foreground last:border-b-0"
               >
                 {item.label}
               </a>
             ))}
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onSignIn}
-              className="hidden sm:inline-flex h-9 px-4 items-center text-sm text-[#0a1512]/80 hover:text-[#0a1512] transition-colors"
-            >
-              Sign in
-            </button>
-            <button
-              onClick={() => navigate("/assessment")}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#00c4cc] text-[#0a1512] px-4 text-sm font-semibold hover:bg-[#33d4da] transition-colors shadow-[0_0_0_1px_rgba(0,196,204,0.4),0_10px_30px_-10px_rgba(0,196,204,0.5)]"
-            >
-              Start free
-            </button>
-            <button
-              onClick={() => setOpen(!open)}
-              className="lg:hidden h-9 w-9 grid place-items-center text-[#0a1512]/80 hover:text-[#0a1512]"
-              aria-label="Toggle menu"
-            >
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {open && (
-          <div className="lg:hidden border-t border-black/10 bg-[#f7f5ef]">
-            <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col">
-              {NAV.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className="py-3 text-[#0a1512]/80 hover:text-[#0a1512] border-b border-black/10"
-                >
-                  {item.label}
-                </a>
-              ))}
-              <button
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
                 onClick={() => {
-                  onSignIn();
                   setOpen(false);
+                  onSignIn();
                 }}
-                className="py-3 text-left text-[#0a1512]/80 hover:text-[#0a1512]"
               >
                 Sign in
-              </button>
-            </nav>
-          </div>
-        )}
-      </header>
-    </>
+              </Button>
+              <Button
+                onClick={() => {
+                  setOpen(false);
+                  onSignUp();
+                }}
+              >
+                {primaryActionLabel}
+              </Button>
+            </div>
+          </nav>
+        </div>
+      )}
+    </header>
   );
 }
