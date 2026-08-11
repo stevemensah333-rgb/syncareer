@@ -3,16 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { useUserProfile } from "@/contexts/UserProfileContext";
 import { getHomeRouteForRole } from "@/components/auth/RoleRoute";
-import { setMetaTags, setOrganizationSchema, setApplicationSchema } from "@/lib/seo";
+import {
+  generateStructuredData,
+  setApplicationSchema,
+  setMetaTags,
+  setOrganizationSchema,
+} from "@/lib/seo";
 import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
-import MarqueeTicker from "@/components/landing/MarqueeTicker";
-import TabbedShowcase from "@/components/landing/TabbedShowcase";
-
-import WhyDifferentSection from "@/components/landing/WhyDifferentSection";
-import FAQSection from "@/components/landing/FAQSection";
+import ProductStory from "@/components/landing/ProductStory";
+import FAQSection, { LANDING_FAQS } from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
+
+const SITE_URL = "https://syncareer.me";
+const SEO_DESCRIPTION =
+  "Syncareer helps African graduates turn real opportunities into stronger, evidence-based applications with role-specific CV guidance, interview practice, and application tracking.";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -20,79 +26,80 @@ export default function Landing() {
   const { profile, loading: profileLoading } = useUserProfile();
 
   useEffect(() => {
-    setMetaTags({
-      title: 'Syncareer — Career Platform for African Graduates',
-      description: 'Build an ATS-ready CV, practice interviews with AI, get a career assessment, and connect with vetted counsellors.',
-      keywords: 'career development, assessment, CV builder, interview practice, career counselling, African graduates',
-      ogTitle: 'Syncareer — Career Platform for African Graduates',
-      ogDescription: 'AI-powered career development platform for African graduates. Assessment, CV builder, interview practice, and counselling.',
-      ogUrl: 'https://syncareer.me',
-      canonical: 'https://syncareer.me',
-      twitterCard: 'summary_large_image',
-    });
-    setOrganizationSchema({
-      name: 'Syncareer',
-      logo: 'https://syncareer.me/logo.png',
-      url: 'https://syncareer.me',
-      sameAs: ['https://twitter.com/syncareer', 'https://linkedin.com/company/syncareer'],
-    });
-    setApplicationSchema({
-      name: 'Syncareer',
-      description: 'AI-powered career development and counselling platform for African graduates.',
-      url: 'https://syncareer.me',
-      image: 'https://syncareer.me/app-preview.png',
-      applicationCategory: 'EducationalApplication',
-    });
-    // FAQPage structured data mirrors FAQSection questions
-    const faqs = [
-      { q: 'Is Syncareer really free?', a: 'Yes. The career assessment, CV builder starter, and interview practice starter are free forever. No card required.' },
-      { q: 'How long does the assessment take?', a: 'About 5 minutes. It uses a RIASEC diagnostic plus a short skills pass, then maps you against 25+ career paths.' },
-      { q: 'Will the CV pass ATS filters?', a: 'No builder can guarantee an ATS outcome. Syncareer uses a clear single-column template and gives deterministic completion and quality guidance so you can review the content before applying.' },
-      { q: 'What is SynAssist and how does interview practice work?', a: 'SynAssist is our voice-based interview coach that runs role-specific sessions with actionable feedback.' },
-      { q: 'Who are the career counsellors?', a: 'Vetted, experienced counsellors — many alumni from Ghanaian universities. You can browse profiles and book sessions.' },
-      { q: 'Which students is this built for?', a: 'Senior high, university, TVET students, and recent graduates across Ghana and the broader region.' },
-    ];
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.id = 'faq-jsonld';
-    script.textContent = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: faqs.map((f) => ({
-        '@type': 'Question',
-        name: f.q,
-        acceptedAnswer: { '@type': 'Answer', text: f.a },
-      })),
-    });
-    document.getElementById('faq-jsonld')?.remove();
-    document.head.appendChild(script);
-    return () => { document.getElementById('faq-jsonld')?.remove(); };
-  }, []);
+    if (!isLoaded || !isSignedIn || profileLoading) return;
+    if (!profile || !profile.onboarding_completed) {
+      navigate("/onboarding", { replace: true });
+      return;
+    }
+    navigate(getHomeRouteForRole(profile.user_type || null), { replace: true });
+  }, [isSignedIn, isLoaded, profile, profileLoading, navigate]);
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
-    if (profileLoading) return;
-    if (!profile || !profile.onboarding_completed) {
-      navigate('/onboarding');
-    } else {
-      navigate(getHomeRouteForRole(profile.user_type || null));
-    }
-  }, [isLoaded, isSignedIn, profile, profileLoading, navigate]);
+    setMetaTags({
+      title: "Syncareer — Stronger, Evidence-Based Graduate Applications",
+      description: SEO_DESCRIPTION,
+      canonical: SITE_URL,
+      ogTitle: "Syncareer — From Opportunity to Stronger Application",
+      ogDescription: SEO_DESCRIPTION,
+      ogUrl: SITE_URL,
+      twitterCard: "summary_large_image",
+    });
 
-  const openSignIn = () => navigate('/sign-in');
-  const openSignUp = () => navigate('/sign-up');
+    setOrganizationSchema({
+      name: "Syncareer",
+      url: SITE_URL,
+      logo: `${SITE_URL}/favicon.png`,
+    });
+
+    setApplicationSchema({
+      name: "Syncareer",
+      description: SEO_DESCRIPTION,
+      url: SITE_URL,
+      image: `${SITE_URL}/favicon.png`,
+      applicationCategory: "BusinessApplication",
+    });
+
+    generateStructuredData("FAQPage", {
+      mainEntity: LANDING_FAQS.map((faq) => ({
+        "@type": "Question",
+        name: faq.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.a,
+        },
+      })),
+    });
+  }, []);
+
+  if (!isLoaded || isSignedIn) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background" role="status" aria-live="polite">
+        <span className="text-sm text-muted-foreground">Loading Syncareer…</span>
+      </div>
+    );
+  }
+
+  const goToSignIn = () => navigate("/sign-in");
+  const startAssessment = () => navigate("/assessment");
 
   return (
-    <div className="min-h-screen font-sans bg-[#0a1512] text-white antialiased overflow-x-hidden">
-      <LandingHeader onSignIn={openSignIn} onSignUp={openSignUp} />
-      <main>
-        <HeroSection onSignUp={openSignUp} />
-        <MarqueeTicker />
-        <TabbedShowcase />
-        
-        <WhyDifferentSection />
+    <div className="app-canvas min-h-screen bg-background text-foreground">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-3 focus:text-sm focus:font-medium focus:text-primary-foreground"
+      >
+        Skip to main content
+      </a>
+      <LandingHeader
+        onSignIn={goToSignIn}
+        onSignUp={startAssessment}
+        primaryActionLabel="Start assessment"
+      />
+      <main id="main-content" tabIndex={-1} className="focus:outline-none">
+        <HeroSection onGetStarted={startAssessment} />
+        <ProductStory />
         <FAQSection />
-        <FinalCTASection />
+        <FinalCTASection onGetStarted={startAssessment} />
       </main>
       <LandingFooter />
     </div>

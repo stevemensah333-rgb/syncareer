@@ -163,9 +163,8 @@
     }
   }
 
-  /* Authenticated application canvas — warm near-white with a very subtle
-     blue/lavender atmospheric wash. Applied only to app shells, never to the
-     landing page which carries its own editorial background. */
+  /* Shared Syncareer canvas — warm near-white with a very subtle
+     blue/lavender atmospheric wash for application and public product shells. */
   .app-canvas {
     background-color: hsl(var(--background));
     background-image:

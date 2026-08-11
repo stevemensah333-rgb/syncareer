@@ -78,15 +78,24 @@ function updateMetaTag(type: 'name' | 'property', name: string, content: string)
 /**
  * Generate JSON-LD structured data for rich snippets
  */
-export function generateStructuredData(type: string, data: any) {
-  const script = document.createElement('script');
-  script.type = 'application/ld+json';
+export function generateStructuredData(type: string, data: Record<string, unknown>) {
+  // Keep one current schema per type. SPA routes and React Strict Mode can run
+  // effects more than once; updating a keyed script avoids duplicate entities
+  // while preserving the existing client-side SEO integration.
+  const id = `seo-jsonld-${type.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  let script = document.getElementById(id) as HTMLScriptElement | null;
+  if (!script) {
+    script = document.createElement('script');
+    script.id = id;
+    script.type = 'application/ld+json';
+    document.head.appendChild(script);
+  }
   script.textContent = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': type,
     ...data,
   });
-  document.head.appendChild(script);
+  return script;
 }
 
 /**

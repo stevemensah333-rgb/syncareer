@@ -1,98 +1,83 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import syncareerLogo from "@/assets/syncareer-logo.svg";
 
+interface FooterGroup {
+  title: string;
+  links: Array<{ label: string; href: string; external?: boolean }>;
+}
+
+const FOOTER_GROUPS: FooterGroup[] = [
+  {
+    title: "Product",
+    links: [
+      { label: "Opportunities", href: "/opportunities" },
+      { label: "Applications", href: "/applications" },
+      { label: "CV Builder", href: "/cv-builder" },
+      { label: "Interview practice", href: "/interview-simulator" },
+      { label: "Career assessment", href: "/assessment" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Blog", href: "/blog" },
+      { label: "Contact", href: "mailto:hello@syncareer.me", external: true },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Terms", href: "/terms" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Unsubscribe", href: "/unsubscribe" },
+    ],
+  },
+];
+
 export default function LandingFooter() {
-  const navigate = useNavigate();
   const year = new Date().getFullYear();
 
-  const cols: { title: string; links: { label: string; onClick?: () => void; href?: string; external?: boolean }[] }[] = [
-    {
-      title: "Product",
-      links: [
-        { label: "Assessment", onClick: () => navigate("/assessment") },
-        { label: "CV Builder", onClick: () => navigate("/cv-builder") },
-        { label: "Interview Simulator", onClick: () => navigate("/interview-simulator") },
-        { label: "Counsellors", onClick: () => navigate("/counsellors") },
-        { label: "Pricing", onClick: () => navigate("/pricing") },
-      ],
-    },
-    {
-      title: "Company",
-      links: [
-        { label: "Blog", href: "/blog" },
-        { label: "Contact", href: "mailto:hello@syncareer.me" },
-      ],
-    },
-    {
-      title: "Legal",
-      links: [
-        { label: "Terms", href: "/terms" },
-        { label: "Privacy", href: "/privacy" },
-        { label: "Unsubscribe", href: "/unsubscribe" },
-      ],
-    },
-    {
-      title: "Social",
-      links: [
-        { label: "Instagram", href: "https://www.instagram.com/syncareer", external: true },
-        { label: "LinkedIn", href: "https://linkedin.com/company/syncareer", external: true },
-      ],
-    },
-  ];
-
   return (
-    <footer className="relative bg-[#f7f5ef] text-[#0a1512] border-t border-black/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 pb-10">
-        <div className="grid lg:grid-cols-[1.5fr_repeat(4,1fr)] gap-10">
-          <div>
-            <div className="flex items-center gap-2">
+    <footer className="border-t bg-background" aria-labelledby="footer-brand">
+      <div className="mx-auto w-full max-w-[1400px] px-4 pb-8 pt-14 sm:px-6 lg:px-8 lg:pt-16">
+        <div className="grid gap-10 md:grid-cols-[1.2fr_1.8fr] lg:gap-20">
+          <div className="max-w-sm">
+            <Link to="/" className="inline-flex items-center gap-2 rounded-md" aria-label="Syncareer home">
               <img src={syncareerLogo} alt="" className="h-8 w-8" />
-              <span className="text-xl font-semibold tracking-tight">
-                Syncareer
-              </span>
-            </div>
-            <p className="mt-5 text-sm text-[#0a1512]/70 max-w-xs leading-relaxed">
-              AI-powered career intelligence for African students and recent
-              graduates.
+              <span id="footer-brand" className="text-xl font-semibold tracking-tight">Syncareer</span>
+            </Link>
+            <p className="mt-5 text-sm leading-6 text-muted-foreground">
+              An opportunity-first career workspace for African graduates building stronger, evidence-based applications.
             </p>
           </div>
 
-          {cols.map((col) => (
-            <div key={col.title}>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0a1512]/50 mb-4">
-                {col.title}
-              </p>
-              <ul className="space-y-3 text-sm">
-                {col.links.map((l) => (
-                  <li key={l.label}>
-                    {l.onClick ? (
-                      <button
-                        onClick={l.onClick}
-                        className="text-[#0a1512]/70 hover:text-[#0a1512] transition-colors"
-                      >
-                        {l.label}
-                      </button>
-                    ) : (
-                      <a
-                        href={l.href}
-                        {...(l.external
-                          ? { target: "_blank", rel: "noopener noreferrer" }
-                          : {})}
-                        className="text-[#0a1512]/70 hover:text-[#0a1512] transition-colors"
-                      >
-                        {l.label}
-                      </a>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+            {FOOTER_GROUPS.map((group) => (
+              <div key={group.title}>
+                <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{group.title}</h2>
+                <ul className="mt-4 space-y-3 text-sm">
+                  {group.links.map((link) => (
+                    <li key={link.label}>
+                      {link.external ? (
+                        <a href={link.href} className="text-muted-foreground transition-colors duration-150 hover:text-foreground">
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link to={link.href} className="text-muted-foreground transition-colors duration-150 hover:text-foreground">
+                          {link.label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-16 pt-6 border-t border-black/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#0a1512]/60">
+        <div className="mt-12 flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} Syncareer. All rights reserved.</p>
-          <p>Made for African graduates.</p>
+          <p>Built for the work between finding a role and recording the outcome.</p>
         </div>
       </div>
     </footer>

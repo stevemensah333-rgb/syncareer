@@ -1,46 +1,44 @@
-import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
-import AnimatedSection from "./AnimatedSection";
+import { ArrowRight, BriefcaseBusiness, FileCheck2, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-export default function FinalCTASection() {
-  const navigate = useNavigate();
+interface FinalCTASectionProps {
+  onGetStarted: () => void;
+}
+
+export default function FinalCTASection({ onGetStarted }: FinalCTASectionProps) {
   return (
-    <section className="relative py-24 lg:py-32 bg-[#0a1512] text-white overflow-hidden">
-      <div
-        aria-hidden
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00c4cc]/40 to-transparent"
-      />
-      <div
-        aria-hidden
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[900px] rounded-full blur-[140px] opacity-25"
-        style={{ background: "radial-gradient(circle, #00c4cc 0%, transparent 70%)" }}
-      />
-      <AnimatedSection>
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]">
-            Start your career journey today.
-          </h2>
-          <p className="mt-6 text-lg text-white/70 max-w-xl mx-auto leading-relaxed">
-            Join thousands of students using Syncareer to discover, prepare for,
-            and land their first role.
-          </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            <button
-              onClick={() => navigate("/assessment")}
-              className="group inline-flex items-center gap-2 rounded-full bg-[#00c4cc] px-6 h-12 text-sm font-semibold text-[#0a1512] hover:bg-[#33d4da] transition-colors shadow-[0_10px_40px_-10px_rgba(0,196,204,0.6)]"
-            >
-              Start free assessment
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </button>
-            <button
-              onClick={() => navigate("/sign-up")}
-              className="inline-flex items-center rounded-full border border-white/15 bg-white/[0.03] px-6 h-12 text-sm font-medium text-white hover:bg-white/[0.07] transition-colors"
-            >
-              Create account
-            </button>
+    <section className="bg-card" aria-labelledby="final-cta-title">
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-20 sm:px-6 md:py-24 lg:px-8">
+        <div className="overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.055] px-6 py-12 sm:px-10 sm:py-14 lg:px-14">
+          <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div className="max-w-3xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Your next application</p>
+              <h2 id="final-cta-title" className="mt-3 text-balance text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-4xl lg:text-5xl">
+                Start with the opportunity. Build the evidence from there.
+              </h2>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+                Create a workspace for the roles you care about, improve the material you submit,
+                prepare with the right context, and keep an honest record of what happens next.
+              </p>
+              <ul className="mt-7 flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-x-6">
+                <li className="flex items-center gap-2">
+                  <BriefcaseBusiness className="h-4 w-4 text-primary" aria-hidden="true" /> Real opportunity context
+                </li>
+                <li className="flex items-center gap-2">
+                  <FileCheck2 className="h-4 w-4 text-success" aria-hidden="true" /> Evidence-first CV guidance
+                </li>
+                <li className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-info" aria-hidden="true" /> Job-specific preparation
+                </li>
+              </ul>
+            </div>
+            <Button size="lg" onClick={onGetStarted} className="min-h-12 w-full gap-2 px-6 sm:w-auto">
+              Start career assessment
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
           </div>
         </div>
-      </AnimatedSection>
+      </div>
     </section>
   );
 }
