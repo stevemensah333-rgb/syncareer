@@ -338,13 +338,12 @@ rollback plan + verification before any remote change.
 
 2. **Per-application targeted CV.** The tracker surfaces the user's *primary* CV
    (`resumes.user_id + is_primary` convention) because `job_applications` cannot reference a
-   specific resume row (`resume_url` is a free-text URL). To target one CV per application:
-
-   ```sql
-   ALTER TABLE public.job_applications
-     ADD COLUMN resume_id uuid NULL REFERENCES public.resumes(id) ON DELETE SET NULL;
-   CREATE INDEX idx_job_applications_resume ON public.job_applications(resume_id);
-   ```
+   specific resume row (`resume_url` is a free-text URL). The UI must not claim that this is
+   an association. A bare `resume_id REFERENCES resumes(id)` is not an approved migration:
+   it would not itself enforce that the resume owner equals `job_applications.applicant_id`.
+   Any future design must first reconcile the live schema, then enforce that cross-table
+   ownership invariant in the database, include rollback and isolated RLS tests, and receive
+   separate approval. See [`CV_BUILDER_PERSISTENCE.md`](./CV_BUILDER_PERSISTENCE.md) §7–8.
 
 3. **Status vocabulary constraint (optional hardening).** `job_applications.status` is
    unconstrained text; the app tolerates unknown values and groups the known ones

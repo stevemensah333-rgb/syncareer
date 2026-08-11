@@ -3,12 +3,11 @@ import { ACTION_VERBS, PLACEHOLDER_PATTERNS } from './constants';
 
 // ── Meaningful-content helpers ───────────────────────────────────
 //
-// Scoring must reward real, user-entered content — never the mere existence
-// of a section, an empty entry object, structural defaults, or placeholder
-// text. These helpers define the single notion of "meaningful content" used
-// by every criterion below, so an entirely untouched CV scores exactly 0.
+// These helpers are the single definition of user content for both completion
+// and quality. Structural defaults, generated ids, empty entries, section
+// labels, template metadata, and placeholder instructions never earn credit.
 
-/** True when `value` is a non-empty, non-whitespace, non-placeholder string. */
+/** True when `value` is non-empty, non-whitespace, non-placeholder text. */
 export function isMeaningfulText(value: unknown): boolean {
   if (typeof value !== 'string') return false;
   const trimmed = value.trim();
@@ -16,9 +15,12 @@ export function isMeaningfulText(value: unknown): boolean {
   return !hasPlaceholder(trimmed);
 }
 
-/** True when at least one bullet in the list is meaningful. */
+function meaningfulBullets(bullets: string[]): string[] {
+  return bullets.filter(isMeaningfulText);
+}
+
 function hasMeaningfulBullets(bullets: string[]): boolean {
-  return bullets.some(isMeaningfulText);
+  return meaningfulBullets(bullets).length > 0;
 }
 
 type Experience = CVData['experience'][number];
@@ -26,43 +28,59 @@ type Project = CVData['projects'][number];
 type Activity = CVData['activities'][number];
 type Achievement = CVData['achievements'][number];
 
-/**
- * An entry counts only when the user has actually filled something in.
- * An entry object created by an "Add" button (all fields empty) is absent.
- */
-export function isExperienceMeaningful(e: Experience): boolean {
-  return isMeaningfulText(e.company) || isMeaningfulText(e.role) ||
-    isMeaningfulText(e.location) || isMeaningfulText(e.date) || hasMeaningfulBullets(e.bullets);
+export function isExperienceMeaningful(entry: Experience): boolean {
+  return isMeaningfulText(entry.company) || isMeaningfulText(entry.role)
+    || isMeaningfulText(entry.location) || isMeaningfulText(entry.date)
+    || hasMeaningfulBullets(entry.bullets);
 }
 
-export function isProjectMeaningful(p: Project): boolean {
-  return isMeaningfulText(p.projectName) || isMeaningfulText(p.organization) ||
-    isMeaningfulText(p.role) || isMeaningfulText(p.date) || hasMeaningfulBullets(p.bullets);
+export function isProjectMeaningful(entry: Project): boolean {
+  return isMeaningfulText(entry.projectName) || isMeaningfulText(entry.organization)
+    || isMeaningfulText(entry.role) || isMeaningfulText(entry.date)
+    || hasMeaningfulBullets(entry.bullets);
 }
 
-export function isActivityMeaningful(a: Activity): boolean {
-  return isMeaningfulText(a.activity) || isMeaningfulText(a.organization) ||
-    isMeaningfulText(a.role) || isMeaningfulText(a.date) || hasMeaningfulBullets(a.bullets);
+export function isActivityMeaningful(entry: Activity): boolean {
+  return isMeaningfulText(entry.activity) || isMeaningfulText(entry.organization)
+    || isMeaningfulText(entry.role) || isMeaningfulText(entry.date)
+    || hasMeaningfulBullets(entry.bullets);
 }
 
-export function isAchievementMeaningful(a: Achievement): boolean {
-  return isMeaningfulText(a.title) || isMeaningfulText(a.organization) || isMeaningfulText(a.date);
+export function isAchievementMeaningful(entry: Achievement): boolean {
+  return isMeaningfulText(entry.title) || isMeaningfulText(entry.organization)
+    || isMeaningfulText(entry.date);
 }
 
-/** Skills with no real content (whitespace / placeholder) do not count. */
-function meaningfulSkills(cv: CVData): string[] {
+export function getMeaningfulSkills(cv: CVData): string[] {
   return cv.skills.filter(isMeaningfulText);
 }
 
-/**
- * True when the CV has real body content beyond bare identity fields — i.e.
- * descriptions, skills, education, or any filled section entry. "Absence of
- * flaw" quality criteria (no-placeholder, section ordering) only earn credit
- * once such substance exists, so a single name field cannot inflate the score.
- */
+export function getAllBullets(cv: CVData): string[] {
+  return [
+    ...cv.experience.flatMap((entry) => entry.bullets),
+    ...cv.projects.flatMap((entry) => entry.bullets),
+    ...cv.activities.flatMap((entry) => entry.bullets),
+  ].filter(isMeaningfulText);
+}
+
+export function hasPlaceholder(text: string): boolean {
+  return PLACEHOLDER_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+export function countActionVerbs(bullets: string[]): number {
+  return bullets.filter((bullet) => {
+    const firstWord = bullet.trim().split(/\s+/)[0]?.toLowerCase() || '';
+    return (ACTION_VERBS as readonly string[]).includes(firstWord);
+  }).length;
+}
+
+export function countQuantifiable(bullets: string[]): number {
+  return bullets.filter((bullet) => /\d+/.test(bullet)).length;
+}
+
 function hasSubstantiveContent(cv: CVData): boolean {
   return getAllBullets(cv).length > 0
-    || meaningfulSkills(cv).length > 0
+    || getMeaningfulSkills(cv).length > 0
     || isMeaningfulText(cv.education.university)
     || isMeaningfulText(cv.education.degree)
     || isMeaningfulText(cv.education.graduationDate)
@@ -72,188 +90,291 @@ function hasSubstantiveContent(cv: CVData): boolean {
     || cv.achievements.some(isAchievementMeaningful);
 }
 
-// ── Bullet helpers ───────────────────────────────────────────────
-
-export function getAllBullets(cv: CVData): string[] {
-  const bullets: string[] = [];
-  cv.experience.forEach(e => bullets.push(...e.bullets));
-  cv.projects.forEach(p => bullets.push(...p.bullets));
-  cv.activities.forEach(a => bullets.push(...a.bullets));
-  return bullets.filter(b => b.trim().length > 0);
-}
-
-export function hasPlaceholder(text: string): boolean {
-  return PLACEHOLDER_PATTERNS.some(p => p.test(text));
-}
-
-export function countActionVerbs(bullets: string[]): number {
-  return bullets.filter(b => {
-    const firstWord = b.trim().split(/\s+/)[0]?.toLowerCase() || '';
-    return (ACTION_VERBS as readonly string[]).includes(firstWord);
-  }).length;
-}
-
-export function countQuantifiable(bullets: string[]): number {
-  return bullets.filter(b => /\d+/.test(b)).length;
-}
-
-// ── Score breakdowns ─────────────────────────────────────────────
+// ── Completion ───────────────────────────────────────────────────
 //
-// Weights (sum to 100):
-//   completeness      25  (5 each: personal details, education, experience, skills, projects/certs)
-//   contentQuality    25  (5 each: bullet format, action verbs, quantifiable, no placeholder, formatting)
-//   skillsRelevance   20  (skill count 10, career alignment 10)
-//   presentation      15  (5 each: spelling, section order, layout)
-//   competitiveness   15  (5 each: leadership, practical experience, certifications)
+// Completion answers only “how much meaningful CV information is present?”.
+// It does not assess writing quality or predict an ATS outcome. Five sections
+// contribute 20 points each. Partial fields receive their documented points.
+
+export type CompletionSectionId =
+  | 'personal'
+  | 'education'
+  | 'experience'
+  | 'skills'
+  | 'additional';
+
+export interface CompletionSection {
+  id: CompletionSectionId;
+  label: string;
+  score: number;
+  max: 20;
+  complete: boolean;
+  requirement: string;
+}
+
+export interface CVCompletionResult {
+  percentage: number;
+  earned: number;
+  max: 100;
+  sections: CompletionSection[];
+}
+
+function bestScore<T>(items: T[], score: (item: T) => number): number {
+  return items.reduce((best, item) => Math.max(best, score(item)), 0);
+}
+
+export function computeCVCompletion(cv: CVData): CVCompletionResult {
+  const personal = [
+    cv.personal.firstName,
+    cv.personal.lastName,
+    cv.personal.email,
+    cv.personal.phone,
+  ].reduce((score, value) => score + (isMeaningfulText(value) ? 5 : 0), 0);
+
+  const education =
+    (isMeaningfulText(cv.education.university) ? 7 : 0)
+    + (isMeaningfulText(cv.education.degree) ? 7 : 0)
+    + (isMeaningfulText(cv.education.graduationDate) ? 6 : 0);
+
+  const experience = bestScore(cv.experience, (entry) =>
+    (isMeaningfulText(entry.company) ? 5 : 0)
+    + (isMeaningfulText(entry.role) ? 5 : 0)
+    + (isMeaningfulText(entry.date) ? 4 : 0)
+    + (hasMeaningfulBullets(entry.bullets) ? 6 : 0));
+
+  const skills = Math.min(4, getMeaningfulSkills(cv).length) * 5;
+
+  const projectScore = bestScore(cv.projects, (entry) =>
+    (isMeaningfulText(entry.projectName) ? 7 : 0)
+    + (isMeaningfulText(entry.organization) || isMeaningfulText(entry.role) ? 5 : 0)
+    + (isMeaningfulText(entry.date) ? 3 : 0)
+    + (hasMeaningfulBullets(entry.bullets) ? 5 : 0));
+  const achievementScore = bestScore(cv.achievements, (entry) =>
+    (isMeaningfulText(entry.title) ? 8 : 0)
+    + (isMeaningfulText(entry.organization) ? 6 : 0)
+    + (isMeaningfulText(entry.date) ? 6 : 0));
+  const activityScore = bestScore(cv.activities, (entry) =>
+    (isMeaningfulText(entry.activity) ? 7 : 0)
+    + (isMeaningfulText(entry.organization) || isMeaningfulText(entry.role) ? 5 : 0)
+    + (isMeaningfulText(entry.date) ? 3 : 0)
+    + (hasMeaningfulBullets(entry.bullets) ? 5 : 0));
+  const additional = Math.max(projectScore, achievementScore, activityScore);
+
+  const sections: CompletionSection[] = [
+    {
+      id: 'personal',
+      label: 'Personal details',
+      score: personal,
+      max: 20,
+      complete: personal === 20,
+      requirement: 'First name, last name, email and phone',
+    },
+    {
+      id: 'education',
+      label: 'Education',
+      score: education,
+      max: 20,
+      complete: education === 20,
+      requirement: 'Institution, degree and graduation date',
+    },
+    {
+      id: 'experience',
+      label: 'Experience',
+      score: experience,
+      max: 20,
+      complete: experience === 20,
+      requirement: 'Employer, role, dates and one contribution',
+    },
+    {
+      id: 'skills',
+      label: 'Skills',
+      score: skills,
+      max: 20,
+      complete: skills === 20,
+      requirement: 'Four meaningful skills',
+    },
+    {
+      id: 'additional',
+      label: 'Projects or achievements',
+      score: additional,
+      max: 20,
+      complete: additional === 20,
+      requirement: 'One well-described project, achievement or activity',
+    },
+  ];
+
+  const earned = sections.reduce((sum, section) => sum + section.score, 0);
+  return {
+    percentage: Math.min(100, Math.max(0, earned)),
+    earned,
+    max: 100,
+    sections,
+  };
+}
+
+// ── Quality ──────────────────────────────────────────────────────
 //
-// Every criterion earns points only when meaningful content relevant to it
-// exists, so absence-of-flaws on an empty CV never yields credit.
+// Quality is deliberately separate from completion. It assesses deterministic
+// writing/evidence patterns in content that exists; it never claims that a CV
+// will pass an applicant tracking system.
 
 export interface ScoreDetail {
   score: number;
   max: number;
 }
 
+export interface ScoreCategory {
+  score: number;
+  max: number;
+  details: Record<string, ScoreDetail>;
+}
+
 export interface ScoreBreakdown {
-  completeness: { score: number; max: number; details: Record<string, ScoreDetail> };
-  contentQuality: { score: number; max: number; details: Record<string, ScoreDetail> };
-  skillsRelevance: { score: number; max: number; details: Record<string, ScoreDetail> };
-  presentation: { score: number; max: number; details: Record<string, ScoreDetail> };
-  competitiveness: { score: number; max: number; details: Record<string, ScoreDetail> };
+  contentQuality: ScoreCategory;
+  skillsCoverage: ScoreCategory;
+  presentation: ScoreCategory;
+  evidence: ScoreCategory;
 }
 
 export const MAX_SCORES = {
-  completeness: 25,
-  contentQuality: 25,
-  skillsRelevance: 20,
-  presentation: 15,
-  competitiveness: 15,
+  contentQuality: 30,
+  skillsCoverage: 20,
+  presentation: 20,
+  evidence: 30,
 } as const;
 
-export function scoreCompleteness(cv: CVData): ScoreBreakdown['completeness'] {
-  const details: Record<string, ScoreDetail> = {};
-
-  const personalFilled = [cv.personal.firstName, cv.personal.lastName, cv.personal.email, cv.personal.phone]
-    .filter(isMeaningfulText).length;
-  details.personalDetails = { score: personalFilled >= 3 ? 5 : Math.round((personalFilled / 3) * 5), max: 5 };
-
-  const eduFilled = [cv.education.university, cv.education.degree, cv.education.graduationDate]
-    .filter(isMeaningfulText).length;
-  details.education = { score: eduFilled >= 2 ? 5 : Math.round((eduFilled / 2) * 5), max: 5 };
-
-  const meaningfulExperience = cv.experience.filter(isExperienceMeaningful);
-  details.experience = { score: meaningfulExperience.length >= 1 ? 5 : 0, max: 5 };
-
-  const skills = meaningfulSkills(cv);
-  details.skills = { score: skills.length >= 1 ? 5 : 0, max: 5 };
-
-  const hasProjects = cv.projects.some(isProjectMeaningful);
-  const hasAchievements = cv.achievements.some(isAchievementMeaningful);
-  details.projectsCerts = { score: (hasProjects || hasAchievements) ? 5 : 0, max: 5 };
-
-  const score = Object.values(details).reduce((s, d) => s + d.score, 0);
-  return { score, max: MAX_SCORES.completeness, details };
-}
-
-export function scoreContentQuality(cv: CVData): ScoreBreakdown['contentQuality'] {
+export function scoreContentQuality(cv: CVData): ScoreCategory {
   const details: Record<string, ScoreDetail> = {};
   const bullets = getAllBullets(cv);
 
-  const longBullets = bullets.filter(b => b.length > 200).length;
-  details.bulletFormat = { score: bullets.length > 0 && longBullets === 0 ? 5 : bullets.length > 0 ? 3 : 0, max: 5 };
+  const longBullets = bullets.filter((bullet) => bullet.length > 200).length;
+  details.bulletFormat = {
+    score: bullets.length > 0 && longBullets === 0 ? 6 : bullets.length > 0 ? 3 : 0,
+    max: 6,
+  };
 
-  const actionCount = countActionVerbs(bullets);
-  const actionRatio = bullets.length > 0 ? actionCount / bullets.length : 0;
-  details.actionVerbs = { score: actionRatio >= 0.5 ? 5 : actionRatio >= 0.25 ? 3 : bullets.length > 0 ? 1 : 0, max: 5 };
+  const actionRatio = bullets.length > 0 ? countActionVerbs(bullets) / bullets.length : 0;
+  details.actionVerbs = {
+    score: actionRatio >= 0.5 ? 7 : actionRatio >= 0.25 ? 4 : bullets.length > 0 ? 1 : 0,
+    max: 7,
+  };
 
-  const quantCount = countQuantifiable(bullets);
-  const quantRatio = bullets.length > 0 ? quantCount / bullets.length : 0;
-  details.quantifiable = { score: quantRatio >= 0.3 ? 5 : quantRatio >= 0.15 ? 3 : quantCount >= 1 ? 1 : 0, max: 5 };
+  const quantifiable = countQuantifiable(bullets);
+  const quantifiableRatio = bullets.length > 0 ? quantifiable / bullets.length : 0;
+  details.quantifiable = {
+    score: quantifiableRatio >= 0.3 ? 7 : quantifiableRatio >= 0.15 ? 4 : quantifiable >= 1 ? 2 : 0,
+    max: 7,
+  };
 
-  // "No placeholder" is a content-quality check that only applies once the CV
-  // has substantive content (descriptions, skills, education, or entries).
-  // An empty CV vacuously contains no placeholder and must not earn credit.
-  const textValues = [cv.personal.firstName, cv.personal.lastName, ...bullets, ...cv.skills];
-  const anyPlaceholder = hasPlaceholder(textValues.join(' '));
-  details.noPlaceholder = { score: hasSubstantiveContent(cv) && !anyPlaceholder ? 5 : 0, max: 5 };
+  const visibleText = [
+    ...Object.values(cv.personal),
+    ...Object.values(cv.education),
+    ...cv.experience.flatMap((entry) => [entry.company, entry.location, entry.date, entry.role, ...entry.bullets]),
+    ...cv.projects.flatMap((entry) => [entry.organization, entry.date, entry.projectName, entry.role, ...entry.bullets]),
+    ...cv.activities.flatMap((entry) => [entry.organization, entry.activity, entry.date, entry.role, ...entry.bullets]),
+    ...cv.achievements.flatMap((entry) => [entry.title, entry.organization, entry.date]),
+    ...cv.skills,
+  ].join(' ');
+  details.noPlaceholder = {
+    score: hasSubstantiveContent(cv) && !hasPlaceholder(visibleText) ? 5 : 0,
+    max: 5,
+  };
 
-  const hasSections = cv.experience.some(isExperienceMeaningful)
+  const hasNarrativeSection = cv.experience.some(isExperienceMeaningful)
     || cv.projects.some(isProjectMeaningful)
     || cv.activities.some(isActivityMeaningful);
-  details.formatting = { score: hasSections && meaningfulSkills(cv).length > 0 ? 5 : hasSections ? 3 : 0, max: 5 };
+  details.sectionContent = {
+    score: hasNarrativeSection && getMeaningfulSkills(cv).length > 0 ? 5 : hasNarrativeSection ? 3 : 0,
+    max: 5,
+  };
 
-  const score = Object.values(details).reduce((s, d) => s + d.score, 0);
-  return { score, max: MAX_SCORES.contentQuality, details };
+  return {
+    score: Object.values(details).reduce((sum, detail) => sum + detail.score, 0),
+    max: MAX_SCORES.contentQuality,
+    details,
+  };
 }
 
-export function scoreSkillsRelevance(cv: CVData): ScoreBreakdown['skillsRelevance'] {
+export function scoreSkillsCoverage(cv: CVData): ScoreCategory {
   const details: Record<string, ScoreDetail> = {};
-  const n = meaningfulSkills(cv).length;
-
-  const skillCountScore = n >= 8 ? 10
-    : n >= 5 ? 7
-    : n >= 3 ? 4
-    : n >= 1 ? 2 : 0;
-  details.skillCount = { score: skillCountScore, max: 10 };
-
-  const skillCoverageScore = n >= 6 ? 10
-    : n >= 4 ? 7
-    : n >= 2 ? 4
-    : n >= 1 ? 2 : 0;
-  details.careerAlignment = { score: skillCoverageScore, max: 10 };
-
-  const score = details.skillCount.score + details.careerAlignment.score;
-  return { score, max: MAX_SCORES.skillsRelevance, details };
+  const count = getMeaningfulSkills(cv).length;
+  details.skillCount = {
+    score: count >= 8 ? 10 : count >= 5 ? 7 : count >= 3 ? 4 : count >= 1 ? 2 : 0,
+    max: 10,
+  };
+  details.skillBreadth = {
+    score: count >= 6 ? 10 : count >= 4 ? 7 : count >= 2 ? 4 : count >= 1 ? 2 : 0,
+    max: 10,
+  };
+  return {
+    score: details.skillCount.score + details.skillBreadth.score,
+    max: MAX_SCORES.skillsCoverage,
+    details,
+  };
 }
 
-export function scorePresentation(cv: CVData): ScoreBreakdown['presentation'] {
+export function scorePresentation(cv: CVData): ScoreCategory {
   const details: Record<string, ScoreDetail> = {};
   const bullets = getAllBullets(cv);
+  const suspectBullets = bullets.filter(
+    (bullet) => /(.)\1{4,}/.test(bullet) || (bullet.trim().length > 0 && bullet.trim().length < 5),
+  );
+  details.textHygiene = {
+    score: bullets.length === 0 ? 0 : suspectBullets.length === 0 ? 6 : 3,
+    max: 6,
+  };
 
-  const suspectBullets = bullets.filter(b => /(.)\1{4,}/.test(b) || (b.trim().length > 0 && b.trim().length < 5));
-  // With no bullets there is nothing to spell-check; do not award credit vacuously.
-  details.spelling = { score: bullets.length === 0 ? 0 : suspectBullets.length === 0 ? 5 : 3, max: 5 };
+  const hasHeader = isMeaningfulText(cv.personal.firstName)
+    && isMeaningfulText(cv.education.university);
+  details.sectionStructure = {
+    score: hasHeader ? 7 : hasSubstantiveContent(cv) ? 3 : 0,
+    max: 7,
+  };
 
-  // Section ordering/structure can only be assessed once there is a real CV
-  // body. A bare identity field does not establish structure, so it earns 0.
-  const hasHeader = isMeaningfulText(cv.personal.firstName) && isMeaningfulText(cv.education.university);
-  const sectionOrderScore = hasHeader ? 5 : hasSubstantiveContent(cv) ? 2 : 0;
-  details.sectionOrder = { score: sectionOrderScore, max: 5 };
+  const experiences = cv.experience.filter(isExperienceMeaningful);
+  const consistent = experiences.every((entry) => meaningfulBullets(entry.bullets).length <= 6);
+  details.layout = {
+    score: experiences.length === 0 ? 0 : consistent ? 7 : 4,
+    max: 7,
+  };
 
-  const meaningfulExperience = cv.experience.filter(isExperienceMeaningful);
-  const hasConsistentBullets = meaningfulExperience.every(e => e.bullets.length <= 6);
-  // An empty experience list must not earn consistency credit via Array.every.
-  details.layout = { score: meaningfulExperience.length === 0 ? 0 : hasConsistentBullets ? 5 : 3, max: 5 };
-
-  const score = Object.values(details).reduce((s, d) => s + d.score, 0);
-  return { score, max: MAX_SCORES.presentation, details };
+  return {
+    score: Object.values(details).reduce((sum, detail) => sum + detail.score, 0),
+    max: MAX_SCORES.presentation,
+    details,
+  };
 }
 
-export function scoreCompetitiveness(cv: CVData): ScoreBreakdown['competitiveness'] {
+export function scoreEvidence(cv: CVData): ScoreCategory {
   const details: Record<string, ScoreDetail> = {};
-  const allBullets = getAllBullets(cv);
-  const allText = allBullets.join(' ').toLowerCase();
+  const allText = getAllBullets(cv).join(' ').toLowerCase();
+  const leadershipKeywords = [
+    'led', 'managed', 'supervised', 'mentored', 'president', 'captain', 'head',
+    'director', 'founder', 'co-founder', 'leader', 'chair',
+  ];
+  const hasLeadership = leadershipKeywords.some((keyword) => allText.includes(keyword))
+    || cv.experience.some((entry) => isExperienceMeaningful(entry) && /lead|manager|director|head|president/i.test(entry.role))
+    || cv.activities.some((entry) => isActivityMeaningful(entry) && /lead|president|captain|head|chair/i.test(entry.role));
+  details.leadership = { score: hasLeadership ? 10 : 0, max: 10 };
 
-  const leadershipKeywords = ['led', 'managed', 'supervised', 'mentored', 'president', 'captain', 'head', 'director', 'founder', 'co-founder', 'leader', 'chair'];
-  const hasLeadership = leadershipKeywords.some(k => allText.includes(k)) ||
-    cv.experience.some(e => isExperienceMeaningful(e) && /lead|manager|director|head|president/i.test(e.role)) ||
-    cv.activities.some(a => isActivityMeaningful(a) && /lead|president|captain|head|chair/i.test(a.role));
-  details.leadership = { score: hasLeadership ? 5 : 0, max: 5 };
+  const experiences = cv.experience.filter(isExperienceMeaningful);
+  const hasInternship = experiences.some((entry) => /intern/i.test(entry.role) || /intern/i.test(entry.company));
+  details.practicalExperience = {
+    score: hasInternship || experiences.length >= 2 ? 10 : experiences.length >= 1 ? 6 : 0,
+    max: 10,
+  };
 
-  const meaningfulExperience = cv.experience.filter(isExperienceMeaningful);
-  const hasInternship = meaningfulExperience.some(e =>
-    /intern/i.test(e.role) || /intern/i.test(e.company)
-  ) || meaningfulExperience.length >= 2;
-  details.practicalExp = { score: hasInternship ? 5 : meaningfulExperience.length >= 1 ? 3 : 0, max: 5 };
+  const hasAdditionalEvidence = cv.achievements.some(isAchievementMeaningful)
+    || cv.projects.some(isProjectMeaningful)
+    || /certif|course|award/i.test(allText);
+  details.additionalEvidence = { score: hasAdditionalEvidence ? 10 : 0, max: 10 };
 
-  const hasCerts = cv.achievements.some(isAchievementMeaningful) || /certif|course|award/i.test(allText);
-  details.certifications = { score: hasCerts ? 5 : 0, max: 5 };
-
-  const score = Object.values(details).reduce((s, d) => s + d.score, 0);
-  return { score, max: MAX_SCORES.competitiveness, details };
+  return {
+    score: Object.values(details).reduce((sum, detail) => sum + detail.score, 0),
+    max: MAX_SCORES.evidence,
+    details,
+  };
 }
-
-// ── Label ────────────────────────────────────────────────────────
 
 export function getScoreLabel(score: number): 'Weak' | 'Developing' | 'Strong' | 'Excellent' {
   if (score <= 40) return 'Weak';
@@ -262,80 +383,70 @@ export function getScoreLabel(score: number): 'Weak' | 'Developing' | 'Strong' |
   return 'Excellent';
 }
 
-// ── Strengths / Suggestions ─────────────────────────────────────
-
 export function generateStrengths(breakdown: ScoreBreakdown, cv: CVData): string[] {
   const strengths: string[] = [];
-
-  if (breakdown.completeness.score >= 20)
-    strengths.push('Well-structured with all key sections filled.');
-  if ((breakdown.contentQuality.details.actionVerbs?.score ?? 0) >= 4)
+  if (breakdown.contentQuality.details.actionVerbs?.score === 7)
     strengths.push('Effective use of action verbs in bullet points.');
-  if ((breakdown.contentQuality.details.quantifiable?.score ?? 0) >= 4)
-    strengths.push('Strong use of quantifiable achievements.');
-  if ((breakdown.competitiveness.details.leadership?.score ?? 0) >= 5)
-    strengths.push('Clear demonstration of leadership experience.');
-  if (cv.skills.length >= 6)
-    strengths.push('Comprehensive skills section with good coverage.');
-  if ((breakdown.competitiveness.details.practicalExp?.score ?? 0) >= 5)
-    strengths.push('Solid practical work experience included.');
-  if (cv.projects.length >= 2)
-    strengths.push('Multiple projects demonstrate initiative.');
-
+  if (breakdown.contentQuality.details.quantifiable?.score === 7)
+    strengths.push('Strong use of measurable achievements.');
+  if (breakdown.evidence.details.leadership?.score === 10)
+    strengths.push('Clear leadership evidence.');
+  if (getMeaningfulSkills(cv).length >= 6)
+    strengths.push('A broad set of meaningful skills is included.');
+  if (breakdown.evidence.details.practicalExperience?.score === 10)
+    strengths.push('Solid practical experience is included.');
+  if (cv.projects.filter(isProjectMeaningful).length >= 2)
+    strengths.push('Multiple projects demonstrate practical initiative.');
   return strengths.slice(0, 3);
 }
 
-export function generateSuggestions(breakdown: ScoreBreakdown, cv: CVData): string[] {
+export function generateSuggestions(
+  breakdown: ScoreBreakdown,
+  cv: CVData,
+  completion: CVCompletionResult,
+): string[] {
   const suggestions: string[] = [];
+  const section = (id: CompletionSectionId) => completion.sections.find((item) => item.id === id);
 
-  if (breakdown.completeness.details.experience?.score === 0)
-    suggestions.push('Add at least one work or internship experience.');
-  if (cv.skills.length < 5)
-    suggestions.push(`Add ${5 - cv.skills.length} more skills to strengthen your profile.`);
-  if ((breakdown.contentQuality.details.quantifiable?.score ?? 0) < 3)
-    suggestions.push('Add measurable achievements (numbers, percentages) to your bullet points.');
-  if ((breakdown.contentQuality.details.actionVerbs?.score ?? 0) < 3)
-    suggestions.push('Start bullet points with strong action verbs like "Led", "Developed", or "Implemented".');
-  if (breakdown.competitiveness.details.leadership?.score === 0)
-    suggestions.push('Include at least one leadership role or responsibility.');
-  if (breakdown.competitiveness.details.certifications?.score === 0)
-    suggestions.push('Add certifications, awards, or relevant online courses.');
-  if (cv.projects.length === 0)
-    suggestions.push('Include projects to showcase your practical abilities.');
-  if ((breakdown.completeness.details.personalDetails?.score ?? 0) < 5)
-    suggestions.push('Complete all personal details for a professional impression.');
-  if ((breakdown.skillsRelevance.details.careerAlignment?.score ?? 0) < 5)
-    suggestions.push('Align your skills section with your chosen career path.');
-
+  if ((section('experience')?.score ?? 0) === 0)
+    suggestions.push('Add a work, internship, volunteer, or other practical experience.');
+  if (getMeaningfulSkills(cv).length < 4)
+    suggestions.push(`Add ${4 - getMeaningfulSkills(cv).length} more meaningful skill${4 - getMeaningfulSkills(cv).length === 1 ? '' : 's'}.`);
+  if ((breakdown.contentQuality.details.quantifiable?.score ?? 0) < 4)
+    suggestions.push('Add measurable outcomes, such as numbers or percentages, where they are accurate.');
+  if ((breakdown.contentQuality.details.actionVerbs?.score ?? 0) < 4)
+    suggestions.push('Start contribution bullets with clear action verbs such as “Led” or “Built”.');
+  if ((breakdown.evidence.details.leadership?.score ?? 0) === 0)
+    suggestions.push('Include leadership responsibility if it reflects your experience.');
+  if ((section('additional')?.score ?? 0) === 0)
+    suggestions.push('Add a project, achievement, certification, or activity as supporting evidence.');
+  if ((section('personal')?.score ?? 0) < 20)
+    suggestions.push('Complete the contact details listed in the completion checklist.');
   return suggestions.slice(0, 3);
 }
 
-// ── Full score computation (pure, no React) ──────────────────────
-
+/** Pure deterministic quality + completion computation. */
 export function computeFullScore(cv: CVData) {
-  const completeness = scoreCompleteness(cv);
+  const completion = computeCVCompletion(cv);
   const contentQuality = scoreContentQuality(cv);
-  const skillsRelevance = scoreSkillsRelevance(cv);
+  const skillsCoverage = scoreSkillsCoverage(cv);
   const presentation = scorePresentation(cv);
-  const competitiveness = scoreCompetitiveness(cv);
-
+  const evidence = scoreEvidence(cv);
   const breakdown: ScoreBreakdown = {
-    completeness,
     contentQuality,
-    skillsRelevance,
+    skillsCoverage,
     presentation,
-    competitiveness,
+    evidence,
   };
-
-  const sum = completeness.score + contentQuality.score + skillsRelevance.score + presentation.score + competitiveness.score;
-  // Deterministic and finite, clamped to the inclusive 0–100 range.
+  const sum = Object.values(breakdown).reduce((total, category) => total + category.score, 0);
   const totalScore = Number.isFinite(sum) ? Math.min(100, Math.max(0, sum)) : 0;
 
   return {
     totalScore,
     label: getScoreLabel(totalScore),
+    completion,
     breakdown,
     strengths: generateStrengths(breakdown, cv),
-    suggestions: generateSuggestions(breakdown, cv),
+    suggestions: generateSuggestions(breakdown, cv, completion),
   };
 }

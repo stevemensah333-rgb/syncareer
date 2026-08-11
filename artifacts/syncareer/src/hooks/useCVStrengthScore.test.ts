@@ -125,7 +125,7 @@ describe('useCVStrengthScore', () => {
     });
     const { result } = renderHook(() => useCVStrengthScore(withPlaceholder));
     expect(result.current.breakdown.contentQuality.details.noPlaceholder?.score).toBe(0);
-    expect(result.current.breakdown.completeness.details.experience?.score).toBe(0);
+    expect(result.current.completion.sections.find((section) => section.id === 'experience')?.score).toBe(0);
     expect(result.current.totalScore).toBeLessThanOrEqual(40);
   });
 });

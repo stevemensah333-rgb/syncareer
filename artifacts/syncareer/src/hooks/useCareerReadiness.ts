@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getCareerSkills } from '@/utils/careerSkillFramework';
+import { resumeRowCompletion } from '@/features/cv-builder/persistence';
 
 export interface SkillReadiness {
   skillName: string;
@@ -44,23 +45,8 @@ const getLevel = (score: number): string => {
   return 'Beginning';
 };
 
-const computeCVScore = (resume: any): number => {
-  if (!resume) return 0;
-  let score = 0;
-  const pi = resume.personal_info as any;
-  if (pi?.fullName || pi?.full_name) score += 15;
-  if (pi?.email) score += 10;
-  if (pi?.phone) score += 5;
-  const edu = resume.education;
-  if (Array.isArray(edu) && edu.length > 0) score += 20;
-  const exp = resume.experience;
-  if (Array.isArray(exp) && exp.length > 0) score += 20;
-  const skills = resume.skills;
-  if (Array.isArray(skills) && skills.length > 0) score += 15;
-  const projects = resume.projects;
-  if (Array.isArray(projects) && projects.length > 0) score += 15;
-  return Math.min(100, score);
-};
+const computeCVScore = (resume: Parameters<typeof resumeRowCompletion>[0] | null): number =>
+  resume ? resumeRowCompletion(resume) : 0;
 
 export const useCareerReadiness = (major: string | null | undefined) => {
   const [data, setData] = useState<ReadinessData>({
@@ -90,7 +76,7 @@ export const useCareerReadiness = (major: string | null | undefined) => {
       // Fetch all data in parallel
       const [skillsRes, resumeRes, interviewsRes] = await Promise.all([
         supabase.from('user_skills').select('skill_name, proficiency').eq('user_id', userId),
-        supabase.from('resumes').select('personal_info, education, experience, skills, projects').eq('user_id', userId).eq('is_primary', true).maybeSingle(),
+        supabase.from('resumes').select('personal_info, education, experience, skills, projects, achievements').eq('user_id', userId).eq('is_primary', true).maybeSingle(),
         supabase.from('mock_interviews').select('overall_score').eq('user_id', userId).not('overall_score', 'is', null),
       ]);
 
@@ -148,7 +134,7 @@ export const useCareerReadiness = (major: string | null | undefined) => {
           score: Math.round(professionalScore),
           weight: 0.2,
           weightedScore: Math.round(professionalScore * 0.2),
-          description: 'CV strength, interview skills, communication',
+          description: 'CV completion, interview skills, communication',
         },
       ];
 

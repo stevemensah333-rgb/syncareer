@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getCareerSkills } from '@/utils/careerSkillFramework';
+import { resumeRowCompletion } from '@/features/cv-builder/persistence';
 
 export interface UserContext {
   // Identity
@@ -34,18 +35,8 @@ const proficiencyToPercent: Record<string, number> = {
   expert: 100,
 };
 
-function computeCVScore(resume: any): number {
-  if (!resume) return 0;
-  let score = 0;
-  const pi = resume.personal_info as any;
-  if (pi?.fullName || pi?.full_name) score += 15;
-  if (pi?.email) score += 10;
-  if (pi?.phone) score += 5;
-  if (Array.isArray(resume.education) && resume.education.length > 0) score += 20;
-  if (Array.isArray(resume.experience) && resume.experience.length > 0) score += 20;
-  if (Array.isArray(resume.skills) && resume.skills.length > 0) score += 15;
-  if (Array.isArray(resume.projects) && resume.projects.length > 0) score += 15;
-  return Math.min(100, score);
+function computeCVScore(resume: Parameters<typeof resumeRowCompletion>[0] | null): number {
+  return resume ? resumeRowCompletion(resume) : 0;
 }
 
 function computeReadinessScore(
@@ -96,7 +87,7 @@ export function useUserContext() {
         supabase.from('student_details').select('major, school, degree_type, expected_completion').eq('user_id', userId).maybeSingle(),
         supabase.from('assessments').select('primary_interest, secondary_interest, tertiary_interest').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('user_skills').select('skill_name, proficiency, category').eq('user_id', userId).limit(30),
-        supabase.from('resumes').select('personal_info, education, experience, skills, projects').eq('user_id', userId).eq('is_primary', true).maybeSingle(),
+        supabase.from('resumes').select('personal_info, education, experience, skills, projects, achievements').eq('user_id', userId).eq('is_primary', true).maybeSingle(),
         supabase.from('mock_interviews').select('overall_score').eq('user_id', userId).not('overall_score', 'is', null),
       ]);
 

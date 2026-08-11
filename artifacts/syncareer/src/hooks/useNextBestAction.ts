@@ -34,8 +34,8 @@ export function useNextBestAction({ hasAssessment, cvScore, interviewScore, appl
       return {
         title: cvScore === 0 ? 'Build your CV' : 'Strengthen your CV',
         description: cvScore === 0
-          ? 'Create an ATS-friendly CV in under 15 minutes.'
-          : `Your CV strength is ${cvScore}%. A few additions will push you above 60%.`,
+          ? 'Create a clear, role-focused CV for your applications.'
+          : `Your CV is ${cvScore}% complete. Use the builder checklist to choose the next section.`,
         ctaLabel: cvScore === 0 ? 'Open CV Builder' : 'Improve CV',
         href: '/cv-builder',
         reason: 'A strong CV unlocks better matches.',

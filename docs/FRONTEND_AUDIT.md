@@ -5,6 +5,12 @@
 **Frontend source of truth:** `artifacts/syncareer/`
 **Evidence boundary:** This is a repository audit. Live Lovable Cloud/Supabase rows, deployed-only Edge Function source, invocation counts, jobs, PostHog dashboards, and provider spend were not available in this checkout. Findings that depend on those sources are explicitly marked unknown.
 
+> Point-in-time note (2026-08-11): the CV `firstName`/`fullName` scoring mismatch,
+> conflated completion/quality display, Activities reload loss, and save-state/error gaps
+> identified below have since been repaired. The current contract is
+> [`CV_BUILDER_PERSISTENCE.md`](./CV_BUILDER_PERSISTENCE.md); the audit text remains as the
+> evidence that motivated that focused repair.
+
 ## Executive summary
 
 Syncareer already has the foundations for the intended career-launch loop:

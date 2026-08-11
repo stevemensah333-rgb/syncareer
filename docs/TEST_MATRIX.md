@@ -22,7 +22,8 @@ suite below was implemented so each test has an explicit intent.
 | ID | Behavior protected | Test | Notes |
 |----|--------------------|------|-------|
 | 1.1 | Deterministic RIASEC scoring, normalization to 0–100, and **tie behavior** (stable order) | `assessmentConstants.test.ts` | No LLM; pure arithmetic |
-| 1.2 | Deterministic CV strength score + label bands | `useCVStrengthScore.test.ts` | Pure functions around CV fixtures |
+| 1.2 | Deterministic CV completion (empty/whitespace/placeholders/ids/defaults = 0; documented section contributions) kept separate from deterministic quality guidance | `features/cv-builder/scoring.test.ts`, `useCVStrengthScore.test.ts` | Pure functions around CV fixtures; no ATS outcome claim |
+| 1.2a | CV persistence: required fields/ownership, authenticated create/update, unauthenticated save, RLS permission error, network/database error, repeated-click coalescing, safe error copy, and full reload round-trip including Activities | `features/cv-builder/persistence.test.ts` | In-memory Supabase fake; live policy execution remains Layer 3 |
 | 1.3 | Feature-access gating: free limits, premium-only features | `featureAccess.test.ts` (existing) | |
 | 1.4 | Progress %, milestones, next-action ordering | `progressCalculations.test.ts` | |
 | 1.5 | Auth validation contracts: email/password/name/phone, signup & login schemas | `validationSchemas.test.ts` | |
@@ -86,7 +87,7 @@ level in `happy-dom`:
 |----|---------|-----------|
 | 5.1 | Sign in → onboarding (student) | `signUpForm`/`signInForm` tests |
 | 5.2 | Complete assessment (deterministic scoring) | `assessmentConstants.test.ts` |
-| 5.3 | Save CV (deterministic strength) | `useCVStrengthScore.test.ts` |
+| 5.3 | Save/reopen CV (completion + quality + create/update/failure/repeated-click states) | `features/cv-builder/scoring.test.ts`, `features/cv-builder/persistence.test.ts`, `useCVStrengthScore.test.ts` |
 | 5.4 | Start a permitted interview via a deterministic stub | `interviewContract.test.ts` (retry/backoff + phase) |
 | 5.5 | Book/cancel a counsellor session | SQL (Layer 3.9) + `counsellor` booking contracts |
 | 5.6 | External job → apply on source → mark as applied → tracker row created (duplicate-safe) | Layer 1.9 (`tracking.test.ts`) |

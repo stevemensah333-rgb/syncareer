@@ -1,3 +1,6 @@
+import { resumeRowCompletion } from '@/features/cv-builder/persistence';
+import type { Json } from '@/integrations/supabase/types';
+
 // Pure helpers for the Home journey — no React, no Supabase IO.
 //
 // The application-status vocabulary (labels, ordering, next-step copy) is
@@ -43,18 +46,20 @@ export function getDeadlineLabel(days: number | null): { label: string; tone: 'u
   return { label: `Closes ${formatShortDate(new Date(Date.now() + days * 86400000).toISOString())}`, tone: 'ok' };
 }
 
-export function scoreResume(resume: any): number {
-  if (!resume) return 0;
-  let score = 0;
-  if (resume.personal_info?.fullName || resume.personal_info?.full_name) score += 15;
-  if (resume.personal_info?.email) score += 10;
-  if (Array.isArray(resume.education) && resume.education.length > 0) score += 20;
-  if (Array.isArray(resume.experience) && resume.experience.length > 0) score += 20;
-  if (Array.isArray(resume.skills) && resume.skills.length > 0) score += 15;
-  if (Array.isArray(resume.projects) && resume.projects.length > 0) score += 15;
-  // clamp + round down to avoid fake precision, also handle achievements as bonus
-  if (Array.isArray(resume.achievements) && resume.achievements.length > 0) score += 5;
-  return Math.min(100, score);
+interface ResumeSections {
+  personal_info?: Json | null;
+  education?: Json | null;
+  experience?: Json | null;
+  projects?: Json | null;
+  achievements?: Json | null;
+  skills?: Json | null;
+  references_section?: string | null;
+}
+
+/** The same meaningful-content completion shown by the CV Builder. */
+export function scoreResume(resume: unknown): number {
+  if (!resume || typeof resume !== 'object' || Array.isArray(resume)) return 0;
+  return resumeRowCompletion(resume as ResumeSections);
 }
 
 export function timeAgo(dateString: string): string {

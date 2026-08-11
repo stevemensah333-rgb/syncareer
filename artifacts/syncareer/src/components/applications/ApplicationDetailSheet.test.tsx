@@ -68,6 +68,8 @@ describe('ApplicationDetailSheet', () => {
     expect(screen.getAllByText(/Recommended next step/i).length).toBeGreaterThan(0);
     // targeted CV + practice entry
     expect(screen.getByText('Ama CV')).toBeTruthy();
+    expect(screen.getByText(/current application schema does not link/i)).toBeTruthy();
+    expect(screen.getByText(/Tailor CV for this role/i).closest('a')?.getAttribute('href')).toContain('application=app-1');
     expect(screen.getByText(/Practice an interview for this role/i).closest('a')).toBeTruthy();
     // notes seeded from the record
     expect((screen.getByLabelText('Application notes') as HTMLTextAreaElement).value).toBe(

@@ -47,7 +47,7 @@ export default function Landing() {
     const faqs = [
       { q: 'Is Syncareer really free?', a: 'Yes. The career assessment, CV builder starter, and interview practice starter are free forever. No card required.' },
       { q: 'How long does the assessment take?', a: 'About 5 minutes. It uses a RIASEC diagnostic plus a short skills pass, then maps you against 25+ career paths.' },
-      { q: 'Will the CV actually pass ATS filters?', a: 'Yes. Templates are engineered for African graduate hiring filters with a built-in strength score.' },
+      { q: 'Will the CV pass ATS filters?', a: 'No builder can guarantee an ATS outcome. Syncareer uses a clear single-column template and gives deterministic completion and quality guidance so you can review the content before applying.' },
       { q: 'What is SynAssist and how does interview practice work?', a: 'SynAssist is our voice-based interview coach that runs role-specific sessions with actionable feedback.' },
       { q: 'Who are the career counsellors?', a: 'Vetted, experienced counsellors — many alumni from Ghanaian universities. You can browse profiles and book sessions.' },
       { q: 'Which students is this built for?', a: 'Senior high, university, TVET students, and recent graduates across Ghana and the broader region.' },
