@@ -235,7 +235,7 @@ const Assessment = () => {
               <span>{answeredCount} of {TOTAL_QUESTIONS} answered</span>
               <span>Section {introIndex + 1} of 3</span>
             </div>
-            <Progress value={progressPercent} className="h-1.5" />
+            <Progress value={progressPercent} className="h-1.5" aria-label={`Assessment progress: ${answeredCount} of ${TOTAL_QUESTIONS} questions answered`} />
           </div>
           <Card>
             <CardContent className="pt-10 pb-10 flex flex-col items-center text-center space-y-5">
@@ -270,7 +270,7 @@ const Assessment = () => {
                   Question {currentPage * QUESTIONS_PER_PAGE + 1}–{Math.min((currentPage + 1) * QUESTIONS_PER_PAGE, TOTAL_QUESTIONS)} of {TOTAL_QUESTIONS}
                 </span>
               </div>
-              <Progress value={progressPercent} className="h-2" />
+              <Progress value={progressPercent} className="h-2" aria-label={`Assessment progress: ${answeredCount} of ${TOTAL_QUESTIONS} questions answered`} />
               <p className="text-xs text-muted-foreground mt-1">{answeredCount} of {TOTAL_QUESTIONS} answered</p>
             </CardContent>
           </Card>
@@ -460,7 +460,12 @@ const Assessment = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-72">
+            <div
+              className="h-72"
+              role="img"
+              aria-label={`RIASEC work-interest scores. ${riasecChartData.map((item) => `${item.name}: ${item.score}%`).join('. ')}`}
+            >
+              <div aria-hidden="true" className="h-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={riasecChartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -477,6 +482,7 @@ const Assessment = () => {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -492,7 +498,12 @@ const Assessment = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
+              <div
+                className="h-64"
+                role="img"
+                aria-label={`Personality-profile scores: ${personalityRadar.map((item) => `${item.axis}: ${item.value}`).join('. ')}`}
+              >
+                <div aria-hidden="true" className="h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={personalityRadar} cx="50%" cy="50%" outerRadius="70%">
                     <PolarGrid stroke="hsl(var(--border))" />
@@ -500,6 +511,7 @@ const Assessment = () => {
                     <Radar name="Personality" dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={2} />
                   </RadarChart>
                 </ResponsiveContainer>
+                </div>
               </div>
               <p className="text-xs text-muted-foreground text-center mt-1">Scores aggregated from personality questions (1–15)</p>
             </CardContent>
@@ -512,19 +524,25 @@ const Assessment = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
+              <div
+                className="h-64"
+                role="img"
+                aria-label={`Skills-preference scores: ${skillsChartData.map((item) => `${item.axis}: ${item.value}%`).join('. ')}`}
+              >
+                <div aria-hidden="true" className="h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={skillsChartData} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                     <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                    <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis type="category" dataKey="axis" width={90} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                     <Tooltip
                       formatter={(value: number) => [`${value}%`, 'Score']}
                       contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
                     />
-                    <Bar dataKey="score" radius={[0, 4, 4, 0]} fill="hsl(var(--accent))" fillOpacity={0.85} />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]} fill="hsl(var(--accent))" fillOpacity={0.85} />
                   </BarChart>
                 </ResponsiveContainer>
+                </div>
               </div>
               <p className="text-xs text-muted-foreground text-center mt-1">Task-preference responses from questions 16–30; not verified skill level</p>
             </CardContent>

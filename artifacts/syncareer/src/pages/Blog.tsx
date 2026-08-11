@@ -21,8 +21,9 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen bg-background">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-3 focus:text-sm focus:font-medium focus:text-primary-foreground">Skip to main content</a>
       <LandingHeader onSignIn={() => navigate("/sign-in")} onSignUp={() => navigate("/sign-up")} />
-      <main className="container mx-auto max-w-4xl px-6 py-20">
+      <main id="main-content" tabIndex={-1} className="container mx-auto max-w-4xl px-6 py-20 focus:outline-none">
         <header className="mb-14">
           <p className="text-xs uppercase tracking-[0.18em] text-primary mb-3">Resources</p>
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight mb-4">Career guides for African graduates</h1>

@@ -24,7 +24,7 @@ describe('landing page content and navigation', () => {
     expect(actions[1]!.textContent).toMatch(/not sure what fits/i);
     fireEvent.click(actions[0]!);
     expect(onGetStarted).toHaveBeenCalledOnce();
-    expect(container.textContent).toMatch(/Illustrative product state/i);
+    expect(container.textContent).toMatch(/External listings retain their source labels/i);
   });
 
   it('renders one coherent illustrative journey and its trust boundaries', () => {
@@ -37,7 +37,7 @@ describe('landing page content and navigation', () => {
     expect(text).toMatch(/Find and save a real external role/i);
     expect(text).toMatch(/Build truthful evidence/i);
     expect(text).toMatch(/Prepare and track/i);
-    expect(text).toMatch(/not independently verified by Syncareer/i);
+    expect(text).toMatch(/not independently verified/i);
     expect(text).toMatch(/do not guarantee applicant-tracking-system success/i);
     expect(screen.getAllByRole('tab')).toHaveLength(4);
   });

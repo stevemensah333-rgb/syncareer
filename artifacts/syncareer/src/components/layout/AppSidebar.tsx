@@ -111,7 +111,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed }: AppSideba
           onClick={onToggleCollapsed}
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-expanded={!isCollapsed}
-          className="h-9 w-9 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="h-11 w-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:h-9 lg:w-9"
         >
           {isCollapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -140,7 +140,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed }: AppSideba
                         aria-current={isActive ? 'page' : undefined}
                         title={isCollapsed ? item.title : undefined}
                         className={cn(
-                          'relative flex min-h-9 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors duration-150',
+                          'relative flex min-h-11 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors duration-150 lg:min-h-9',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-1',
                           isCollapsed && 'justify-center px-0',
                           isActive

@@ -28,7 +28,7 @@ export function OnboardingProgress({ steps }: { steps: OnboardingStep[] }) {
           <CardTitle className="text-[14px] font-semibold">Setup progress</CardTitle>
           <span className="text-[12px] text-muted-foreground">{doneCount}/{total} complete</span>
         </div>
-        <Progress value={percent} className="h-1.5 mt-2" />
+        <Progress value={percent} className="h-1.5 mt-2" aria-label={`Setup progress: ${doneCount} of ${total} steps complete`} />
       </CardHeader>
       <CardContent className="pt-0 space-y-2">
         {steps.map(step => (

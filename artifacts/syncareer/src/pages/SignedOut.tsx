@@ -4,7 +4,8 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function SignedOut() {
   return (
-    <div
+    <main
+      id="main-content"
       className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden"
       style={{ backgroundColor: "hsl(var(--landing-cream))" }}
     >
@@ -51,6 +52,6 @@ export default function SignedOut() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

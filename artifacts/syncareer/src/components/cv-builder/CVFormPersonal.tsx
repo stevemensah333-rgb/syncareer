@@ -34,7 +34,7 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="firstName">First Name <span aria-hidden>*</span></Label>
             <Input
@@ -58,7 +58,7 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="phone" className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
@@ -82,7 +82,7 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="email" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />

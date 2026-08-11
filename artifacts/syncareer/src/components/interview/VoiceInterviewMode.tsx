@@ -2,6 +2,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ChevronDown, ChevronUp, Headphones, Mic, Pause, PhoneOff, Play, RefreshCw, RotateCcw, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { useVoiceInterview } from '@/hooks/useVoiceInterview';
 import { INTERVIEW_PHASE_LABELS } from '@/features/interview/lifecycle';
@@ -117,7 +127,7 @@ export function VoiceInterviewMode({
       <main className="fixed inset-0 z-[100] overflow-y-auto bg-background" aria-labelledby="report-title">
         <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:py-10">
           <header className="flex flex-wrap items-start justify-between gap-4 border-b pb-5">
-            <div><p className="text-sm font-medium text-primary">Practice complete</p><h1 id="report-title" className="text-2xl font-semibold tracking-tight">Interview report</h1><p className="mt-1 text-sm text-muted-foreground">{jobRole} · Evidence from this session only</p></div>
+            <div><p className="text-sm font-medium text-primary">Practice complete</p><h2 id="report-title" className="text-2xl font-semibold tracking-tight">Interview report</h2><p className="mt-1 text-sm text-muted-foreground">{jobRole} · Evidence from this session only</p></div>
             <Button variant="outline" onClick={finish}>Close report</Button>
           </header>
 
@@ -160,11 +170,11 @@ export function VoiceInterviewMode({
     <main className="fixed inset-0 z-[100] overflow-y-auto bg-background" aria-labelledby="session-title">
       <div className="mx-auto flex min-h-full max-w-5xl flex-col px-4 py-4 sm:px-6 sm:py-6">
         <header className="flex items-center justify-between gap-4 border-b pb-4">
-          <div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Active interview</p><h1 id="session-title" className="truncate text-lg font-semibold">{jobRole}</h1></div>
+          <div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Active interview</p><h2 id="session-title" className="truncate text-lg font-semibold">{jobRole}</h2></div>
           <Button variant="outline" className="shrink-0 text-destructive" onClick={() => setConfirmEnd(true)}><PhoneOff className="mr-2 h-4 w-4" />End interview</Button>
         </header>
 
-        <div className="mt-4 flex items-center gap-3"><Progress value={progressPercent} className="h-2 flex-1" /><span className="text-sm tabular-nums text-muted-foreground">Question {Math.min(interview.progress.answered + 1, interview.progress.total)} of {interview.progress.total}</span></div>
+        <div className="mt-4 flex items-center gap-3"><Progress value={progressPercent} className="h-2 flex-1" aria-label={`Interview progress: ${interview.progress.answered} of ${interview.progress.total} questions answered`} /><span className="text-sm tabular-nums text-muted-foreground">Question {Math.min(interview.progress.answered + 1, interview.progress.total)} of {interview.progress.total}</span></div>
 
         <section className="flex flex-1 flex-col items-center justify-center py-8 text-center">
           <div className={cn('grid h-32 w-32 place-items-center rounded-full border-4 border-primary/30 bg-primary/5 transition-colors duration-150', interview.isListening && 'border-success bg-success/10', interview.isSpeaking && 'border-primary bg-primary/10', interview.phase === 'processing' && 'border-primary/60', animatedState && 'motion-safe:animate-pulse motion-reduce:animate-none')} aria-hidden="true">
@@ -181,7 +191,22 @@ export function VoiceInterviewMode({
         <footer className="border-t pt-4"><div className="flex flex-wrap items-center justify-center gap-2" role="toolbar" aria-label="Interview controls"><Button variant="outline" onClick={interview.replayQuestion} disabled={!interview.currentQuestion || interview.phase === 'processing' || interview.phase === 'connecting'}><RotateCcw className="mr-2 h-4 w-4" />Repeat question</Button>{interview.phase === 'paused' ? <Button onClick={interview.resume}><Play className="mr-2 h-4 w-4" />Resume</Button> : <Button variant="outline" onClick={interview.pause} disabled={!interview.isListening && !interview.isSpeaking}><Pause className="mr-2 h-4 w-4" />Pause</Button>}<Button variant="ghost" onClick={() => setShowTranscript((value) => !value)} aria-expanded={showTranscript}>{showTranscript ? <ChevronUp className="mr-2 h-4 w-4" /> : <ChevronDown className="mr-2 h-4 w-4" />}{showTranscript ? 'Hide transcript' : 'Show transcript'}</Button></div><p className="mt-3 text-center text-xs text-muted-foreground">Session scope: {interview.progress.total} questions. Ending early preserves only responses already accepted by the service; an unsent local transcript cannot be recovered.</p></footer>
       </div>
 
-      {confirmEnd && <div className="fixed inset-0 z-[110] grid place-items-center bg-foreground/40 p-4" role="dialog" aria-modal="true" aria-labelledby="end-title"><div className="w-full max-w-md rounded-lg border bg-background p-5 shadow-lg"><h2 id="end-title" className="font-semibold">End this interview?</h2><p className="mt-2 text-sm text-muted-foreground">Responses already accepted by the service remain available. Speech that has not been submitted cannot be recovered.</p><div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setConfirmEnd(false)}>Continue interview</Button><Button variant="destructive" onClick={finish}>End interview</Button></div></div></div>}
+      <AlertDialog open={confirmEnd} onOpenChange={setConfirmEnd}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End this interview?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Responses already accepted by the service remain available. Speech that has not been submitted cannot be recovered.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continue interview</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={finish}>
+              End interview
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

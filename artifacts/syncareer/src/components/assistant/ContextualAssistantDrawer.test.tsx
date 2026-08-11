@@ -25,6 +25,21 @@ describe('ContextualAssistantDrawer', () => {
     expect(undo).toHaveBeenCalledOnce();
   });
 
+  it('does not announce an AI proposal as accepted when its destination rejects it', async () => {
+    request.mockResolvedValue({ kind: 'draft', text: 'Follow-up proposal', sourceContextIds: ['role'] });
+    const accept = vi.fn(() => false);
+    render(<ContextualAssistantDrawer task="application.draft_follow_up" description="Draft help" suggestedPrompt="Draft a follow-up" context={[{ id: 'role', label: 'Graduate Analyst', provenance: 'opportunity', content: 'Graduate Analyst' }]} onAccept={accept} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ask Syncareer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Request proposal' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Accept proposal' })).toBeTruthy());
+    fireEvent.click(screen.getByRole('button', { name: 'Accept proposal' }));
+
+    expect(accept).toHaveBeenCalledWith('Follow-up proposal');
+    expect(screen.getByRole('alert').textContent).toMatch(/could not be applied/i);
+    expect(screen.queryByText(/Proposal accepted/i)).toBeNull();
+  });
+
   it('opens as an accessible mobile-width dialog with keyboard-close support', () => {
     render(<ContextualAssistantDrawer task="opportunity.explain_requirement" description="Explain" context={[{ id: 'role', label: 'Role', provenance: 'opportunity', content: 'Role' }]} />);
     fireEvent.click(screen.getByRole('button', { name: 'Ask Syncareer' }));

@@ -17,7 +17,8 @@ export function OnboardingShell({
 }: OnboardingShellProps) {
   const titleParts = title.split(italicWord);
   return (
-    <div
+    <main
+      id="main-content"
       className="relative min-h-screen flex items-start sm:items-center justify-center px-4 py-12 overflow-hidden"
       style={{ backgroundColor: 'hsl(var(--landing-cream))' }}
     >
@@ -48,6 +49,6 @@ export function OnboardingShell({
         )}
         <div className="mt-10 w-full">{children}</div>
       </div>
-    </div>
+    </main>
   );
 }

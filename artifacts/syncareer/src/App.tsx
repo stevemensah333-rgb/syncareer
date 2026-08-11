@@ -9,6 +9,7 @@ import { UserProfileProvider, useUserProfile } from "./contexts/UserProfileConte
 import { prefetchLandingRoutes, prefetchStudentRoutes, prefetchCounsellorRoutes } from "@/lib/routePrefetch";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { identifyAnalyticsUser, resetAnalyticsIdentity } from "@/services/analytics";
+import { getPageTitle } from "@/lib/pageTitle";
 
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { LoadingFallback } from "./components/LoadingFallback";
@@ -134,6 +135,14 @@ const RoutePrefetcher = () => {
   return null;
 };
 
+const DocumentTitleManager = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.title = getPageTitle(pathname);
+  }, [pathname]);
+  return null;
+};
+
 const AnalyticsBridge = () => {
   usePageTracking();
   const { isLoaded, isSignedIn, userId } = useAuth();
@@ -154,6 +163,7 @@ const AppContent = () => (
       <UserProfileProvider>
         <TooltipProvider>
           <RoutePrefetcher />
+          <DocumentTitleManager />
           <AnalyticsBridge />
           <Toaster />
             <Sonner />

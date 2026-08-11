@@ -89,9 +89,9 @@ describe('getNextAction', () => {
     expect(n?.urgency).toBe('high');
   });
 
-  it('prioritises taking an assessment next', () => {
+  it('prioritises exploring a real opportunity before the optional assessment', () => {
     const n = getNextAction(progress({ profileCompletion: 100, assessmentCompleted: 0 }));
-    expect(n?.action).toBe('Take Assessment');
+    expect(n?.action).toBe('Explore Opportunities');
   });
 
   it('returns null once sufficiently progressed', () => {

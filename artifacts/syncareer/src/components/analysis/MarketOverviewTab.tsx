@@ -212,7 +212,12 @@ export function MarketOverviewTab({ data }: Props) {
             {data.salary_data.length === 0 ? (
               <EmptyState message="No salary data available for this major yet." />
             ) : (
-              <div className="h-72">
+              <div
+                className="h-72"
+                role="img"
+                aria-label={`Salary progression in US dollars, thousands. ${salaryChartData.map((item) => `${item.role}: entry ${item.Entry}, mid ${item.Mid}, senior ${item.Senior}`).join('. ')}`}
+              >
+                <div aria-hidden="true" className="h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={salaryChartData} margin={{ top: 4, right: 16, left: 0, bottom: 24 }}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-40" />
@@ -231,6 +236,7 @@ export function MarketOverviewTab({ data }: Props) {
                     <Bar dataKey="Senior" name="Senior Level" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
+                </div>
               </div>
             )}
           </CardContent>
