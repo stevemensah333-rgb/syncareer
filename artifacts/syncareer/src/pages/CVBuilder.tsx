@@ -24,6 +24,7 @@ import { CVFormProjects } from '@/components/cv-builder/CVFormProjects';
 import { CVFormActivities } from '@/components/cv-builder/CVFormActivities';
 import { CVFormSkills } from '@/components/cv-builder/CVFormSkills';
 import { CVPreview } from '@/components/cv-builder/CVPreview';
+import { CVPreviewDialog } from '@/components/cv-builder/CVPreviewDialog';
 import { CVAIAssistant } from '@/components/cv-builder/CVAIAssistant';
 import { CVStrengthScore } from '@/components/cv-builder/CVStrengthScore';
 import { CVUploadDialog } from '@/components/cv-builder/CVUploadDialog';
@@ -245,6 +246,11 @@ const CVBuilder = () => {
     markChanged();
   };
 
+  const focusInvalidPersonalField = (field: string) => {
+    setActiveTab('personal');
+    requestAnimationFrame(() => document.getElementById(field)?.focus());
+  };
+
   const handleDownloadPDF = async () => {
     if (strengthResult.completion.percentage === 0) {
       toast.error('Add meaningful CV content before exporting a PDF.');
@@ -387,7 +393,14 @@ const CVBuilder = () => {
   return (
     <PageLayout title="CV Builder" description="Create, review, and save your primary CV." breadcrumbs={[{ label: "Home", to: "/dashboard" }, { label: "Build", to: "/build" }, { label: "CV Builder" }]}>
       {isLoadingCV ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div
+          className="grid grid-cols-1 gap-6 lg:grid-cols-3"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+          aria-label="Loading your saved CV"
+        >
+          <span className="sr-only">Loading your saved CV</span>
           <div className="lg:col-span-2 space-y-4">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
@@ -525,7 +538,7 @@ const CVBuilder = () => {
           </div>
           </AnimatedSection>
 
-          {Object.keys(fieldErrors).length > 0 && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4"><p className="font-medium">Fix the following before saving:</p><ul className="mt-2 list-disc pl-5 text-sm">{Object.entries(fieldErrors).map(([field, message]) => <li key={field}><button className="underline" onClick={() => setActiveTab('personal')}>{message}</button></li>)}</ul></div>}
+          {Object.keys(fieldErrors).length > 0 && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4"><p className="font-medium">Fix the following before saving:</p><ul className="mt-2 list-disc pl-5 text-sm">{Object.entries(fieldErrors).map(([field, message]) => <li key={field}><button type="button" className="rounded-sm underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => focusInvalidPersonalField(field)}>{message}</button></li>)}</ul></div>}
           <AnimatedSection delay={0.08} y={20}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="flex w-full overflow-x-auto">
@@ -612,28 +625,13 @@ const CVBuilder = () => {
         </AnimatedSection>
       </div>
       )}
-      {/* CV Preview Modal/Section */}
-      {showPreview && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-auto">
-          <div className="bg-white max-w-4xl w-full max-h-[90vh] overflow-auto rounded-lg shadow-xl">
-            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center z-10">
-              <h3 className="font-semibold">CV Preview</h3>
-              <div className="flex gap-2">
-                <Button onClick={handleDownloadPDF} disabled={isGeneratingPDF}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download PDF
-                </Button>
-                <Button variant="outline" onClick={() => setShowPreview(false)}>
-                  Close
-                </Button>
-              </div>
-            </div>
-            <div className="p-4">
-              <CVPreview data={cvData} />
-            </div>
-          </div>
-        </div>
-      )}
+      <CVPreviewDialog
+        open={showPreview}
+        data={cvData}
+        isGeneratingPDF={isGeneratingPDF}
+        onOpenChange={setShowPreview}
+        onDownload={handleDownloadPDF}
+      />
 
       {/* Feedback Modal */}
       <FeedbackModal

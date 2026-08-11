@@ -14,7 +14,8 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div
+    <main
+      id="main-content"
       className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden"
       style={{ backgroundColor: "hsl(var(--landing-cream))" }}
     >
@@ -55,7 +56,7 @@ const NotFound = () => {
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

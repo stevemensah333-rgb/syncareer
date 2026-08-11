@@ -12,6 +12,6 @@ describe('Greeting', () => {
   it('renders without name', () => {
     render(<Greeting fullName={null} />);
     // Should show Good morning/afternoon/evening
-    expect(screen.getByRole('heading')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2 })).toBeTruthy();
   });
 });

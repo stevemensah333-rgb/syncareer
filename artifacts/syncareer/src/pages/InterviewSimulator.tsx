@@ -267,8 +267,8 @@ const InterviewSimulator = () => {
 
                   {/* Session Length Selector */}
                   <div className="space-y-2">
-                    <Label>Session Length</Label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <Label id="session-length-label">Session Length</Label>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="group" aria-labelledby="session-length-label">
                       {SESSION_OPTIONS.map((opt) => {
                         const Icon = SESSION_ICONS[opt.value];
                         return (
@@ -276,6 +276,7 @@ const InterviewSimulator = () => {
                             key={opt.value}
                             type="button"
                             onClick={() => setSessionLength(opt.value)}
+                            aria-pressed={sessionLength === opt.value}
                             className={cn(
                               "relative flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 text-center transition-all hover:border-primary/50",
                               sessionLength === opt.value

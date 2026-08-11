@@ -51,7 +51,12 @@ export function CareerOutlookTab({ data }: Props) {
             {data.demand_forecast.length === 0 ? (
               <EmptyState message="No demand forecast data available yet." />
             ) : (
-              <div className="h-72">
+              <div
+                className="h-72"
+                role="img"
+                aria-label={`Twelve-month demand forecast. ${data.demand_forecast.map((item) => `${item.month}: demand index ${item.demand_index}, hiring activity ${item.hiring_activity}`).join('. ')}`}
+              >
+                <div aria-hidden="true" className="h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.demand_forecast} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-40" />
@@ -82,6 +87,7 @@ export function CareerOutlookTab({ data }: Props) {
                     />
                   </LineChart>
                 </ResponsiveContainer>
+                </div>
               </div>
             )}
           </CardContent>

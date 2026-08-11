@@ -50,6 +50,13 @@ describe('Landing routing', () => {
     expect(screen.queryByText(/Loading Syncareer/i)).toBeNull();
   });
 
+  it('provides a skip link to the main landmark', () => {
+    renderLanding();
+    const skip = screen.getByRole('link', { name: 'Skip to main content' });
+    expect((skip as HTMLAnchorElement).getAttribute('href')).toBe('#main-content');
+    expect(document.getElementById('main-content')?.tagName).toBe('MAIN');
+  });
+
   it('uses opportunity exploration as the primary acquisition action', async () => {
     const router = renderLanding();
 

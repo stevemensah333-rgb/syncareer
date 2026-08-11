@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { VoiceInterviewMode } from './VoiceInterviewMode';
 
@@ -31,7 +31,7 @@ describe('VoiceInterviewMode report', () => {
       ],
     };
     render(<VoiceInterviewMode jobRole="Analyst" onEnd={vi.fn()} />);
-    expect(screen.getByText('Tell me about a project you led.')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Tell me about a project you led.' })).toBeTruthy();
     expect(screen.getByText('No recognised answer is available for this question.')).toBeTruthy();
     expect(screen.queryByText(/\/100/)).toBeNull();
     expect(screen.getByText(/not semantic grading or a hiring probability/i)).toBeTruthy();
@@ -54,5 +54,22 @@ describe('VoiceInterviewMode report', () => {
     expect(container.querySelector('.motion-reduce\\:animate-none')).toBeTruthy();
     expect(screen.getByRole('button', { name: /repeat question/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /pause/i })).toBeTruthy();
+  });
+
+  it('uses a labelled alert dialog for ending an active interview and lets Escape keep the session open', () => {
+    hookState.value = {
+      ...baseState,
+      phase: 'user_speaking', isActive: true, isListening: true, isCompleted: false,
+      currentQuestion: 'Why this role?', messages: [],
+    };
+    render(<VoiceInterviewMode jobRole="Analyst" onEnd={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'End interview' }));
+    const dialog = screen.getByRole('alertdialog', { name: 'End this interview?' });
+    expect(dialog).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Continue interview' })).toBeTruthy();
+
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(screen.queryByRole('alertdialog')).toBeNull();
   });
 });

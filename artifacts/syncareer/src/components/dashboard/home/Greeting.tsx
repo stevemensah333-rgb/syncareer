@@ -19,7 +19,7 @@ export function Greeting({ fullName, major, school }: GreetingProps) {
 
   return (
     <div className="flex flex-col gap-1">
-      <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.02em] leading-tight text-foreground">
+      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.02em] leading-tight text-foreground">
         {firstName ? (
           <>
             {time}, <span className="text-primary">{firstName}</span>
@@ -27,7 +27,7 @@ export function Greeting({ fullName, major, school }: GreetingProps) {
         ) : (
           <>{time}</>
         )}
-      </h1>
+      </h2>
       {major && (
         <p className="text-[13px] text-muted-foreground">
           {major}

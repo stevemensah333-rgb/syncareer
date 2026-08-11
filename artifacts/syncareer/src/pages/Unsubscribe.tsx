@@ -62,7 +62,7 @@ export default function Unsubscribe() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6">
+    <main id="main-content" className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="max-w-md w-full text-center space-y-5">
         <h1 className="text-2xl font-semibold tracking-tight">Email preferences</h1>
 
@@ -103,6 +103,6 @@ export default function Unsubscribe() {
           </>
         )}
       </div>
-    </div>
+    </main>
   );
 }

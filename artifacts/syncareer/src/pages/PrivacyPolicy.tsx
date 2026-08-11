@@ -13,7 +13,7 @@ export default function PrivacyPolicy() {
     });
   }, []);
   return (
-    <div className="min-h-screen bg-background py-16 px-6">
+    <main id="main-content" className="min-h-screen bg-background py-16 px-6">
       <div className="container mx-auto max-w-3xl prose prose-neutral dark:prose-invert">
         <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
         <p className="text-muted-foreground text-sm mb-8">Effective Date: 1st February, 2026 — Platform: Syncareer</p>
@@ -89,6 +89,6 @@ export default function PrivacyPolicy() {
           <li>Website: <a href="https://syncareer.me" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://syncareer.me</a></li>
         </ul>
       </div>
-    </div>
+    </main>
   );
 }

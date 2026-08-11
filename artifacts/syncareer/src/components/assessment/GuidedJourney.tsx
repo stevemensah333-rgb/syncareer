@@ -110,7 +110,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ isGuest = false })
           <CardTitle className="text-lg">Your Career Journey</CardTitle>
           <span className="text-sm text-muted-foreground">{completedCount}/{steps.length} complete</span>
         </div>
-        <Progress value={progressPercent} className="h-2 mt-2" />
+        <Progress value={progressPercent} className="h-2 mt-2" aria-label={`Career journey progress: ${completedCount} of ${steps.length} steps complete`} />
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

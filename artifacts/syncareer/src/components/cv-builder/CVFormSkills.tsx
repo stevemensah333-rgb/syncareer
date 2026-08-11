@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Wrench, Plus, X } from 'lucide-react';
 import { SUGGESTED_SKILLS } from '@/features/cv-builder/constants';
 
@@ -47,14 +48,16 @@ export const CVFormSkills: React.FC<CVFormSkillsProps> = ({ skills, onChange }) 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Label htmlFor="cv-skill-input" className="sr-only">Add a skill</Label>
           <Input
+            id="cv-skill-input"
             placeholder="Add a skill (e.g., Python, Leadership, Excel)"
             value={newSkill}
             onChange={(e) => setNewSkill(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <Button onClick={addSkill}>
+          <Button type="button" onClick={addSkill}>
             <Plus className="h-4 w-4 mr-1" />
             Add
           </Button>
@@ -72,10 +75,12 @@ export const CVFormSkills: React.FC<CVFormSkillsProps> = ({ skills, onChange }) 
                 >
                   {skill}
                   <button
+                    type="button"
                     onClick={() => removeSkill(skill)}
-                    className="ml-1 hover:text-destructive"
+                    aria-label={`Remove ${skill}`}
+                    className="ml-0.5 grid h-7 w-7 place-items-center rounded-sm hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <X className="h-3 w-3" />
+                    <X aria-hidden="true" className="h-3 w-3" />
                   </button>
                 </Badge>
               ))}
@@ -90,15 +95,15 @@ export const CVFormSkills: React.FC<CVFormSkillsProps> = ({ skills, onChange }) 
               .filter((skill) => !skills.includes(skill))
               .slice(0, 10)
               .map((skill) => (
-                <Badge
+                <button
                   key={skill}
-                  variant="outline"
-                  className="px-3 py-1 text-sm cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                  type="button"
+                  className="inline-flex min-h-11 items-center rounded-full border border-border px-3 py-1 text-sm font-semibold transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   onClick={() => addSuggestedSkill(skill)}
                 >
-                  <Plus className="h-3 w-3 mr-1" />
-                  {skill}
-                </Badge>
+                  <Plus aria-hidden="true" className="mr-1 h-3 w-3" />
+                  Add {skill}
+                </button>
               ))}
           </div>
         </div>

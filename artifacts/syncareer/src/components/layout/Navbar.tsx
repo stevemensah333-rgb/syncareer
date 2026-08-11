@@ -98,7 +98,7 @@ export function Navbar({ className }: NavbarProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9"
+                className="h-11 w-11 md:h-9 md:w-9"
                 onMouseEnter={preloadAskCounsellor}
                 onFocus={preloadAskCounsellor}
                 onClick={openAskCounsellor}
@@ -115,7 +115,7 @@ export function Navbar({ className }: NavbarProps) {
                 <button
                   type="button"
                   aria-label="Open account menu"
-                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:h-9 md:w-9"
                 >
                 <Avatar className="h-9 w-9 cursor-pointer border transition-colors duration-150 hover:border-primary/50">
                   <AvatarFallback className="bg-primary/10 text-primary">

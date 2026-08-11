@@ -14,6 +14,8 @@ const Progress = React.forwardRef<
       className
     )}
     {...props}
+    aria-label={props['aria-label'] ?? 'Progress'}
+    aria-valuetext={props['aria-valuetext'] ?? `${Math.round(value ?? 0)}%`}
   >
     <ProgressPrimitive.Indicator
       className="h-full w-full flex-1 bg-primary transition-all"

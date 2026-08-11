@@ -243,7 +243,12 @@ const FeedbackDashboard = () => {
             </CardHeader>
             <CardContent>
               {featureBreakdown.length > 0 ? (
-                <div className="h-64">
+                <div
+                  className="h-64"
+                  role="img"
+                  aria-label={`Feedback by feature. ${featureBreakdown.map((item) => `${item.name}: ${item.positive} positive and ${item.negative} negative`).join('. ')}`}
+                >
+                  <div aria-hidden="true" className="h-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={featureBreakdown}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -254,6 +259,7 @@ const FeedbackDashboard = () => {
                       <Bar dataKey="negative" fill="hsl(0, 84%, 60%)" name="Negative" stackId="a" />
                     </BarChart>
                   </ResponsiveContainer>
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">No feedback data yet.</p>
@@ -270,7 +276,12 @@ const FeedbackDashboard = () => {
             </CardHeader>
             <CardContent>
               {stats.total > 0 ? (
-                <div className="h-64 flex items-center justify-center">
+                <div
+                  className="h-64 flex items-center justify-center"
+                  role="img"
+                  aria-label={`Overall sentiment. ${pieData.map((item) => `${item.name}: ${item.value}`).join('. ')}`}
+                >
+                  <div aria-hidden="true" className="h-full w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
@@ -281,6 +292,7 @@ const FeedbackDashboard = () => {
                       <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">No data available.</p>

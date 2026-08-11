@@ -32,8 +32,9 @@ export default function BlogPost() {
   if (!post) {
     return (
       <div className="min-h-screen bg-background">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-3 focus:text-sm focus:font-medium focus:text-primary-foreground">Skip to main content</a>
         <LandingHeader onSignIn={() => navigate("/sign-in")} onSignUp={() => navigate("/sign-up")} />
-        <main className="container mx-auto max-w-3xl px-6 py-32 text-center">
+        <main id="main-content" tabIndex={-1} className="container mx-auto max-w-3xl px-6 py-32 text-center focus:outline-none">
           <h1 className="text-3xl font-semibold mb-4">Post not found</h1>
           <Link to="/blog" className="text-primary hover:underline">← Back to blog</Link>
         </main>
@@ -44,8 +45,9 @@ export default function BlogPost() {
 
   return (
     <div className="min-h-screen bg-background">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-3 focus:text-sm focus:font-medium focus:text-primary-foreground">Skip to main content</a>
       <LandingHeader onSignIn={() => navigate("/sign-in")} onSignUp={() => navigate("/sign-up")} />
-      <main className="container mx-auto max-w-3xl px-6 py-20">
+      <main id="main-content" tabIndex={-1} className="container mx-auto max-w-3xl px-6 py-20 focus:outline-none">
         <Link to="/blog" className="text-sm text-foreground/60 hover:text-foreground mb-8 inline-block">← All posts</Link>
         <article>
           <p className="text-xs uppercase tracking-[0.14em] text-primary mb-3">{post.category} · {post.readTime}</p>

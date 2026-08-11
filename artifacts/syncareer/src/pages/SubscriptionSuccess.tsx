@@ -7,7 +7,7 @@ export default function SubscriptionSuccessPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <main id="main-content" className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <AnimatedSection y={20} className="text-center max-w-md">
         <div className="space-y-6">
           <AnimatedSection y={16}>
@@ -31,6 +31,6 @@ export default function SubscriptionSuccessPage() {
           </AnimatedSection>
         </div>
       </AnimatedSection>
-    </div>
+    </main>
   );
 }
