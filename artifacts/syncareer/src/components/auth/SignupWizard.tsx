@@ -7,7 +7,6 @@ import { Progress } from '@/components/ui/progress';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
 import { signupFormSchema, type SignupFormData } from '@/lib/validationSchemas';
-import { trackEvent } from '@/services/analytics';
 
 interface SignupWizardProps {
   onComplete: (data: SignupFormData) => void;
@@ -97,13 +96,6 @@ export const SignupWizard: React.FC<SignupWizardProps> = ({
     const nextIndex = currentStepIndex + 1;
     if (nextIndex < steps.length) {
       setCurrentStep(steps[nextIndex]!);
-      trackEvent({
-        event: 'user_action',
-        properties: {
-          action_name: 'signup_step_progress',
-          context: `moved_to_${steps[nextIndex]}`,
-        },
-      });
     }
   };
 
@@ -118,10 +110,6 @@ export const SignupWizard: React.FC<SignupWizardProps> = ({
     // Validate full form
     try {
       const validated = signupFormSchema.parse(formData);
-      trackEvent({
-        event: 'user_signup',
-        properties: { user_type: 'student' },
-      });
       onComplete(validated);
     } catch (error) {
       if (error instanceof z.ZodError) {

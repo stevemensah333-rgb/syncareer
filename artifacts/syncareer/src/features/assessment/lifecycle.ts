@@ -1,4 +1,4 @@
-import { EVENTS, trackEvent } from '@/services/analytics';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
 export const ASSESSMENT_ANALYTICS_CONSENT_KEY = 'syncareer.assessment_analytics_consent';
 
@@ -12,8 +12,13 @@ export function setAssessmentAnalyticsConsent(granted: boolean, storage: Pick<St
 
 export function trackAssessmentLifecycle(event: 'start' | 'progress' | 'abandonment' | 'resume' | 'completion', properties: { answered: number; total: number; elapsedSeconds?: number }, storage?: Pick<Storage, 'getItem'>): void {
   if (!hasAssessmentAnalyticsConsent(storage)) return;
-  const eventName = event === 'start' ? EVENTS.ASSESSMENT_STARTED : event === 'completion' ? EVENTS.ASSESSMENT_COMPLETED : event === 'abandonment' ? EVENTS.ASSESSMENT_ABANDONED : event === 'resume' ? EVENTS.ASSESSMENT_RESUMED : EVENTS.ASSESSMENT_QUESTION_PROGRESS;
-  trackEvent(eventName, { answered_count: properties.answered, total_questions: properties.total, ...(properties.elapsedSeconds === undefined ? {} : { elapsed_seconds: properties.elapsedSeconds }) });
+  const percentage = properties.total > 0 ? Math.floor((properties.answered / properties.total) * 100) : 0;
+  const bucket = percentage >= 75 ? 75 : percentage >= 50 ? 50 : percentage >= 25 ? 25 : 0;
+  if (event === 'start') captureProductEvent(ANALYTICS_EVENTS.ASSESSMENT_STARTED, {});
+  else if (event === 'completion') captureProductEvent(ANALYTICS_EVENTS.ASSESSMENT_COMPLETED, {});
+  else if (event === 'progress' && bucket > 0) captureProductEvent(ANALYTICS_EVENTS.ASSESSMENT_PROGRESS, { progress_bucket: bucket as 25 | 50 | 75 });
+  else if (event === 'abandonment') captureProductEvent(ANALYTICS_EVENTS.ASSESSMENT_ABANDONED, { progress_bucket: bucket });
+  else if (event === 'resume') captureProductEvent(ANALYTICS_EVENTS.ASSESSMENT_RESUMED, { progress_bucket: bucket });
 }
 
 export const assessmentResumeCapability = {

@@ -16,6 +16,7 @@ import FAQSection, { LANDING_FAQS } from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
 import OAuthReturnState, { hasOAuthReturnState } from "@/components/auth/OAuthReturnState";
+import { ANALYTICS_EVENTS, captureProductEvent } from "@/services/analytics";
 
 const SITE_URL = "https://syncareer.me";
 const SEO_DESCRIPTION =
@@ -80,14 +81,14 @@ export default function Landing() {
       </a>
       <LandingHeader
         onSignIn={goToSignIn}
-        onSignUp={startWithOpportunity}
+        onSignUp={() => { captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: 'opportunities', placement: 'header' }); startWithOpportunity(); }}
         primaryActionLabel="Explore opportunities"
       />
       <main id="main-content" tabIndex={-1} className="focus:outline-none">
-        <HeroSection onGetStarted={startWithOpportunity} onAssessment={startAssessment} />
+        <HeroSection onGetStarted={() => { captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: 'opportunities', placement: 'hero' }); startWithOpportunity(); }} onAssessment={() => { captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: 'assessment', placement: 'hero' }); startAssessment(); }} />
         <ProductStory />
         <FAQSection />
-        <FinalCTASection onGetStarted={startWithOpportunity} onAssessment={startAssessment} />
+        <FinalCTASection onGetStarted={() => { captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: 'opportunities', placement: 'final' }); startWithOpportunity(); }} onAssessment={() => { captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: 'assessment', placement: 'final' }); startAssessment(); }} />
       </main>
       <LandingFooter />
     </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -183,6 +184,8 @@ const Onboarding = () => {
         .from('profiles')
         .upsert(profilePayload, { onConflict: 'id' });
       if (profileError) throw profileError;
+
+      captureProductEvent(ANALYTICS_EVENTS.ONBOARDING_COMPLETED, { user_role: userType === 'career_counsellor' ? 'career_counsellor' : 'student' });
 
       toast.success('Profile setup complete!');
       // Refresh the cached profile so RoleRoute sees onboarding_completed=true

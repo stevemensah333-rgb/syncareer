@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { UserProfileProvider, useUserProfile } from "./contexts/UserProfileContext";
 import { prefetchLandingRoutes, prefetchStudentRoutes, prefetchCounsellorRoutes } from "@/lib/routePrefetch";
+import { usePageTracking } from "@/hooks/usePageTracking";
+import { identifyAnalyticsUser, resetAnalyticsIdentity } from "@/services/analytics";
 
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { LoadingFallback } from "./components/LoadingFallback";
@@ -132,6 +134,19 @@ const RoutePrefetcher = () => {
   return null;
 };
 
+const AnalyticsBridge = () => {
+  usePageTracking();
+  const { isLoaded, isSignedIn, userId } = useAuth();
+  const { profile } = useUserProfile();
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn || !userId) { resetAnalyticsIdentity(); return; }
+    const role = profile?.user_type === 'student' || profile?.user_type === 'career_counsellor' ? profile.user_type : 'unknown';
+    void identifyAnalyticsUser(userId, role);
+  }, [isLoaded, isSignedIn, profile?.user_type, userId]);
+  return null;
+};
+
 const AppContent = () => (
   <GlobalErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -139,6 +154,7 @@ const AppContent = () => (
       <UserProfileProvider>
         <TooltipProvider>
           <RoutePrefetcher />
+          <AnalyticsBridge />
           <Toaster />
             <Sonner />
             <Suspense fallback={<LoadingFallback />}>

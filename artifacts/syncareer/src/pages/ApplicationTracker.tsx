@@ -13,6 +13,7 @@ import { classifyTrackerError, saveApplicationNotes, updateApplicationStatus, up
 import { STAGE_LABELS, STAGE_ORDER, stageForStatus, statusLabel, statusesForStage, type ApplicationStage } from '@/features/application-tracker/workflow';
 import { applicationFacts, ownedWorkspaceLinks, type WorkspaceApplication, type WorkspaceInterview, type WorkspaceResume } from '@/features/application-tracker/workspace';
 import { getOrganisation } from '@/features/opportunities/opportunity';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
 type StageFilter = 'all' | ApplicationStage | 'other';
 type LoadState = 'loading' | 'ready' | 'error';
@@ -97,6 +98,8 @@ export default function ApplicationTracker() {
     setStatusSaving(false);
     if (!result.ok) { toast.error(result.userMessage); return; }
     setApplications((items) => items.map((item) => item.id === selected.id ? { ...item, status } : item));
+    if (status === 'rejected' || status === 'withdrawn' || status === 'offered') captureProductEvent(ANALYTICS_EVENTS.APPLICATION_OUTCOME_RECORDED, { outcome: status });
+    else captureProductEvent(ANALYTICS_EVENTS.APPLICATION_STAGE_RECORDED, { stage: stageForStatus(status) ?? 'other' });
     toast.success(`Stage updated to ${statusLabel(status)}`);
   };
 
@@ -119,6 +122,7 @@ export default function ApplicationTracker() {
     const result = await updateApplicationWorkspace(supabase, selected.id, userId, update);
     if (!result.ok) { setWorkspaceState('failed'); return; }
     setApplications((items) => items.map((item) => item.id === selected.id ? { ...item, ...update, next_action: update.next_action?.trim() || (update.next_action === undefined ? item.next_action : null), next_action_due: update.next_action?.trim() === '' ? null : update.next_action_due === undefined ? item.next_action_due : update.next_action_due } : item));
+    if (update.next_action?.trim()) captureProductEvent(ANALYTICS_EVENTS.APPLICATION_NEXT_ACTION_SET, { has_due_date: Boolean(update.next_action_due) });
     setWorkspaceState('saved');
   };
 

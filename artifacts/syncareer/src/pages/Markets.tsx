@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CompanyLogo } from '@/components/opportunities/CompanyLogo';
 import { DeadlinePill } from '@/components/opportunities/DeadlinePill';
@@ -182,6 +183,10 @@ const Opportunities = () => {
     if (Number.isFinite(stored) && stored > 0) listRef.current.scrollTop = stored;
   }, [loadStatus]);
 
+  useEffect(() => {
+    if (loadStatus === 'ready') captureProductEvent(ANALYTICS_EVENTS.OPPORTUNITIES_VIEWED, { view: tab });
+  }, [loadStatus, tab]);
+
   const toggleSave = async (jobId: string) => {
     if (pendingSaveIds.current.has(jobId) || partialWarning) return;
     const {
@@ -214,6 +219,8 @@ const Opportunities = () => {
           .from('saved_jobs')
           .insert({ user_id: user.id, job_id: jobId });
         if (error && error.code !== '23505') throw error;
+        const job = jobs.find((item) => item.id === jobId);
+        captureProductEvent(ANALYTICS_EVENTS.OPPORTUNITY_SAVED, { source_kind: job?.is_external ? 'external' : 'native' });
         toast.success('Saved — find it under the Saved tab');
       }
     } catch (err) {
@@ -271,6 +278,8 @@ const Opportunities = () => {
           return next;
         });
       }
+      captureProductEvent(ANALYTICS_EVENTS.APPLICATION_CREATED, { origin: 'opportunity' });
+      captureProductEvent(ANALYTICS_EVENTS.OPPORTUNITY_MARKED_APPLIED, { source_kind: job.is_external ? 'external' : 'native' });
       toast.success('Now tracking this application');
     } catch (err) {
       toast.error(classifyTrackerError(err).userMessage);

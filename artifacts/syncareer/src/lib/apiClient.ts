@@ -1,7 +1,6 @@
 const captureException = (error: Error, ctx?: Record<string, unknown>) => {
   console.error('[apiClient]', error, ctx);
 };
-import { trackEvent } from '@/services/analytics';
 
 export interface ApiError {
   status: number;
@@ -39,16 +38,6 @@ export async function apiRequest<T>(
           message: data.message || response.statusText,
           data,
         };
-
-        // Track API errors
-        trackEvent({
-          event: 'api_error',
-          properties: {
-            endpoint: url,
-            status_code: response.status,
-            error_message: error.message,
-          },
-        });
 
         throw new Error(`API Error: ${error.message}`);
       }

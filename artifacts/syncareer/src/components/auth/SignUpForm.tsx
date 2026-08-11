@@ -14,6 +14,7 @@ import {
 import GoogleSignInButton from './GoogleSignInButton';
 import PasswordField from './PasswordField';
 import { getAuthErrorMessage, getReturnToFromLocationState } from './authUtils';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
 const ROLE_OPTIONS = [
   { value: 'student', label: 'Student / Job seeker' },
@@ -45,6 +46,8 @@ export default function SignUpForm() {
       return;
     }
     submissionInFlight.current = true;
+    const analyticsRole = userType === 'career_counsellor' ? 'career_counsellor' : 'student';
+    captureProductEvent(ANALYTICS_EVENTS.SIGN_UP_STARTED, { method: 'email', user_role: analyticsRole });
     setSubmitting(true);
     setErrorMessage('');
     try {
@@ -60,6 +63,7 @@ export default function SignUpForm() {
         },
       });
       if (error) throw error;
+      captureProductEvent(ANALYTICS_EVENTS.ACCOUNT_CREATED, { method: 'email', user_role: analyticsRole, confirmation_required: !data.session });
 
       // Fire-and-forget welcome email (don't block signup on failure)
       const newUserId = data.user?.id;

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { lovable } from '@/integrations/lovable';
 import { getAuthErrorMessage, getSafeReturnTo, OAUTH_PENDING_KEY, OAUTH_RETURN_TO_KEY } from './authUtils';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
 interface Props {
   label?: string;
@@ -17,6 +18,7 @@ export default function GoogleSignInButton({ label = 'Continue with Google', cla
   const handleClick = async () => {
     if (requestInFlight.current) return;
     requestInFlight.current = true;
+    if (/sign up/i.test(label)) captureProductEvent(ANALYTICS_EVENTS.SIGN_UP_STARTED, { method: 'google', user_role: 'unknown' });
     setLoading(true);
     setErrorMessage('');
     sessionStorage.setItem(OAUTH_RETURN_TO_KEY, getSafeReturnTo(returnTo));
