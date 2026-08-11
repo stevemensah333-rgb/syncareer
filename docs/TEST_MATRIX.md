@@ -27,6 +27,11 @@ suite below was implemented so each test has an explicit intent.
 | 1.4 | Progress %, milestones, next-action ordering | `progressCalculations.test.ts` | |
 | 1.5 | Auth validation contracts: email/password/name/phone, signup & login schemas | `validationSchemas.test.ts` | |
 | 1.6 | Subscription access gating (`isPremiumUser`), active/expired/canceled tiers | `subscriptionService.test.ts` | Deterministic fakes around `subscriptions` |
+| 1.7 | Opportunity facts: organisation fallback, work mode (remote-only evidence), eligibility labels, deadline classification (none/passed/today/closing-soon/upcoming), provenance honesty (`verified: false`, no fabricated claims), posted-ago, CTA routing (external/native/tracked) | `features/opportunities/opportunity.test.ts` | Pure functions; no DB |
+| 1.8 | Application status vocabulary & journey: labels, stage mapping, honest terminal/unknown handling, status-editor grouping, notes normalisation, context-aware next actions (missing posting / expired deadline / no CV / offer outcome) | `features/application-tracker/workflow.test.ts` | Pure functions; no DB |
+| 1.9 | Tracker write seam: create-on-first-track, per-user duplicate detection, unique-violation race → alreadyTracked, status/notes updates (blank → null), remove, and error classification (auth-expired / permission / network / server) with no internal leakage | `features/application-tracker/tracking.test.ts` | In-memory fake table; asserts emitted RLS scoping |
+| 1.10 | Opportunity preview progressive disclosure: no hover surface on touch devices; hover/focus reveals deadline, eligibility, provenance, next action; tracked state; expired-deadline warning | `components/opportunities/OpportunityPreview.test.tsx` | happy-dom; gated by `(hover: hover) and (pointer: fine)` |
+| 1.11 | Application detail sheet: full context (status, journey, deadline, CV, practice, notes), missing-posting banner, unknown status, expired deadline, CV-creation recommendation, CV-load failure, note save, delete confirmation, outcome copy | `components/applications/ApplicationDetailSheet.test.tsx` | happy-dom + MemoryRouter |
 
 ## Layer 2 — Auth & onboarding contract tests (local CI)
 
@@ -84,6 +89,10 @@ level in `happy-dom`:
 | 5.3 | Save CV (deterministic strength) | `useCVStrengthScore.test.ts` |
 | 5.4 | Start a permitted interview via a deterministic stub | `interviewContract.test.ts` (retry/backoff + phase) |
 | 5.5 | Book/cancel a counsellor session | SQL (Layer 3.9) + `counsellor` booking contracts |
+| 5.6 | External job → apply on source → mark as applied → tracker row created (duplicate-safe) | Layer 1.9 (`tracking.test.ts`) |
+| 5.7 | Status update / outcome recording on a tracked application (progress + terminal) | Layers 1.8–1.9, 1.11 |
+| 5.8 | Save/unsave an opportunity (saved state visible in list and detail) | Layer 1.10 (saved-state rendering); `saved_jobs` toggle logic exercised via the page |
+| 5.9 | Application empty / expired-deadline / permission / partial-data states | Layers 1.7–1.11 (facts, seam errors, detail-sheet partial states); page-level render not asserted in local CI (see gaps) |
 
 ## What remains unverified (documented gaps)
 
@@ -96,6 +105,11 @@ level in `happy-dom`:
   not tested.
 - **Browser-level E2E** is not run locally; covered by integration tests until a browser
   driver is added.
+- **Page-level render of Opportunities / Application Tracker** (loading skeletons, empty
+  states, error cards, deep-link handling) is implemented but not asserted by a dedicated
+  page test; the underlying states are exercised at the seam and component level
+  (Layers 1.7–1.11). The `saved_jobs` toggle itself is only covered through the page, not
+  in isolation.
 
 ## Failure policy
 

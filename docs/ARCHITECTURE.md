@@ -72,6 +72,54 @@ CVBuilder.tsx ──► useCVStrengthScore.ts (pure, deterministic 0–100 + lab
   └── AI assistant + skill-gap via deployed-only edge functions
 ```
 
+### Opportunity → application flow
+
+The saved opportunity / tracked application is the central product object of the
+"Apply" pillar. Both `/opportunities` (`pages/Markets.tsx`) and `/applications`
+(`pages/ApplicationTracker.tsx`) are list + detail surfaces over the same
+`job_postings` / `saved_jobs` / `job_applications` tables; the tracker detail is a
+right-hand sheet (`components/applications/ApplicationDetailSheet.tsx`) so list
+context is preserved.
+
+```
+Markets.tsx (job_postings, is_external = true)
+  ├── save          → saved_jobs (user_id, job_id)                 [saved tab]
+  ├── apply external → source_url (new tab) + "I applied — start tracking"
+  │                     → startTrackingApplication() → job_applications insert
+  │                       (applicant_id, job_id, status='pending')
+  ├── apply native  → startTrackingApplication() (same insert seam)
+  └── open tracker  → /applications?application=<id>
+
+ApplicationTracker.tsx (job_applications ⋈ job_postings, applicant-owned)
+  ├── status update → updateApplicationStatus()  → job_applications.status
+  ├── notes         → saveApplicationNotes()     → job_applications.notes
+  ├── outcome       → updateOutcome()/trackAction() (recommendation feedback)
+  └── remove        → removeApplicationRecord()  → delete (confirmed dialog)
+```
+
+- The write seam is `features/application-tracker/tracking.ts`; it is
+  duplicate-safe (read-before-write + unique-violation mapping), scopes every
+  query to `applicant_id`, and classifies errors into safe user-facing
+  categories (auth-expired / permission / network / server).
+- The status vocabulary and journey (`Applied → In review → Interview → Offer →
+  Outcome`) live in `features/application-tracker/workflow.ts`, re-exported by
+  the Home/dashboard helpers; unknown stored statuses are tolerated and surfaced
+  honestly, never guessed.
+- CV and interview functionality are connected where the schema permits:
+  `job_applications.resume_url` is displayed when present, the user's primary CV
+  (`resumes.user_id + is_primary`) is shown as the targeted CV, and the CV
+  builder / interview simulator are reached via context deep links
+  (`/cv-builder?targetRole=…`, `/interview-simulator?role=…&skills=…`), which the
+  simulator pre-fills. There is no FK between those features and
+  `job_applications`, so the links are the safe integration boundary.
+- Honesty rules: `job_postings` carries no verification/freshness evidence, so
+  opportunities always render provenance (source, source URL, posted/updated
+  timestamps) with an explicit "not independently verified" note, never claim a
+  listing is current, and show missing fields (deadline, salary, experience
+  level, organisation) as explicitly absent. Required-but-not-applied schema
+  migrations for verification evidence, per-application CV targeting, and a
+  status CHECK constraint are reported in [`SCHEMA_RECONCILIATION.md`](./SCHEMA_RECONCILIATION.md) §13.
+
 ### Payment / subscription flow
 
 See [`PAYMENT_AND_SUBSCRIPTIONS.md`](./PAYMENT_AND_SUBSCRIPTIONS.md).
