@@ -36,7 +36,7 @@ The frontend router (`artifacts/syncareer/src/App.tsx`) defines the modules:
 
 | Module | Primary routes |
 |---|---|
-| Marketing / landing / blog / pricing | `/`, `/blog`, `/pricing`, `/terms`, `/privacy` |
+| Marketing / landing / pricing | `/`, `/pricing`, `/terms`, `/privacy` |
 | Auth & onboarding | `/sign-in`, `/sign-up`, `/reset-password`, `/onboarding` |
 | Student core | `/dashboard`, `/assessment`, `/cv-builder`, `/analysis` |
 | Interview / AI | `/interview-simulator`, `/ai-coach` |
