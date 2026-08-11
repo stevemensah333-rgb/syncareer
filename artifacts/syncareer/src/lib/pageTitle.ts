@@ -6,7 +6,6 @@ const exactTitles: Record<string, string> = {
   '/subscription-success': 'Subscription activated | Syncareer',
   '/terms': 'Terms and conditions | Syncareer',
   '/privacy': 'Privacy policy | Syncareer',
-  '/blog': 'Career guides | Syncareer',
   '/unsubscribe': 'Email preferences | Syncareer',
   '/signed-out': 'Signed out | Syncareer',
   '/reset-password': 'Reset password | Syncareer',
@@ -36,6 +35,5 @@ export function getPageTitle(pathname: string): string {
   if (pathname.endsWith('/forgot-password')) return 'Reset password | Syncareer';
   if (pathname.startsWith('/sign-in')) return 'Sign in | Syncareer';
   if (pathname.startsWith('/sign-up')) return 'Create your account | Syncareer';
-  if (pathname.startsWith('/blog/')) return 'Career guide | Syncareer';
   return exactTitles[pathname] ?? 'Page not found | Syncareer';
 }

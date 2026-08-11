@@ -22,7 +22,7 @@ describe('getPageTitle', () => {
   });
 
   it('covers dynamic, authentication, and unknown routes without falling back to a stale title', () => {
-    expect(getPageTitle('/blog/evidence-based-cv')).toBe('Career guide | Syncareer');
+    expect(getPageTitle('/blog/evidence-based-cv')).toBe('Page not found | Syncareer');
     expect(getPageTitle('/sign-in/forgot-password')).toBe('Reset password | Syncareer');
     expect(getPageTitle('/missing-route')).toBe('Page not found | Syncareer');
   });

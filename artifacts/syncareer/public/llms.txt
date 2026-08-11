@@ -8,15 +8,10 @@ Syncareer combines a RIASEC-based career assessment, an AI CV builder, a voice-b
 
 - [Home](/): Platform overview and sign-up.
 - [Pricing](/pricing): Subscription plans for students.
-- [Blog](/blog): Career guides for African graduates.
 - [Sign in](/sign-in): Existing user login.
 - [Sign up](/sign-up): Create a new account.
 - [Privacy Policy](/privacy-policy): How user data is handled.
 - [Terms and Conditions](/terms-and-conditions): Platform terms of use.
-
-## Blog
-
-- [Career guides](/blog): CV writing, interview prep, assessments, and graduate jobs in Africa.
 
 ## Optional
 
