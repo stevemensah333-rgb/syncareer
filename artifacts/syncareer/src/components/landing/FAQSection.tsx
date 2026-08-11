@@ -8,19 +8,19 @@ import {
 export const LANDING_FAQS = [
   {
     q: "Does Syncareer apply to roles for me?",
-    a: "No. For externally sourced opportunities, you apply on the original posting. You can then record that you applied so the role, deadline, notes, preparation, stage, and outcome stay organised in your workspace.",
+    a: "No. You apply directly on the original employer's posting, then track your stage, notes, and deadlines in your Syncareer workspace.",
   },
   {
     q: "Are the opportunities verified by Syncareer?",
-    a: "No. Opportunities can be aggregated from external sources and are not independently verified by Syncareer. The product shows the stored source and original link where available so you can confirm the role, requirements, and deadline before applying.",
+    a: "No. We aggregate external listings and show you the stored source and original link so you can confirm details before applying.",
   },
   {
     q: "Does the CV quality score guarantee that my CV will pass an applicant tracking system?",
-    a: "No. Completion and quality are deterministic guidance based on meaningful fields and visible writing or evidence patterns. They do not predict applicant tracking system acceptance, interviews, or hiring outcomes.",
+    a: "No. Our scoring checks completion and evidence quality to help you build a stronger application, but hiring decisions depend on the employer.",
   },
   {
     q: "How is interview practice made specific to a job?",
-    a: "You configure the target role, industry, interview type, session length, and optional job-description and CV context. Questions and feedback are AI-generated from that setup, so they should be reviewed critically rather than treated as an employer assessment.",
+    a: "You select your target role, industry, and session length, and optional job-description and CV context. Syncareer generates tailored practice questions and feedback from your setup.",
   },
 ];
 
