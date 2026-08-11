@@ -46,6 +46,16 @@ export function getDeadlineLabel(days: number | null): { label: string; tone: 'u
   return { label: `Closes ${formatShortDate(new Date(Date.now() + days * 86400000).toISOString())}`, tone: 'ok' };
 }
 
+export function getActionDueLabel(days: number | null): { label: string; tone: 'urgent' | 'soon' | 'ok' } | null {
+  if (days === null) return null;
+  if (days < -1) return { label: `${Math.abs(days)} days overdue`, tone: 'urgent' };
+  if (days === -1) return { label: '1 day overdue', tone: 'urgent' };
+  if (days === 0) return { label: 'Due today', tone: 'urgent' };
+  if (days === 1) return { label: 'Due tomorrow', tone: 'soon' };
+  if (days <= 7) return { label: `Due in ${days} days`, tone: 'soon' };
+  return { label: `Due ${formatShortDate(new Date(Date.now() + days * 86400000).toISOString())}`, tone: 'ok' };
+}
+
 interface ResumeSections {
   personal_info?: Json | null;
   education?: Json | null;

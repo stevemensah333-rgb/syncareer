@@ -24,17 +24,7 @@ const SEO_DESCRIPTION =
 export default function Landing() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
-  const { profile, loading: profileLoading } = useUserProfile();
   const oauthReturn = hasOAuthReturnState();
-
-  useEffect(() => {
-    if (oauthReturn || !isLoaded || !isSignedIn || profileLoading) return;
-    if (!profile || !profile.onboarding_completed) {
-      navigate("/onboarding", { replace: true });
-      return;
-    }
-    navigate(getHomeRouteForRole(profile.user_type || null), { replace: true });
-  }, [isSignedIn, isLoaded, profile, profileLoading, navigate, oauthReturn]);
 
   useEffect(() => {
     setMetaTags({
@@ -74,14 +64,7 @@ export default function Landing() {
   }, []);
 
   if (oauthReturn) return <OAuthReturnState />;
-
-  if (!isLoaded || isSignedIn) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-background" role="status" aria-live="polite">
-        <span className="text-sm text-muted-foreground">Loading Syncareer…</span>
-      </div>
-    );
-  }
+  if (isLoaded && isSignedIn) return <SignedInLandingRedirect />;
 
   const goToSignIn = () => navigate("/sign-in");
   const startAssessment = () => navigate("/assessment");
@@ -109,4 +92,17 @@ export default function Landing() {
       <LandingFooter />
     </div>
   );
+}
+
+function SignedInLandingRedirect() {
+  const navigate = useNavigate();
+  const { profile, loading } = useUserProfile();
+
+  useEffect(() => {
+    if (loading) return;
+    if (!profile || !profile.onboarding_completed) navigate("/onboarding", { replace: true });
+    else navigate(getHomeRouteForRole(profile.user_type || null), { replace: true });
+  }, [loading, navigate, profile]);
+
+  return <div className="grid min-h-screen place-items-center bg-background" role="status" aria-live="polite"><span className="text-sm text-muted-foreground">Opening your workspace…</span></div>;
 }

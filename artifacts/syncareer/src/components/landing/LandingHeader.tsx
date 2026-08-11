@@ -12,9 +12,7 @@ interface LandingHeaderProps {
 
 const NAV = [
   { label: "How it works", href: "/#workflow" },
-  { label: "Workspace", href: "/#workspace" },
-  { label: "Method", href: "/#method" },
-  { label: "FAQ", href: "/#faqs" },
+  { label: "Product", href: "/#product" },
 ];
 
 export default function LandingHeader({

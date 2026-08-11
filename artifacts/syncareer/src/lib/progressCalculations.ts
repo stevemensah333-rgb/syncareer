@@ -119,17 +119,17 @@ export function getNextAction(progress: UserProgress): {
 
   if (progress.assessmentCompleted === 0) {
     return {
-      action: 'Take Assessment',
-      description: 'Start with our career assessment to discover your strengths.',
-      urgency: 'high',
+      action: 'Explore Opportunities',
+      description: 'Start with a current opportunity. Use the optional assessment only if you are still choosing a direction.',
+      urgency: 'medium',
     };
   }
 
   if (progress.assessmentCompleted < 3) {
     return {
-      action: 'Take More Assessments',
-      description: 'Explore different career paths with additional assessments.',
-      urgency: 'medium',
+      action: 'Explore Opportunities',
+      description: 'Compare your interest themes with real role requirements and evidence you can build.',
+      urgency: 'low',
     };
   }
 

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { calculateScoresLocally } from './assessmentConstants';
 import { RIASEC_LABELS } from '@/data/assessmentQuestions';
+import { ASSESSMENT_QUESTIONS } from '@/data/assessmentQuestions';
+import { validateAssessmentAnswers } from '@/features/assessment/scoring';
 
 /**
  * Matrix 1.1 — Deterministic RIASEC scoring, normalization to 0–100,
@@ -30,6 +32,13 @@ function riasecAnswers(scores: Record<string, number>): Record<number, number> {
 }
 
 describe('calculateScoresLocally (RIASEC)', () => {
+  it('rejects incomplete or out-of-range response sets at submission boundaries', () => {
+    const complete = Object.fromEntries(ASSESSMENT_QUESTIONS.map((question) => [question.id, 3]));
+    expect(validateAssessmentAnswers(complete, ASSESSMENT_QUESTIONS)).toBe(true);
+    expect(validateAssessmentAnswers({ ...complete, 45: 6 }, ASSESSMENT_QUESTIONS)).toBe(false);
+    const incomplete = { ...complete }; delete incomplete[45];
+    expect(validateAssessmentAnswers(incomplete, ASSESSMENT_QUESTIONS)).toBe(false);
+  });
   it('normalizes subcategory sums to a 0–100 work interest score', () => {
     // R: 3×5=15/15 → 100 ; I: 3×4=12/15 → 80 ; A: 3×3=9/15 → 60 ; S: 3×2=6/15 → 40 ; E: 2×1=2/10 → 20 ; C: 1×5=5/5 → 100
     const answers = riasecAnswers({ R: 5, I: 4, A: 3, S: 2, E: 1, C: 5 });

@@ -31,7 +31,7 @@ describe('AttentionList', () => {
         />
       </MemoryRouter>
     );
-    expect(screen.getByText(/Needs attention soon/)).toBeTruthy();
+    expect(screen.getByText(/Needs attention/)).toBeTruthy();
     expect(screen.getByText('Frontend Developer')).toBeTruthy();
   });
 });

@@ -25,6 +25,7 @@ function renderLanding() {
       { path: '/dashboard', element: <div>Dashboard route</div> },
       { path: '/onboarding', element: <div>Onboarding route</div> },
       { path: '/sign-in', element: <div>Sign-in route</div> },
+      { path: '/sign-up', element: <div>Sign-up route</div> },
     ],
     { initialEntries: ['/'] },
   );
@@ -42,13 +43,29 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('Landing routing', () => {
-  it('uses the public assessment as the primary acquisition action', async () => {
+  it('renders signed-out content while authentication is still resolving', () => {
+    authState.isLoaded = false;
+    renderLanding();
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/real opportunity/i);
+    expect(screen.queryByText(/Loading Syncareer/i)).toBeNull();
+  });
+
+  it('uses opportunity exploration as the primary acquisition action', async () => {
     const router = renderLanding();
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Start career assessment' })[0]!);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Explore opportunities' })[0]!);
 
-    expect(await screen.findByText('Assessment route')).toBeTruthy();
-    expect(router.state.location.pathname).toBe('/assessment');
+    expect(await screen.findByText('Sign-up route')).toBeTruthy();
+    expect(router.state.location.pathname).toBe('/sign-up');
+    expect(router.state.location.search).toBe('?returnTo=%2Fopportunities');
+  });
+
+  it('keeps truthful canonical metadata and four FAQ schema entries', () => {
+    renderLanding();
+    expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://syncareer.me');
+    expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).toMatch(/real opportunities/i);
+    const schema = JSON.parse(document.getElementById('seo-jsonld-faqpage')?.textContent || '{}') as { mainEntity?: unknown[] };
+    expect(schema.mainEntity).toHaveLength(4);
   });
 
   it('preserves the role-aware redirect for an onboarded authenticated visitor', async () => {

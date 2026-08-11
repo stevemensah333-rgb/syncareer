@@ -10,13 +10,16 @@ describe('EmptyState', () => {
         <EmptyState />
       </MemoryRouter>
     );
-    expect(screen.getByText(/Turn real opportunities into stronger applications/)).toBeTruthy();
+    expect(screen.getByText(/Start with a real opportunity/)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Find an opportunity/ })).toBeTruthy();
     // Should NOT show fake metrics like XP, trophies etc.
     expect(screen.queryByText(/XP/)).toBeNull();
-    // Three step path present
-    expect(screen.getByText(/Save an opportunity/)).toBeTruthy();
-    expect(screen.getByText(/Build & prepare/)).toBeTruthy();
-    expect(screen.getByText(/Apply & track/)).toBeTruthy();
+    expect(screen.queryByText(/Build & prepare/)).toBeNull();
+    expect(screen.queryByRole('button', { name: /choosing a direction/i })).toBeNull();
+  });
+
+  it('offers assessment only when direction is explicitly unknown', () => {
+    render(<MemoryRouter><EmptyState showAssessment /></MemoryRouter>);
+    expect(screen.getByRole('button', { name: /choosing a direction/i })).toBeTruthy();
   });
 });

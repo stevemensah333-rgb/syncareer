@@ -56,6 +56,7 @@ import {
   isMeaningfulText,
   isProjectMeaningful,
 } from '@/features/cv-builder/scoring';
+import { RequirementEvidenceActions } from '@/components/learning/RequirementEvidenceActions';
 
 type SaveState = 'saved' | 'unsaved' | 'saving' | 'failed';
 
@@ -96,8 +97,11 @@ const CVBuilder = () => {
   const applicationId = searchParams.get('application') || '';
   const targetSkills = useMemo(() => {
     const raw = searchParams.get('skills') || '';
-    return raw ? raw.split(',').map((skill) => skill.trim()).filter(Boolean) : [];
+    const focusSkill = searchParams.get('focusSkill')?.trim();
+    return Array.from(new Set([...(raw ? raw.split(',').map((skill) => skill.trim()).filter(Boolean) : []), ...(focusSkill ? [focusSkill] : [])]));
   }, [searchParams]);
+  const requestedReturnTo = searchParams.get('returnTo') || '';
+  const safeReturnTo = requestedReturnTo.startsWith('/opportunities') || requestedReturnTo.startsWith('/applications') ? requestedReturnTo : '';
   const loadSavedCV = useCallback(async () => {
     setIsLoadingCV(true);
     setLoadFailure(null);
@@ -372,24 +376,23 @@ const CVBuilder = () => {
                     </p>
                   )}
                 </div>
-                {applicationId && (
+                {(applicationId || safeReturnTo) && (
                   <Button size="sm" variant="ghost" asChild>
-                    <Link to={`/applications?application=${encodeURIComponent(applicationId)}`}>Back to application</Link>
+                    <Link to={safeReturnTo || `/applications?application=${encodeURIComponent(applicationId)}`}>{safeReturnTo.startsWith('/opportunities') ? 'Back to opportunity' : 'Back to application'}</Link>
                   </Button>
                 )}
               </div>
               {targetSkills.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
+                <div className="mt-3 space-y-2">
                   {targetSkills.filter((skill) => !dismissedTargetSkills.includes(skill)).map(s => {
                     const present = cvData.skills.some(c => c.toLowerCase() === s.toLowerCase());
                     return (
-                      <span
+                      <div
                         key={s}
-                        className={`text-xs px-2 py-0.5 rounded-full border ${present ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}
+                        className={present ? 'rounded-lg border border-success/30 bg-success/5 p-3 text-sm text-success' : ''}
                       >
-                        {present ? '✓ ' : ''}{s}
-                        {!present && <span className="ml-2 inline-flex gap-1"><button type="button" className="underline" onClick={() => { setActiveTab('skills'); toast.info(`Add ${s} only if you can describe evidence for it.`); }}>Add evidence I have</button><button type="button" className="underline" onClick={() => toast.info(`Record ${s} as a learning goal outside your CV until you can support it.`)}>I'm learning this</button><button type="button" className="underline" onClick={() => setDismissedTargetSkills((items) => [...items, s])}>Not relevant</button><a className="underline" href={`https://www.google.com/search?q=${encodeURIComponent(`learn ${s}`)}`} target="_blank" rel="noopener noreferrer">Find a resource</a></span>}
-                      </span>
+                        {present ? <>✓ {s} is already listed. Check that your experience or project sections provide evidence.</> : <RequirementEvidenceActions requirement={s} role={targetRole} onAddEvidence={() => { setActiveTab('experience'); toast.info(`Add a truthful experience or project example showing ${s}. The skill has not been added.`); }} onNotRelevant={() => setDismissedTargetSkills((items) => items.includes(s) ? items : [...items, s])} />}
+                      </div>
                     );
                   })}
                 </div>

@@ -22,13 +22,13 @@ export interface CareerRecommendation {
 
 const INTEREST_WEIGHTS = { primary: 0.5, secondary: 0.3, tertiary: 0.2 };
 
-const RIASEC_STRENGTHS: Record<string, string> = {
-  R: 'hands-on strengths',
-  I: 'analytical mindset',
-  A: 'creativity',
-  S: 'people skills',
-  E: 'leadership',
-  C: 'organizational abilities',
+const RIASEC_THEMES: Record<string, string> = {
+  R: 'hands-on activity',
+  I: 'investigation and analysis',
+  A: 'creative expression',
+  S: 'helping and collaboration',
+  E: 'initiative and influence',
+  C: 'structure and organisation',
 };
 
 function reverseLabel(label: string): string | null {
@@ -46,14 +46,14 @@ function generateExplanation(
 
   [primaryKey, secondaryKey, tertiaryKey].forEach((key) => {
     if (key && (profile[key] ?? 0) >= 0.4) {
-      parts.push(`${RIASEC_LABELS[key]} ${RIASEC_STRENGTHS[key] || 'traits'}`);
+      parts.push(`${RIASEC_LABELS[key]} interests in ${RIASEC_THEMES[key] || 'this theme'}`);
     }
   });
 
-  if (parts.length === 0) return `This career aligns with your overall interest profile.`;
-  if (parts.length === 1) return `This career matches your ${parts[0]}.`;
+  if (parts.length === 0) return `This role family is one option to investigate from your interest pattern.`;
+  if (parts.length === 1) return `This role family overlaps with your ${parts[0]}.`;
   const last = parts.pop();
-  return `This career matches your ${parts.join(', ')}, and ${last}.`;
+  return `This role family overlaps with your ${parts.join(', ')}, and ${last}.`;
 }
 
 function getClusterInsight(

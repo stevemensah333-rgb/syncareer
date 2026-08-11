@@ -7,7 +7,6 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +23,7 @@ import { useAssessment, type AssessmentResult } from '@/hooks/useAssessment';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { useCareerRecommendations } from '@/hooks/useCareerRecommendations';
-import { ASSESSMENT_QUESTIONS, LIKERT_OPTIONS, RIASEC_LABELS, RIASEC_DESCRIPTIONS } from '@/data/assessmentQuestions';
+import { ASSESSMENT_QUESTIONS, RIASEC_LABELS, RIASEC_DESCRIPTIONS } from '@/data/assessmentQuestions';
 import { personalityRadarData, skillsBarData } from '@/features/assessment/chartData';
 import CareerRecommendations from '@/components/assessment/CareerRecommendations';
 import { format, differenceInDays } from 'date-fns';
@@ -40,6 +39,7 @@ import {
 } from './assessment/assessmentConstants';
 import { assessmentResumeCapability, hasAssessmentAnalyticsConsent, setAssessmentAnalyticsConsent, trackAssessmentLifecycle } from '@/features/assessment/lifecycle';
 import { validateAssessmentAnswers } from '@/features/assessment/scoring';
+import { AssessmentQuestionCard } from '@/components/assessment/AssessmentQuestionCard';
 
 const Assessment = () => {
   const { profile, studentDetails } = useUserProfile();
@@ -276,34 +276,7 @@ const Assessment = () => {
           </Card>
 
           <div className="space-y-4">
-            {currentQuestions.map((q, idx) => (
-              <Card key={q.id} className={`border-l-4 transition-colors ${answers[q.id] !== undefined ? 'border-l-primary' : 'border-l-primary/20'}`}>
-                <CardContent className="pt-6">
-                  <p className="font-medium mb-4">
-                    <span className="text-muted-foreground mr-2">{currentPage * QUESTIONS_PER_PAGE + idx + 1}.</span>
-                    {q.text}
-                  </p>
-                  <RadioGroup
-                    value={answers[q.id]?.toString() || ''}
-                    onValueChange={(val) => handleAnswer(q.id, parseInt(val))}
-                    className="space-y-2"
-                  >
-                    {LIKERT_OPTIONS.map(opt => (
-                      <div
-                        key={opt.value}
-                        className={`flex items-center space-x-3 p-2 rounded-lg transition-colors cursor-pointer ${
-                          answers[q.id] === opt.value ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/50'
-                        }`}
-                        onClick={() => handleAnswer(q.id, opt.value)}
-                      >
-                        <RadioGroupItem value={opt.value.toString()} id={`q${q.id}-${opt.value}`} />
-                        <Label htmlFor={`q${q.id}-${opt.value}`} className="cursor-pointer flex-1 text-sm">{opt.label}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </CardContent>
-              </Card>
-            ))}
+            {currentQuestions.map((question, index) => <AssessmentQuestionCard key={question.id} question={question} questionNumber={currentPage * QUESTIONS_PER_PAGE + index + 1} value={answers[question.id]} onChange={handleAnswer} />)}
           </div>
 
           {allCurrentAnswered && !isLastPage && (

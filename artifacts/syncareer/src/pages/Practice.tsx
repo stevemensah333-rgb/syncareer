@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 const sections = [
   {
     title: 'Career Assessment',
-    description: 'Discover your top career fits using the RIASEC model.',
+    description: 'Explore interest themes if you are still choosing a direction. This does not measure skill or readiness.',
     icon: ClipboardList,
     href: '/assessment',
   },

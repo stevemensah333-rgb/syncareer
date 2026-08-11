@@ -10,6 +10,8 @@ import { STATUS_EDITOR_GROUPS, canRecordStatus } from '@/features/application-tr
 import { applicationFacts, nextActionDueState, type WorkspaceApplication, type WorkspaceInterview, type WorkspaceResume } from '@/features/application-tracker/workspace';
 import { getOrganisation, getProvenanceFacts } from '@/features/opportunities/opportunity';
 import { ContextualAssistantDrawer } from '@/components/assistant/ContextualAssistantDrawer';
+import { RequirementEvidenceActions } from '@/components/learning/RequirementEvidenceActions';
+import { buildEvidenceHref } from '@/features/learning/requirementLearning';
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
 
@@ -62,7 +64,10 @@ export function ApplicationWorkspaceDetail({ application, resumes, interviews, s
       <h2 className="text-xl font-semibold">{facts.title || 'Application'}</h2>
       <p className="text-sm text-muted-foreground">{organisation}{facts.location ? ` · ${facts.location}` : ''}</p>
       <p className="text-sm whitespace-pre-wrap">{facts.employment_type || 'Role type not provided'}</p>
-      {facts.skills?.length ? <p className="text-sm"><span className="text-muted-foreground">Requirements:</span> {facts.skills.join(', ')}</p> : <p className="text-sm text-muted-foreground">Requirements were not provided.</p>}
+      {facts.skills?.length ? <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Requirements</p>
+        {facts.skills.map((skill) => <RequirementEvidenceActions key={skill} requirement={skill} role={facts.title ?? undefined} evidenceHref={buildEvidenceHref({ requirement: skill, role: facts.title ?? undefined, applicationId: application.id, returnTo: `/applications?application=${encodeURIComponent(application.id)}` })} />)}
+      </div> : <p className="text-sm text-muted-foreground">Requirements were not provided.</p>}
     </section>
     <section className="space-y-2">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Where you are</h3>

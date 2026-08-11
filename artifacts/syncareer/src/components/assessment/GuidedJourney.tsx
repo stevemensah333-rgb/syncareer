@@ -17,25 +17,19 @@ interface JourneyStep {
   completed: boolean;
 }
 
-interface GuidedJourneyProps {
-  topCareerTitle?: string;
-  topCareerIndustry?: string;
-  isGuest?: boolean;
-}
+interface GuidedJourneyProps { isGuest?: boolean; }
 
 function buildSteps(
   assessment: boolean,
   cv: boolean,
   interview: boolean,
   applied: boolean,
-  topCareerTitle?: string,
-  topCareerIndustry?: string,
 ): JourneyStep[] {
   return [
     {
       id: 'assessment',
       title: 'Complete Assessment',
-      description: 'Discover your career interests and strengths',
+      description: 'Optional: explore interest themes if you are still choosing direction',
       icon: ClipboardList,
       href: '/assessment',
       completed: assessment,
@@ -51,10 +45,9 @@ function buildSteps(
     {
       id: 'interview',
       title: 'Practice Interview',
-      description: `Prepare for ${topCareerIndustry || 'your target'} industry roles`,
+      description: 'Prepare only after choosing an explicit role or application context',
       icon: Mic,
       href: '/interview-simulator',
-      state: { prefillRole: topCareerTitle, prefillIndustry: topCareerIndustry },
       completed: interview,
     },
     {
@@ -68,11 +61,7 @@ function buildSteps(
   ];
 }
 
-export const GuidedJourney: React.FC<GuidedJourneyProps> = ({
-  topCareerTitle,
-  topCareerIndustry,
-  isGuest = false,
-}) => {
+export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ isGuest = false }) => {
   const navigate = useNavigate();
   const [steps, setSteps] = useState<JourneyStep[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +70,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({
     const checkCompletion = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        setSteps(buildSteps(false, false, false, false, topCareerTitle, topCareerIndustry));
+        setSteps(buildSteps(false, false, false, false));
         setLoading(false);
         return;
       }
@@ -99,14 +88,12 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({
         (resumeRes.data?.length || 0) > 0,
         (interviewRes.data?.length || 0) > 0,
         (applicationRes.data?.length || 0) > 0,
-        topCareerTitle,
-        topCareerIndustry,
       ));
       setLoading(false);
     };
 
     checkCompletion();
-  }, [topCareerTitle, topCareerIndustry]);
+  }, []);
 
   if (loading) return null;
 

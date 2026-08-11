@@ -7,10 +7,6 @@ import {
 
 export const LANDING_FAQS = [
   {
-    q: "Do I need an account to use Syncareer?",
-    a: "You can take the career assessment without an account. Saving opportunities, building a CV, tracking applications, using interview practice, and checking in-app counsellor availability require you to sign in. Some features also depend on your account's access level.",
-  },
-  {
     q: "Does Syncareer apply to roles for me?",
     a: "No. For externally sourced opportunities, you apply on the original posting. You can then record that you applied so the role, deadline, notes, preparation, stage, and outcome stay organised in your workspace.",
   },
@@ -26,19 +22,14 @@ export const LANDING_FAQS = [
     q: "How is interview practice made specific to a job?",
     a: "You configure the target role, industry, interview type, session length, and optional job-description and CV context. Questions and feedback are AI-generated from that setup, so they should be reviewed critically rather than treated as an employer assessment.",
   },
-  {
-    q: "Can I book a career counsellor?",
-    a: "Signed-in students can check the in-app counsellor flow. A booking request is possible only when a published counsellor profile and an available time slot are returned. Availability varies, and the request remains pending until the counsellor responds.",
-  },
 ];
 
 export default function FAQSection() {
   return (
     <section id="faqs" className="scroll-mt-24 border-b" aria-labelledby="faq-title">
-      <div className="mx-auto grid w-full max-w-[1400px] gap-10 px-4 py-20 sm:px-6 md:py-24 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16 lg:px-8">
+      <div className="mx-auto grid w-full max-w-[1400px] gap-8 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.7fr_1.3fr] lg:gap-14 lg:px-8">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">FAQ</p>
-          <h2 id="faq-title" className="mt-3 text-balance text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-4xl">
+          <h2 id="faq-title" className="text-balance text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-4xl">
             Questions worth answering before you start.
           </h2>
           <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">

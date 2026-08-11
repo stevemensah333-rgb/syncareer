@@ -21,6 +21,11 @@ export interface PrimaryApplication {
   status: string;
   created_at: string;
   updated_at: string;
+  next_action?: string | null;
+  next_action_due?: string | null;
+  resume_id?: string | null;
+  job_title_snapshot?: string | null;
+  company_name_snapshot?: string | null;
   job: PrimaryJob | null;
 }
 
@@ -101,7 +106,9 @@ export function PrimaryFocusCard(props: Props) {
   // application
   const app = props.data;
   const job = app.job;
-  const next = nextStepForApplicationStatus(app.status, job?.title ?? '');
+  const role = job?.title ?? app.job_title_snapshot ?? 'Application';
+  const company = job?.company_name ?? app.company_name_snapshot;
+  const next = nextStepForApplicationStatus(app.status, role);
   const statusIdx = ORDERED_STATUSES.indexOf(app.status);
   const days = job?.application_deadline ? getDaysUntilDeadline(job.application_deadline) : null;
   const deadlineInfo = getDeadlineLabel(days);
@@ -114,10 +121,10 @@ export function PrimaryFocusCard(props: Props) {
             <div className="min-w-0 space-y-1.5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Continue your application</p>
               <h2 className="text-xl md:text-[22px] font-semibold tracking-tight leading-tight truncate">
-                {job?.title ?? 'Application'}
+                {role}
               </h2>
               <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
-                {job?.company_name && <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{job.company_name}</span>}
+                {company && <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{company}</span>}
                 {job?.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{job.location}</span>}
                 {job?.employment_type && <span className="capitalize">{job.employment_type}</span>}
               </div>
@@ -157,8 +164,8 @@ export function PrimaryFocusCard(props: Props) {
 
           {/* What should I do next */}
           <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
-            <p className="text-[13px] font-semibold text-foreground">{next.title}</p>
-            <p className="text-[13px] leading-relaxed text-muted-foreground">{next.description}</p>
+            <p className="text-[13px] font-semibold text-foreground">{app.next_action || next.title}</p>
+            <p className="text-[13px] leading-relaxed text-muted-foreground">{app.next_action ? (app.next_action_due ? `Due ${formatShortDate(app.next_action_due)}` : 'No due date set') : next.description}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">

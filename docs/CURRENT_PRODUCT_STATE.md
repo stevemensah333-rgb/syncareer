@@ -68,15 +68,15 @@ Lovable classification: `@lovable.dev/cloud-auth-js` and `src/integrations/lovab
 
 ### `/assessment`
 
-1. **User goal:** complete a RIASEC/personality/skills assessment and see career recommendations.
+1. **User goal:** when still choosing a direction, complete the 45-question assessment to explore interest themes, work environments and broad role families.
 2. **Primary object:** guest in-memory result or owned `assessments` plus `assessment_responses`.
 3. **Data/ownership:** authenticated records use `user_id = session.user.id`; guest answers/results remain React state and are not persisted.
-4. **Reality:** guest scoring is **real and fixture-verified at the scoring layer**; authenticated load/save is **code-verified**. After save, `compute-user-intelligence` is invoked best-effort. Recommendations query active jobs for authenticated context.
-5. **States:** auth/result loading screen, paginated unanswered validation, submitting state, results/history/retake gating, recommendation loading, and guest sign-up CTA. Submission errors toast; fetch errors are console-only in the hook, leaving an empty/no-result presentation rather than a dedicated error state.
-6. **Keyboard/mobile:** semantic radio groups/buttons and responsive charts/layout; chart screen-reader and mobile-browser behavior unverified.
-7. **Dependencies:** Supabase Auth/PostgREST; `compute-user-intelligence` Edge Function.
-8. **Known defect/claim:** AI-related SEO wording is not evidence that guest scoring uses AI; it is local deterministic scoring. Deployed function and RLS behavior are unverified.
-9. **Tests:** `pages/assessment/assessmentConstants.test.ts`; landing tests cover entry. No full assessment route/submission test.
+4. **Reality:** the canonical 45-question scorer is unchanged and **fixture-verified**; authenticated completed-result load/save is **code-verified**. After save, `compute-user-intelligence` is invoked best-effort. Result role families are investigation prompts, can be prioritised/deprioritised/dismissed locally, and link to an explicit opportunity search; no result silently writes a job title or industry.
+5. **States:** auth/result loading, section/page progress, complete-response validation, submitting, results/history/retake gating, role-family correction and guest sign-up. Save/resume is not implemented; the UI explicitly says unfinished answers clear on refresh/navigation and `ASSESSMENT_DRAFT_PROPOSAL.md` records the safe design.
+6. **Keyboard/mobile:** each question uses a fieldset/legend and labelled five-option radio group with 44px rows; responsive charts/layout remain. Chart screen-reader and real mobile-browser behavior remain manual.
+7. **Dependencies:** Supabase Auth/PostgREST; `compute-user-intelligence`; optional PostHog lifecycle events only after explicit assessment-specific consent. Events contain counts/timing, never answers or themes.
+8. **Known defect/claim:** RIASEC describes interests, not skill, readiness, employability, guaranteed fit or hiring probability. Role-family corrections are session-local because no approved explicit-preference schema exists. Live analytics enablement, deployed function and RLS behavior remain unverified.
+9. **Tests:** scoring/incomplete-response tests, `features/assessment/lifecycle.test.ts`, `features/assessment/roleFamilies.test.ts`, `components/assessment/AssessmentQuestionCard.test.tsx`, and landing entry tests. No live authenticated submission or full browser route test.
 
 ### `/dashboard`
 

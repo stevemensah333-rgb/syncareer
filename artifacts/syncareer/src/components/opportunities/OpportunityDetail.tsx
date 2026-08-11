@@ -32,6 +32,8 @@ import { statusLabel, type ApplicationRef } from '@/features/application-tracker
 import { CompanyLogo } from './CompanyLogo';
 import { DeadlinePill } from './DeadlinePill';
 import { ContextualAssistantDrawer } from '@/components/assistant/ContextualAssistantDrawer';
+import { RequirementEvidenceActions } from '@/components/learning/RequirementEvidenceActions';
+import { buildEvidenceHref } from '@/features/learning/requirementLearning';
 
 interface OpportunityDetailProps {
   job: MatchedOpportunityJob;
@@ -100,6 +102,7 @@ export function OpportunityDetail({
   const cvHref = `/cv-builder?targetRole=${encodeURIComponent(job.title)}${
     organisation ? `&company=${encodeURIComponent(organisation)}` : ''
   }&skills=${encodeURIComponent((job.skills ?? []).join(','))}`;
+  const opportunityReturnTo = `/opportunities?job=${encodeURIComponent(job.id)}`;
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -254,8 +257,13 @@ export function OpportunityDetail({
           {job.skills && job.skills.length > 0 ? (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-1.5">Skills listed by the source</p>
-              <div className="flex flex-wrap gap-1.5">
-                {job.skills.map((skill) => <Badge key={skill} variant="secondary">{skill}</Badge>)}
+              <div className="space-y-2">
+                {job.skills.map((skill) => <RequirementEvidenceActions
+                  key={skill}
+                  requirement={skill}
+                  role={job.title}
+                  evidenceHref={buildEvidenceHref({ requirement: skill, role: job.title, company: organisation ?? undefined, returnTo: opportunityReturnTo })}
+                />)}
               </div>
             </div>
           ) : <p className="text-sm text-muted-foreground">No skills were provided by the source.</p>}

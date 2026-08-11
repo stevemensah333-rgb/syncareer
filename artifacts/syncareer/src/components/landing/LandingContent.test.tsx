@@ -20,30 +20,40 @@ describe('landing page content and navigation', () => {
     );
     const actions = screen.getAllByRole('button');
     expect(actions).toHaveLength(2);
-    expect(actions[0]!.textContent).toMatch(/explore real opportunities/i);
-    expect(actions[1]!.textContent).toMatch(/still choosing/i);
+    expect(actions[0]!.textContent).toMatch(/explore opportunities/i);
+    expect(actions[1]!.textContent).toMatch(/not sure what fits/i);
     fireEvent.click(actions[0]!);
     expect(onGetStarted).toHaveBeenCalledOnce();
     expect(container.textContent).toMatch(/Illustrative product state/i);
   });
 
-  it('renders the complete workflow, workspace, CV, interview, guidance, and methodology story', () => {
+  it('renders one coherent illustrative journey and its trust boundaries', () => {
     const { container } = render(<ProductStory />);
     const text = container.textContent ?? '';
 
-    expect(text).toMatch(/Finding a role is not the same as building a case for it/i);
-    expect(text).toMatch(/One thread from role discovery to your recorded result/i);
-    expect(text).toMatch(/The role, your next action, and your record stay together/i);
-    expect(text).toMatch(/Improve what is on the page—without inventing what is not/i);
-    expect(text).toMatch(/Practise for this role/i);
-    expect(text).toMatch(/Human guidance, when available/i);
-    expect(text).toMatch(/Clear signals, visible limits/i);
+    expect(text).toMatch(/One application, four connected steps/i);
+    expect(text).toMatch(/Illustrative product state/i);
+    expect(text).toMatch(/Graduate Data Analyst/i);
+    expect(text).toMatch(/Find and save a real external role/i);
+    expect(text).toMatch(/Build truthful evidence/i);
+    expect(text).toMatch(/Prepare and track/i);
     expect(text).toMatch(/not independently verified by Syncareer/i);
-    expect(text).toMatch(/not a prediction or guarantee/i);
+    expect(text).toMatch(/do not guarantee applicant-tracking-system success/i);
+    expect(screen.getAllByRole('tab')).toHaveLength(4);
+  });
+
+  it('supports arrow-key navigation through the illustrative journey', () => {
+    render(<ProductStory />);
+    const tabs = screen.getAllByRole('tab');
+    tabs[0]!.focus();
+    fireEvent.keyDown(tabs[0]!, { key: 'ArrowRight' });
+    expect(tabs[1]!.getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('tabpanel').textContent).toMatch(/SQL/i);
   });
 
   it('exposes every FAQ as a keyboard-operable accordion trigger', () => {
     render(<FAQSection />);
+    expect(LANDING_FAQS).toHaveLength(4);
     for (const faq of LANDING_FAQS) {
       const trigger = screen.getByRole('button', { name: faq.q });
       expect(trigger.getAttribute('aria-expanded')).toBe('false');
@@ -65,5 +75,6 @@ describe('landing page content and navigation', () => {
     expect(screen.getByRole('navigation', { name: 'Mobile navigation' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: /counsellors/i })).toBeNull();
     expect(screen.queryByRole('link', { name: /pricing/i })).toBeNull();
+    expect(screen.getAllByRole('link', { name: 'Product' }).length).toBeGreaterThan(0);
   });
 });

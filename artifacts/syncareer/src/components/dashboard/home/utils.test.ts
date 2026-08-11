@@ -4,6 +4,7 @@ import {
   isActiveStatus,
   getDaysUntilDeadline,
   getDeadlineLabel,
+  getActionDueLabel,
   scoreResume,
   nextStepForApplicationStatus,
   timeAgo,
@@ -41,6 +42,12 @@ describe('home utils', () => {
     expect(getDeadlineLabel(20)?.tone).toBe('ok');
     expect(getDeadlineLabel(-1)).toBeNull();
     expect(getDeadlineLabel(null)).toBeNull();
+  });
+
+  it('labels overdue and upcoming next actions without hiding overdue work', () => {
+    expect(getActionDueLabel(-3)).toEqual({ label: '3 days overdue', tone: 'urgent' });
+    expect(getActionDueLabel(0)?.label).toBe('Due today');
+    expect(getActionDueLabel(4)?.tone).toBe('soon');
   });
 
   it('scores resume honestly — empty is 0', () => {
