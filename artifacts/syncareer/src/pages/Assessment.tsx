@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { Suspense, lazy, useState, useCallback, useEffect, useRef } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
@@ -10,11 +10,6 @@ import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell, RadarChart, PolarGrid,
-  PolarAngleAxis, Radar,
-} from 'recharts';
 import {
   ClipboardCheck, ArrowRight, ArrowLeft, RotateCcw, Calendar,
   Trophy, Brain, Clock, LogIn, Compass, User, Zap,
@@ -32,7 +27,6 @@ import AnimatedSection from '@/components/landing/AnimatedSection';
 import {
   QUESTIONS_PER_PAGE,
   TOTAL_QUESTIONS,
-  SECTION_COLORS,
   SECTION_INTROS,
   SECTION_START_PAGES,
   calculateScoresLocally,
@@ -40,6 +34,16 @@ import {
 import { assessmentResumeCapability, hasAssessmentAnalyticsConsent, setAssessmentAnalyticsConsent, trackAssessmentLifecycle } from '@/features/assessment/lifecycle';
 import { validateAssessmentAnswers } from '@/features/assessment/scoring';
 import { AssessmentQuestionCard } from '@/components/assessment/AssessmentQuestionCard';
+
+// Result charts are only needed once a completed assessment is shown. Keeping
+// recharts out of this route's static imports means answering questions (and
+// the landing page's idle prefetch of this public route) no longer downloads
+// the ~384 kB chart chunk.
+const RiasecBarChart = lazy(() => import('@/components/assessment/AssessmentResultCharts').then((m) => ({ default: m.RiasecBarChart })));
+const PersonalityRadarChart = lazy(() => import('@/components/assessment/AssessmentResultCharts').then((m) => ({ default: m.PersonalityRadarChart })));
+const SkillsBarChart = lazy(() => import('@/components/assessment/AssessmentResultCharts').then((m) => ({ default: m.SkillsBarChart })));
+
+const ChartFallback = () => <div className="h-full animate-pulse rounded-md bg-muted" />;
 
 const Assessment = () => {
   const { profile, studentDetails } = useUserProfile();
@@ -465,24 +469,9 @@ const Assessment = () => {
               role="img"
               aria-label={`RIASEC work-interest scores. ${riasecChartData.map((item) => `${item.name}: ${item.score}%`).join('. ')}`}
             >
-              <div aria-hidden="true" className="h-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={riasecChartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                  <Tooltip
-                    formatter={(value: number) => [`${value}%`, 'Score']}
-                    contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
-                  />
-                  <Bar dataKey="score" radius={[6, 6, 0, 0]}>
-                    {riasecChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={SECTION_COLORS[entry.name] || 'hsl(var(--primary))'} opacity={index < 3 ? 1 : 0.45} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-              </div>
+              <Suspense fallback={<ChartFallback />}>
+                <RiasecBarChart data={riasecChartData} />
+              </Suspense>
             </div>
           </CardContent>
         </Card>
@@ -503,15 +492,9 @@ const Assessment = () => {
                 role="img"
                 aria-label={`Personality-profile scores: ${personalityRadar.map((item) => `${item.axis}: ${item.value}`).join('. ')}`}
               >
-                <div aria-hidden="true" className="h-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={personalityRadar} cx="50%" cy="50%" outerRadius="70%">
-                    <PolarGrid stroke="hsl(var(--border))" />
-                    <PolarAngleAxis dataKey="axis" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                    <Radar name="Personality" dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={2} />
-                  </RadarChart>
-                </ResponsiveContainer>
-                </div>
+                <Suspense fallback={<ChartFallback />}>
+                  <PersonalityRadarChart data={personalityRadar} />
+                </Suspense>
               </div>
               <p className="text-xs text-muted-foreground text-center mt-1">Scores aggregated from personality questions (1–15)</p>
             </CardContent>
@@ -529,20 +512,9 @@ const Assessment = () => {
                 role="img"
                 aria-label={`Skills-preference scores: ${skillsChartData.map((item) => `${item.axis}: ${item.value}%`).join('. ')}`}
               >
-                <div aria-hidden="true" className="h-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={skillsChartData} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                    <YAxis type="category" dataKey="axis" width={90} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                    <Tooltip
-                      formatter={(value: number) => [`${value}%`, 'Score']}
-                      contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
-                    />
-                    <Bar dataKey="value" radius={[0, 4, 4, 0]} fill="hsl(var(--accent))" fillOpacity={0.85} />
-                  </BarChart>
-                </ResponsiveContainer>
-                </div>
+                <Suspense fallback={<ChartFallback />}>
+                  <SkillsBarChart data={skillsChartData} />
+                </Suspense>
               </div>
               <p className="text-xs text-muted-foreground text-center mt-1">Task-preference responses from questions 16–30; not verified skill level</p>
             </CardContent>

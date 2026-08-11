@@ -39,13 +39,20 @@ const responseSchema = z.object({
 });
 
 export type AssistantProposal = NonNullable<z.infer<typeof responseSchema>['proposal']>;
-export type AssistantRequestErrorCode = 'unauthorized' | 'quota' | 'rate-limit' | 'network' | 'malformed' | 'server' | 'no-proposal';
+export type AssistantRequestErrorCode = 'unauthorized' | 'quota' | 'rate-limit' | 'network' | 'malformed' | 'server' | 'no-proposal' | 'cancelled';
 
 export class AssistantRequestError extends Error {
   constructor(public readonly code: AssistantRequestErrorCode, message: string) { super(message); }
 }
 
-export async function requestContextualAssistance(task: AssistantTask, instruction: string, context: AssistantContextItem[]): Promise<AssistantProposal> {
+/**
+ * Requests a contextual proposal. Accepts an optional AbortSignal so callers
+ * can cancel an in-flight request when the assistant UI unmounts — the
+ * endpoint is a billable AI call, so abandoned requests should stop instead
+ * of running to completion with no UI left to show the result.
+ */
+export async function requestContextualAssistance(task: AssistantTask, instruction: string, context: AssistantContextItem[], signal?: AbortSignal): Promise<AssistantProposal> {
+  if (signal?.aborted) throw new AssistantRequestError('cancelled', 'The assistant request was cancelled.');
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
     try {
@@ -72,12 +79,18 @@ export async function requestContextualAssistance(task: AssistantTask, instructi
     response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/career-guidance`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      signal,
       body: JSON.stringify({
         version: 2, requestId, task, instruction: instruction.trim(),
         context: context.map(({ id, label, provenance, content }) => ({ id, label, provenance, content })),
       }),
     });
-  } catch {
+  } catch (cause) {
+    // A caller-initiated cancellation is not a product failure: no analytics,
+    // and the caller decides whether to surface anything.
+    if (signal?.aborted || (cause instanceof DOMException && cause.name === 'AbortError')) {
+      throw new AssistantRequestError('cancelled', 'The assistant request was cancelled.');
+    }
     try {
       captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, {
         task: task as AnalyticsAssistantTask,
@@ -87,6 +100,10 @@ export async function requestContextualAssistance(task: AssistantTask, instructi
     } catch { /* never break */ }
     throw new AssistantRequestError('network', 'The assistant could not be reached. Check your connection and retry.');
   }
+
+  // The caller went away while the response was in flight — drop the result
+  // instead of letting a stale proposal land on a closed assistant.
+  if (signal?.aborted) throw new AssistantRequestError('cancelled', 'The assistant request was cancelled.');
 
   if (response.status === 401) {
     try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'unauthorized' }); } catch {}

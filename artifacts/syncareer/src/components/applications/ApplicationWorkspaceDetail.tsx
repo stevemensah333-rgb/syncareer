@@ -57,7 +57,11 @@ export function ApplicationWorkspaceDetail({ application, resumes, interviews, s
   const notesDirty = notes.trim() !== (application.notes ?? '');
   const actionDirty = nextAction.trim() !== (application.next_action ?? '') || due !== (application.next_action_due ?? '');
 
-  const Overview = () => <div className="space-y-5">
+  // Overview/Actions are rendered by plain function calls rather than as
+  // nested component definitions: defining them as components would give them
+  // a fresh type identity on every parent render, unmounting and remounting
+  // this whole workspace subtree on every keystroke (losing input focus).
+  const renderOverview = () => <div className="space-y-5">
     {application.job === null && <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">The source posting is unavailable. This workspace is using the durable facts saved with your application.</div>}
     <section className="space-y-2">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Role</h3>
@@ -85,7 +89,7 @@ export function ApplicationWorkspaceDetail({ application, resumes, interviews, s
     </section>
   </div>;
 
-  const Actions = ({ only }: { only?: 'cv' | 'practice' | 'notes' }) => <div className="space-y-5">
+  const renderActions = (only?: 'cv' | 'practice' | 'notes') => <div className="space-y-5">
     {!only && <section className="space-y-2 rounded-lg border p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recommended next step</p>
       <h3 className="font-semibold">Next action</h3>
@@ -131,8 +135,8 @@ export function ApplicationWorkspaceDetail({ application, resumes, interviews, s
     </section>}
   </div>;
 
-  if (desktop) return <div className="grid h-full grid-cols-[minmax(0,1fr)_minmax(280px,380px)] divide-x bg-card"><main className="overflow-y-auto p-6"><Overview /></main><aside className="overflow-y-auto p-5"><Actions /></aside></div>;
-  return <div className="h-full bg-card"><div className="border-b p-3"><Button variant="ghost" size="sm" onClick={onBack}><ArrowLeft className="h-4 w-4" />Back to applications</Button></div><Tabs defaultValue="overview"><TabsList className="m-3 grid grid-cols-4"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="cv">CV</TabsTrigger><TabsTrigger value="practice">Practice</TabsTrigger><TabsTrigger value="notes">Notes</TabsTrigger></TabsList><TabsContent value="overview" className="p-4"><Overview /></TabsContent><TabsContent value="cv" className="p-4"><Actions only="cv" /></TabsContent><TabsContent value="practice" className="p-4"><Actions only="practice" /></TabsContent><TabsContent value="notes" className="p-4"><Actions only="notes" /></TabsContent></Tabs></div>;
+  if (desktop) return <div className="grid h-full grid-cols-[minmax(0,1fr)_minmax(280px,380px)] divide-x bg-card"><main className="overflow-y-auto p-6">{renderOverview()}</main><aside className="overflow-y-auto p-5">{renderActions()}</aside></div>;
+  return <div className="h-full bg-card"><div className="border-b p-3"><Button variant="ghost" size="sm" onClick={onBack}><ArrowLeft className="h-4 w-4" />Back to applications</Button></div><Tabs defaultValue="overview"><TabsList className="m-3 grid grid-cols-4"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="cv">CV</TabsTrigger><TabsTrigger value="practice">Practice</TabsTrigger><TabsTrigger value="notes">Notes</TabsTrigger></TabsList><TabsContent value="overview" className="p-4">{renderOverview()}</TabsContent><TabsContent value="cv" className="p-4">{renderActions('cv')}</TabsContent><TabsContent value="practice" className="p-4">{renderActions('practice')}</TabsContent><TabsContent value="notes" className="p-4">{renderActions('notes')}</TabsContent></Tabs></div>;
 }
 
 function SaveMessage({ state }: { state: SaveState }) {

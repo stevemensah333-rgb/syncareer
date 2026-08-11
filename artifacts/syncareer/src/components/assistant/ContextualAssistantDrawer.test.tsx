@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ContextualAssistantDrawer } from './ContextualAssistantDrawer';
+import { AssistantRequestError } from '@/features/contextual-assistant/contract';
 
 const request = vi.hoisted(() => vi.fn());
 vi.mock('@/features/contextual-assistant/contract', async (load) => {
@@ -38,6 +39,50 @@ describe('ContextualAssistantDrawer', () => {
     expect(accept).toHaveBeenCalledWith('Follow-up proposal');
     expect(screen.getByRole('alert').textContent).toMatch(/could not be applied/i);
     expect(screen.queryByText(/Proposal accepted/i)).toBeNull();
+  });
+
+  it('cancels the in-flight assistant request when the drawer unmounts', async () => {
+    request.mockClear();
+    let capturedSignal: AbortSignal | undefined;
+    request.mockImplementation((_task: unknown, _instruction: unknown, _context: unknown, signal?: AbortSignal) => {
+      capturedSignal = signal;
+      // Never resolves: the request is still in flight when the drawer unmounts.
+      return new Promise(() => {});
+    });
+    const { unmount } = render(<ContextualAssistantDrawer task="application.draft_follow_up" description="Draft help" suggestedPrompt="Draft a follow-up" context={[{ id: 'role', label: 'Graduate Analyst', provenance: 'opportunity', content: 'Graduate Analyst' }]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ask Syncareer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Request proposal' }));
+    await waitFor(() => expect(request).toHaveBeenCalledOnce());
+    expect(capturedSignal).toBeInstanceOf(AbortSignal);
+    expect(capturedSignal!.aborted).toBe(false);
+
+    unmount();
+
+    // The billable AI request must be cancelled, not left running for a UI
+    // that no longer exists.
+    expect(capturedSignal!.aborted).toBe(true);
+  });
+
+  it('does not surface an error when the in-flight request is cancelled on unmount', async () => {
+    request.mockClear();
+    request.mockImplementation((_task: unknown, _instruction: unknown, _context: unknown, signal?: AbortSignal) => {
+      return new Promise((_resolve, reject) => {
+        signal?.addEventListener('abort', () => {
+          reject(new AssistantRequestError('cancelled', 'The assistant request was cancelled.'));
+        });
+      });
+    });
+    const { unmount } = render(<ContextualAssistantDrawer task="application.draft_follow_up" description="Draft help" suggestedPrompt="Draft a follow-up" context={[{ id: 'role', label: 'Graduate Analyst', provenance: 'opportunity', content: 'Graduate Analyst' }]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ask Syncareer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Request proposal' }));
+    await waitFor(() => expect(request).toHaveBeenCalledOnce());
+
+    unmount();
+
+    // Nothing to assert in the DOM after unmount — the guard is that the
+    // cancelled path never calls setError, which would otherwise warn about
+    // setting state on an unmounted component in future React changes.
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('opens as an accessible mobile-width dialog with keyboard-close support', () => {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Bot, Check, Loader2, RotateCcw, Send, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,20 @@ export function ContextualAssistantDrawer({ task, title = 'Ask Syncareer', descr
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const selected = available.filter((item) => included.has(item.id));
+  const abortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
+
+  // The assistant request is a billable AI call. If the drawer unmounts while
+  // a proposal is in flight (workspace tab change, navigation, mobile sheet
+  // dismissal), cancel it so a stale response never lands on a closed UI.
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.abort();
+      abortRef.current = null;
+    };
+  }, []);
 
   const toggleContext = (item: AssistantContextItem) => {
     if (!item.optional) return;
@@ -44,9 +58,19 @@ export function ContextualAssistantDrawer({ task, title = 'Ask Syncareer', descr
   const send = async () => {
     if (!instruction.trim() || pending) return;
     setPending(true); setError(null); setProposal(null); setRejected(null); setAccepted(null);
-    try { setProposal(await requestContextualAssistance(task, instruction, selected)); }
-    catch (cause) { setError(cause instanceof AssistantRequestError ? cause.message : 'The assistant request failed. Nothing was changed.'); }
-    finally { setPending(false); }
+    const controller = new AbortController();
+    abortRef.current = controller;
+    try { setProposal(await requestContextualAssistance(task, instruction, selected, controller.signal)); }
+    catch (cause) {
+      // A cancellation (unmount or superseded request) is not a user-facing
+      // failure; surface every other error so the user knows nothing changed.
+      if (cause instanceof AssistantRequestError && cause.code === 'cancelled') return;
+      if (mountedRef.current) setError(cause instanceof AssistantRequestError ? cause.message : 'The assistant request failed. Nothing was changed.');
+    }
+    finally {
+      if (abortRef.current === controller) abortRef.current = null;
+      if (mountedRef.current) setPending(false);
+    }
   };
 
   const emitDecided = (decision: 'accepted' | 'rejected' | 'undone') => {
