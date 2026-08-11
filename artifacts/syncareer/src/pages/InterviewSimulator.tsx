@@ -27,6 +27,7 @@ import type { InterviewSetupConfig } from '@/types/interview';
 import { SESSION_OPTIONS } from '@/features/interview/constants';
 import type { SessionLengthOption } from '@/features/interview/constants';
 import { classifyMicrophoneError, type DeviceReadiness } from '@/features/interview/setup';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
 type SessionLength = SessionLengthOption['value'];
 
@@ -44,6 +45,7 @@ const InterviewSimulator = () => {
   const [step, setStep] = useState<'setup' | 'readiness' | 'interview'>('setup');
   const [readiness, setReadiness] = useState<DeviceReadiness>('unchecked');
   const startRequested = useRef(false);
+  const setupEmittedRef = useRef(false);
   const [sessionLength, setSessionLength] = useState<SessionLength>('standard');
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(searchParams.get('application'));
   const feedbackModal = useFeedbackModal('interview_simulator');
@@ -70,6 +72,18 @@ const InterviewSimulator = () => {
       industry: industry || prev.industry,
       jobDescription: jd || (skills ? `Required skills: ${skills}` : prev.jobDescription),
     }));
+  }, [searchParams]);
+
+  // Analytics: setup opened
+  useEffect(() => {
+    if (setupEmittedRef.current) return;
+    setupEmittedRef.current = true;
+    const hasRole = Boolean(searchParams.get('role') || searchParams.get('skills') || searchParams.get('jd'));
+    const hasApp = Boolean(searchParams.get('application'));
+    const entry = hasApp ? 'application' : hasRole ? 'opportunity' : 'navigation';
+    try {
+      captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_SETUP_OPENED, { entry });
+    } catch {}
   }, [searchParams]);
 
   const { data: interviewHistory, isLoading: _historyLoading } = useQuery({
@@ -142,15 +156,29 @@ const InterviewSimulator = () => {
   const checkReadiness = async () => {
     if (readiness === 'checking') return;
     setReadiness('checking');
+    let next: DeviceReadiness = 'ready';
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw { name: 'NotFoundError' };
       if (!('speechSynthesis' in window)) throw new Error('Audio output unavailable');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
+      next = 'ready';
       setReadiness('ready');
     } catch (error) {
-      setReadiness(classifyMicrophoneError(error));
+      next = classifyMicrophoneError(error);
+      setReadiness(next);
     }
+    try {
+      const resultMap: Record<DeviceReadiness, 'ready' | 'missing' | 'denied' | 'failed'> = {
+        unchecked: 'failed',
+        checking: 'failed',
+        ready: 'ready',
+        denied: 'denied',
+        missing: 'missing',
+        failed: 'failed',
+      };
+      captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_DEVICE_CHECKED, { result: resultMap[next] ?? 'failed' });
+    } catch {}
   };
 
   const beginReadyInterview = () => {
@@ -482,6 +510,7 @@ const InterviewSimulator = () => {
               applicationId={selectedApplicationId}
               autoStart
               onRetry={() => {
+                try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' }); } catch {}
                 startRequested.current = false;
                 setReadiness('unchecked');
                 setStep('readiness');

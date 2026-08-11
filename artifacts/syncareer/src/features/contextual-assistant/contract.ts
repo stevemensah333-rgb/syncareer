@@ -1,5 +1,13 @@
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
+import type { AssistantTask as AnalyticsAssistantTask } from '@/services/analyticsEvents';
+
+function toCountBucket(count: number): '1' | '2' | '3_plus' {
+  if (count <= 1) return '1';
+  if (count === 2) return '2';
+  return '3_plus';
+}
 
 export const assistantTasks = [
   'opportunity.explain_requirement', 'opportunity.compare_evidence', 'opportunity.research_questions',
@@ -39,7 +47,25 @@ export class AssistantRequestError extends Error {
 
 export async function requestContextualAssistance(task: AssistantTask, instruction: string, context: AssistantContextItem[]): Promise<AssistantProposal> {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) throw new AssistantRequestError('unauthorized', 'Your session has expired. Sign in and try again.');
+  if (!session?.access_token) {
+    try {
+      captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, {
+        task: task as AnalyticsAssistantTask,
+        result: 'failure',
+        failure_code: 'unauthorized',
+      });
+    } catch { /* analytics must never break product */ }
+    throw new AssistantRequestError('unauthorized', 'Your session has expired. Sign in and try again.');
+  }
+
+  try {
+    captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_REQUESTED, {
+      task: task as AnalyticsAssistantTask,
+      context_count_bucket: toCountBucket(context.length),
+      includes_optional_personal_context: context.some((item) => Boolean(item.personal)),
+    });
+  } catch { /* never break */ }
+
   const requestId = crypto.randomUUID();
   let response: Response;
   try {
@@ -52,17 +78,55 @@ export async function requestContextualAssistance(task: AssistantTask, instructi
       }),
     });
   } catch {
+    try {
+      captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, {
+        task: task as AnalyticsAssistantTask,
+        result: 'failure',
+        failure_code: 'network',
+      });
+    } catch { /* never break */ }
     throw new AssistantRequestError('network', 'The assistant could not be reached. Check your connection and retry.');
   }
-  if (response.status === 401) throw new AssistantRequestError('unauthorized', 'Your session has expired. Sign in and try again.');
-  if (response.status === 402) throw new AssistantRequestError('quota', 'Your assistant allowance has been reached.');
-  if (response.status === 429) throw new AssistantRequestError('rate-limit', 'Too many requests. Wait a moment and retry.');
-  if (!response.ok) throw new AssistantRequestError('server', 'The assistant could not complete this request. Nothing was changed.');
+
+  if (response.status === 401) {
+    try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'unauthorized' }); } catch {}
+    throw new AssistantRequestError('unauthorized', 'Your session has expired. Sign in and try again.');
+  }
+  if (response.status === 402) {
+    try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'quota' }); } catch {}
+    throw new AssistantRequestError('quota', 'Your assistant allowance has been reached.');
+  }
+  if (response.status === 429) {
+    try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'rate_limit' }); } catch {}
+    throw new AssistantRequestError('rate-limit', 'Too many requests. Wait a moment and retry.');
+  }
+  if (!response.ok) {
+    try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'server' }); } catch {}
+    throw new AssistantRequestError('server', 'The assistant could not complete this request. Nothing was changed.');
+  }
+
   const payload = await response.json().catch(() => null);
   const parsed = responseSchema.safeParse(payload);
-  if (!parsed.success || parsed.data.requestId !== requestId) throw new AssistantRequestError('malformed', 'The assistant returned an unsupported response. Nothing was changed.');
-  if (!parsed.data.proposal) throw new AssistantRequestError('no-proposal', 'No usable proposal was returned. Nothing was changed.');
+  if (!parsed.success || parsed.data.requestId !== requestId) {
+    try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'malformed' }); } catch {}
+    throw new AssistantRequestError('malformed', 'The assistant returned an unsupported response. Nothing was changed.');
+  }
+  if (!parsed.data.proposal) {
+    try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'no_proposal' }); } catch {}
+    throw new AssistantRequestError('no-proposal', 'No usable proposal was returned. Nothing was changed.');
+  }
   const allowedIds = new Set(context.map((item) => item.id));
-  if (parsed.data.proposal.sourceContextIds.some((id) => !allowedIds.has(id))) throw new AssistantRequestError('malformed', 'The assistant referenced context that was not supplied. Nothing was changed.');
+  if (parsed.data.proposal.sourceContextIds.some((id) => !allowedIds.has(id))) {
+    try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'malformed' }); } catch {}
+    throw new AssistantRequestError('malformed', 'The assistant referenced context that was not supplied. Nothing was changed.');
+  }
+
+  try {
+    captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, {
+      task: task as AnalyticsAssistantTask,
+      result: 'success',
+    });
+  } catch { /* never break */ }
+
   return parsed.data.proposal;
 }

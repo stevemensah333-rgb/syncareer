@@ -57,6 +57,7 @@ import {
   isProjectMeaningful,
 } from '@/features/cv-builder/scoring';
 import { RequirementEvidenceActions } from '@/components/learning/RequirementEvidenceActions';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
 type SaveState = 'saved' | 'unsaved' | 'saving' | 'failed';
 
@@ -80,6 +81,8 @@ const CVBuilder = () => {
   const cvDataRef = useRef(cvData);
   const lastPersistedSnapshotRef = useRef<string | null>(null);
   const saveActionInFlightRef = useRef(false);
+  const cvStartedEmittedRef = useRef(false);
+  const meaningfulPreviousRef = useRef<Record<string, boolean>>({});
 
   const strengthResult = useCVStrengthScore(cvData);
   const feedbackModal = useFeedbackModal('cv_builder');
@@ -102,6 +105,43 @@ const CVBuilder = () => {
   }, [searchParams]);
   const requestedReturnTo = searchParams.get('returnTo') || '';
   const safeReturnTo = requestedReturnTo.startsWith('/opportunities') || requestedReturnTo.startsWith('/applications') ? requestedReturnTo : '';
+
+  // Analytics: cv_started (entry based on query context)
+  useEffect(() => {
+    if (cvStartedEmittedRef.current) return;
+    cvStartedEmittedRef.current = true;
+    const entry = applicationId ? 'application' : targetRole || targetCompany || targetSkills.length > 0 ? 'opportunity' : 'navigation';
+    try {
+      captureProductEvent(ANALYTICS_EVENTS.CV_STARTED, { entry });
+    } catch { /* analytics must never break */ }
+  }, [applicationId, targetRole, targetCompany, targetSkills]);
+
+  // Analytics: meaningful section completion (emit once per section when becomes meaningful)
+  useEffect(() => {
+    const current = {
+      personal: Object.values(cvData.personal).some(isMeaningfulText),
+      education: Object.values(cvData.education).some(isMeaningfulText) || cvData.achievements.some(isAchievementMeaningful),
+      experience: cvData.experience.some(isExperienceMeaningful),
+      projects: cvData.projects.some(isProjectMeaningful),
+      activities: cvData.activities.some(isActivityMeaningful),
+      skills: getMeaningfulSkills(cvData).length > 0,
+    };
+    for (const [section, meaningful] of Object.entries(current)) {
+      if (meaningful && !meaningfulPreviousRef.current[section]) {
+        try {
+          captureProductEvent(ANALYTICS_EVENTS.CV_MEANINGFUL_SECTION_COMPLETED, { section: section as any });
+        } catch { /* never break */ }
+      }
+    }
+    meaningfulPreviousRef.current = current;
+  }, [cvData]);
+
+  // Analytics: previewed
+  useEffect(() => {
+    if (!showPreview) return;
+    try { captureProductEvent(ANALYTICS_EVENTS.CV_PREVIEWED, {}); } catch {}
+  }, [showPreview]);
+
   const loadSavedCV = useCallback(async () => {
     setIsLoadingCV(true);
     setLoadFailure(null);
@@ -208,11 +248,13 @@ const CVBuilder = () => {
   const handleDownloadPDF = async () => {
     if (strengthResult.completion.percentage === 0) {
       toast.error('Add meaningful CV content before exporting a PDF.');
+      try { captureProductEvent(ANALYTICS_EVENTS.CV_EXPORTED, { result: 'failure', format: 'pdf' }); } catch {}
       return;
     }
     const element = previewRef.current;
     if (!element) {
       toast.error('The PDF renderer is unavailable. Please retry.');
+      try { captureProductEvent(ANALYTICS_EVENTS.CV_EXPORTED, { result: 'failure', format: 'pdf' }); } catch {}
       return;
     }
 
@@ -237,10 +279,12 @@ const CVBuilder = () => {
           },
         },
       });
+      try { captureProductEvent(ANALYTICS_EVENTS.CV_EXPORTED, { result: 'success', format: 'pdf' }); } catch {}
       feedbackModal.triggerFeedback();
     } catch (error) {
       console.error('[CV PDF] generation failed', { name: error instanceof Error ? error.name : 'UnknownError' });
       toast.error('Failed to generate PDF');
+      try { captureProductEvent(ANALYTICS_EVENTS.CV_EXPORTED, { result: 'failure', format: 'pdf' }); } catch {}
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -264,6 +308,15 @@ const CVBuilder = () => {
       }
       const spec = cvSaveToast(result, { onRetry: () => void handleSaveCV() });
       toast.error(spec.message, spec.action ? { action: spec.action } : undefined);
+      try {
+        const failure_code = result.category === 'validation' ? 'validation' as const
+          : result.category === 'auth-expired' ? 'authentication' as const
+          : result.category === 'permission' ? 'conflict' as const
+          : result.category === 'network' ? 'network' as const
+          : result.category === 'server' ? 'server' as const
+          : 'unknown' as const;
+        captureProductEvent(ANALYTICS_EVENTS.CV_SAVE_FINISHED, { result: 'failure', failure_code });
+      } catch {}
       saveActionInFlightRef.current = false;
       return;
     }
@@ -272,6 +325,8 @@ const CVBuilder = () => {
     lastPersistedSnapshotRef.current = savedSnapshot;
     const newerChangesExist = cvSnapshot(cvDataRef.current) !== savedSnapshot;
     setSaveState(newerChangesExist ? 'unsaved' : 'saved');
+
+    try { captureProductEvent(ANALYTICS_EVENTS.CV_SAVE_FINISHED, { result: 'success' }); } catch {}
 
     // These enrichments happen only after the primary row is confirmed. They
     // are best-effort and can never turn a confirmed CV save into a failure.
@@ -391,7 +446,7 @@ const CVBuilder = () => {
                         key={s}
                         className={present ? 'rounded-lg border border-success/30 bg-success/5 p-3 text-sm text-success' : ''}
                       >
-                        {present ? <>✓ {s} is already listed. Check that your experience or project sections provide evidence.</> : <RequirementEvidenceActions requirement={s} role={targetRole} onAddEvidence={() => { setActiveTab('experience'); toast.info(`Add a truthful experience or project example showing ${s}. The skill has not been added.`); }} onNotRelevant={() => setDismissedTargetSkills((items) => items.includes(s) ? items : [...items, s])} />}
+                        {present ? <>✓ {s} is already listed. Check that your experience or project sections provide evidence.</> : <RequirementEvidenceActions surface="cv" requirement={s} role={targetRole} onAddEvidence={() => { setActiveTab('experience'); toast.info(`Add a truthful experience or project example showing ${s}. The skill has not been added.`); }} onNotRelevant={() => setDismissedTargetSkills((items) => items.includes(s) ? items : [...items, s])} />}
                       </div>
                     );
                   })}

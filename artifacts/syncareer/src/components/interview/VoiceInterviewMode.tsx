@@ -8,6 +8,7 @@ import { INTERVIEW_PHASE_LABELS } from '@/features/interview/lifecycle';
 import { deterministicAnswerChecks, pairQuestionAnswers, retryOutline } from '@/features/interview/sessionReport';
 import { parseFinalReport } from '@/features/interview/reportParser';
 import { ContextualAssistantDrawer } from '@/components/assistant/ContextualAssistantDrawer';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
 interface VoiceInterviewModeProps {
   jobRole: string;
@@ -46,6 +47,8 @@ export function VoiceInterviewMode({
   const [confirmEnd, setConfirmEnd] = useState(false);
   const autoStartedRef = useRef(false);
   const transcriptRef = useRef<HTMLDivElement>(null);
+  const sessionStartedRef = useRef(false);
+  const sessionFinishedRef = useRef(false);
 
   useEffect(() => {
     if (!autoStart || autoStartedRef.current) return;
@@ -56,6 +59,36 @@ export function VoiceInterviewMode({
   useEffect(() => {
     if (showTranscript && transcriptRef.current) transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
   }, [interview.messages, interview.currentTranscript, showTranscript]);
+
+  useEffect(() => {
+    if (sessionStartedRef.current) return;
+    if (interview.phase !== 'idle' && interview.phase !== 'connecting' && interview.phase !== 'error') {
+      sessionStartedRef.current = true;
+      try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_SESSION_STARTED, { mode: 'voice' }); } catch {}
+    }
+  }, [interview.phase]);
+
+  useEffect(() => {
+    if (!interview.isCompleted || sessionFinishedRef.current) return;
+    sessionFinishedRef.current = true;
+    try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_SESSION_FINISHED, { result: 'completed' }); } catch {}
+  }, [interview.isCompleted]);
+
+  useEffect(() => {
+    if (interview.phase !== 'error' || sessionFinishedRef.current) return;
+    if (interview.error) {
+      try {
+        const lower = interview.error.toLowerCase();
+        let failure_code: 'network' | 'device' | 'quota' | 'server' | 'unknown' = 'unknown';
+        if (lower.includes('network') || lower.includes('fetch') || lower.includes('connection')) failure_code = 'network';
+        else if (lower.includes('microphone') || lower.includes('not-allowed') || lower.includes('permission')) failure_code = 'device';
+        else if (lower.includes('rate') || lower.includes('429')) failure_code = 'quota';
+        else if (lower.includes('server') || lower.includes('500')) failure_code = 'server';
+        captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_SESSION_FINISHED, { result: 'failed', failure_code });
+        sessionFinishedRef.current = true;
+      } catch {}
+    }
+  }, [interview.phase, interview.error]);
 
   const statusLabel = INTERVIEW_PHASE_LABELS[interview.phase];
   const progressPercent = interview.progress.total > 0 ? (interview.progress.answered / interview.progress.total) * 100 : 0;
@@ -68,6 +101,13 @@ export function VoiceInterviewMode({
   const improvements = [...ranked].reverse().slice(0, 2);
 
   const finish = () => {
+    if (!sessionFinishedRef.current) {
+      try {
+        const result = interview.progress.answered > 0 ? 'completed' : 'failed';
+        captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_SESSION_FINISHED, { result });
+      } catch {}
+      sessionFinishedRef.current = true;
+    }
     interview.stop();
     onEnd();
   };
@@ -99,7 +139,7 @@ export function VoiceInterviewMode({
           </section>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <section className="rounded-lg border bg-card p-5"><h2 className="font-semibold">Strongest moments</h2>{strongest.length ? <ul className="mt-3 space-y-3">{strongest.map(({ pair }, index) => <li key={index} className="text-sm"><span className="font-medium">{excerpt(pair.question, 100)}</span><blockquote className="mt-1 border-l-2 pl-3 text-muted-foreground">“{excerpt(pair.answer)}”</blockquote></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">There is not enough transcript evidence to identify a strongest moment.</p>}</section>
+            <section className="rounded-lg border bg-card p-5"><h2 className="font-semibold">Strongest moments</h2>{strongest.length ? <ul className="mt-3 space-y-3">{strongest.map(({ pair }, index) => <li key={index} className="text-sm"><span className="font-medium">{excerpt(pair.question, 100)}</span><blockquote className="mt-1 border-l-2 pl-3 text-muted-foreground">"{excerpt(pair.answer)}"</blockquote></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">There is not enough transcript evidence to identify a strongest moment.</p>}</section>
             <section className="rounded-lg border bg-card p-5"><h2 className="font-semibold">Highest-priority improvements</h2>{improvements.length ? <ul className="mt-3 space-y-3">{improvements.map(({ pair }, index) => <li key={index} className="text-sm"><span className="font-medium">Strengthen: {excerpt(pair.question, 100)}</span><p className="mt-1 text-muted-foreground">Evidence reviewed: {excerpt(pair.answer)}</p></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">No answer evidence is available to prioritise improvements.</p>}</section>
           </div>
 
@@ -109,7 +149,7 @@ export function VoiceInterviewMode({
 
           <section className="flex justify-end"><ContextualAssistantDrawer task="interview.explain_feedback" description="Explain this feedback or propose another practice question for the same role. The report evidence is optional and can be removed before sending." suggestedPrompt="Explain the highest-priority feedback in plain language and suggest one focused practice question for this role." context={[{ id: 'interview-role', label: jobRole, provenance: 'opportunity', content: jobRole }, { id: 'interview-report', label: 'Interview report', provenance: 'interview_report', content: evidence.map((item) => `Question: ${item.question}\nAnswer: ${item.answer ?? 'Unavailable'}`).join('\n\n'), optional: true, personal: true }]} /></section>
 
-          <div className="flex flex-wrap gap-3"><Button onClick={() => onRetry?.()} disabled={!onRetry}><RotateCcw className="mr-2 h-4 w-4" />Try again with this context</Button><Button variant="outline" onClick={finish}>Return to setup</Button></div>
+          <div className="flex flex-wrap gap-3"><Button onClick={() => { try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' }); } catch {} onRetry?.(); }} disabled={!onRetry}><RotateCcw className="mr-2 h-4 w-4" />Try again with this context</Button><Button variant="outline" onClick={finish}>Return to setup</Button></div>
         </div>
       </main>
     );
@@ -133,7 +173,7 @@ export function VoiceInterviewMode({
           <div className="mt-5" role="status" aria-live="polite"><p className="font-semibold">{statusLabel}</p><p className="mt-1 text-sm text-muted-foreground">{interview.phase === 'reconnecting' ? 'The connection was interrupted. We are restoring listening without submitting another answer.' : interview.phase === 'paused' ? 'Audio playback and microphone capture are stopped.' : interview.isListening ? 'Your microphone is active. Your answer is submitted only after recognised speech ends.' : interview.isSpeaking ? 'The interviewer is reading the current question.' : interview.phase === 'processing' ? 'Your recognised answer is being reviewed.' : 'Preparing the session.'}</p></div>
           {interview.currentQuestion && <div className="mt-8 max-w-3xl"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Current question</p><p className="mt-2 text-xl font-medium leading-relaxed sm:text-2xl">{interview.currentQuestion}</p></div>}
           {interview.silenceWarning && <div role="alert" className="mt-5 flex max-w-xl items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-left text-sm"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" /><span>No speech has been recognised yet. Take your time; the interview will not advance until a recognised answer is available.</span></div>}
-          {interview.error && <div role="alert" className="mt-5 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">{interview.error} <Button size="sm" variant="outline" className="ml-2" onClick={interview.retry}><RefreshCw className="mr-2 h-3 w-3" />Retry</Button></div>}
+          {interview.error && <div role="alert" className="mt-5 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">{interview.error} <Button size="sm" variant="outline" className="ml-2" onClick={() => { try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' }); } catch {} interview.retry(); }}><RefreshCw className="mr-2 h-3 w-3" />Retry</Button></div>}
         </section>
 
         {showTranscript && <section ref={transcriptRef} className="mb-4 max-h-56 overflow-y-auto rounded-lg border bg-card p-4" aria-label="Interview transcript"><div className="space-y-3" role="log" aria-live="polite">{interview.messages.map((message) => <div key={message.id}><p className="text-xs font-medium text-muted-foreground">{message.role === 'assistant' ? 'Interviewer' : 'You'}</p><p className="text-sm">{message.content}</p></div>)}{interview.currentTranscript && <div><p className="text-xs font-medium text-muted-foreground">Recognition in progress</p><p className="text-sm italic">{interview.currentTranscript}</p></div>}</div></section>}

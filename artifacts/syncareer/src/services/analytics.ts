@@ -1,4 +1,3 @@
-import type { PostHog } from 'posthog-js';
 import { ANALYTICS_PROPERTY_KEYS, type AnalyticsEventName, type AnalyticsEventProperties } from './analyticsEvents';
 
 export { ANALYTICS_EVENTS } from './analyticsEvents';
@@ -6,8 +5,16 @@ export { ANALYTICS_EVENTS } from './analyticsEvents';
 export type AnalyticsConsent = 'unknown' | 'granted' | 'denied';
 export const ANALYTICS_CONSENT_KEY = 'syncareer.analytics_consent';
 
-let client: PostHog | null = null;
-let loadPromise: Promise<PostHog | null> | null = null;
+type PostHogClient = {
+  capture: (event: string, props?: Record<string, unknown>) => void;
+  identify: (id: string, props?: Record<string, unknown>) => void;
+  reset: () => void;
+  opt_out_capturing: () => void;
+  init: (key: string, opts: Record<string, unknown>) => void;
+};
+
+let client: PostHogClient | null = null;
+let loadPromise: Promise<PostHogClient | null> | null = null;
 const queue: Array<{ event: AnalyticsEventName; properties: Record<string, unknown> }> = [];
 
 function captureEnabled(): boolean {
@@ -43,12 +50,12 @@ export function setAnalyticsConsent(consent: Exclude<AnalyticsConsent, 'unknown'
   }
 }
 
-async function loadPostHog(): Promise<PostHog | null> {
+async function loadPostHog(): Promise<PostHogClient | null> {
   if (client) return client;
   if (!canCaptureAnalytics()) return null;
   try {
     const module = await import('posthog-js');
-    const posthog = module.default;
+    const posthog = module.default as unknown as PostHogClient;
     posthog.init(import.meta.env.VITE_POSTHOG_API_KEY, {
       api_host: 'https://us.posthog.com',
       autocapture: false,
@@ -56,7 +63,7 @@ async function loadPostHog(): Promise<PostHog | null> {
       capture_pageleave: false,
       disable_session_recording: true,
       persistence: 'localStorage+cookie',
-      loaded: (instance) => { client = instance; },
+      loaded: (instance: unknown) => { client = instance as PostHogClient; },
     });
     client = client ?? posthog;
     for (const call of queue.splice(0)) safeCapture(call.event, call.properties);
