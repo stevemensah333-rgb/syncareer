@@ -37,6 +37,66 @@ const FALLBACK_MAJORS = [
   'Engineering', 'Nursing', 'Economics', 'Information Technology',
 ];
 
+// Kept intentionally bounded: a daily run should cover distinct student demand
+// without letting an unbounded major list multiply provider cost and latency.
+const MAX_DISCOVERY_MAJORS = 12;
+const SEARCHES_PER_MAJOR = 2;
+
+// Search-engine terms complement a literal-major query. They improve discovery
+// breadth but are not user-facing claims about a student's eligibility.
+const ROLE_FAMILY_TERMS: Record<string, string[]> = {
+  'computer science': ['software engineer', 'data analyst', 'qa engineer'],
+  'data science': ['data analyst', 'data scientist', 'data engineer'],
+  'information technology': ['it support', 'network engineer', 'cybersecurity analyst'],
+  'business administration': ['business analyst', 'operations analyst', 'graduate trainee'],
+  accounting: ['audit associate', 'accounts officer', 'finance analyst'],
+  finance: ['financial analyst', 'credit analyst', 'audit associate'],
+  marketing: ['digital marketing', 'marketing assistant', 'brand assistant'],
+  nursing: ['registered nurse', 'graduate nurse', 'clinical nurse'],
+  engineering: ['engineering intern', 'graduate engineer', 'project engineer'],
+  economics: ['economic analyst', 'research analyst', 'policy analyst'],
+};
+
+interface DiscoveryPlan {
+  major: string;
+  label: string;
+  query: string;
+}
+
+function canonicalSourceUrl(value: string): string {
+  try {
+    const url = new URL(value);
+    for (const key of Array.from(url.searchParams.keys())) {
+      if (key.startsWith('utm_') || key === 'ref' || key === 'source') url.searchParams.delete(key);
+    }
+    url.hash = '';
+    return url.toString().replace(/\/$/, '');
+  } catch {
+    return value.trim().toLowerCase().replace(/\/$/, '');
+  }
+}
+
+function stableExternalId(source: string, sourceUrl: string): string {
+  return `${source}:${canonicalSourceUrl(sourceUrl)}`;
+}
+
+function buildDiscoveryPlans(major: string): DiscoveryPlan[] {
+  const normalized = major.trim().toLowerCase();
+  const roleTerms = ROLE_FAMILY_TERMS[normalized] ?? [`${major} graduate`, `${major} intern`, `${major} entry level`];
+  return [
+    {
+      major,
+      label: `${major} graduate roles`,
+      query: `${major} entry-level graduate jobs Ghana`,
+    },
+    {
+      major,
+      label: `${major} role family`,
+      query: `(${roleTerms.slice(0, 3).map((term) => `"${term}"`).join(' OR ')}) entry-level jobs Ghana`,
+    },
+  ];
+}
+
 const JOB_SCHEMA = {
   type: 'object',
   properties: {
@@ -69,24 +129,26 @@ const JOB_SCHEMA = {
 // and to keep function memory bounded.
 const MAX_CONCURRENT_SEARCHES = 6;
 
-async function searchSource(apiKey: string, source: { id: string; site: string }, major: string): Promise<ScrapedJob[]> {
+async function searchSource(apiKey: string, source: { id: string; site: string }, plan: DiscoveryPlan): Promise<ScrapedJob[]> {
   try {
-    const query = `${major} entry-level graduate jobs Ghana site:${source.site}`;
+    const query = `${plan.query} site:${source.site}`;
     const res = await fetch(`${FIRECRAWL_V2}/search`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query,
-        limit: 15,
+        // A page-sized yield makes the ingestion function useful beyond the
+        // previous ~20-result feed while bounded query planning controls cost.
+        limit: 25,
         scrapeOptions: {
           formats: [
-            { type: 'json', schema: JOB_SCHEMA, prompt: `Extract job postings relevant to a ${major} graduate: title, company, location, type, required skills, and application deadline.` },
+            { type: 'json', schema: JOB_SCHEMA, prompt: `Extract active early-career job postings for ${plan.label}: title, company, location, type, required skills, source URL, and application deadline. Exclude pages that are not individual vacancies.` },
           ],
         },
       }),
     });
     if (!res.ok) {
-      console.error(`[${source.id}/${major}] search failed`, res.status, await res.text());
+      console.error(`[${source.id}/${plan.label}] search failed`, res.status, await res.text());
       return [];
     }
     const data = await res.json();
@@ -100,15 +162,15 @@ async function searchSource(apiKey: string, source: { id: string; site: string }
           ...j,
           source: source.id,
           source_url: j.source_url || r.url,
-          external_id: `${source.id}:${j.source_url || r.url}`,
+          external_id: stableExternalId(source.id, j.source_url || r.url),
           employment_type: (j.employment_type || 'full-time').toLowerCase(),
-          skills: [...(j.skills || []), major],
+          skills: [...(j.skills || []), plan.major],
         });
       }
     }
     return jobs;
   } catch (e) {
-    console.error(`[${source.id}/${major}]`, e);
+    console.error(`[${source.id}/${plan.label}]`, e);
     return [];
   }
 }
@@ -166,14 +228,23 @@ Deno.serve(async (req) => {
       .not('major', 'is', null);
     const majorsSet = new Set<string>();
     (majorRows || []).forEach((r: any) => { if (r.major) majorsSet.add(String(r.major).trim()); });
-    const majors = majorsSet.size > 0 ? Array.from(majorsSet) : FALLBACK_MAJORS;
+    const candidateMajors = majorsSet.size > 0 ? Array.from(majorsSet) : FALLBACK_MAJORS;
+    const majors = candidateMajors
+      .sort((left, right) => left.localeCompare(right))
+      .slice(0, MAX_DISCOVERY_MAJORS);
 
-    // Build (source, major) pairs and run searches with bounded concurrency.
-    const pairs: { major: string; site: typeof SITES[number] }[] = [];
-    for (const major of majors) for (const site of SITES) pairs.push({ major, site });
+    // Two complementary queries per major (literal discipline + role family)
+    // across every supported source. This is bounded by design and avoids a
+    // single narrow phrase deciding the entire daily opportunity pool.
+    const pairs: { plan: DiscoveryPlan; site: typeof SITES[number] }[] = [];
+    for (const major of majors) {
+      for (const plan of buildDiscoveryPlans(major).slice(0, SEARCHES_PER_MAJOR)) {
+        for (const site of SITES) pairs.push({ plan, site });
+      }
+    }
 
-    const results = await pool(pairs, MAX_CONCURRENT_SEARCHES, ({ major, site }) =>
-      searchSource(FIRECRAWL_API_KEY, site, major),
+    const results = await pool(pairs, MAX_CONCURRENT_SEARCHES, ({ plan, site }) =>
+      searchSource(FIRECRAWL_API_KEY, site, plan),
     );
     const all = results.flat();
 
@@ -182,13 +253,14 @@ Deno.serve(async (req) => {
     for (const j of all) byExternalId.set(j.external_id, j);
     const deduped = Array.from(byExternalId.values());
 
-    console.log(`Aggregated ${all.length} jobs (${deduped.length} unique) across ${majors.length} majors × ${SITES.length} sites (concurrency=${MAX_CONCURRENT_SEARCHES})`);
+    console.log(`Aggregated ${all.length} jobs (${deduped.length} unique) across ${majors.length} majors × ${SEARCHES_PER_MAJOR} query families × ${SITES.length} sites (queries=${pairs.length}, concurrency=${MAX_CONCURRENT_SEARCHES})`);
 
     if (deduped.length === 0) {
       return new Response(JSON.stringify({
         success: true,
         sources: SITES.map(s => s.id),
         majors,
+        query_count: pairs.length,
         total_scraped: 0,
         inserted: 0,
         updated: 0,
@@ -253,6 +325,7 @@ Deno.serve(async (req) => {
       success: true,
       sources: SITES.map(s => s.id),
       majors,
+      query_count: pairs.length,
       total_scraped: deduped.length,
       inserted,
       updated: Math.max(0, updated),

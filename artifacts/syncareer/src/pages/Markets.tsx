@@ -31,6 +31,12 @@ import {
 import { classifyTrackerError, startTrackingApplication } from '@/features/application-tracker/tracking';
 import { STATUS_COLORS } from '@/features/application-tracker/constants';
 import { statusLabel, type ApplicationRef } from '@/features/application-tracker/workflow';
+import { useUserProfile } from '@/contexts/UserProfileContext';
+import {
+  opportunityRankingSummary,
+  rankAndDeduplicateOpportunities,
+  type OpportunityProfileSignals,
+} from '@/features/opportunities/ranking';
 
 const EMPLOYMENT_TYPES = ['all', 'full-time', 'part-time', 'internship', 'contract', 'remote'];
 const EXPERIENCE_LEVELS = ['all', 'entry', 'mid', 'senior'];
@@ -42,6 +48,7 @@ const DEADLINE_FILTERS = [
 
 type LoadStatus = 'loading' | 'error' | 'ready';
 const SCROLL_STORAGE_KEY = 'syncareer.opportunities.scrollTop';
+const INITIAL_VISIBLE_ROWS = 20;
 
 interface OpportunityRowProps {
   job: OpportunityJob;
@@ -155,8 +162,14 @@ const OpportunityRow = memo(function OpportunityRow({
 const Opportunities = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { studentDetails, profile } = useUserProfile();
 
   const [jobs, setJobs] = useState<OpportunityJob[]>([]);
+  const [profileSignals, setProfileSignals] = useState<Pick<OpportunityProfileSignals, 'skills' | 'interests'>>({
+    skills: [],
+    interests: [],
+  });
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_ROWS);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [applicationsByJob, setApplicationsByJob] = useState<Map<string, ApplicationRef>>(new Map());
   const [loadStatus, setLoadStatus] = useState<LoadStatus>('loading');
@@ -197,7 +210,7 @@ const Opportunities = () => {
         return;
       }
 
-      const [jobsRes, savedRes, appsRes] = await Promise.all([
+      const [jobsRes, savedRes, appsRes, skillsRes, interestsRes] = await Promise.all([
         supabase
           .from('job_postings')
           .select('*')
@@ -209,10 +222,28 @@ const Opportunities = () => {
           .from('job_applications')
           .select('id, job_id, status')
           .eq('applicant_id', session.user.id),
+        supabase.from('user_skills').select('skill_name').eq('user_id', session.user.id).limit(25),
+        supabase
+          .from('assessments')
+          .select('primary_interest, secondary_interest, tertiary_interest')
+          .eq('user_id', session.user.id)
+          .not('completed_at', 'is', null)
+          .order('completed_at', { ascending: false })
+          .limit(1),
       ]);
 
       if (jobsRes.error) throw jobsRes.error;
 
+      setProfileSignals({
+        skills: skillsRes.error ? [] : (skillsRes.data ?? []).map((skill) => skill.skill_name).filter(Boolean),
+        interests: interestsRes.error
+          ? []
+          : (interestsRes.data ?? []).flatMap((assessment) => [
+              assessment.primary_interest,
+              assessment.secondary_interest,
+              assessment.tertiary_interest,
+            ]).filter((interest): interest is string => Boolean(interest)),
+      });
       setSavedIds(new Set(savedRes.error ? [] : (savedRes.data ?? []).map((s) => s.job_id)));
       setApplicationsByJob(
         new Map((appsRes.error ? [] : (appsRes.data ?? [])).map((a) => [a.job_id, { id: a.id, status: a.status }])),
@@ -233,9 +264,23 @@ const Opportunities = () => {
     load();
   }, [load]);
 
-  // Filtered list
+  const rankingProfile = useMemo<OpportunityProfileSignals>(() => ({
+    major: studentDetails?.major ?? null,
+    skills: profileSignals.skills,
+    interests: profileSignals.interests,
+    earlyCareer: profile?.user_type === 'student' || Boolean(studentDetails),
+  }), [profile?.user_type, profileSignals.interests, profileSignals.skills, studentDetails]);
+
+  const rankedJobs = useMemo(
+    () => rankAndDeduplicateOpportunities(jobs, rankingProfile).map((result) => result.job),
+    [jobs, rankingProfile],
+  );
+  const rankingSummary = useMemo(() => opportunityRankingSummary(rankingProfile), [rankingProfile]);
+  const deduplicatedCount = jobs.length - rankedJobs.length;
+
+  // Filtered list — ranking and source-level deduplication happen before user filters.
   const filtered = useMemo(() => {
-    return jobs.filter((j) => {
+    return rankedJobs.filter((j) => {
       if (tab === 'saved' && !savedIds.has(j.id)) return false;
       if (search) {
         const q = search.toLowerCase();
@@ -254,7 +299,14 @@ const Opportunities = () => {
       }
       return true;
     });
-  }, [jobs, tab, savedIds, search, locationFilter, typeFilter, experienceFilter, deadlineFilter]);
+  }, [rankedJobs, tab, savedIds, search, locationFilter, typeFilter, experienceFilter, deadlineFilter]);
+
+  const visibleJobs = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+  const remainingCount = Math.max(0, filtered.length - visibleJobs.length);
+
+  useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE_ROWS);
+  }, [deadlineFilter, experienceFilter, locationFilter, search, tab, typeFilter, jobs]);
 
   const selected = filtered.find((j) => j.id === selectedId) || filtered[0];
 
@@ -262,6 +314,15 @@ const Opportunities = () => {
     if (filtered.length && !filtered.find((j) => j.id === selectedId)) {
       setSelectedId(filtered[0]!.id);
     }
+  }, [filtered, selectedId]);
+
+  // A deep link or a relevance re-rank can select a row outside the initial
+  // render window. Expand only far enough to make the active list selection
+  // visible, so the detail pane never points at an unseen row.
+  useEffect(() => {
+    if (!selectedId) return;
+    const selectedIndex = filtered.findIndex((job) => job.id === selectedId);
+    if (selectedIndex >= 0) setVisibleCount((current) => Math.max(current, selectedIndex + 1));
   }, [filtered, selectedId]);
 
   // Keep inspection context in the URL so protected-route auth redirects and
@@ -444,6 +505,7 @@ const Opportunities = () => {
     const next = rows[target];
     if (!next) return;
     setSelectedId(next.id);
+    setVisibleCount((current) => Math.max(current, target + 1));
     requestAnimationFrame(() => {
       listRef.current?.querySelector<HTMLButtonElement>(`[data-opportunity-id="${next.id}"]`)?.focus();
     });
@@ -475,7 +537,7 @@ const Opportunities = () => {
   };
 
   return (
-    <PageLayout title="Latest opportunities" description="External listings ordered by when Syncareer ingested them. Confirm details on the original source.">
+    <PageLayout title="Latest opportunities" description="Active external listings are ordered by fit when profile details are available. Confirm details on the original source.">
       {/* Search + filter bar */}
       <div className="space-y-3 mb-4">
         <div className="flex gap-2">
@@ -556,6 +618,13 @@ const Opportunities = () => {
             {filtered.length} {filtered.length === 1 ? 'job' : 'jobs'}
           </div>
         </div>
+        {rankingSummary && tab === 'all' ? (
+          <p role="status" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+            {rankingSummary}
+            {deduplicatedCount > 0 ? ` ${deduplicatedCount} duplicate ${deduplicatedCount === 1 ? 'listing was' : 'listings were'} hidden.` : ''}
+          </p>
+        ) : null}
         <Tabs value={tab} onValueChange={(v) => setTab(v as 'all' | 'saved')}>
           <TabsList>
             <TabsTrigger value="all">Latest</TabsTrigger>
@@ -643,20 +712,34 @@ const Opportunities = () => {
                     )}
                   </div>
                 ) : (
-                  filtered.map((job) => (
-                    <OpportunityRow
-                      key={job.id}
-                      job={job}
-                      saved={savedIds.has(job.id)}
-                      saving={savingIds.has(job.id)}
-                      isSelected={selected?.id === job.id}
-                      bookmarkDisabled={Boolean(partialWarning)}
-                      application={applicationsByJob.get(job.id) ?? null}
-                      onSelect={handleSelect}
-                      onToggleSave={toggleSave}
-                      onRowKeyDown={handleRowKeyDown}
-                    />
-                  ))
+                  <>
+                    {visibleJobs.map((job) => (
+                      <OpportunityRow
+                        key={job.id}
+                        job={job}
+                        saved={savedIds.has(job.id)}
+                        saving={savingIds.has(job.id)}
+                        isSelected={selected?.id === job.id}
+                        bookmarkDisabled={Boolean(partialWarning)}
+                        application={applicationsByJob.get(job.id) ?? null}
+                        onSelect={handleSelect}
+                        onToggleSave={toggleSave}
+                        onRowKeyDown={handleRowKeyDown}
+                      />
+                    ))}
+                    {remainingCount > 0 ? (
+                      <div className="p-3 border-t bg-muted/20">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_ROWS)}
+                        >
+                          Load {Math.min(INITIAL_VISIBLE_ROWS, remainingCount)} more opportunities ({remainingCount} remaining)
+                        </Button>
+                      </div>
+                    ) : null}
+                  </>
                 )}
               </div>
             </Card>

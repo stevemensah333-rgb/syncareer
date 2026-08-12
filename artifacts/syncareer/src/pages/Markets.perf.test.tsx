@@ -20,11 +20,9 @@ vi.mock('@/contexts/UserProfileContext', () => ({
 /**
  * Render-cost regression guard for the opportunity list.
  *
- * The page renders every matching row, each wrapped in a hover preview. With
- * an unbounded feed this list can reach hundreds of rows, so typing in the
- * search box must not re-render rows whose inputs did not change. This test
- * renders 400 synthetic rows and measures (React Profiler) the commit cost of
- * a single keystroke against the initial render cost of the same list.
+ * The feed can reach hundreds of rows, but the page renders only an initial
+ * bounded window and offers an explicit load-more action. This test still uses
+ * 400 synthetic rows and guards the cost of a broad search keystroke.
  */
 
 function makeJobs(count: number) {
@@ -61,7 +59,7 @@ describe('Opportunities list render cost', () => {
     vi.clearAllMocks();
   });
 
-  it('a search keystroke is much cheaper than the initial 400-row render', async () => {
+  it('bounds the initial 400-row feed render and keeps a broad search keystroke inexpensive', async () => {
     const jobs = makeJobs(400);
     installSupabaseMock({
       tables: {
@@ -85,7 +83,8 @@ describe('Opportunities list render cost', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getAllByRole('button', { name: /Open details\.$/ }).length).toBe(400);
+      expect(screen.getAllByRole('button', { name: /Open details\.$/ }).length).toBe(20);
+      expect(screen.getByRole('button', { name: /Load 20 more opportunities \(380 remaining\)/ })).toBeTruthy();
     });
 
     const initialDuration = commits.reduce((sum, commit) => sum + commit.actualDuration, 0);
@@ -97,17 +96,16 @@ describe('Opportunities list render cost', () => {
     fireEvent.change(searchInput, { target: { value: 'Graduate' } });
 
     await waitFor(() => {
-      expect(screen.getAllByRole('button', { name: /Open details\.$/ }).length).toBe(342);
+      expect(screen.getAllByRole('button', { name: /Open details\.$/ }).length).toBe(20);
+      expect(screen.getByRole('button', { name: /Load 20 more opportunities \(322 remaining\)/ })).toBeTruthy();
     });
 
     const keystrokeDuration = commits.reduce((sum, commit) => sum + commit.actualDuration, 0);
     // eslint-disable-next-line no-console
-    console.log(`[markets-perf] initial400=${initialDuration.toFixed(1)}ms keystroke342=${keystrokeDuration.toFixed(1)}ms`);
+    console.log(`[markets-perf] initialWindow=${initialDuration.toFixed(1)}ms searchWindow=${keystrokeDuration.toFixed(1)}ms`);
 
-    // Guard: one keystroke over surviving rows must cost a small fraction of
-    // rendering the whole list once. Pre-fix every surviving row re-rendered
-    // (parity with the initial render); with memoized rows only the rows
-    // whose inputs changed re-render.
+    // Guard: one broad search keystroke must stay cheap relative to the
+    // bounded initial window; all 342 surviving rows must not be mounted.
     expect(keystrokeDuration).toBeLessThan(initialDuration * 0.5);
     expect(keystrokeDuration).toBeLessThan(100);
   }, 30_000);

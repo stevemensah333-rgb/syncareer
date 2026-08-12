@@ -84,7 +84,7 @@ describe('Opportunities page', () => {
     expect(document.querySelector('[aria-busy="true"]')).toBeTruthy();
 
     expect((await screen.findAllByText('Graduate Analyst')).length).toBeGreaterThan(0);
-    expect(screen.getByText('Junior Developer')).toBeTruthy();
+    expect(screen.getAllByText('Junior Developer').length).toBeGreaterThan(0);
     // tracked + saved state exposed on the rows
     expect(screen.getByText(/Tracked · Interview/)).toBeTruthy();
     expect(screen.getByText('Saved')).toBeTruthy();
@@ -284,6 +284,30 @@ describe('Opportunities page', () => {
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toContain('You do not have access to opportunities');
     expect(screen.queryByRole('button', { name: /Try again/i })).toBeNull();
+  });
+
+  it('orders using available profile signals and incrementally reveals a longer feed', async () => {
+    const jobs = Array.from({ length: 21 }, (_, index) => makeJob({
+      title: index === 20 ? 'Senior Marketing Director' : `Graduate Engineer ${index + 1}`,
+      experience_level: index === 20 ? 'senior' : 'entry',
+      source_url: `https://example.com/paged/${index + 1}`,
+    }));
+    installSupabaseMock({
+      tables: {
+        job_postings: { data: jobs, error: null },
+        user_skills: { data: [{ skill_name: 'TypeScript' }], error: null },
+      },
+    });
+    renderPage();
+
+    await screen.findAllByText('Graduate Engineer 1');
+    expect(screen.getByText(/Ordered using Computer Science and 1 skill/i)).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: /Open details\.$/ })).toHaveLength(20);
+    expect(screen.queryByRole('button', { name: /Senior Marketing Director.*Open details/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Load 1 more opportunities \(1 remaining\)/i }));
+    expect(await screen.findByRole('button', { name: /Senior Marketing Director.*Open details/i })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: /Open details\.$/ })).toHaveLength(21);
   });
 
   it('has explicit empty states for the list and the saved tab', async () => {
