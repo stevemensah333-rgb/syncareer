@@ -21,11 +21,13 @@ export default function FinalCTASection({
             id="final-cta-title"
             className="text-balance text-3xl font-semibold tracking-[-0.035em]"
           >
-            Start with an opportunity worth pursuing.
+            Your application should have a memory.
           </h2>
+          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-secondary-foreground/75">
+            <span>Role</span><span aria-hidden="true">→</span><span>Evidence</span><span aria-hidden="true">→</span><span>Preparation</span><span aria-hidden="true">→</span><span>Action</span><span aria-hidden="true">→</span><span>Outcome</span>
+          </div>
           <p className="mt-3 text-sm leading-6 text-secondary-foreground/70 sm:text-base">
-            Keep the evidence, preparation, next action, and outcome connected
-            from the start.
+            Start with an opportunity worth pursuing, then keep the decisions and evidence connected as the application changes.
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">

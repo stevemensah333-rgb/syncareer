@@ -30,21 +30,23 @@ describe('landing page content and navigation', () => {
     fireEvent.click(exploreBtn);
     expect(onGetStarted).toHaveBeenCalledOnce();
     expect(container.textContent).toMatch(/External listings retain their source labels/i);
-    expect(container.textContent).toMatch(/One application, four connected steps/i);
+    expect(container.textContent).toMatch(/One application, connected steps/i);
   });
 
   it('renders one coherent feature breakdown and its trust boundaries after features', () => {
     const { container } = render(<ProductStory />);
     const text = container.textContent ?? '';
 
-    expect(text).toMatch(/What Syncareer helps you do/i);
-    expect(text).toMatch(/Find and save a real external role/i);
-    expect(text).toMatch(/Build truthful evidence/i);
-    expect(text).toMatch(/Prepare and track/i);
+    expect(text).toMatch(/The role stays connected from first look to next action/i);
+    expect(text).toMatch(/Keep the source, role, and requirements in view/i);
+    expect(text).toMatch(/Build evidence without filling gaps with fiction/i);
+    expect(text).toMatch(/Record the next action, then the outcome/i);
     expect(text).toMatch(/We tell you what's real and what's a suggestion/i);
-    expect(text).toMatch(/not independently verified/i);
-    expect(text).toMatch(/do not guarantee applicant-tracking-system success/i);
-    expect(text).toMatch(/Application stages, external submissions, next actions, and outcomes change only through deliberate user actions/i);
+    expect(text).toMatch(/Independent verification, ATS success, or guaranteed outcome/i);
+    expect(text).toMatch(/Not claimed/i);
+    expect(text).toMatch(/Application stage and outcome/i);
+    expect(text).toMatch(/User controlled/i);
+    expect(text).toMatch(/Independent verification, ATS success, or guaranteed outcome/i);
   });
 
   it('supports arrow-key navigation through the illustrative journey', () => {

@@ -13,8 +13,8 @@ export default function HeroSection({
 }: HeroSectionProps) {
   const handleTryDemo = () => {
     const nextTab =
-      document.getElementById("demo-tab-evidence") ||
-      document.getElementById("demo-tab-opportunity");
+      document.getElementById("hero-demo-tab-evidence") ||
+      document.getElementById("hero-demo-tab-opportunity");
     if (nextTab) {
       nextTab.scrollIntoView({ behavior: "smooth", block: "nearest" });
       nextTab.focus();
@@ -83,7 +83,7 @@ export default function HeroSection({
             </p>
           </div>
           <div id="hero-interactive-demo" className="w-full lg:col-span-6 xl:col-span-6">
-            <ProductDemo />
+            <ProductDemo autoProgress idPrefix="hero-demo" />
           </div>
         </div>
       </div>

@@ -1,184 +1,47 @@
-import {
-  BriefcaseBusiness,
-  CheckCircle2,
-  FileCheck2,
-  Mic2,
-  ShieldCheck,
-  Bookmark,
-  Sparkles,
-  UserCheck,
-  FileText,
-} from "lucide-react";
+import { useEffect, useRef, useState } from 'react';
+import { Check, ChevronRight, Circle, ShieldCheck } from 'lucide-react';
+import ProductDemo, { DEMO_STEPS, type DemoStep } from './ProductDemo';
 
-const capabilities = [
-  {
-    step: "01",
-    icon: BriefcaseBusiness,
-    title: "Find and save a real external role",
-    copy: "Inspect source, organisation, location, level, recency, and known deadlines without invented salary or verification claims.",
-    uiSnippet: {
-      label: "Opportunity record",
-      content: "Source: External listing · Accra · Entry level · Known deadline",
-    },
-  },
-  {
-    step: "02",
-    icon: FileCheck2,
-    title: "Build truthful evidence",
-    copy: "Compare listed requirements with evidence you actually have, then improve a role-specific CV without fabricating experience.",
-    uiSnippet: {
-      label: "Evidence check",
-      content: "Requirement: SQL · Project evidence validated · No automatic fabrication",
-    },
-  },
-  {
-    step: "03",
-    icon: Mic2,
-    title: "Prepare and track",
-    copy: "Practise with role context, record the next action, and update stage or outcome only when it actually changes.",
-    uiSnippet: {
-      label: "Active application",
-      content: "Stage: Interview Practice · Next action: Follow up Friday",
-    },
-  },
-];
-
-const trustFeatures = [
-  {
-    badge: "Provenance",
-    icon: Bookmark,
-    title: "Source labels",
-    copy: "External opportunities retain the stored source and original link when available; they are not independently verified.",
-  },
-  {
-    badge: "Deterministic",
-    icon: FileText,
-    title: "Deterministic CV guidance",
-    copy: "Completion and evidence checks examine entered content. They do not guarantee applicant-tracking-system success.",
-  },
-  {
-    badge: "AI Boundary",
-    icon: Sparkles,
-    title: "Bounded AI",
-    copy: "Generated suggestions remain proposals, use only supplied context, and may be inaccurate. You decide whether to use them.",
-  },
-  {
-    badge: "User Controlled",
-    icon: UserCheck,
-    title: "Recorded outcomes",
-    copy: "Application stages, external submissions, next actions, and outcomes change only through deliberate user actions.",
-  },
+const storySteps: Array<{ id: DemoStep; eyebrow: string; title: string; copy: string }> = [
+  { id: 'opportunity', eyebrow: '01 · Start with a real opportunity', title: 'Keep the source, role, and requirements in view.', copy: 'Inspect the original listing, organisation, location, level, and known deadline before you decide whether the role is worth pursuing.' },
+  { id: 'evidence', eyebrow: '02 · Compare it with what you can prove', title: 'Build evidence without filling gaps with fiction.', copy: 'Match requirements to project evidence or coursework, see what still needs support, and keep generated wording separate from facts you supplied.' },
+  { id: 'interview', eyebrow: '03 · Prepare around that role', title: 'Use the same opportunity context when you practise.', copy: 'Interview preparation stays connected to the saved role, so your practice has a reason and a reference point.' },
+  { id: 'application', eyebrow: '04 · Know what to do next', title: 'Record the next action, then the outcome.', copy: 'Track the stage, follow-up, and eventual outcome deliberately. The application record remembers what you chose to record.' },
 ];
 
 export default function ProductStory() {
-  return (
-    <>
-      <section
-        id="product"
-        className="scroll-mt-24 border-b bg-background"
-        aria-labelledby="capabilities-title"
-      >
-        <div className="mx-auto w-full max-w-[1400px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-          <div className="mb-12 max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Evidence-based workflow
-            </p>
-            <h2
-              id="capabilities-title"
-              className="mt-2 text-balance text-3xl font-semibold tracking-[-0.035em] sm:text-4xl"
-            >
-              What Syncareer helps you do.
-            </h2>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">
-              Every step in Syncareer is intentionally designed around real evidence,
-              source transparency, and user-controlled tracking.
-            </p>
-          </div>
+  const [activeStep, setActiveStep] = useState<DemoStep>('opportunity');
+  const stepRefs = useRef<Array<HTMLElement | null>>([]);
 
-          <div className="grid gap-6 lg:grid-cols-3">
-            {capabilities.map(({ step, icon: Icon, title, copy, uiSnippet }) => (
-              <article
-                key={title}
-                className="flex flex-col justify-between rounded-xl border bg-card p-6 shadow-sm sm:p-7"
-              >
-                <div>
-                  <div className="flex items-center justify-between border-b pb-4">
-                    <span className="text-xs font-semibold tracking-wider text-muted-foreground">
-                      STEP {step}
-                    </span>
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Icon className="h-4 w-4" aria-hidden="true" />
-                    </span>
-                  </div>
-                  <h3 className="mt-5 text-xl font-semibold text-foreground">
-                    {title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {copy}
-                  </p>
-                </div>
-                <div className="mt-6 rounded-lg border border-border/80 bg-muted/40 p-3.5 text-xs">
-                  <p className="font-semibold text-foreground">{uiSnippet.label}</p>
-                  <p className="mt-1 text-muted-foreground">{uiSnippet.content}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return undefined;
+    const observers = stepRefs.current.map((element) => {
+      if (!element) return null;
+      const observer = new IntersectionObserver(([entry]) => { if (entry?.isIntersecting) setActiveStep(entry.target.getAttribute('data-step') as DemoStep); }, { rootMargin: '-35% 0px -45% 0px', threshold: 0 });
+      observer.observe(element);
+      return observer;
+    });
+    return () => observers.forEach((observer) => observer?.disconnect());
+  }, []);
+
+  return <>
+    <section id="product" className="scroll-mt-24 border-b bg-background" aria-labelledby="journey-title">
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+        <div className="mb-12 max-w-2xl lg:mb-16"><p className="eyebrow text-primary">The application journey</p><h2 id="journey-title" className="mt-3 text-balance text-3xl font-semibold tracking-[-0.045em] sm:text-4xl lg:text-5xl">The role stays connected from first look to next action.</h2><p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">One working record carries the opportunity context through evidence, preparation, and the decisions you make after applying.</p></div>
+        <div className="grid gap-14 lg:grid-cols-[0.82fr_1.18fr] lg:gap-20">
+          <div className="relative"><div className="absolute left-[11px] top-3 hidden h-[calc(100%-24px)] w-px bg-border lg:block" aria-hidden="true" /><div className="space-y-8 lg:space-y-12">{storySteps.map((step, index) => <article key={step.id} data-step={step.id} ref={(node) => { stepRefs.current[index] = node; }} className={`relative pl-9 transition-opacity duration-300 motion-reduce:transition-none ${activeStep === step.id ? 'opacity-100' : 'opacity-55 hover:opacity-90'}`}><button type="button" onClick={() => setActiveStep(step.id)} className="group block text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"><span className={`absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full border-2 bg-background text-[10px] font-bold ${activeStep === step.id ? 'border-primary text-primary' : 'border-border text-muted-foreground'}`} aria-hidden="true">{activeStep === step.id ? <Check className="h-3 w-3" /> : String(index + 1).padStart(2, '0')}</span><p className="eyebrow text-primary">{step.eyebrow}</p><h3 className="mt-2 max-w-md text-xl font-semibold tracking-tight group-hover:text-primary sm:text-2xl">{step.title}</h3><p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground sm:text-base">{step.copy}</p><span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary">View this application state <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" /></span></button></article>)}</div></div>
+          <div className="lg:sticky lg:top-24 lg:self-start"><ProductDemo activeStep={activeStep} onStepChange={setActiveStep} autoProgress={false} idPrefix="journey-demo" /><p className="mt-3 text-center text-xs text-muted-foreground">Illustrative product state. The source, evidence, and next action are examples, not a live record.</p></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section
-        id="method"
-        className="scroll-mt-24 border-b bg-secondary/30"
-        aria-labelledby="method-title"
-      >
-        <div className="mx-auto w-full max-w-[1400px] px-4 py-16 sm:px-6 md:py-20 lg:px-8">
-          <div className="mb-12 max-w-2xl">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
-              <span>Built for trust</span>
-            </div>
-            <h2
-              id="method-title"
-              className="mt-2 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl"
-            >
-              We tell you what&apos;s real and what&apos;s a suggestion.
-            </h2>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">
-              Syncareer supports your judgement; it does not replace it. Every
-              signal in the platform is clearly bounded.
-            </p>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {trustFeatures.map(({ badge, icon: Icon, title, copy }) => (
-              <div
-                key={title}
-                className="flex flex-col justify-between rounded-xl border bg-card p-6 shadow-sm"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-[11px] font-medium text-secondary-foreground">
-                      <Icon className="h-3 w-3 text-primary" aria-hidden="true" />
-                      {badge}
-                    </span>
-                    <CheckCircle2
-                      className="h-4 w-4 text-success"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <h3 className="mt-4 text-base font-semibold text-foreground">
-                    {title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {copy}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    </>
-  );
+    <section id="method" className="scroll-mt-24 border-b bg-secondary/25" aria-labelledby="method-title"><div className="mx-auto w-full max-w-[1400px] px-4 py-20 sm:px-6 lg:px-8 lg:py-24"><div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20"><div><div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" /><p className="eyebrow text-primary">A product contract</p></div><h2 id="method-title" className="mt-4 text-balance text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">We tell you what&apos;s real and what&apos;s a suggestion.</h2><p className="mt-4 max-w-md text-base leading-7 text-muted-foreground">Syncareer supports your judgement; it does not replace it. The interface keeps provenance, guidance, and user decisions distinct.</p></div><div className="divide-y border-y"><LedgerRow label="External opportunity source" status="Recorded" tone="recorded" /><LedgerRow label="Your supplied CV evidence" status="Recorded" tone="recorded" /><LedgerRow label="Application stage and outcome" status="User controlled" tone="controlled" /><LedgerRow label="Job-fit and interview suggestions" status="Guidance" tone="guidance" /><LedgerRow label="Independent verification, ATS success, or guaranteed outcome" status="Not claimed" tone="not-claimed" /></div></div></div></section>
+  </>;
 }
+
+function LedgerRow({ label, status, tone }: { label: string; status: string; tone: 'recorded' | 'controlled' | 'guidance' | 'not-claimed' }) {
+  const toneClass = { recorded: 'text-success', controlled: 'text-primary', guidance: 'text-foreground', 'not-claimed': 'text-muted-foreground' }[tone];
+  return <div className="grid gap-2 py-4 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-6"><div className="flex items-center gap-2 text-sm font-medium"><Circle className={`h-2.5 w-2.5 fill-current ${toneClass}`} aria-hidden="true" />{label}</div><span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${toneClass}`}><span aria-hidden="true">{tone === 'not-claimed' ? '—' : '✓'}</span>{status}</span></div>;
+}
+
+export { DEMO_STEPS };

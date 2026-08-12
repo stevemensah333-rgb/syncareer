@@ -165,6 +165,23 @@
 
   /* Shared Syncareer canvas — warm near-white with a very subtle
      blue/lavender atmospheric wash for application and public product shells. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground;
+  }
+
+  .landing-product-demo [role='tabpanel'] {
+    animation: landing-panel-in 260ms ease-out;
+  }
+
+  @keyframes landing-panel-in {
+    from { opacity: 0.35; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-product-demo [role='tabpanel'] { animation: none; }
+  }
+
   .app-canvas {
     background-color: hsl(var(--background));
     background-image:
