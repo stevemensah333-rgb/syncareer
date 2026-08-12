@@ -27,7 +27,7 @@ export const LANDING_FAQS = [
 export default function FAQSection() {
   return (
     <section id="faqs" className="scroll-mt-24 border-b" aria-labelledby="faq-title">
-      <div className="mx-auto grid w-full max-w-[1400px] gap-8 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-[0.7fr_1.3fr] lg:gap-14 lg:px-8">
+      <div className="mx-auto grid w-full max-w-[1280px] gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20 lg:px-8 lg:py-24">
         <div>
           <h2 id="faq-title" className="text-balance text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-4xl">
             Questions worth answering before you start.
@@ -37,13 +37,13 @@ export default function FAQSection() {
           </p>
         </div>
 
-        <Accordion type="single" collapsible className="rounded-xl border bg-card px-4 sm:px-6">
+        <Accordion type="single" collapsible className="border-y">
           {LANDING_FAQS.map((item, index) => (
-            <AccordionItem key={item.q} value={`faq-${index}`}>
-              <AccordionTrigger className="min-h-14 py-4 text-left text-sm font-semibold hover:no-underline sm:text-base">
+              <AccordionItem key={item.q} value={`faq-${index}`}>
+              <AccordionTrigger className="min-h-14 py-5 text-left text-sm font-semibold hover:no-underline sm:text-base">
                 {item.q}
               </AccordionTrigger>
-              <AccordionContent className="max-w-3xl pb-5 pr-6 text-sm leading-6 text-muted-foreground">
+              <AccordionContent className="max-w-3xl pb-5 pr-8 text-sm leading-6 text-muted-foreground">
                 {item.a}
               </AccordionContent>
             </AccordionItem>
