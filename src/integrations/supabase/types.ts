@@ -136,6 +136,39 @@ export type Database = {
         }
         Relationships: []
       }
+      assistant_requests: {
+        Row: {
+          created_at: string
+          id: string
+          proposal: Json | null
+          request_id: string
+          status: string
+          task: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          proposal?: Json | null
+          request_id: string
+          status?: string
+          task: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          proposal?: Json | null
+          request_id?: string
+          status?: string
+          task?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       career_guidance_sessions: {
         Row: {
           confidence_score: number | null
