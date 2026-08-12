@@ -1,7 +1,7 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const FIRECRAWL_V2 = 'https://api.firecrawl.dev/v2';
+const FIRECRAWL_V2 = "https://api.firecrawl.dev/v2";
 
 interface ScrapedJob {
   title: string;
@@ -23,42 +23,97 @@ interface ScrapedJob {
 
 // Job board domains to search across for each major
 const SITES: { id: string; site: string }[] = [
-  { id: 'linkedin',       site: 'linkedin.com/jobs' },
-  { id: 'indeed',         site: 'indeed.com' },
-  { id: 'jobberman',      site: 'jobberman.com.gh' },
-  { id: 'ghanajobweb',    site: 'ghanajobweb.com' },
-  { id: 'brightermonday', site: 'brightermonday.co.ke' },
-  { id: 'jobsinghana',    site: 'jobsinghana.com' },
+  { id: "linkedin", site: "linkedin.com/jobs" },
+  { id: "indeed", site: "indeed.com" },
+  { id: "jobberman", site: "jobberman.com.gh" },
+  { id: "ghanajobweb", site: "ghanajobweb.com" },
+  { id: "brightermonday", site: "brightermonday.co.ke" },
+  { id: "jobsinghana", site: "jobsinghana.com" },
 ];
 
-// Fallback majors used when no student rows exist yet
-const FALLBACK_MAJORS = [
-  'Computer Science', 'Business Administration', 'Accounting', 'Marketing',
-  'Engineering', 'Nursing', 'Economics', 'Information Technology',
+// Shared daily discovery taxonomy. This is intentionally fixed and independent
+// of student records: ingestion creates one broad opportunity pool for everyone,
+// while the product ranks and filters that shared pool per user at read time.
+//
+// Each segment has two complementary queries. Keep this list curated and bounded
+// so discovery cost stays stable as the user base grows.
+interface DiscoverySegment {
+  id: string;
+  label: string;
+  queries: [string, string];
+}
+
+const SHARED_DISCOVERY_SEGMENTS: DiscoverySegment[] = [
+  {
+    id: "software-data",
+    label: "software, data and AI",
+    queries: [
+      "software engineer developer data analyst entry-level graduate jobs Ghana",
+      "frontend backend qa engineer data science internship jobs Ghana",
+    ],
+  },
+  {
+    id: "it-cybersecurity",
+    label: "IT, cloud and cybersecurity",
+    queries: [
+      "IT support network engineer cybersecurity entry-level jobs Ghana",
+      "cloud support systems administrator technical support internship jobs Ghana",
+    ],
+  },
+  {
+    id: "business-operations",
+    label: "business and operations",
+    queries: [
+      "business analyst operations analyst project coordinator graduate jobs Ghana",
+      "management trainee customer success sales associate internship jobs Ghana",
+    ],
+  },
+  {
+    id: "finance-accounting",
+    label: "finance and accounting",
+    queries: [
+      "financial analyst audit associate accounts officer graduate jobs Ghana",
+      "credit analyst tax associate finance internship entry-level jobs Ghana",
+    ],
+  },
+  {
+    id: "marketing-communications",
+    label: "marketing and communications",
+    queries: [
+      "digital marketing marketing assistant content social media jobs Ghana",
+      "communications officer public relations brand assistant internship jobs Ghana",
+    ],
+  },
+  {
+    id: "healthcare",
+    label: "healthcare and life sciences",
+    queries: [
+      "registered nurse medical officer pharmacist entry-level jobs Ghana",
+      "clinical research public health pharmacy internship healthcare jobs Ghana",
+    ],
+  },
+  {
+    id: "engineering-built-environment",
+    label: "engineering and built environment",
+    queries: [
+      "graduate engineer electrical mechanical civil engineering jobs Ghana",
+      "site engineer project engineer quality engineer engineering internship Ghana",
+    ],
+  },
+  {
+    id: "people-public-impact",
+    label: "people, education and public impact",
+    queries: [
+      "human resources recruitment coordinator teaching assistant jobs Ghana",
+      "research assistant programme officer policy analyst graduate jobs Ghana",
+    ],
+  },
 ];
 
-// Kept intentionally bounded: a daily run should cover distinct student demand
-// without letting an unbounded major list multiply provider cost and latency.
-const MAX_DISCOVERY_MAJORS = 12;
-const SEARCHES_PER_MAJOR = 2;
-
-// Search-engine terms complement a literal-major query. They improve discovery
-// breadth but are not user-facing claims about a student's eligibility.
-const ROLE_FAMILY_TERMS: Record<string, string[]> = {
-  'computer science': ['software engineer', 'data analyst', 'qa engineer'],
-  'data science': ['data analyst', 'data scientist', 'data engineer'],
-  'information technology': ['it support', 'network engineer', 'cybersecurity analyst'],
-  'business administration': ['business analyst', 'operations analyst', 'graduate trainee'],
-  accounting: ['audit associate', 'accounts officer', 'finance analyst'],
-  finance: ['financial analyst', 'credit analyst', 'audit associate'],
-  marketing: ['digital marketing', 'marketing assistant', 'brand assistant'],
-  nursing: ['registered nurse', 'graduate nurse', 'clinical nurse'],
-  engineering: ['engineering intern', 'graduate engineer', 'project engineer'],
-  economics: ['economic analyst', 'research analyst', 'policy analyst'],
-};
+const SEARCHES_PER_SEGMENT = 2;
 
 interface DiscoveryPlan {
-  major: string;
+  segment: string;
   label: string;
   query: string;
 }
@@ -67,12 +122,13 @@ function canonicalSourceUrl(value: string): string {
   try {
     const url = new URL(value);
     for (const key of Array.from(url.searchParams.keys())) {
-      if (key.startsWith('utm_') || key === 'ref' || key === 'source') url.searchParams.delete(key);
+      if (key.startsWith("utm_") || key === "ref" || key === "source")
+        url.searchParams.delete(key);
     }
-    url.hash = '';
-    return url.toString().replace(/\/$/, '');
+    url.hash = "";
+    return url.toString().replace(/\/$/, "");
   } catch {
-    return value.trim().toLowerCase().replace(/\/$/, '');
+    return value.trim().toLowerCase().replace(/\/$/, "");
   }
 }
 
@@ -80,46 +136,50 @@ function stableExternalId(source: string, sourceUrl: string): string {
   return `${source}:${canonicalSourceUrl(sourceUrl)}`;
 }
 
-function buildDiscoveryPlans(major: string): DiscoveryPlan[] {
-  const normalized = major.trim().toLowerCase();
-  const roleTerms = ROLE_FAMILY_TERMS[normalized] ?? [`${major} graduate`, `${major} intern`, `${major} entry level`];
-  return [
-    {
-      major,
-      label: `${major} graduate roles`,
-      query: `${major} entry-level graduate jobs Ghana`,
-    },
-    {
-      major,
-      label: `${major} role family`,
-      query: `(${roleTerms.slice(0, 3).map((term) => `"${term}"`).join(' OR ')}) entry-level jobs Ghana`,
-    },
-  ];
+function buildDiscoveryPlans(segment: DiscoverySegment): DiscoveryPlan[] {
+  return segment.queries.map((query, index) => ({
+    segment: segment.id,
+    label: `${segment.label} query ${index + 1}`,
+    query,
+  }));
 }
 
 const JOB_SCHEMA = {
-  type: 'object',
+  type: "object",
   properties: {
     jobs: {
-      type: 'array',
+      type: "array",
       items: {
-        type: 'object',
+        type: "object",
         properties: {
-          title: { type: 'string' },
-          company_name: { type: 'string' },
-          company_domain: { type: 'string', description: 'Just the bare domain, e.g. mtn.com.gh' },
-          location: { type: 'string' },
-          employment_type: { type: 'string', description: 'one of: full-time, part-time, internship, contract, remote' },
-          experience_level: { type: 'string', description: 'one of: entry, mid, senior' },
-          description: { type: 'string' },
-          skills: { type: 'array', items: { type: 'string' } },
-          source_url: { type: 'string' },
-          application_deadline: { type: 'string', description: 'ISO date YYYY-MM-DD if available' },
-          salary_min: { type: 'number' },
-          salary_max: { type: 'number' },
-          salary_currency: { type: 'string' },
+          title: { type: "string" },
+          company_name: { type: "string" },
+          company_domain: {
+            type: "string",
+            description: "Just the bare domain, e.g. mtn.com.gh",
+          },
+          location: { type: "string" },
+          employment_type: {
+            type: "string",
+            description:
+              "one of: full-time, part-time, internship, contract, remote",
+          },
+          experience_level: {
+            type: "string",
+            description: "one of: entry, mid, senior",
+          },
+          description: { type: "string" },
+          skills: { type: "array", items: { type: "string" } },
+          source_url: { type: "string" },
+          application_deadline: {
+            type: "string",
+            description: "ISO date YYYY-MM-DD if available",
+          },
+          salary_min: { type: "number" },
+          salary_max: { type: "number" },
+          salary_currency: { type: "string" },
         },
-        required: ['title', 'location', 'source_url', 'description'],
+        required: ["title", "location", "source_url", "description"],
       },
     },
   },
@@ -129,12 +189,19 @@ const JOB_SCHEMA = {
 // and to keep function memory bounded.
 const MAX_CONCURRENT_SEARCHES = 6;
 
-async function searchSource(apiKey: string, source: { id: string; site: string }, plan: DiscoveryPlan): Promise<ScrapedJob[]> {
+async function searchSource(
+  apiKey: string,
+  source: { id: string; site: string },
+  plan: DiscoveryPlan,
+): Promise<ScrapedJob[]> {
   try {
     const query = `${plan.query} site:${source.site}`;
     const res = await fetch(`${FIRECRAWL_V2}/search`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         query,
         // A page-sized yield makes the ingestion function useful beyond the
@@ -142,13 +209,21 @@ async function searchSource(apiKey: string, source: { id: string; site: string }
         limit: 25,
         scrapeOptions: {
           formats: [
-            { type: 'json', schema: JOB_SCHEMA, prompt: `Extract active early-career job postings for ${plan.label}: title, company, location, type, required skills, source URL, and application deadline. Exclude pages that are not individual vacancies.` },
+            {
+              type: "json",
+              schema: JOB_SCHEMA,
+              prompt: `Extract active early-career job postings for ${plan.label}: title, company, location, type, required skills, source URL, and application deadline. Exclude pages that are not individual vacancies.`,
+            },
           ],
         },
       }),
     });
     if (!res.ok) {
-      console.error(`[${source.id}/${plan.label}] search failed`, res.status, await res.text());
+      console.error(
+        `[${source.id}/${plan.label}] search failed`,
+        res.status,
+        await res.text(),
+      );
       return [];
     }
     const data = await res.json();
@@ -163,8 +238,11 @@ async function searchSource(apiKey: string, source: { id: string; site: string }
           source: source.id,
           source_url: j.source_url || r.url,
           external_id: stableExternalId(source.id, j.source_url || r.url),
-          employment_type: (j.employment_type || 'full-time').toLowerCase(),
-          skills: [...(j.skills || []), plan.major],
+          employment_type: (j.employment_type || "full-time").toLowerCase(),
+          // Skills come only from the source extraction. Discovery-segment
+          // labels are coverage metadata, not evidence that an applicant needs
+          // or has a particular skill.
+          skills: j.skills || [],
         });
       }
     }
@@ -185,66 +263,70 @@ async function pool<T, R>(
 ): Promise<R[]> {
   const results: R[] = new Array(items.length);
   let next = 0;
-  const runners = Array.from({ length: Math.min(limit, items.length) }, async (_, runnerIdx) => {
-    while (true) {
-      const i = next++;
-      if (i >= items.length) break;
-      // Spacing out start times slightly to reduce thundering-herd.
-      if (runnerIdx > 0) await new Promise((r) => setTimeout(r, runnerIdx * 50));
-      results[i] = await worker(items[i]);
-    }
-  });
+  const runners = Array.from(
+    { length: Math.min(limit, items.length) },
+    async (_, runnerIdx) => {
+      while (true) {
+        const i = next++;
+        if (i >= items.length) break;
+        // Spacing out start times slightly to reduce thundering-herd.
+        if (runnerIdx > 0)
+          await new Promise((r) => setTimeout(r, runnerIdx * 50));
+        results[i] = await worker(items[i]);
+      }
+    },
+  );
   await Promise.all(runners);
   return results;
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === "OPTIONS")
+    return new Response("ok", { headers: corsHeaders });
 
   // Service-role only (cron job)
-  const authHeader = req.headers.get('Authorization') || '';
-  const token = authHeader.replace(/^Bearer\s+/i, '');
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "");
   let isServiceRole = false;
-  try { isServiceRole = JSON.parse(atob(token.split('.')[1] || ''))?.role === 'service_role'; } catch {}
+  try {
+    isServiceRole =
+      JSON.parse(atob(token.split(".")[1] || ""))?.role === "service_role";
+  } catch {}
   if (!isServiceRole) {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), {
-      status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
   try {
-    const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
-    if (!FIRECRAWL_API_KEY) throw new Error('FIRECRAWL_API_KEY not configured');
+    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+    if (!FIRECRAWL_API_KEY) throw new Error("FIRECRAWL_API_KEY not configured");
 
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Fetch distinct majors from student_details; fall back to a general set
-    const { data: majorRows } = await supabase
-      .from('student_details')
-      .select('major')
-      .not('major', 'is', null);
-    const majorsSet = new Set<string>();
-    (majorRows || []).forEach((r: any) => { if (r.major) majorsSet.add(String(r.major).trim()); });
-    const candidateMajors = majorsSet.size > 0 ? Array.from(majorsSet) : FALLBACK_MAJORS;
-    const majors = candidateMajors
-      .sort((left, right) => left.localeCompare(right))
-      .slice(0, MAX_DISCOVERY_MAJORS);
+    // Daily discovery is deliberately independent of individual users. A fixed
+    // broad taxonomy produces one shared pool; the Opportunities page applies
+    // each user's major, skills, interests, and filters only after loading it.
+    const segments = SHARED_DISCOVERY_SEGMENTS;
 
-    // Two complementary queries per major (literal discipline + role family)
-    // across every supported source. This is bounded by design and avoids a
-    // single narrow phrase deciding the entire daily opportunity pool.
-    const pairs: { plan: DiscoveryPlan; site: typeof SITES[number] }[] = [];
-    for (const major of majors) {
-      for (const plan of buildDiscoveryPlans(major).slice(0, SEARCHES_PER_MAJOR)) {
+    const pairs: { plan: DiscoveryPlan; site: (typeof SITES)[number] }[] = [];
+    for (const segment of segments) {
+      for (const plan of buildDiscoveryPlans(segment).slice(
+        0,
+        SEARCHES_PER_SEGMENT,
+      )) {
         for (const site of SITES) pairs.push({ plan, site });
       }
     }
 
-    const results = await pool(pairs, MAX_CONCURRENT_SEARCHES, ({ plan, site }) =>
-      searchSource(FIRECRAWL_API_KEY, site, plan),
+    const results = await pool(
+      pairs,
+      MAX_CONCURRENT_SEARCHES,
+      ({ plan, site }) => searchSource(FIRECRAWL_API_KEY, site, plan),
     );
     const all = results.flat();
 
@@ -253,18 +335,24 @@ Deno.serve(async (req) => {
     for (const j of all) byExternalId.set(j.external_id, j);
     const deduped = Array.from(byExternalId.values());
 
-    console.log(`Aggregated ${all.length} jobs (${deduped.length} unique) across ${majors.length} majors × ${SEARCHES_PER_MAJOR} query families × ${SITES.length} sites (queries=${pairs.length}, concurrency=${MAX_CONCURRENT_SEARCHES})`);
+    console.log(
+      `Aggregated ${all.length} jobs (${deduped.length} unique) across ${segments.length} shared segments × ${SEARCHES_PER_SEGMENT} query families × ${SITES.length} sites (queries=${pairs.length}, concurrency=${MAX_CONCURRENT_SEARCHES})`,
+    );
 
     if (deduped.length === 0) {
-      return new Response(JSON.stringify({
-        success: true,
-        sources: SITES.map(s => s.id),
-        majors,
-        query_count: pairs.length,
-        total_scraped: 0,
-        inserted: 0,
-        updated: 0,
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          sources: SITES.map((s) => s.id),
+          shared_pool: true,
+          segments: segments.map((segment) => segment.id),
+          query_count: pairs.length,
+          total_scraped: 0,
+          inserted: 0,
+          updated: 0,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // Bulk upsert: a single statement that uses the unique partial index on
@@ -273,10 +361,10 @@ Deno.serve(async (req) => {
     // comparison of upserted count vs. previous count — simpler is to record
     // the before-count once.
     const { count: beforeCount, error: countErr } = await supabase
-      .from('job_postings')
-      .select('*', { count: 'exact', head: true })
-      .not('external_id', 'is', null);
-    if (countErr) console.error('count before upsert failed', countErr);
+      .from("job_postings")
+      .select("*", { count: "exact", head: true })
+      .not("external_id", "is", null);
+    if (countErr) console.error("count before upsert failed", countErr);
 
     const rows = deduped.map((j) => ({
       title: j.title,
@@ -296,7 +384,7 @@ Deno.serve(async (req) => {
       source_url: j.source_url,
       external_id: j.external_id,
       is_external: true,
-      status: 'active',
+      status: "active",
     }));
 
     // Upsert in chunks of 200 to stay safely below PostgREST payload limits.
@@ -305,36 +393,44 @@ Deno.serve(async (req) => {
     for (let i = 0; i < rows.length; i += CHUNK) {
       const chunk = rows.slice(i, i + CHUNK);
       const { error } = await supabase
-        .from('job_postings')
-        .upsert(chunk, { onConflict: 'external_id', ignoreDuplicates: false });
+        .from("job_postings")
+        .upsert(chunk, { onConflict: "external_id", ignoreDuplicates: false });
       if (error) {
         upsertErrors += chunk.length;
-        console.error('upsert chunk failed', i, error);
+        console.error("upsert chunk failed", i, error);
       }
     }
 
     const { count: afterCount } = await supabase
-      .from('job_postings')
-      .select('*', { count: 'exact', head: true })
-      .not('external_id', 'is', null);
+      .from("job_postings")
+      .select("*", { count: "exact", head: true })
+      .not("external_id", "is", null);
 
     const inserted = Math.max(0, (afterCount ?? 0) - (beforeCount ?? 0));
     const updated = deduped.length - inserted - upsertErrors;
 
-    return new Response(JSON.stringify({
-      success: true,
-      sources: SITES.map(s => s.id),
-      majors,
-      query_count: pairs.length,
-      total_scraped: deduped.length,
-      inserted,
-      updated: Math.max(0, updated),
-      errors: upsertErrors,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        sources: SITES.map((s) => s.id),
+        shared_pool: true,
+        segments: segments.map((segment) => segment.id),
+        query_count: pairs.length,
+        total_scraped: deduped.length,
+        inserted,
+        updated: Math.max(0, updated),
+        errors: upsertErrors,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     console.error(e);
-    return new Response(JSON.stringify({ success: false, error: "Internal server error" }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ success: false, error: "Internal server error" }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   }
 });
