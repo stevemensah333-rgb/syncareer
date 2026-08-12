@@ -135,7 +135,7 @@ export function ApplicationWorkspaceDetail({ application, resumes, interviews, s
     </section>}
   </div>;
 
-  if (desktop) return <div className="grid h-full grid-cols-[minmax(0,1fr)_minmax(280px,380px)] divide-x bg-card"><main className="overflow-y-auto p-6">{renderOverview()}</main><aside className="overflow-y-auto p-5">{renderActions()}</aside></div>;
+  if (desktop) return <div className="grid grid-cols-[minmax(0,1fr)_minmax(280px,380px)] divide-x bg-card"><main className="p-6">{renderOverview()}</main><aside className="p-5">{renderActions()}</aside></div>;
   return <div className="h-full bg-card"><div className="border-b p-3"><Button variant="ghost" size="sm" onClick={onBack}><ArrowLeft className="h-4 w-4" />Back to applications</Button></div><Tabs defaultValue="overview"><TabsList className="m-3 grid grid-cols-4"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="cv">CV</TabsTrigger><TabsTrigger value="practice">Practice</TabsTrigger><TabsTrigger value="notes">Notes</TabsTrigger></TabsList><TabsContent value="overview" className="p-4">{renderOverview()}</TabsContent><TabsContent value="cv" className="p-4">{renderActions('cv')}</TabsContent><TabsContent value="practice" className="p-4">{renderActions('practice')}</TabsContent><TabsContent value="notes" className="p-4">{renderActions('notes')}</TabsContent></Tabs></div>;
 }
 

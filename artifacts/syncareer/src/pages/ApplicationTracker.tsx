@@ -159,8 +159,8 @@ export default function ApplicationTracker() {
   };
 
   return <PageLayout title="Applications" description="Keep each role, CV, preparation and next action in one workspace.">
-    <div className="-mx-4 -mb-6 overflow-hidden border-y bg-card sm:mx-0 sm:rounded-lg sm:border lg:grid lg:h-[calc(100vh-10rem)] lg:grid-cols-[320px_minmax(0,1fr)]">
-      <aside className={`${selected ? 'hidden lg:flex' : 'flex'} min-h-[70vh] flex-col border-r`}>
+    <div className="-mx-4 -mb-6 border-y bg-card sm:mx-0 sm:rounded-lg sm:border lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start">
+      <aside className={`${selected ? 'hidden lg:flex' : 'flex'} min-h-[70vh] flex-col border-r lg:max-h-[calc(100dvh-10rem)]`}>
         <div className="space-y-3 border-b p-3">
           <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input aria-label="Search applications" className="pl-9" value={search} onChange={(e) => updateParams({ q: e.target.value || null })} placeholder="Search applications" /></div>
           <div className="flex gap-1 overflow-x-auto" aria-label="Filter by stage">{(['all', ...STAGE_ORDER] as StageFilter[]).map((value) => <Button key={value} size="sm" variant={stage === value ? 'secondary' : 'ghost'} aria-pressed={stage === value} onClick={() => updateParams({ stage: value === 'all' ? null : value })}>{value === 'all' ? 'All' : STAGE_LABELS[value as ApplicationStage]}</Button>)}</div>
