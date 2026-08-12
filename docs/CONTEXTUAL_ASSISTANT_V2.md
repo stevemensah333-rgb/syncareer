@@ -2,7 +2,26 @@
 
 ## Status
 
-The frontend sends a versioned request to the existing authenticated `career-guidance` URL and fails closed unless it receives the validated v2 response below. The tracked Edge Function still implements the legacy streaming contract. It was deliberately not edited or deployed because the exact deployed `check-feature-access` implementation and its transactional semantics are unavailable in the repository.
+**Server implemented and deployed** (`supabase/functions/career-guidance`). The function routes explicitly on `version`: a `version: 2` body goes to the validated JSON handler, anything else falls through to the legacy SSE branch. A malformed v2 body never falls through.
+
+Modules:
+
+- `contract.ts` — task/provenance/kind allowlists, size limits, request and model-output validation.
+- `prompts.ts` — bounded per-family server prompts built only from supplied context.
+- `handler.ts` — dependency-injected flow: validate → authenticate → reserve → entitlement → gateway → validate output → commit one unit.
+- `index.ts` — real dependencies (Supabase Auth `getUser`, `check-feature-access`, `assistant_requests`, Lovable AI gateway) plus the retained legacy branch.
+- `index.test.ts` — 16 Deno tests, synthetic fixtures only. Run: `deno test --allow-net supabase/functions/career-guidance/index.test.ts`.
+
+### Live audit findings (recorded before implementation)
+
+- `career-guidance` had **no invocations** in the retained log window; the frontend sends only v2 and `/ai-coach` is a static transition page. No live v1 caller was found. Legacy branch retained until **2026-09-30**; remove if the logs still show no v1 traffic then.
+- Quota feature key: `ai_coach_session` (free tier 5/month), enforced by the deployed-only `check-feature-access` (still `UNKNOWN` source — called, never rewritten or bypassed). If it is unreachable the server fails closed.
+- No durable idempotency store existed. Added the smallest additive table `assistant_requests` with a unique `(user_id, request_id)` pair, service-role only, RLS enabled.
+
+### Not yet verified
+
+An authenticated canary for the four workflow families has **not** been run: no test session is available to this environment. Sign in through the Lovable preview so a session is injected, then the canary can be executed.
+
 
 Lovable classifications:
 
