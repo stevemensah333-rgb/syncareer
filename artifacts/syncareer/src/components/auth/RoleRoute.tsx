@@ -1,7 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
+import type { AccountRole } from '@/lib/accountRoles';
 
-type UserRole = 'student' | 'career_counsellor';
+type UserRole = AccountRole;
 
 interface RoleRouteProps {
   children: React.ReactNode;

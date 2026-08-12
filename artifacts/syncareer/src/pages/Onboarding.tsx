@@ -131,30 +131,39 @@ const Onboarding = () => {
         throw new OnboardingFlowError('We could not load your profile. Try again to continue.', 'profile');
       }
 
-      const profile = profileResult.data;
+      let profile = profileResult.data;
+      if (!profile) {
+        const initialiseResult = await supabase.rpc('initialize_my_profile_from_auth_metadata');
+        if (initialiseResult.error) {
+          throw new OnboardingFlowError('We could not initialize your profile. Try again to continue.', 'profile');
+        }
+        if (initialiseResult.data) {
+          const refreshedProfileResult = await supabase
+            .from('profiles')
+            .select('full_name, onboarding_completed, user_type')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          if (refreshedProfileResult.error) {
+            throw new OnboardingFlowError('We could not load your initialized profile. Try again to continue.', 'profile');
+          }
+          profile = refreshedProfileResult.data;
+        }
+      }
+
       if (profile?.onboarding_completed && isOnboardingRole(profile.user_type)) {
         navigate(getHomeRouteForRole(profile.user_type), { replace: true });
         return;
       }
 
-      const metadataRole = session.user.user_metadata?.user_type;
       const role = profile
         ? isOnboardingRole(profile.user_type)
           ? profile.user_type
           : null
-        : isOnboardingRole(metadataRole)
-          ? metadataRole
-          : 'student';
+        : null;
 
       if (!role) {
         throw new OnboardingFlowError(
           'Your account role is missing or unsupported. Contact support so it can be corrected safely.',
-          'role',
-        );
-      }
-      if (!profile && role === 'career_counsellor') {
-        throw new OnboardingFlowError(
-          'Your counsellor role has not been verified yet. Try again shortly or contact support.',
           'role',
         );
       }

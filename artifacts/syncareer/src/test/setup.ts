@@ -7,6 +7,7 @@ vi.mock('@/integrations/supabase/client', () => {
         getUser: vi.fn(),
         getSession: vi.fn(),
       },
+      rpc: vi.fn(),
       from: vi.fn(),
       channel: vi.fn(() => ({
         on: vi.fn().mockReturnThis(),

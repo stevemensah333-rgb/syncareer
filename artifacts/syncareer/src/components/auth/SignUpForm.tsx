@@ -15,10 +15,11 @@ import GoogleSignInButton from './GoogleSignInButton';
 import PasswordField from './PasswordField';
 import { getAuthErrorMessage, getReturnToFromLocationState } from './authUtils';
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
+import { ACCOUNT_ROLES } from '@/lib/accountRoles';
 
 const ROLE_OPTIONS = [
-  { value: 'student', label: 'Student / Job seeker' },
-  { value: 'career_counsellor', label: 'Career counsellor' },
+  { value: ACCOUNT_ROLES[0], label: 'Student / Job seeker' },
+  { value: ACCOUNT_ROLES[1], label: 'Career counsellor' },
 ];
 
 export default function SignUpForm() {

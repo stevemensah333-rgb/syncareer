@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { ACCOUNT_ROLES, isAccountRole, type AccountRole } from '@/lib/accountRoles';
 
-export const ONBOARDING_ROLES = ['student', 'career_counsellor'] as const;
-export type OnboardingRole = (typeof ONBOARDING_ROLES)[number];
+export const ONBOARDING_ROLES = ACCOUNT_ROLES;
+export type OnboardingRole = AccountRole;
 
 export function isOnboardingRole(value: unknown): value is OnboardingRole {
-  return typeof value === 'string' && ONBOARDING_ROLES.includes(value as OnboardingRole);
+  return isAccountRole(value);
 }
 
 export const MAJORS = [

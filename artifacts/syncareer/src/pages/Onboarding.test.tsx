@@ -24,6 +24,7 @@ interface RecordedWrite {
 
 function installTableResults(results: Record<string, Result>) {
   const writes: RecordedWrite[] = [];
+  const sequences = new Map<string, unknown[]>();
   const from = supabase.from as unknown as ReturnType<typeof vi.fn>;
   from.mockImplementation((table: string) => {
     const result = results[table] ?? { data: null, error: null };
@@ -36,11 +37,16 @@ function installTableResults(results: Record<string, Result>) {
         return builder;
       };
     }
-    builder.maybeSingle = () => Promise.resolve(result);
+    if (!sequences.has(table) && Array.isArray(result.data)) sequences.set(table, [...result.data]);
+    const nextResult = (): Result => {
+      const sequence = sequences.get(table);
+      return { data: sequence ? sequence.shift() : result.data, error: result.error };
+    };
+    builder.maybeSingle = () => Promise.resolve(nextResult());
     builder.then = (
       resolve: (value: Result) => unknown,
       reject: (reason: unknown) => unknown,
-    ) => Promise.resolve(result).then(resolve, reject);
+    ) => Promise.resolve(nextResult()).then(resolve, reject);
     return builder;
   });
   return writes;
@@ -58,6 +64,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
   const auth = supabase.auth as unknown as { getSession: ReturnType<typeof vi.fn> };
+  const rpc = supabase.rpc as unknown as ReturnType<typeof vi.fn>;
+  rpc.mockResolvedValue({ data: null, error: null });
   auth.getSession.mockResolvedValue({
     data: {
       session: {
@@ -160,6 +168,39 @@ describe('Onboarding interface', () => {
     const retry = screen.getByRole('button', { name: 'Try again' });
     fireEvent.click(retry);
     await waitFor(() => expect(supabase.auth.getSession).toHaveBeenCalledTimes(2));
+  });
+
+  it('initializes a missing counselor profile and loads counselor onboarding', async () => {
+    localStorage.setItem('syncareer:onboarding-welcome-seen:user-1', '1');
+    const auth = supabase.auth as unknown as { getSession: ReturnType<typeof vi.fn> };
+    auth.getSession.mockResolvedValue({
+      data: {
+        session: {
+          user: {
+            id: 'user-1',
+            user_metadata: { full_name: 'Ama Mensah', user_type: 'career_counsellor' },
+          },
+        },
+      },
+      error: null,
+    });
+    const rpc = supabase.rpc as unknown as ReturnType<typeof vi.fn>;
+    rpc.mockResolvedValue({ data: 'career_counsellor', error: null });
+    installTableResults({
+      profiles: {
+        data: [
+          null,
+          { full_name: 'Ama Mensah', onboarding_completed: false, user_type: 'career_counsellor' },
+        ],
+        error: null,
+      },
+      counsellor_details: { data: null, error: null },
+    });
+
+    renderPage();
+
+    expect(await screen.findByRole('heading', { name: 'Add your contact details' })).toBeTruthy();
+    expect(rpc).toHaveBeenCalledWith('initialize_my_profile_from_auth_metadata');
   });
 
   it('shows explicit recovery when a stored account role is unsupported instead of a blank card', async () => {

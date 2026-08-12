@@ -1877,6 +1877,7 @@ export type Database = {
       }
       get_my_referral_code: { Args: never; Returns: string }
       get_profile_user_type: { Args: { _id: string }; Returns: string }
+      initialize_my_profile_from_auth_metadata: { Args: never; Returns: string | null }
       migrate_skills_to_relational: {
         Args: never
         Returns: {
