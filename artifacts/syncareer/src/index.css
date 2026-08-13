@@ -185,6 +185,44 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  .legal-document {
+    @apply text-base leading-7 text-foreground;
+  }
+
+  .legal-document p {
+    max-width: 72ch;
+  }
+
+  .legal-document ul,
+  .legal-document ol {
+    @apply ml-6 space-y-2;
+  }
+
+  .legal-document ul { list-style: disc; }
+  .legal-document ol { list-style: decimal; }
+
+  .legal-document a:not([class*='no-underline']) {
+    @apply text-primary underline underline-offset-4;
+  }
+
+  @media print {
+    @page { margin: 18mm; }
+    .legal-screen-only { display: none !important; }
+    .legal-page,
+    .legal-page main,
+    .legal-page header {
+      background: white !important;
+      color: black !important;
+    }
+    .legal-page main > header { border-bottom: 1px solid #bbb; }
+    .legal-document { max-width: none !important; color: black !important; font-size: 11pt; line-height: 1.55; }
+    .legal-document section { break-inside: avoid; }
+    .legal-document h2 { break-after: avoid; color: black !important; }
+    .legal-document a { color: black !important; }
+    .legal-document a[href^='http']::after,
+    .legal-document a[href^='mailto']::after { content: ' (' attr(href) ')'; font-size: 9pt; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .landing-application-record [role='tabpanel'] { animation: none; }
   }

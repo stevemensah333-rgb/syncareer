@@ -10,8 +10,8 @@ Syncareer combines a RIASEC-based career assessment, an AI CV builder, a voice-b
 - [Pricing](/pricing): Subscription plans for students.
 - [Sign in](/sign-in): Existing user login.
 - [Sign up](/sign-up): Create a new account.
-- [Privacy Policy](/privacy-policy): How user data is handled.
-- [Terms and Conditions](/terms-and-conditions): Platform terms of use.
+- [Privacy Policy](/privacy): How user data is handled.
+- [Terms and Conditions](/terms): Platform terms of use.
 
 ## Optional
 
