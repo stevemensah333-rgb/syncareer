@@ -200,41 +200,64 @@ async function searchSource(
 ): Promise<ScrapedJob[]> {
   try {
     const query = `${plan.query} site:${source.site}`;
-    const res = await fetch(`${FIRECRAWL_V2}/search`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+    const body = JSON.stringify({
+      query,
+      // A page-sized yield makes the ingestion function useful beyond the
+      // previous ~20-result feed while bounded query planning controls cost.
+      limit: 25,
+      scrapeOptions: {
+        formats: [
+          {
+            type: "json",
+            schema: JOB_SCHEMA,
+            prompt: `Extract active early-career job postings for ${plan.label}: title, company, location, type, required skills, source URL, and application deadline. Exclude pages that are not individual vacancies.`,
+          },
+        ],
       },
-      body: JSON.stringify({
-        query,
-        // A page-sized yield makes the ingestion function useful beyond the
-        // previous ~20-result feed while bounded query planning controls cost.
-        limit: 25,
-        scrapeOptions: {
-          formats: [
-            {
-              type: "json",
-              schema: JOB_SCHEMA,
-              prompt: `Extract active early-career job postings for ${plan.label}: title, company, location, type, required skills, source URL, and application deadline. Exclude pages that are not individual vacancies.`,
-            },
-          ],
-        },
-      }),
     });
-    if (!res.ok) {
+
+    let res: Response | null = null;
+    for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
+      res = await fetch(`${FIRECRAWL_V2}/search`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body,
+      });
+      if (res.status !== 429) break;
+      await res.text();
+      if (attempt === MAX_RATE_LIMIT_RETRIES) {
+        console.error(`[${source.id}/${plan.label}] rate limited, giving up`);
+        return [];
+      }
+      // Firecrawl resets its window each minute; back off past the reset.
+      await new Promise((r) => setTimeout(r, 20000 * (attempt + 1)));
+    }
+    if (!res || !res.ok) {
       console.error(
         `[${source.id}/${plan.label}] search failed`,
-        res.status,
-        await res.text(),
+        res?.status,
+        res ? await res.text() : "no response",
       );
       return [];
     }
     const data = await res.json();
-    const results = data.data || data.web || [];
+    // Firecrawl v2 may return `data` as an array or as `{ web: [...] }`.
+    const raw = Array.isArray(data?.data)
+      ? data.data
+      : (data?.data?.web ?? data?.web ?? []);
+    const results: unknown[] = Array.isArray(raw) ? raw : [];
     const jobs: ScrapedJob[] = [];
-    for (const r of results) {
+    for (const item of results) {
+      const r = item as {
+        url?: string;
+        json?: { jobs?: ScrapedJob[] };
+        extract?: { jobs?: ScrapedJob[] };
+      };
       const extracted = r.json?.jobs || r.extract?.jobs || [];
+      if (!Array.isArray(extracted)) continue;
       for (const j of extracted) {
         if (!j.title || !j.source_url) continue;
         jobs.push({
