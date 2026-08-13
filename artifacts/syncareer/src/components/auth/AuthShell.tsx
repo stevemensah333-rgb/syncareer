@@ -1,4 +1,5 @@
 import React from 'react';
+import syncareerLogo from '@/assets/syncareer-logo.svg';
 
 interface AuthShellProps {
   title: string;
@@ -11,7 +12,7 @@ export default function AuthShell({ title, subtitle, children }: AuthShellProps)
     <main id="main-content" tabIndex={-1} className="app-canvas flex min-h-screen items-start justify-center overflow-x-hidden px-4 py-8 focus:outline-none sm:items-center sm:py-12">
       <div className="w-full max-w-md">
         <a href="/" className="mb-8 inline-flex items-center gap-2 rounded-md text-sm font-semibold text-foreground focus-visible:outline-none">
-          <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">S</span>
+          <img src={syncareerLogo} alt="" className="h-8 w-8 object-contain" />
           Syncareer
         </a>
         <header>
