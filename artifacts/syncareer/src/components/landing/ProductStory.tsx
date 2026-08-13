@@ -7,49 +7,42 @@ const journeyNotes: Array<{
   number: string;
   title: string;
   copy: string;
-  signal: string;
 }> = [
   {
     stage: "opportunity",
     number: "01",
     title: "A role begins with its source, not a vague match score.",
-    copy: "Keep the original listing label, organisation, location, level, deadline when provided, and visible requirements together before deciding to pursue it.",
-    signal: "Recorded opportunity context",
+    copy: "Keep the listing label, organisation, location, level, deadline, and requirements together before deciding to pursue it.",
   },
   {
     stage: "evidence",
     number: "02",
     title: "Requirements become evidence checks—not claims.",
-    copy: "A requirement can be connected to user-provided project evidence or coursework, marked as still developing, or left visibly unsupported.",
-    signal: "Evidence remains attributable",
+    copy: "Connect a requirement to project evidence or coursework, mark it as developing, or leave it visibly unsupported.",
   },
   {
     stage: "cv",
     number: "03",
     title: "CV guidance is useful only when it stays reviewable.",
-    copy: "Suggested wording is shown as guidance. It does not become a fact about you, and it should be checked against the evidence you supplied.",
-    signal: "Guidance is not a record",
+    copy: "Suggested wording stays guidance until you compare it with the evidence you supplied.",
   },
   {
     stage: "interview",
     number: "04",
     title: "Practice has a role-specific reference point.",
-    copy: "Interview preparation can use the same role and recorded examples, so it is connected to the opportunity without pretending to be an employer assessment.",
-    signal: "Preparation in context",
+    copy: "The same role and recorded examples give interview practice a concrete place to begin.",
   },
   {
     stage: "action",
     number: "05",
     title: "Next actions are deliberate and user controlled.",
-    copy: "Record a stage, a CV link, a follow-up, or a reminder only when you choose to. The workspace remembers those decisions with the role.",
-    signal: "No inferred submission",
+    copy: "Record your stage, CV link, follow-up, or reminder when you choose to. It stays with the role.",
   },
   {
     stage: "outcome",
     number: "06",
     title: "An outcome is meaningful precisely because it is not assumed.",
-    copy: "The record can hold an outcome when you enter one. It does not infer a response, interview result, or offer from an external application.",
-    signal: "Not claimed until recorded",
+    copy: "Add an outcome when you have one. Nothing is inferred from an external application.",
   },
 ];
 
@@ -78,22 +71,26 @@ export default function ProductStory() {
           </div>
 
           <div className="mt-10 grid gap-0 lg:mt-14 lg:grid-cols-[0.42fr_1fr]">
-            <div className="border-b py-5 lg:border-b-0 lg:border-r lg:pr-10 lg:py-0">
+            <div className="border-b py-5 lg:border-b-0 lg:border-r lg:py-0 lg:pr-10">
               <p className="eyebrow">Record states</p>
-              <p className="mt-3 max-w-xs text-sm leading-6 text-muted-foreground">Select a state to inspect the same record in the workspace above. The visual changes, but the application does not disappear between steps.</p>
+              <p className="mt-3 max-w-xs text-sm leading-6 text-muted-foreground">Inspect a state in the same workspace above. The visual changes, but the application does not disappear between steps.</p>
             </div>
             <ol className="divide-y lg:pl-10">
               {journeyNotes.map((note) => (
-                <li key={note.stage} className="group grid gap-4 py-6 first:pt-5 sm:grid-cols-[3.5rem_minmax(0,1fr)_auto] sm:items-start sm:gap-6">
-                  <span className="font-mono text-xs font-semibold tracking-[0.12em] text-primary">{note.number}</span>
-                  <div>
-                    <button type="button" onClick={() => openHeroStage(note.stage)} className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4">
-                      <h3 className="text-lg font-semibold tracking-[-0.025em] transition-colors group-hover:text-primary sm:text-xl">{note.title}</h3>
-                    </button>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">{note.copy}</p>
-                  </div>
-                  <button type="button" onClick={() => openHeroStage(note.stage)} className="inline-flex min-h-10 items-center gap-1 self-start text-left text-xs font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:justify-self-end">
-                    Inspect <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                <li key={note.stage}>
+                  <button
+                    type="button"
+                    onClick={() => openHeroStage(note.stage)}
+                    className="group grid w-full gap-4 border-l-2 border-transparent py-6 pl-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out hover:translate-x-1 hover:border-primary/60 hover:bg-secondary/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none first:pt-5 sm:grid-cols-[3.5rem_minmax(0,1fr)_auto] sm:items-start sm:gap-6"
+                  >
+                    <span className="font-mono text-xs font-semibold tracking-[0.12em] text-primary transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none">{note.number}</span>
+                    <span>
+                      <span className="block text-lg font-semibold tracking-[-0.025em] transition-colors duration-150 group-hover:text-primary motion-reduce:transition-none sm:text-xl">{note.title}</span>
+                      <span className="mt-2 block max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">{note.copy}</span>
+                    </span>
+                    <span className="inline-flex min-h-10 items-center gap-1 self-start text-xs font-semibold text-primary underline-offset-4 group-hover:underline sm:justify-self-end">
+                      Inspect <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none" aria-hidden="true" />
+                    </span>
                   </button>
                 </li>
               ))}

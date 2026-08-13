@@ -7,6 +7,7 @@ import FAQSection, { LANDING_FAQS } from "./FAQSection";
 import LandingHeader from "./LandingHeader";
 import LandingFooter from "./LandingFooter";
 import ProductDemo from "./ProductDemo";
+import FinalCTASection from "./FinalCTASection";
 
 afterEach(() => cleanup());
 
@@ -29,6 +30,11 @@ describe("landing page content and navigation", () => {
     expect(container.textContent).toMatch(/Application \/ 0147/i);
     expect(container.textContent).toMatch(/Requirements → evidence checks/i);
     expect(container.textContent).toMatch(/External listings retain source labels/i);
+
+    const sqlEvidence = screen.getByRole("button", { name: /SQL: Project evidence/i });
+    expect(sqlEvidence.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(sqlEvidence);
+    expect(sqlEvidence.getAttribute("aria-pressed")).toBe("true");
   });
 
   it("renders the continuous record narrative and explicit product boundaries", () => {
@@ -63,6 +69,17 @@ describe("landing page content and navigation", () => {
       expect(trigger.getAttribute("aria-expanded")).toBe("false");
       expect(faq.a.split(". ").length).toBeLessThanOrEqual(3);
     }
+  });
+
+  it("makes application continuity explicit in the single high-contrast closing chapter", () => {
+    const onGetStarted = vi.fn();
+    const onAssessment = vi.fn();
+    render(<FinalCTASection onGetStarted={onGetStarted} onAssessment={onAssessment} />);
+
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toMatch(/should not disappear after you click Apply/i);
+    expect(screen.getByText(/Application memory/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /explore opportunities/i }));
+    expect(onGetStarted).toHaveBeenCalledOnce();
   });
 
   it("provides labelled desktop and mobile navigation without broken counsellor or pricing links", () => {

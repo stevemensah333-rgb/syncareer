@@ -19,7 +19,7 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
     <section className="relative overflow-hidden border-b" aria-labelledby="landing-hero-title">
       <div className="mx-auto w-full max-w-[1440px] px-4 py-10 sm:px-6 md:py-14 lg:px-8 lg:py-20">
         <div className="grid gap-9 lg:grid-cols-12 lg:items-center lg:gap-10 xl:gap-14">
-          <div className="max-w-xl lg:col-span-5">
+          <div className="min-w-0 max-w-xl lg:col-span-5">
             <p className="eyebrow text-primary">For African students and recent graduates</p>
             <h1 id="landing-hero-title" className="mt-4 text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-5xl lg:text-[3.6rem]">
               Stop guessing what an application is missing.
@@ -44,8 +44,9 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
               External listings retain source labels. Syncareer does not claim independent verification or guarantee an application outcome.
             </p>
           </div>
-          <div id="hero-interactive-demo" className="w-full lg:col-span-7">
-            <ApplicationRecord autoProgress idPrefix="hero-record" className="rounded-none sm:rounded-sm" />
+          <div id="hero-interactive-demo" className="relative min-w-0 w-full lg:col-span-7 lg:pr-5">
+            <div aria-hidden="true" className="absolute inset-y-7 -right-1 hidden w-7 bg-primary/10 lg:block" />
+            <ApplicationRecord autoProgress idPrefix="hero-record" className="relative rounded-none sm:rounded-sm lg:-translate-x-2" />
           </div>
         </div>
       </div>

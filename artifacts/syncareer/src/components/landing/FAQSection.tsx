@@ -33,7 +33,7 @@ export default function FAQSection() {
             Questions worth answering before you start.
           </h2>
           <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">
-            Syncareer is designed to support your judgement, not replace it. These are the boundaries that matter most.
+            Practical details, stated plainly before you decide what to do next.
           </p>
         </div>
 

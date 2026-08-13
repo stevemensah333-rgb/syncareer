@@ -47,6 +47,7 @@ export default function ApplicationRecord({
   const [userPaused, setUserPaused] = useState(false);
   const [documentHidden, setDocumentHidden] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [inspectedRequirement, setInspectedRequirement] = useState<(typeof requirementRows)[number]["requirement"] | null>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const active = activeStage ?? internalStage;
   const activeIndex = APPLICATION_STAGES.findIndex((stage) => stage.id === active);
@@ -168,14 +169,30 @@ export default function ApplicationRecord({
             <ul className="mt-3 divide-y border-y">
               {requirementRows.map((row) => {
                 const supported = row.evidence !== "Evidence missing";
-                const highlighted = active === "evidence" || active === "cv";
+                const isInspected = inspectedRequirement === row.requirement;
+                const stageHighlightsEvidence = active === "evidence" || active === "cv";
                 return (
-                  <li key={row.requirement} className={`grid gap-2 px-1 py-3 transition-colors duration-200 motion-reduce:transition-none sm:grid-cols-[0.62fr_1fr] sm:items-center ${highlighted ? "bg-primary/[0.025]" : ""}`}>
-                    <span className="text-sm font-semibold">{row.requirement}</span>
-                    <span className={`flex items-center gap-2 text-sm ${supported ? "text-success" : "text-muted-foreground"}`}>
-                      {supported ? <Check className="h-4 w-4" aria-hidden="true" /> : <Circle className="h-3.5 w-3.5" aria-hidden="true" />}
-                      <span><span className="font-medium">{row.evidence}</span><span className="hidden text-muted-foreground sm:inline"> · {row.detail}</span></span>
-                    </span>
+                  <li key={row.requirement}>
+                    <button
+                      type="button"
+                      aria-pressed={isInspected}
+                      aria-label={`${row.requirement}: ${row.evidence}. ${row.detail}`}
+                      onMouseEnter={() => setInspectedRequirement(row.requirement)}
+                      onMouseLeave={() => setInspectedRequirement(null)}
+                      onFocus={() => setInspectedRequirement(row.requirement)}
+                      onBlur={() => setInspectedRequirement(null)}
+                      onClick={() => setInspectedRequirement(isInspected ? null : row.requirement)}
+                      className={`group/requirement grid w-full gap-2 border-l-2 px-3 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out motion-reduce:transition-none sm:grid-cols-[0.62fr_1fr] sm:items-center ${isInspected ? "border-primary bg-primary/[0.075]" : stageHighlightsEvidence ? "border-primary/30 bg-primary/[0.025] hover:border-primary/60 hover:bg-primary/[0.05]" : "border-transparent hover:border-primary/40 hover:bg-secondary/60"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`}
+                    >
+                      <span className={`text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none ${isInspected ? "text-primary" : ""}`}>{row.requirement}</span>
+                      <span className={`flex items-center gap-2 text-sm ${supported ? "text-success" : "text-muted-foreground"}`}>
+                        {supported ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : <Circle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+                        <span>
+                          <span className="font-medium">{row.evidence}</span>
+                          <span className={`${isInspected ? "inline" : "hidden sm:inline"} text-muted-foreground`}> · {row.detail}</span>
+                        </span>
+                      </span>
+                    </button>
                   </li>
                 );
               })}
@@ -219,7 +236,7 @@ function StageDetail({ stage }: { stage: ApplicationStage }) {
     evidence: {
       label: "Evidence review",
       title: "Requirements become evidence checks.",
-      body: <><p className="text-sm leading-6 text-muted-foreground">SQL and Python are connected to examples you supplied. AWS remains a visible gap; nothing is added to the CV automatically.</p><p className="mt-4 text-xs leading-5 text-muted-foreground"><span className="font-semibold text-success">Recorded evidence</span> remains distinct from suggestions.</p></>,
+      body: <><p className="text-sm leading-6 text-muted-foreground">SQL and Python are connected to examples you supplied. AWS remains a visible gap to address.</p><p className="mt-4 text-xs leading-5 text-muted-foreground"><span className="font-semibold text-success">Recorded evidence</span> stays distinct from guidance.</p></>,
     },
     cv: {
       label: "CV preparation",
@@ -229,7 +246,7 @@ function StageDetail({ stage }: { stage: ApplicationStage }) {
     interview: {
       label: "Interview preparation",
       title: "Practice stays tied to this role.",
-      body: <><p className="text-sm font-medium">How did you investigate a data-quality issue before reporting it?</p><p className="mt-3 text-sm leading-6 text-muted-foreground">The role requirements and your recorded examples give practice a shared reference point.</p><p className="mt-4 text-xs leading-5 text-muted-foreground"><Mic2 className="mr-1 inline h-3.5 w-3.5 text-primary" aria-hidden="true" /> Interview guidance is not an employer assessment.</p></>,
+      body: <><p className="text-sm font-medium">How did you investigate a data-quality issue before reporting it?</p><p className="mt-3 text-sm leading-6 text-muted-foreground">The role requirements and your recorded examples give practice a shared reference point.</p><p className="mt-4 text-xs leading-5 text-muted-foreground"><Mic2 className="mr-1 inline h-3.5 w-3.5 text-primary" aria-hidden="true" /> Practice starts from the same evidence you can review.</p></>,
     },
     action: {
       label: "Application memory",
@@ -239,7 +256,7 @@ function StageDetail({ stage }: { stage: ApplicationStage }) {
     outcome: {
       label: "Outcome",
       title: "Record an outcome deliberately.",
-      body: <><p className="text-sm leading-6 text-muted-foreground">No outcome is recorded for this illustration. Syncareer does not infer an external submission, interview result, or offer.</p><p className="mt-4 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">○ Not claimed</p></>,
+      body: <><p className="text-sm leading-6 text-muted-foreground">No outcome is recorded for this illustration. The record stays open until you add one.</p><p className="mt-4 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">○ Not claimed</p></>,
     },
   };
   const detail = details[stage];
