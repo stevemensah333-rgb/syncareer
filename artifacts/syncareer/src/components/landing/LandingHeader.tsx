@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,14 +21,32 @@ export default function LandingHeader({
   primaryActionLabel = "Get started",
 }: LandingHeaderProps) {
   const [open, setOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+    const focusable = Array.from(mobileNavRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? []);
+    focusable[0]?.focus();
+    const manageMenuFocus = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        menuButtonRef.current?.focus();
+        return;
+      }
+      if (event.key !== "Tab" || focusable.length === 0) return;
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    window.addEventListener("keydown", manageMenuFocus);
+    return () => window.removeEventListener("keydown", manageMenuFocus);
   }, [open]);
 
   return (
@@ -59,6 +77,7 @@ export default function LandingHeader({
             {primaryActionLabel}
           </Button>
           <Button
+            ref={menuButtonRef}
             variant="ghost"
             size="icon"
             onClick={() => setOpen((value) => !value)}
@@ -73,7 +92,7 @@ export default function LandingHeader({
       </div>
 
       {open && (
-        <div id="landing-mobile-navigation" className="border-t bg-card lg:hidden">
+        <div ref={mobileNavRef} id="landing-mobile-navigation" className="border-t bg-card lg:hidden">
           <nav className="mx-auto flex w-full max-w-[1400px] flex-col px-4 py-3 sm:px-6" aria-label="Mobile navigation">
             {NAV.map((item) => (
               <a

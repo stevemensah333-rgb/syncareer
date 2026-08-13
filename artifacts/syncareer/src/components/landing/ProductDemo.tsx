@@ -9,7 +9,6 @@ export type DemoStep = ApplicationStage;
 interface ProductDemoProps {
   activeStep?: DemoStep;
   onStepChange?: (step: DemoStep) => void;
-  autoProgress?: boolean;
   showStageControls?: boolean;
   className?: string;
   idPrefix?: string;
@@ -23,7 +22,6 @@ interface ProductDemoProps {
 export default function ProductDemo({
   activeStep,
   onStepChange,
-  autoProgress,
   showStageControls,
   className,
   idPrefix,
@@ -32,7 +30,6 @@ export default function ProductDemo({
     <ApplicationRecord
       activeStage={activeStep}
       onStageChange={onStepChange}
-      autoProgress={autoProgress}
       showControls={showStageControls}
       className={className}
       idPrefix={idPrefix}

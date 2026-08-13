@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
-  ArrowUpRight,
+  ExternalLink,
   Bookmark,
   Check,
   Circle,
   FileText,
   Mic2,
-  TimerReset,
 } from "lucide-react";
 
 export const APPLICATION_STAGES = [
@@ -29,7 +28,6 @@ const requirementRows = [
 interface ApplicationRecordProps {
   activeStage?: ApplicationStage;
   onStageChange?: (stage: ApplicationStage) => void;
-  autoProgress?: boolean;
   idPrefix?: string;
   className?: string;
   showControls?: boolean;
@@ -38,55 +36,24 @@ interface ApplicationRecordProps {
 export default function ApplicationRecord({
   activeStage,
   onStageChange,
-  autoProgress = false,
   idPrefix = "application-record",
   className = "",
   showControls = true,
 }: ApplicationRecordProps) {
   const [internalStage, setInternalStage] = useState<ApplicationStage>("opportunity");
-  const [userPaused, setUserPaused] = useState(false);
-  const [documentHidden, setDocumentHidden] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
   const [inspectedRequirement, setInspectedRequirement] = useState<(typeof requirementRows)[number]["requirement"] | null>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const active = activeStage ?? internalStage;
   const activeIndex = APPLICATION_STAGES.findIndex((stage) => stage.id === active);
 
-  useEffect(() => {
-    const query = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    if (!query) return undefined;
-    const update = () => setReducedMotion(query.matches);
-    update();
-    query.addEventListener?.("change", update);
-    return () => query.removeEventListener?.("change", update);
-  }, []);
-
-  useEffect(() => {
-    const updateVisibility = () => setDocumentHidden(document.hidden);
-    updateVisibility();
-    document.addEventListener("visibilitychange", updateVisibility);
-    return () => document.removeEventListener("visibilitychange", updateVisibility);
-  }, []);
-
-  useEffect(() => {
-    if (!autoProgress || userPaused || documentHidden || reducedMotion) return undefined;
-    const timer = window.setInterval(() => {
-      const next = APPLICATION_STAGES[(activeIndex + 1) % APPLICATION_STAGES.length]!.id;
-      setInternalStage(next);
-      onStageChange?.(next);
-    }, 7200);
-    return () => window.clearInterval(timer);
-  }, [activeIndex, autoProgress, documentHidden, onStageChange, reducedMotion, userPaused]);
-
-  const selectStage = (stage: ApplicationStage, fromUser = false) => {
-    if (fromUser) setUserPaused(true);
+  const selectStage = (stage: ApplicationStage) => {
     setInternalStage(stage);
     onStageChange?.(stage);
   };
 
   const move = (index: number) => {
     const normalized = (index + APPLICATION_STAGES.length) % APPLICATION_STAGES.length;
-    selectStage(APPLICATION_STAGES[normalized]!.id, true);
+    selectStage(APPLICATION_STAGES[normalized]!.id);
     requestAnimationFrame(() => tabRefs.current[normalized]?.focus());
   };
 
@@ -102,11 +69,6 @@ export default function ApplicationRecord({
           <p className="mt-1 text-sm text-muted-foreground">Example organisation · Accra · Entry level</p>
         </div>
         <div className="flex items-center gap-2">
-          {autoProgress && !userPaused && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-              <TimerReset className="h-3.5 w-3.5" aria-hidden="true" /> Slow preview
-            </span>
-          )}
           <span className="inline-flex items-center gap-1.5 border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
             <Bookmark className="h-3.5 w-3.5" aria-hidden="true" /> Saved
           </span>
@@ -130,7 +92,7 @@ export default function ApplicationRecord({
               aria-controls={`${idPrefix}-panel-${stage.id}`}
               aria-selected={active === stage.id}
               tabIndex={active === stage.id ? 0 : -1}
-              onClick={() => selectStage(stage.id, true)}
+              onClick={() => selectStage(stage.id)}
               onKeyDown={(event) => {
                 if (event.key === "ArrowRight" || event.key === "ArrowDown") {
                   event.preventDefault();
@@ -157,13 +119,13 @@ export default function ApplicationRecord({
       <div className="grid lg:grid-cols-[minmax(0,1.04fr)_minmax(230px,0.96fr)]">
         <section className="border-b p-4 sm:p-5 lg:border-b-0 lg:border-r" aria-label="Record fields">
           <div className="grid gap-3 border-b pb-4 sm:grid-cols-3">
-            <Field label="Source" value="External listing" state="recorded" />
-            <Field label="Location" value="Accra" state="recorded" />
-            <Field label="Stage" value={stageLabel(active)} state="controlled" />
+            <Field label="Source" value="External listing" />
+            <Field label="Location" value="Accra" />
+            <Field label="Current step" value={stageLabel(active)} />
           </div>
           <div className="pt-4">
             <div className="flex items-center justify-between gap-3">
-              <p className="eyebrow">Requirements → evidence checks</p>
+              <p className="text-xs font-semibold text-muted-foreground">Requirements and your evidence</p>
               <span className="text-xs font-semibold text-success">2 / 3 supported</span>
             </div>
             <ul className="mt-3 divide-y border-y">
@@ -214,14 +176,11 @@ export default function ApplicationRecord({
   );
 }
 
-function Field({ label, value, state }: { label: string; value: string; state: "recorded" | "controlled" }) {
+function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="eyebrow">{label}</p>
       <p className="mt-1 text-sm font-semibold">{value}</p>
-      <p className={`mt-1 text-[10px] font-semibold uppercase tracking-[0.1em] ${state === "recorded" ? "text-success" : "text-primary"}`}>
-        {state === "recorded" ? "● Recorded" : "● User controlled"}
-      </p>
     </div>
   );
 }
@@ -230,33 +189,33 @@ function StageDetail({ stage }: { stage: ApplicationStage }) {
   const details: Record<ApplicationStage, { label: string; title: string; body: React.ReactNode }> = {
     opportunity: {
       label: "Opportunity context",
-      title: "Keep the original role in view.",
-      body: <><p className="text-sm leading-6 text-muted-foreground">The record retains the source label, location, level, and listed requirements while you decide whether the role is worth pursuing.</p><p className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"><ArrowUpRight className="h-4 w-4" aria-hidden="true" /> Original source available</p></>,
+      title: "Start with the real listing.",
+      body: <><p className="text-sm leading-6 text-muted-foreground">See the organisation, location and listed requirements before deciding whether the role is worth pursuing.</p><p className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"><ExternalLink className="h-4 w-4" aria-hidden="true" /> Open original source</p></>,
     },
     evidence: {
       label: "Evidence review",
-      title: "Requirements become evidence checks.",
-      body: <><p className="text-sm leading-6 text-muted-foreground">SQL and Python are connected to examples you supplied. AWS remains a visible gap to address.</p><p className="mt-4 text-xs leading-5 text-muted-foreground"><span className="font-semibold text-success">Recorded evidence</span> stays distinct from guidance.</p></>,
+      title: "Decide what you can support.",
+      body: <><p className="text-sm leading-6 text-muted-foreground">For the SQL requirement, you added: “Created a reporting dashboard for a coursework project.” AWS remains a visible gap.</p><p className="mt-4 text-xs leading-5 text-muted-foreground"><span className="font-semibold text-success">Evidence provided by you.</span> Nothing is added to your CV automatically.</p></>,
     },
     cv: {
       label: "CV preparation",
-      title: "Only proof can support a claim.",
-      body: <><div className="border-l-2 border-primary pl-3"><p className="eyebrow text-primary">Guidance · review before use</p><p className="mt-2 text-sm leading-6">Built a SQL-backed reporting dashboard for coursework analysis.</p></div><p className="mt-4 text-xs leading-5 text-muted-foreground"><FileText className="mr-1 inline h-3.5 w-3.5 text-primary" aria-hidden="true" /> Draft wording is guidance, not a new fact about you.</p></>,
+      title: "Turn a vague line into specific evidence.",
+      body: <><p className="text-xs text-muted-foreground line-through">Worked on a data project.</p><div className="mt-3 border-l-2 border-primary pl-3"><p className="text-xs font-semibold text-primary">Suggested for review</p><p className="mt-2 text-sm leading-6">Created a SQL reporting dashboard for a coursework project.</p></div><p className="mt-4 text-xs leading-5 text-muted-foreground"><FileText className="mr-1 inline h-3.5 w-3.5 text-primary" aria-hidden="true" /> Uses only the facts supplied in this illustration.</p></>,
     },
     interview: {
       label: "Interview preparation",
       title: "Practice stays tied to this role.",
-      body: <><p className="text-sm font-medium">How did you investigate a data-quality issue before reporting it?</p><p className="mt-3 text-sm leading-6 text-muted-foreground">The role requirements and your recorded examples give practice a shared reference point.</p><p className="mt-4 text-xs leading-5 text-muted-foreground"><Mic2 className="mr-1 inline h-3.5 w-3.5 text-primary" aria-hidden="true" /> Practice starts from the same evidence you can review.</p></>,
+      body: <><p className="text-sm font-medium">How did you use SQL to turn coursework data into a clear dashboard?</p><p className="mt-3 text-sm leading-6 text-muted-foreground">The question uses the same requirement and evidence, so your practice stays focused on this role.</p><p className="mt-4 text-xs leading-5 text-muted-foreground"><Mic2 className="mr-1 inline h-3.5 w-3.5 text-primary" aria-hidden="true" /> Practice guidance is not an employer assessment.</p></>,
     },
     action: {
-      label: "Application memory",
-      title: "Record what you chose to do next.",
-      body: <><div className="border-y py-3"><p className="eyebrow text-primary">Next action · user controlled</p><p className="mt-1 text-sm font-semibold">Review missing AWS evidence</p><p className="mt-1 text-xs text-muted-foreground">No due date recorded</p></div><p className="mt-4 text-sm leading-6 text-muted-foreground">Stage, CV link, practice, and next action stay attached to this application record.</p></>,
+      label: "Next action",
+      title: "Leave yourself one clear task.",
+      body: <><div className="border-y py-3"><p className="text-xs font-semibold text-primary">Set by you</p><p className="mt-1 text-sm font-semibold">Check whether the role needs AWS evidence before applying</p><p className="mt-1 text-xs text-muted-foreground">No due date set</p></div><p className="mt-4 text-sm leading-6 text-muted-foreground">Your next action stays connected to the Graduate Data Analyst application.</p></>,
     },
     outcome: {
       label: "Outcome",
-      title: "Record an outcome deliberately.",
-      body: <><p className="text-sm leading-6 text-muted-foreground">No outcome is recorded for this illustration. The record stays open until you add one.</p><p className="mt-4 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">○ Not claimed</p></>,
+      title: "Track what actually happened.",
+      body: <><p className="text-sm leading-6 text-muted-foreground">No outcome is set in this illustration. You record an application, interview or offer outcome yourself; Syncareer does not infer one.</p><p className="mt-4 text-xs font-semibold text-muted-foreground">No outcome recorded</p></>,
     },
   };
   const detail = details[stage];

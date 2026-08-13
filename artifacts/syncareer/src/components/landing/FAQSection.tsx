@@ -11,15 +11,15 @@ export const LANDING_FAQS = [
     a: "No. You apply directly on the original employer's posting, then track your stage, notes, and deadlines in your Syncareer workspace.",
   },
   {
-    q: "Are the opportunities verified by Syncareer?",
-    a: "No. We aggregate external listings and show you the stored source and original link so you can confirm details before applying.",
+    q: "Where do the opportunities come from?",
+    a: "Syncareer aggregates external listings and shows the stored source and original link so you can confirm details before applying.",
   },
   {
-    q: "Does the CV quality score guarantee that my CV will pass an applicant tracking system?",
+    q: "Does the CV guidance guarantee ATS acceptance?",
     a: "No. Our scoring checks completion and evidence quality to help you build a stronger application, but hiring decisions depend on the employer.",
   },
   {
-    q: "How is interview practice made specific to a job?",
+    q: "How is interview practice made specific to a role?",
     a: "You select your target role, industry, and session length, and optional job-description and CV context. Syncareer generates tailored practice questions and feedback from your setup.",
   },
 ];

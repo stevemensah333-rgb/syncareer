@@ -46,7 +46,7 @@ describe('Landing routing', () => {
   it('renders signed-out content while authentication is still resolving', () => {
     authState.isLoaded = false;
     renderLanding();
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/stop guessing what an application is missing/i);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/know what your application needs/i);
     expect(screen.queryByText(/Loading Syncareer/i)).toBeNull();
   });
 
