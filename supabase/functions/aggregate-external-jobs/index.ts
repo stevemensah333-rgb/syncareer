@@ -365,18 +365,36 @@ async function runAggregation(apiKey: string): Promise<void> {
     .not("external_id", "is", null);
   if (countErr) console.error("count before upsert failed", countErr);
 
+  // Scraped values are untrusted: the database enforces an employment-type
+  // vocabulary and integer salaries, so normalise before writing.
+  const EMPLOYMENT_TYPES = [
+    "full-time",
+    "part-time",
+    "contract",
+    "internship",
+    "remote",
+  ];
+  const normaliseEmploymentType = (value: string | undefined): string => {
+    const v = (value || "").toLowerCase().trim().replace(/\s+/g, "-");
+    return EMPLOYMENT_TYPES.includes(v) ? v : "full-time";
+  };
+  const toInt = (value: unknown): number | null => {
+    const n = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  };
+
   const rows = deduped.map((j) => ({
     title: j.title,
     company_name: j.company_name || null,
     company_domain: j.company_domain || null,
     department: j.company_name || null,
     location: j.location,
-    employment_type: j.employment_type,
+    employment_type: normaliseEmploymentType(j.employment_type),
     experience_level: j.experience_level || null,
     description: j.description,
     skills: j.skills || [],
-    salary_min: j.salary_min || null,
-    salary_max: j.salary_max || null,
+    salary_min: toInt(j.salary_min),
+    salary_max: toInt(j.salary_max),
     salary_currency: j.salary_currency || null,
     application_deadline: j.application_deadline || null,
     source: j.source,
