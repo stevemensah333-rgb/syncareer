@@ -187,7 +187,11 @@ const JOB_SCHEMA = {
 
 // Cap concurrent outbound searches to avoid hammering Firecrawl / the network
 // and to keep function memory bounded.
-const MAX_CONCURRENT_SEARCHES = 6;
+const MAX_CONCURRENT_SEARCHES = 3;
+
+// Firecrawl enforces a per-minute request budget; a rate-limited search is a
+// transient condition, not a failed source. Retry a bounded number of times.
+const MAX_RATE_LIMIT_RETRIES = 3;
 
 async function searchSource(
   apiKey: string,
@@ -196,48 +200,71 @@ async function searchSource(
 ): Promise<ScrapedJob[]> {
   try {
     const query = `${plan.query} site:${source.site}`;
-    const res = await fetch(`${FIRECRAWL_V2}/search`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+    const body = JSON.stringify({
+      query,
+      // A page-sized yield makes the ingestion function useful beyond the
+      // previous ~20-result feed while bounded query planning controls cost.
+      limit: 25,
+      scrapeOptions: {
+        formats: [
+          {
+            type: "json",
+            schema: JOB_SCHEMA,
+            prompt: `Extract active early-career job postings for ${plan.label}: title, company, location, type, required skills, source URL, and application deadline. Exclude pages that are not individual vacancies.`,
+          },
+        ],
       },
-      body: JSON.stringify({
-        query,
-        // A page-sized yield makes the ingestion function useful beyond the
-        // previous ~20-result feed while bounded query planning controls cost.
-        limit: 25,
-        scrapeOptions: {
-          formats: [
-            {
-              type: "json",
-              schema: JOB_SCHEMA,
-              prompt: `Extract active early-career job postings for ${plan.label}: title, company, location, type, required skills, source URL, and application deadline. Exclude pages that are not individual vacancies.`,
-            },
-          ],
-        },
-      }),
     });
-    if (!res.ok) {
+
+    let res: Response | null = null;
+    for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
+      res = await fetch(`${FIRECRAWL_V2}/search`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body,
+      });
+      if (res.status !== 429) break;
+      await res.text();
+      if (attempt === MAX_RATE_LIMIT_RETRIES) {
+        console.error(`[${source.id}/${plan.label}] rate limited, giving up`);
+        return [];
+      }
+      // Firecrawl resets its window each minute; back off past the reset.
+      await new Promise((r) => setTimeout(r, 20000 * (attempt + 1)));
+    }
+    if (!res || !res.ok) {
       console.error(
         `[${source.id}/${plan.label}] search failed`,
-        res.status,
-        await res.text(),
+        res?.status,
+        res ? await res.text() : "no response",
       );
       return [];
     }
     const data = await res.json();
-    const results = data.data || data.web || [];
+    // Firecrawl v2 may return `data` as an array or as `{ web: [...] }`.
+    const raw = Array.isArray(data?.data)
+      ? data.data
+      : (data?.data?.web ?? data?.web ?? []);
+    const results: unknown[] = Array.isArray(raw) ? raw : [];
     const jobs: ScrapedJob[] = [];
-    for (const r of results) {
+    for (const item of results) {
+      const r = item as {
+        url?: string;
+        json?: { jobs?: ScrapedJob[] };
+        extract?: { jobs?: ScrapedJob[] };
+      };
       const extracted = r.json?.jobs || r.extract?.jobs || [];
+      if (!Array.isArray(extracted)) continue;
       for (const j of extracted) {
         if (!j.title || !j.source_url) continue;
         jobs.push({
           ...j,
           source: source.id,
-          source_url: j.source_url || r.url,
-          external_id: stableExternalId(source.id, j.source_url || r.url),
+          source_url: j.source_url || r.url || "",
+          external_id: stableExternalId(source.id, j.source_url || r.url || ""),
           employment_type: (j.employment_type || "full-time").toLowerCase(),
           // Skills come only from the source extraction. Discovery-segment
           // labels are coverage metadata, not evidence that an applicant needs
@@ -280,7 +307,130 @@ async function pool<T, R>(
   return results;
 }
 
-Deno.serve(async (req) => {
+// A full sweep of every segment exceeds both the Firecrawl per-minute budget
+// and the request timeout, so each daily run covers a rotating slice of the
+// shared taxonomy. Every segment is still refreshed within a few days.
+const SEGMENTS_PER_RUN = 2;
+
+function segmentsForRun(now: Date): DiscoverySegment[] {
+  const total = SHARED_DISCOVERY_SEGMENTS.length;
+  const dayIndex = Math.floor(now.getTime() / 86_400_000);
+  const start = (dayIndex * SEGMENTS_PER_RUN) % total;
+  return Array.from(
+    { length: Math.min(SEGMENTS_PER_RUN, total) },
+    (_, i) => SHARED_DISCOVERY_SEGMENTS[(start + i) % total],
+  );
+}
+
+async function runAggregation(apiKey: string): Promise<void> {
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  // Daily discovery is deliberately independent of individual users. A fixed
+  // broad taxonomy produces one shared pool; the Opportunities page applies
+  // each user's major, skills, interests, and filters only after loading it.
+  const segments = segmentsForRun(new Date());
+
+  const pairs: { plan: DiscoveryPlan; site: (typeof SITES)[number] }[] = [];
+  for (const segment of segments) {
+    for (const plan of buildDiscoveryPlans(segment).slice(
+      0,
+      SEARCHES_PER_SEGMENT,
+    )) {
+      for (const site of SITES) pairs.push({ plan, site });
+    }
+  }
+
+  const results = await pool(pairs, MAX_CONCURRENT_SEARCHES, ({ plan, site }) =>
+    searchSource(apiKey, site, plan),
+  );
+  const all = results.flat();
+
+  // Deduplicate within this run by external_id so upsert inputs are unique.
+  const byExternalId = new Map<string, ScrapedJob>();
+  for (const j of all) byExternalId.set(j.external_id, j);
+  const deduped = Array.from(byExternalId.values());
+
+  console.log(
+    `Aggregated ${all.length} jobs (${deduped.length} unique) across segments [${segments.map((s) => s.id).join(", ")}] × ${SEARCHES_PER_SEGMENT} query families × ${SITES.length} sites (queries=${pairs.length}, concurrency=${MAX_CONCURRENT_SEARCHES})`,
+  );
+
+  if (deduped.length === 0) return;
+
+  const { count: beforeCount, error: countErr } = await supabase
+    .from("job_postings")
+    .select("*", { count: "exact", head: true })
+    .not("external_id", "is", null);
+  if (countErr) console.error("count before upsert failed", countErr);
+
+  // Scraped values are untrusted: the database enforces an employment-type
+  // vocabulary and integer salaries, so normalise before writing.
+  const EMPLOYMENT_TYPES = [
+    "full-time",
+    "part-time",
+    "contract",
+    "internship",
+    "remote",
+  ];
+  const normaliseEmploymentType = (value: string | undefined): string => {
+    const v = (value || "").toLowerCase().trim().replace(/\s+/g, "-");
+    return EMPLOYMENT_TYPES.includes(v) ? v : "full-time";
+  };
+  const toInt = (value: unknown): number | null => {
+    const n = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  };
+
+  const rows = deduped.map((j) => ({
+    title: j.title,
+    company_name: j.company_name || null,
+    company_domain: j.company_domain || null,
+    department: j.company_name || null,
+    location: j.location,
+    employment_type: normaliseEmploymentType(j.employment_type),
+    experience_level: j.experience_level || null,
+    description: j.description,
+    skills: j.skills || [],
+    salary_min: toInt(j.salary_min),
+    salary_max: toInt(j.salary_max),
+    salary_currency: j.salary_currency || null,
+    application_deadline: j.application_deadline || null,
+    source: j.source,
+    source_url: j.source_url,
+    external_id: j.external_id,
+    is_external: true,
+    status: "active",
+  }));
+
+  // Upsert in chunks of 200 to stay safely below PostgREST payload limits.
+  const CHUNK = 200;
+  let upsertErrors = 0;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const chunk = rows.slice(i, i + CHUNK);
+    const { error } = await supabase
+      .from("job_postings")
+      .upsert(chunk, { onConflict: "external_id", ignoreDuplicates: false });
+    if (error) {
+      upsertErrors += chunk.length;
+      console.error("upsert chunk failed", i, error);
+    }
+  }
+
+  const { count: afterCount } = await supabase
+    .from("job_postings")
+    .select("*", { count: "exact", head: true })
+    .not("external_id", "is", null);
+
+  const inserted = Math.max(0, (afterCount ?? 0) - (beforeCount ?? 0));
+  const updated = Math.max(0, deduped.length - inserted - upsertErrors);
+  console.log(
+    `Upsert complete: scraped=${deduped.length} inserted=${inserted} updated=${updated} errors=${upsertErrors}`,
+  );
+}
+
+Deno.serve((req) => {
   if (req.method === "OPTIONS")
     return new Response("ok", { headers: corsHeaders });
 
@@ -299,138 +449,40 @@ Deno.serve(async (req) => {
     });
   }
 
-  try {
-    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
-    if (!FIRECRAWL_API_KEY) throw new Error("FIRECRAWL_API_KEY not configured");
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-
-    // Daily discovery is deliberately independent of individual users. A fixed
-    // broad taxonomy produces one shared pool; the Opportunities page applies
-    // each user's major, skills, interests, and filters only after loading it.
-    const segments = SHARED_DISCOVERY_SEGMENTS;
-
-    const pairs: { plan: DiscoveryPlan; site: (typeof SITES)[number] }[] = [];
-    for (const segment of segments) {
-      for (const plan of buildDiscoveryPlans(segment).slice(
-        0,
-        SEARCHES_PER_SEGMENT,
-      )) {
-        for (const site of SITES) pairs.push({ plan, site });
-      }
-    }
-
-    const results = await pool(
-      pairs,
-      MAX_CONCURRENT_SEARCHES,
-      ({ plan, site }) => searchSource(FIRECRAWL_API_KEY, site, plan),
-    );
-    const all = results.flat();
-
-    // Deduplicate within this run by external_id so upsert inputs are unique.
-    const byExternalId = new Map<string, ScrapedJob>();
-    for (const j of all) byExternalId.set(j.external_id, j);
-    const deduped = Array.from(byExternalId.values());
-
-    console.log(
-      `Aggregated ${all.length} jobs (${deduped.length} unique) across ${segments.length} shared segments × ${SEARCHES_PER_SEGMENT} query families × ${SITES.length} sites (queries=${pairs.length}, concurrency=${MAX_CONCURRENT_SEARCHES})`,
-    );
-
-    if (deduped.length === 0) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          sources: SITES.map((s) => s.id),
-          shared_pool: true,
-          segments: segments.map((segment) => segment.id),
-          query_count: pairs.length,
-          total_scraped: 0,
-          inserted: 0,
-          updated: 0,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    // Bulk upsert: a single statement that uses the unique partial index on
-    // external_id. Existing rows keep their id/created_at; new rows are
-    // inserted. We count inserted vs. no-op via a deterministic client-side
-    // comparison of upserted count vs. previous count — simpler is to record
-    // the before-count once.
-    const { count: beforeCount, error: countErr } = await supabase
-      .from("job_postings")
-      .select("*", { count: "exact", head: true })
-      .not("external_id", "is", null);
-    if (countErr) console.error("count before upsert failed", countErr);
-
-    const rows = deduped.map((j) => ({
-      title: j.title,
-      company_name: j.company_name || null,
-      company_domain: j.company_domain || null,
-      department: j.company_name || null,
-      location: j.location,
-      employment_type: j.employment_type,
-      experience_level: j.experience_level || null,
-      description: j.description,
-      skills: j.skills || [],
-      salary_min: j.salary_min || null,
-      salary_max: j.salary_max || null,
-      salary_currency: j.salary_currency || null,
-      application_deadline: j.application_deadline || null,
-      source: j.source,
-      source_url: j.source_url,
-      external_id: j.external_id,
-      is_external: true,
-      status: "active",
-    }));
-
-    // Upsert in chunks of 200 to stay safely below PostgREST payload limits.
-    const CHUNK = 200;
-    let upsertErrors = 0;
-    for (let i = 0; i < rows.length; i += CHUNK) {
-      const chunk = rows.slice(i, i + CHUNK);
-      const { error } = await supabase
-        .from("job_postings")
-        .upsert(chunk, { onConflict: "external_id", ignoreDuplicates: false });
-      if (error) {
-        upsertErrors += chunk.length;
-        console.error("upsert chunk failed", i, error);
-      }
-    }
-
-    const { count: afterCount } = await supabase
-      .from("job_postings")
-      .select("*", { count: "exact", head: true })
-      .not("external_id", "is", null);
-
-    const inserted = Math.max(0, (afterCount ?? 0) - (beforeCount ?? 0));
-    const updated = deduped.length - inserted - upsertErrors;
-
+  const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+  if (!FIRECRAWL_API_KEY) {
+    console.error("FIRECRAWL_API_KEY not configured");
     return new Response(
-      JSON.stringify({
-        success: true,
-        sources: SITES.map((s) => s.id),
-        shared_pool: true,
-        segments: segments.map((segment) => segment.id),
-        query_count: pairs.length,
-        total_scraped: deduped.length,
-        inserted,
-        updated: Math.max(0, updated),
-        errors: upsertErrors,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  } catch (e) {
-    console.error(e);
-    return new Response(
-      JSON.stringify({ success: false, error: "Internal server error" }),
+      JSON.stringify({ success: false, error: "Aggregation not configured" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
   }
+
+  const segments = segmentsForRun(new Date()).map((s) => s.id);
+
+  // Scraping outlives the 150s request timeout, so it runs as a background
+  // task and the cron caller gets an immediate acknowledgement.
+  const work = runAggregation(FIRECRAWL_API_KEY).catch((e) =>
+    console.error("aggregation failed", e),
+  );
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime;
+  if (runtime?.waitUntil) runtime.waitUntil(work);
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      accepted: true,
+      shared_pool: true,
+      sources: SITES.map((s) => s.id),
+      segments,
+      query_count: segments.length * SEARCHES_PER_SEGMENT * SITES.length,
+    }),
+    {
+      status: 202,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    },
+  );
 });
