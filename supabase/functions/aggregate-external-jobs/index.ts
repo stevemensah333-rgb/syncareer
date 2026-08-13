@@ -263,8 +263,8 @@ async function searchSource(
         jobs.push({
           ...j,
           source: source.id,
-          source_url: j.source_url || r.url,
-          external_id: stableExternalId(source.id, j.source_url || r.url),
+          source_url: j.source_url || r.url || "",
+          external_id: stableExternalId(source.id, j.source_url || r.url || ""),
           employment_type: (j.employment_type || "full-time").toLowerCase(),
           // Skills come only from the source extraction. Discovery-segment
           // labels are coverage metadata, not evidence that an applicant needs
