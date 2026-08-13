@@ -29,12 +29,14 @@ describe("landing page content and navigation", () => {
     expect(onGetStarted).toHaveBeenCalledOnce();
     expect(container.textContent).toMatch(/Application \/ 0147/i);
     expect(container.textContent).toMatch(/Requirements and your evidence/i);
-    expect(container.textContent).toMatch(/External listings retain source labels/i);
+    expect(container.textContent).toMatch(/External opportunities keep their original source links\./i);
 
     const sqlEvidence = screen.getByRole("button", { name: /SQL: Project evidence/i });
-    expect(sqlEvidence.getAttribute("aria-pressed")).toBe("false");
-    fireEvent.click(sqlEvidence);
     expect(sqlEvidence.getAttribute("aria-pressed")).toBe("true");
+    const awsEvidence = screen.getByRole("button", { name: /AWS: Evidence missing/i });
+    fireEvent.click(awsEvidence);
+    expect(awsEvidence.getAttribute("aria-pressed")).toBe("true");
+    expect(sqlEvidence.getAttribute("aria-pressed")).toBe("false");
   });
 
   it("renders a compact journey, concrete transformation and plain product boundaries", () => {
@@ -59,6 +61,31 @@ describe("landing page content and navigation", () => {
     expect(tabs[1]!.getAttribute("aria-selected")).toBe("true");
     expect(screen.getByRole("tabpanel").textContent).toMatch(/Decide what you can support/i);
     expect(screen.getByRole("heading", { name: "Graduate Data Analyst" })).toBeTruthy();
+  });
+
+  it("keeps one role connected across manual stages without auto-advancing", () => {
+    vi.useFakeTimers();
+    render(<ProductDemo />);
+
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs[0]!.getAttribute("aria-selected")).toBe("true");
+    vi.advanceTimersByTime(30_000);
+    expect(tabs[0]!.getAttribute("aria-selected")).toBe("true");
+
+    const expected = [
+      /Start with the real listing/i,
+      /Decide what you can support/i,
+      /Suggested for review/i,
+      /How did you use SQL/i,
+      /Set by you/i,
+      /No outcome recorded/i,
+    ];
+    tabs.forEach((tab, index) => {
+      fireEvent.click(tab);
+      expect(screen.getByRole("heading", { name: "Graduate Data Analyst" })).toBeTruthy();
+      expect(screen.getByRole("tabpanel").textContent).toMatch(expected[index]!);
+    });
+    vi.useRealTimers();
   });
 
   it("exposes every FAQ as a keyboard-operable short-answer accordion", () => {

@@ -25,6 +25,8 @@ const requirementRows = [
   { requirement: "AWS", evidence: "Evidence missing", detail: "No supporting example yet" },
 ] as const;
 
+type Requirement = (typeof requirementRows)[number]["requirement"];
+
 interface ApplicationRecordProps {
   activeStage?: ApplicationStage;
   onStageChange?: (stage: ApplicationStage) => void;
@@ -41,12 +43,20 @@ export default function ApplicationRecord({
   showControls = true,
 }: ApplicationRecordProps) {
   const [internalStage, setInternalStage] = useState<ApplicationStage>("opportunity");
-  const [inspectedRequirement, setInspectedRequirement] = useState<(typeof requirementRows)[number]["requirement"] | null>(null);
+  const [selectedRequirement, setSelectedRequirement] = useState<Requirement>("SQL");
+  const [transitionDirection, setTransitionDirection] = useState<"forward" | "backward">("forward");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const active = activeStage ?? internalStage;
   const activeIndex = APPLICATION_STAGES.findIndex((stage) => stage.id === active);
 
   const selectStage = (stage: ApplicationStage) => {
+    const nextIndex = APPLICATION_STAGES.findIndex((item) => item.id === stage);
+    setTransitionDirection(nextIndex < activeIndex ? "backward" : "forward");
+    if (stage === "evidence" || stage === "cv" || stage === "interview") {
+      setSelectedRequirement("SQL");
+    } else if (stage === "action") {
+      setSelectedRequirement("AWS");
+    }
     setInternalStage(stage);
     onStageChange?.(stage);
   };
@@ -108,9 +118,10 @@ export default function ApplicationRecord({
                   move(APPLICATION_STAGES.length - 1);
                 }
               }}
-              className={`min-h-10 shrink-0 snap-start border-b-2 px-3 py-2 text-left text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:px-3.5 ${active === stage.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              className={`landing-record-tab relative min-h-10 shrink-0 snap-start px-3 py-2 text-left text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:px-3.5 ${active === stage.id ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
             >
               <span className="mr-1.5 text-[10px] opacity-70">0{index + 1}</span>{stage.label}
+              <span className="landing-record-tab-indicator" aria-hidden="true" />
             </button>
           ))}
         </div>
@@ -131,27 +142,25 @@ export default function ApplicationRecord({
             <ul className="mt-3 divide-y border-y">
               {requirementRows.map((row) => {
                 const supported = row.evidence !== "Evidence missing";
-                const isInspected = inspectedRequirement === row.requirement;
-                const stageHighlightsEvidence = active === "evidence" || active === "cv";
+                const isSelected = selectedRequirement === row.requirement;
                 return (
                   <li key={row.requirement}>
                     <button
                       type="button"
-                      aria-pressed={isInspected}
+                      aria-pressed={isSelected}
                       aria-label={`${row.requirement}: ${row.evidence}. ${row.detail}`}
-                      onMouseEnter={() => setInspectedRequirement(row.requirement)}
-                      onMouseLeave={() => setInspectedRequirement(null)}
-                      onFocus={() => setInspectedRequirement(row.requirement)}
-                      onBlur={() => setInspectedRequirement(null)}
-                      onClick={() => setInspectedRequirement(isInspected ? null : row.requirement)}
-                      className={`group/requirement grid w-full gap-2 border-l-2 px-3 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out motion-reduce:transition-none sm:grid-cols-[0.62fr_1fr] sm:items-center ${isInspected ? "border-primary bg-primary/[0.075]" : stageHighlightsEvidence ? "border-primary/30 bg-primary/[0.025] hover:border-primary/60 hover:bg-primary/[0.05]" : "border-transparent hover:border-primary/40 hover:bg-secondary/60"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`}
+                      aria-describedby={`${idPrefix}-requirement-${row.requirement.toLowerCase()}-detail`}
+                      onMouseEnter={() => setSelectedRequirement(row.requirement)}
+                      onFocus={() => setSelectedRequirement(row.requirement)}
+                      onClick={() => setSelectedRequirement(row.requirement)}
+                      className={`group/requirement grid w-full gap-2 border-l-2 px-3 py-3 text-left transition-[background-color,border-color] duration-150 ease-out motion-reduce:transition-none sm:grid-cols-[0.62fr_1fr] sm:items-center ${isSelected ? "border-primary bg-primary/[0.075]" : "border-transparent hover:border-primary/40 hover:bg-secondary/60"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`}
                     >
-                      <span className={`text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none ${isInspected ? "text-primary" : ""}`}>{row.requirement}</span>
+                      <span className={`text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none ${isSelected ? "text-primary" : ""}`}>{row.requirement}</span>
                       <span className={`flex items-center gap-2 text-sm ${supported ? "text-success" : "text-muted-foreground"}`}>
                         {supported ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : <Circle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
                         <span>
                           <span className="font-medium">{row.evidence}</span>
-                          <span className={`${isInspected ? "inline" : "hidden sm:inline"} text-muted-foreground`}> · {row.detail}</span>
+                          <span id={`${idPrefix}-requirement-${row.requirement.toLowerCase()}-detail`} className={`${isSelected ? "inline" : "hidden sm:inline"} text-muted-foreground`}> · {row.detail}</span>
                         </span>
                       </span>
                     </button>
@@ -163,11 +172,13 @@ export default function ApplicationRecord({
         </section>
 
         <section
+          key={active}
           role="tabpanel"
           id={`${idPrefix}-panel-${active}`}
           aria-labelledby={`${idPrefix}-tab-${active}`}
           tabIndex={0}
-          className="min-h-[250px] p-4 transition-[background-color,opacity] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none sm:p-5"
+          data-direction={transitionDirection}
+          className="min-h-[328px] p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:min-h-[270px] sm:p-5"
         >
           <StageDetail stage={active} />
         </section>

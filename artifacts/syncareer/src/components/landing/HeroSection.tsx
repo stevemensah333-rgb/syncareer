@@ -42,7 +42,7 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
             </button>
             <p className="mt-7 flex max-w-lg items-start gap-2 text-sm leading-6 text-muted-foreground">
               <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
-              External listings retain source labels. Syncareer does not claim independent verification or guarantee an application outcome.
+              External opportunities keep their original source links.
             </p>
           </div>
           <div id="hero-interactive-demo" className="relative min-w-0 w-full lg:col-span-7 lg:translate-y-6 xl:-mr-8">

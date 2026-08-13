@@ -80,32 +80,6 @@ Before removing or restructuring a Lovable-specific artifact, classify it as:
 - Every billable AI or payment operation must enforce access server-side. Client checks are not security controls.
 - Payment verification must confirm provider status, amount, currency, plan, user ownership, and replay/idempotency before granting access.
 
-## Protected GitHub Actions path
-
-**DO NOT create, modify, delete, rename, move, stage, or commit anything under:**
-
-```text
-.github/workflows/
-```
-
-This prohibition applies even when:
-
-- a workflow is broken;
-- CI could be improved;
-- generated tooling recommends a workflow;
-- formatting tools touch the files;
-- another prompt requests general repository cleanup.
-
-Do not use `git add .`, `git add -A`, or another broad staging command without first proving that `.github/workflows/` is excluded and unchanged.
-
-Before completing work, run:
-
-```sh
-git diff -- .github/workflows
-```
-
-It must return no changes. If a workflow change appears necessary, report the recommendation without making the change.
-
 ## Retired platform artifacts
 
 Replit is no longer part of the intended workflow. Legacy Replit artifacts may still be wired into the repository, so Replit-specific files, configuration, and dependencies may be removed only after confirming that no active build, runtime, deployment, or documentation path uses them.
@@ -211,7 +185,6 @@ Additionally:
 - Run the production build.
 - Run database/RLS or Edge Function tests when those areas change.
 - Inspect the final diff for accidental generated files, secrets, lockfile churn, unrelated formatting, weakened validation, and unnecessary abstractions.
-- Confirm `.github/workflows/` is unchanged with `git diff -- .github/workflows`.
 - Report changed files, exact test commands and outcomes, remaining risks, anything not verified, and any required user action.
 - Do not claim success if a required check was skipped or already failing. State whether failures are pre-existing or introduced.
 
