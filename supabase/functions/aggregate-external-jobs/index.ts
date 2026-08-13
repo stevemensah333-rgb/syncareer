@@ -187,7 +187,11 @@ const JOB_SCHEMA = {
 
 // Cap concurrent outbound searches to avoid hammering Firecrawl / the network
 // and to keep function memory bounded.
-const MAX_CONCURRENT_SEARCHES = 6;
+const MAX_CONCURRENT_SEARCHES = 3;
+
+// Firecrawl enforces a per-minute request budget; a rate-limited search is a
+// transient condition, not a failed source. Retry a bounded number of times.
+const MAX_RATE_LIMIT_RETRIES = 3;
 
 async function searchSource(
   apiKey: string,
