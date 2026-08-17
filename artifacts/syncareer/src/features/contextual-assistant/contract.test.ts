@@ -20,6 +20,11 @@ describe('contextual assistant v2 contract', () => {
     expect(body.messages).toBeUndefined();
   });
 
+  it('accepts an unlimited quota (limit -1) as a valid response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({ version: 2, requestId: '00000000-0000-4000-8000-000000000001', proposal: { kind: 'rewrite', text: 'Improved bullet', sourceContextIds: ['bullet'] }, usage: { consumed: true, used: 0, limit: -1 } })));
+    await expect(requestContextualAssistance('cv.rewrite_bullet', 'Rewrite', [{ id: 'bullet', label: 'Selected CV bullet', provenance: 'selected_cv_text', content: 'Built a tool' }])).resolves.toMatchObject({ text: 'Improved bullet' });
+  });
+
   it.each([[401, 'unauthorized'], [402, 'quota'], [429, 'rate-limit']])('maps HTTP %s to %s', async (status, code) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({}, status as number)));
     await expect(requestContextualAssistance('cv.rewrite_bullet', 'Rewrite', [{ id: 'bullet', label: 'Selected CV bullet', provenance: 'selected_cv_text', content: 'Built a tool' }])).rejects.toMatchObject({ code });
