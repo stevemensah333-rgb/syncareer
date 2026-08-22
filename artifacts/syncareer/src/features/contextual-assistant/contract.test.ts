@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { supabase } from '@/integrations/supabase/client';
 import { AssistantRequestError, requestContextualAssistance } from './contract';
 
@@ -9,6 +9,8 @@ describe('contextual assistant v2 contract', () => {
     vi.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session: { access_token: 'test-token' } }, error: null } as never);
     vi.spyOn(crypto, 'randomUUID').mockReturnValue('00000000-0000-4000-8000-000000000001');
   });
+
+  afterEach(() => vi.useRealTimers());
 
   it('sends only selected context and no implicit profile or chat history', async () => {
     const fetchMock = vi.fn().mockResolvedValue(response({ version: 2, requestId: '00000000-0000-4000-8000-000000000001', proposal: { kind: 'explanation', text: 'A bounded explanation', sourceContextIds: ['role'] }, usage: { consumed: true, used: 1, limit: 5 } }));
@@ -28,13 +30,14 @@ describe('contextual assistant v2 contract', () => {
   it('passes the abort signal to fetch and maps cancellation to a cancelled error', async () => {
     const controller = new AbortController();
     const fetchMock = vi.fn().mockImplementation((_url: string, init: RequestInit) => {
-      expect(init.signal).toBe(controller.signal);
-      return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+      expect(init.signal).toBeInstanceOf(AbortSignal);
+      return new Promise((_resolve, reject) => init.signal?.addEventListener('abort', () => reject(new DOMException('The operation was aborted.', 'AbortError'))));
     });
     vi.stubGlobal('fetch', fetchMock);
-    await expect(
-      requestContextualAssistance('cv.rewrite_bullet', 'Rewrite', [{ id: 'bullet', label: 'Selected CV bullet', provenance: 'selected_cv_text', content: 'Built a tool' }], controller.signal),
-    ).rejects.toMatchObject({ code: 'cancelled' });
+    const pending = requestContextualAssistance('cv.rewrite_bullet', 'Rewrite', [{ id: 'bullet', label: 'Selected CV bullet', provenance: 'selected_cv_text', content: 'Built a tool' }], controller.signal);
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ code: 'cancelled' });
   });
 
   it('rejects immediately when the signal is already aborted', async () => {
@@ -69,5 +72,27 @@ describe('contextual assistant v2 contract', () => {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(payload)));
       await expect(requestContextualAssistance('cv.rewrite_bullet', 'Rewrite', [{ id: 'bullet', label: 'Selected CV bullet', provenance: 'selected_cv_text', content: 'Built a tool' }])).rejects.toBeInstanceOf(AssistantRequestError);
     }
+  });
+
+  it('rejects a validly shaped but wrong proposal kind', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({
+      version: 2,
+      requestId: '00000000-0000-4000-8000-000000000001',
+      proposal: { kind: 'draft', text: 'Wrong operation', sourceContextIds: ['role'] },
+      usage: { consumed: true, used: 1, limit: 5 },
+    })));
+    await expect(requestContextualAssistance('opportunity.explain_requirement', 'Explain', [{ id: 'role', label: 'Role', provenance: 'opportunity', content: 'Role' }]))
+      .rejects.toMatchObject({ code: 'malformed' });
+  });
+
+  it('aborts and fails safely after the request timeout', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((_url: string, init: RequestInit) => new Promise((_resolve, reject) => {
+      init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+    })));
+    const pending = requestContextualAssistance('opportunity.explain_requirement', 'Explain', [{ id: 'role', label: 'Role', provenance: 'opportunity', content: 'Role' }]);
+    const assertion = expect(pending).rejects.toMatchObject({ code: 'timeout' });
+    await vi.advanceTimersByTimeAsync(30_000);
+    await assertion;
   });
 });

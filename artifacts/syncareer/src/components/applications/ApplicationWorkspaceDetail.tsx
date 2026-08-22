@@ -50,7 +50,7 @@ export function ApplicationWorkspaceDetail({ application, resumes, interviews, s
   const organisation = getOrganisation(facts) ?? 'Organisation not specified';
   const provenance = getProvenanceFacts(facts);
   const dueState = nextActionDueState(application.next_action, application.next_action_due);
-  const cvHref = `/cv-builder?application=${encodeURIComponent(application.id)}&targetRole=${encodeURIComponent(facts.title ?? '')}`;
+  const cvHref = `/cv-builder?application=${encodeURIComponent(application.id)}${application.job_id ? `&opportunity=${encodeURIComponent(application.job_id)}` : ''}&targetRole=${encodeURIComponent(facts.title ?? '')}`;
   const practiceHref = `/interview-simulator?application=${encodeURIComponent(application.id)}&role=${encodeURIComponent(facts.title ?? '')}`;
   const linkedInterviews = interviews.filter((interview) => interview.application_id === application.id);
   const availableInterviews = interviews.filter((interview) => !interview.application_id);

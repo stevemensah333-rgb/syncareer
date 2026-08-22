@@ -87,7 +87,7 @@ export interface AnalyticsEventProperties {
   assessment_resumed: { progress_bucket: 0 | 25 | 50 | 75 };
   assessment_completed: Record<string, never>;
   contextual_ai_requested: { task: AssistantTask; context_count_bucket: '1' | '2' | '3_plus'; includes_optional_personal_context: boolean };
-  contextual_ai_finished: { task: AssistantTask; result: 'success' | 'failure'; failure_code?: 'unauthorized' | 'quota' | 'rate_limit' | 'network' | 'malformed' | 'server' | 'no_proposal' | 'unknown' };
+  contextual_ai_finished: { task: AssistantTask; result: 'success' | 'failure'; failure_code?: 'unauthorized' | 'quota' | 'rate_limit' | 'network' | 'timeout' | 'malformed' | 'server' | 'no_proposal' | 'unknown' };
   contextual_ai_decided: { task: AssistantTask; decision: 'accepted' | 'rejected' | 'undone' };
   contextual_learning_actioned: { surface: Surface; action: 'already_know' | 'learning' | 'practice_selected' | 'resource_requested' | 'not_relevant' | 'evidence_opened' };
 }

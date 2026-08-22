@@ -59,6 +59,8 @@ import {
 } from '@/features/cv-builder/scoring';
 import { RequirementEvidenceActions } from '@/components/learning/RequirementEvidenceActions';
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
+import { buildCandidateEvidence, buildOpportunityContext, matchRequirementToEvidence, type OpportunityContext } from '@/features/cv-builder/guidance';
+import type { OpportunityJob } from '@/features/opportunities/opportunity';
 
 type SaveState = 'saved' | 'unsaved' | 'saving' | 'failed';
 
@@ -77,6 +79,9 @@ const CVBuilder = () => {
   const [isLoadingCV, setIsLoadingCV] = useState(true);
   const [loadFailure, setLoadFailure] = useState<CvPersistenceFailure | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('unsaved');
+  const [opportunityContext, setOpportunityContext] = useState<OpportunityContext | null>(null);
+  const [opportunityContextLoading, setOpportunityContextLoading] = useState(false);
+  const [opportunityContextError, setOpportunityContextError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<CvValidationErrors>({});
   const previewRef = useRef<HTMLDivElement>(null);
   const cvDataRef = useRef(cvData);
@@ -99,6 +104,7 @@ const CVBuilder = () => {
   const targetRole = searchParams.get('targetRole') || searchParams.get('role') || '';
   const targetCompany = searchParams.get('company') || '';
   const applicationId = searchParams.get('application') || '';
+  const opportunityId = searchParams.get('opportunity') || searchParams.get('job') || '';
   const targetSkills = useMemo(() => {
     const raw = searchParams.get('skills') || '';
     const focusSkill = searchParams.get('focusSkill')?.trim();
@@ -106,6 +112,53 @@ const CVBuilder = () => {
   }, [searchParams]);
   const requestedReturnTo = searchParams.get('returnTo') || '';
   const safeReturnTo = requestedReturnTo.startsWith('/opportunities') || requestedReturnTo.startsWith('/applications') ? requestedReturnTo : '';
+  const skillGuidance = useMemo(() => {
+    const candidateEvidence = buildCandidateEvidence(cvData);
+    return (opportunityContext?.requirements ?? [])
+      .filter((requirement) => requirement.kind === 'required_skill' || requirement.kind === 'preferred_skill')
+      .map((requirement) => ({ requirement, match: matchRequirementToEvidence(requirement, candidateEvidence) }));
+  }, [cvData, opportunityContext]);
+
+  useEffect(() => {
+    let active = true;
+    if (!opportunityId) {
+      setOpportunityContext(null);
+      setOpportunityContextError(null);
+      setOpportunityContextLoading(false);
+      return () => { active = false; };
+    }
+    setOpportunityContextLoading(true);
+    setOpportunityContextError(null);
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('job_postings')
+          .select('*')
+          .eq('id', opportunityId)
+          .maybeSingle();
+        if (!active) return;
+        if (error || !data) {
+          setOpportunityContext(null);
+          setOpportunityContextError('The selected opportunity could not be loaded. Choose it again before requesting AI wording.');
+          return;
+        }
+        try {
+          setOpportunityContext(buildOpportunityContext(data as OpportunityJob));
+        } catch {
+          setOpportunityContext(null);
+          setOpportunityContextError('The selected opportunity does not contain usable role context.');
+        }
+      } catch {
+        if (active) {
+          setOpportunityContext(null);
+          setOpportunityContextError('The selected opportunity could not be loaded. Choose it again before requesting AI wording.');
+        }
+      } finally {
+        if (active) setOpportunityContextLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [opportunityId]);
 
   // Analytics: cv_started (entry based on query context)
   useEffect(() => {
@@ -386,7 +439,7 @@ const CVBuilder = () => {
     if (!changed) { toast.error('The source field changed or the proposal was invalid. Nothing was applied.'); return false; }
     setUndoCVData(beforeSnapshot);
     markChanged();
-    toast.success('AI proposal applied.');
+    toast.success('AI suggestion applied to your draft. Save changes when you are ready.');
     return true;
   };
 
@@ -450,21 +503,19 @@ const CVBuilder = () => {
                   </Button>
                 )}
               </div>
-              {targetSkills.length > 0 && (
+              {skillGuidance.length > 0 ? (
                 <div className="mt-3 space-y-2">
-                  {targetSkills.filter((skill) => !dismissedTargetSkills.includes(skill)).map(s => {
-                    const present = cvData.skills.some(c => c.toLowerCase() === s.toLowerCase());
-                    return (
-                      <div
-                        key={s}
-                        className={present ? 'rounded-lg border border-success/30 bg-success/5 p-3 text-sm text-success' : ''}
-                      >
-                        {present ? <>✓ {s} is already listed. Check that your experience or project sections provide evidence.</> : <RequirementEvidenceActions surface="cv" requirement={s} role={targetRole} onAddEvidence={() => { setActiveTab('experience'); toast.info(`Add a truthful experience or project example showing ${s}. The skill has not been added.`); }} onNotRelevant={() => setDismissedTargetSkills((items) => items.includes(s) ? items : [...items, s])} />}
-                      </div>
-                    );
+                  {([
+                    { title: 'Supported by your evidence', statuses: ['supported'] },
+                    { title: 'Possibly supported — confirm', statuses: ['partially_supported', 'unclear'] },
+                    { title: 'Required by the role but not yet supported', statuses: ['unsupported'] },
+                  ] as const).map((group) => {
+                    const items = skillGuidance.filter(({ requirement, match }) => group.statuses.includes(match.status as never) && !dismissedTargetSkills.includes(requirement.text));
+                    if (!items.length) return null;
+                    return <section key={group.title} className="rounded-lg border bg-card/70 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.title}</p><div className="mt-2 space-y-2">{items.map(({ requirement, match }) => <div key={requirement.requirementId}>{match.status === 'supported' ? <p className="text-sm text-success">✓ {requirement.text} — supported by contextual CV/project evidence. Review before relying on it.</p> : <RequirementEvidenceActions surface="cv" requirement={requirement.text} role={targetRole} onAddEvidence={() => { setActiveTab('experience'); toast.info(`Add a truthful experience or project example showing ${requirement.text}. The skill has not been added.`); }} onNotRelevant={() => setDismissedTargetSkills((current) => current.includes(requirement.text) ? current : [...current, requirement.text])} />}</div>)}</div></section>;
                   })}
                 </div>
-              )}
+              ) : targetSkills.length > 0 ? <p className="mt-3 text-xs text-muted-foreground">The link names role skills, but the full opportunity record is required before Syncareer classifies evidence.</p> : null}
             </div>
           )}
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -621,7 +672,7 @@ const CVBuilder = () => {
             <CVSkillGapPanel result={cvAnalysis.result} />
           )}
           <Button variant="outline" className="w-full" onClick={() => setShowAIAssistance((open) => !open)}>{showAIAssistance ? 'Close AI assistance' : `AI help for ${activeTab}`}</Button>
-          {showAIAssistance && <CVAIAssistant cvData={cvData} activeSection={activeTab} onSuggestion={handleAISuggestion} onUndo={() => { if (undoCVData) { setCVData(undoCVData); cvDataRef.current = undoCVData; setUndoCVData(null); markChanged(); } }} />}
+          {showAIAssistance && <CVAIAssistant cvData={cvData} activeSection={activeTab} opportunity={opportunityContext} opportunityLoading={opportunityContextLoading} opportunityError={opportunityContextError} onSuggestion={handleAISuggestion} onUndo={() => { if (undoCVData) { setCVData(undoCVData); cvDataRef.current = undoCVData; setUndoCVData(null); markChanged(); } }} />}
         </AnimatedSection>
       </div>
       )}

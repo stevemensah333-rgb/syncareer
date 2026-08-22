@@ -34,7 +34,7 @@ source is **not** tracked here (documented in
 - `check-feature-access` — server-side feature-usage gating.
 - `delete-account` — owner-only account deletion.
 - `mock-interview`, `interview-tts` — AI interview + text-to-speech.
-- `cv-ai-assistant`, `analyze-portfolio` — CV/AI assistance.
+- `analyze-portfolio` — CV upload parsing. A deployed `cv-ai-assistant` artifact is documented in the platform inventory, but no current repository caller remains; job-specific bullet guidance uses tracked `career-guidance`.
 - `compute-user-intelligence`, `compute-university-insights` — readiness/insights.
 - `admin-feedback`, `admin-users`, `send-notification`.
 

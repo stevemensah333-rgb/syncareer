@@ -15,7 +15,7 @@
 |---|---|---|---|---|---|---|---|
 | **`aggregate-external-jobs`** | Database cron (`aggregate-external-jobs-daily` @ 6 AM UTC) | Tracked (`supabase/functions/aggregate-external-jobs/`) | Active Deployed | `true` | `FIRECRAWL_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Service Role / Cron | **Tracked & Present** |
 | **`alumni-outcomes`** | `AlumniOutcomesCard.tsx` (`functions.invoke`) | Tracked (`supabase/functions/alumni-outcomes/`) | Active Deployed | `true` | `FIRECRAWL_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY` (Gemini 2.5 Flash) | Authenticated User | **Tracked & Present** |
-| **`career-guidance`** | `AICoach.tsx` (raw fetch / SSE stream) | Tracked (`supabase/functions/career-guidance/`) | Active Deployed | `true` | `LOVABLE_API_KEY` (Lovable AI Gateway / Gemini 2.5 Flash) | Authenticated User | **Tracked & Present** |
+| **`career-guidance`** | contextual drawers through `features/contextual-assistant/contract.ts` (authenticated JSON fetch) | Tracked (`supabase/functions/career-guidance/`) | Base v2 deployed; evidence-grounding revision pending Lovable redeployment | `true` | `LOVABLE_API_KEY` (Lovable AI Gateway / Gemini 2.5 Flash) | Authenticated User | **Tracked & Present** |
 | **`handle-email-suppression`** | Lovable email bounce/complaint webhooks | Tracked (`supabase/functions/handle-email-suppression/`) | Active Deployed | `false` (HMAC) | `LOVABLE_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Webhook (HMAC) | **Tracked & Present** |
 | **`handle-email-unsubscribe`** | `Unsubscribe.tsx` (raw fetch), direct email links | Tracked (`supabase/functions/handle-email-unsubscribe/`) | Active Deployed | `false` (Token) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Public (Signed Token) | **Tracked & Present** |
 | **`market-intelligence`** | `useMarketIntelligence.ts` (raw fetch) | Tracked (`supabase/functions/market-intelligence/`) | Active Deployed | `true` | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY` (Gemini 2.5 Flash) | Authenticated User | **Tracked & Present** |
@@ -30,7 +30,7 @@
 | **`check-feature-access`** | `featureAccess.ts`, `useSubscription.ts` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
 | **`compute-university-insights`** | `UniversityInsightsCard.tsx` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
 | **`compute-user-intelligence`** | `useAssessment.ts`, `useOutcomeTracking.ts`, `CVBuilder.tsx` | **Missing** | Deployed | `true` (Expected) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
-| **`cv-ai-assistant`** | `CVAIAssistant.tsx` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `LOVABLE_API_KEY` (AI Gateway) | Authenticated User | **BLOCKED (Requires Live Pull)** |
+| **`cv-ai-assistant`** | No current repository caller; historical CV assistant deployment | **Missing** | Deployed status recorded historically; live use unknown | `true` (Expected) | `LOVABLE_API_KEY` (AI Gateway) | Authenticated User | **UNKNOWN (Requires Live Pull / Usage Review)** |
 | **`delete-account`** | `Settings.tsx` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (Auth Admin API) | Authenticated User | **BLOCKED (Requires Live Pull)** |
 | **`interview-tts`** | `useVoiceInterview.ts` (raw fetch audio blob) | **Missing** | Deployed | `true` (Expected) | `OPENAI_API_KEY` / `ELEVENLABS_API_KEY` / `LOVABLE_API_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
 | **`mock-interview`** | `useVoiceInterview.ts` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `LOVABLE_API_KEY` (AI Gateway) | Authenticated User | **BLOCKED (Requires Live Pull)** |
@@ -77,9 +77,9 @@
    - **Payload:** `{ userId?: string }` (or derives user from auth context).
 
 7. **`cv-ai-assistant`**
-   - **File:** `artifacts/syncareer/src/components/cv-builder/CVAIAssistant.tsx`
-   - **Operations:** Generates section bullet points, optimizes phrasing for ATS, fixes grammar and impact metrics.
-   - **Payload:** `{ section: string, content: string, jobTarget?: string }`.
+   - **Current caller:** none found. `CVAIAssistant.tsx` now uses the typed `career-guidance` v2 boundary.
+   - **Classification:** `UNKNOWN`; do not remove the deployed function without live usage/source recovery and explicit approval.
+   - **Historical payload:** `{ section: string, content: string, jobTarget?: string }` (not a current contract).
 
 8. **`delete-account`**
    - **File:** `artifacts/syncareer/src/pages/Settings.tsx`

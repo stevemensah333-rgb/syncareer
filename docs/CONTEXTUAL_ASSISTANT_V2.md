@@ -2,7 +2,7 @@
 
 ## Status
 
-**Server implemented and deployed** (`supabase/functions/career-guidance`). The function routes explicitly on `version`: a `version: 2` body goes to the validated JSON handler, anything else falls through to the legacy SSE branch. A malformed v2 body never falls through.
+**Base v2 was previously recorded as deployed. The evidence-grounding revision is implemented in the repository and requires a Lovable redeployment** (`supabase/functions/career-guidance`). No deployment was performed as part of the revision. The function routes explicitly on `version`: a `version: 2` body goes to the validated JSON handler, anything else falls through to the legacy SSE branch. A malformed v2 body never falls through.
 
 Modules:
 
@@ -10,7 +10,9 @@ Modules:
 - `prompts.ts` — bounded per-family server prompts built only from supplied context.
 - `handler.ts` — dependency-injected flow: validate → authenticate → reserve → entitlement → gateway → validate output → commit one unit.
 - `index.ts` — real dependencies (Supabase Auth `getUser`, `check-feature-access`, `assistant_requests`, Lovable AI gateway) plus the retained legacy branch.
-- `index.test.ts` — 16 Deno tests, synthetic fixtures only. Run: `deno test --allow-net supabase/functions/career-guidance/index.test.ts`.
+- `index.test.ts` — 18 Deno tests, synthetic fixtures only. Run: `deno test --allow-net supabase/functions/career-guidance/index.test.ts`.
+
+The revision adds a CV preflight requiring opportunity, `requirement-*` and `evidence-*` context, requires the model to cite both evidence and requirement IDs, treats all context as untrusted data, and adds a 30-second gateway timeout. See `AI_APPLICATION_GUIDANCE.md` for the application-layer evidence and review contract.
 
 ### Live audit findings (recorded before implementation)
 

@@ -80,10 +80,10 @@ Format per feature: identity & ownership → data → usage/burden/cost/security
 
 - **Routes/ownership:** `/cv-builder` — `pages/CVBuilder.tsx` (494 lines), `components/cv-builder/*` (10 components), `features/cv-builder/*`, `hooks/useCVStrengthScore.ts` (deterministic), `hooks/useCVAnalysis.ts` (AI upload-parse).
 - **Data:** `resumes` (JSON sections incl. projects), skill fields feeding `user_skills`.
-- **Usage/burden/cost:** Events defined (`cv_saved`, `cv_downloaded`, `cv_section_completed`), none emitted. AI cost via deployed-only `cv-ai-assistant` and `analyze-portfolio` (both Lovable AI gateway). Export is client-side `html2pdf.js` (no server cost).
+- **Usage/burden/cost:** Consent-gated CV and contextual-assistant events are wired. AI cost comes from tracked `career-guidance` for job-specific bullet proposals and deployed-only `analyze-portfolio` for upload parsing. The historically deployed `cv-ai-assistant` has no current repository caller and remains `UNKNOWN` until live usage review. Export is client-side `html2pdf.js` (no server cost).
 - **Security/privacy:** CV content is highly personal; RLS owner-scoped; file upload validated client-side (type/size) then parsed server-side — server-side validation of the uploaded file's payload is unverifiable (function source not in repo).
-- **Tests:** `useCVStrengthScore.test.ts` (Layer 1.2/5.3).
-- **Platform deps:** Two deployed-only AI functions — recovery-blocked like the rest (§5 of BACKEND_PLATFORM_INVENTORY).
+- **Tests:** deterministic scoring plus `guidance.test.ts`, `aiOperations.test.ts`, `CVAIAssistant.test.tsx`, contextual contract tests and upload-response validation (see `TEST_MATRIX.md`).
+- **Platform deps:** tracked `career-guidance` and Lovable AI gateway; deployed-only `analyze-portfolio`; historical `cv-ai-assistant` remains `UNKNOWN`.
 - **Centrality/AI:** Central promise ("ATS-ready CV"). Deterministic strength score needs no AI; AI assistant is genuinely useful here (bullet rewriting) but is not the core value — the editor + score are.
 - **Classification: CORE.** The deterministic core carries the feature; AI assistant is a SUPPORTING add-on inside it (its limits are displayed but only enforced for AI coach — see 3.9).
 

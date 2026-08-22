@@ -3,61 +3,49 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { CVData } from '@/features/cv-builder/types';
 import { MAX_UPLOAD_FILE_SIZE, ALLOWED_UPLOAD_TYPES } from '@/features/cv-builder/constants';
+import { z } from 'zod';
 
 export type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done' | 'error';
 
-export interface ExtractedSkill {
-  name: string;
-  category: string;
-  proficiency: string;
-}
+const boundedText = z.string().max(10_000);
+const shortText = z.string().max(500);
+const analysisResultSchema = z.object({
+  analysis: boundedText,
+  extractedSkills: z.array(z.object({ name: shortText, category: shortText, proficiency: shortText })).max(100),
+  experienceSummary: z.object({
+    totalYears: z.number().finite().nonnegative(),
+    industries: z.array(shortText).max(50),
+    educationLevel: shortText,
+    keyAchievements: z.array(boundedText).max(100),
+  }).nullable(),
+  scores: z.object({
+    overall: z.number().finite().min(0).max(100),
+    formatting: z.number().finite().min(0).max(100),
+    content: z.number().finite().min(0).max(100),
+    relevance: z.number().finite().min(0).max(100),
+    impact: z.number().finite().min(0).max(100),
+  }).nullable(),
+  suggestedRoles: z.array(shortText).max(50),
+  missingSkills: z.array(shortText).max(100),
+  extractedPersonal: z.object({
+    firstName: shortText, lastName: shortText, email: shortText, phone: shortText,
+    linkedIn: shortText, nationality: shortText,
+  }).nullable(),
+  extractedEducation: z.object({
+    university: shortText, degree: shortText, location: shortText,
+    graduationDate: shortText, gpa: shortText,
+  }).nullable(),
+  extractedExperience: z.array(z.object({
+    company: shortText, role: shortText, location: shortText, date: shortText,
+    bullets: z.array(boundedText).max(100),
+  })).max(100),
+}).strict();
 
-export interface ExtractedPersonal {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  linkedIn: string;
-  nationality: string;
-}
+export type AnalysisResult = z.infer<typeof analysisResultSchema>;
 
-export interface ExtractedEducation {
-  university: string;
-  degree: string;
-  location: string;
-  graduationDate: string;
-  gpa: string;
-}
-
-export interface ExtractedExperience {
-  company: string;
-  role: string;
-  location: string;
-  date: string;
-  bullets: string[];
-}
-
-export interface AnalysisResult {
-  analysis: string;
-  extractedSkills: ExtractedSkill[];
-  experienceSummary: {
-    totalYears: number;
-    industries: string[];
-    educationLevel: string;
-    keyAchievements: string[];
-  } | null;
-  scores: {
-    overall: number;
-    formatting: number;
-    content: number;
-    relevance: number;
-    impact: number;
-  } | null;
-  suggestedRoles: string[];
-  missingSkills: string[];
-  extractedPersonal: ExtractedPersonal | null;
-  extractedEducation: ExtractedEducation | null;
-  extractedExperience: ExtractedExperience[];
+export function parseCVAnalysisResult(value: unknown): AnalysisResult | null {
+  const parsed = analysisResultSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
 const fileToBase64 = (file: File): Promise<string> =>
@@ -108,14 +96,17 @@ export const useCVAnalysis = () => {
       });
 
       if (fnError) throw fnError;
-      if (!data) throw new Error('No data returned from analysis');
+      const parsed = parseCVAnalysisResult(data);
+      if (!parsed) throw new Error('MALFORMED_ANALYSIS_RESPONSE');
 
-      setResult(data as AnalysisResult);
+      setResult(parsed);
       setStatus('done');
       toast.success('CV analyzed — review and edit each section.');
-    } catch (e: any) {
-      console.error('[useCVAnalysis] Error:', e);
-      const msg = e?.message || 'Failed to analyze CV.';
+    } catch (cause: unknown) {
+      console.error('[useCVAnalysis] CV analysis failed', { name: cause instanceof Error ? cause.name : 'UnknownError' });
+      const msg = cause instanceof Error && cause.message === 'MALFORMED_ANALYSIS_RESPONSE'
+        ? 'The CV analysis service returned an unsupported response. Nothing was applied.'
+        : 'Failed to analyze CV. Nothing was applied.';
       setError(msg);
       setStatus('error');
       toast.error(msg);

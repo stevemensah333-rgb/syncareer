@@ -75,6 +75,7 @@ export type ValidationFailure =
   | "context_empty"
   | "context_too_many"
   | "context_duplicate_id"
+  | "cv_context"
   | "context_item_too_long"
   | "context_total_too_long";
 
@@ -147,6 +148,15 @@ export function parseAssistantRequest(
       provenance: item.provenance as Provenance,
       content: item.content,
     });
+  }
+
+  if (raw.task === "cv.rewrite_bullet") {
+    const hasRequirement = context.some((item) => item.id.startsWith("requirement-") && item.provenance === "job_description");
+    const hasEvidence = context.some((item) => item.id.startsWith("evidence-") && item.provenance === "selected_cv_text");
+    const hasOpportunity = context.some((item) => item.provenance === "opportunity");
+    if (!hasRequirement || !hasEvidence || !hasOpportunity) {
+      return { ok: false, failure: "cv_context" };
+    }
   }
 
   return {

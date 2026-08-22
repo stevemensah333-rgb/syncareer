@@ -34,6 +34,7 @@ import { DeadlinePill } from './DeadlinePill';
 import { ContextualAssistantDrawer } from '@/components/assistant/ContextualAssistantDrawer';
 import { RequirementEvidenceActions } from '@/components/learning/RequirementEvidenceActions';
 import { buildEvidenceHref } from '@/features/learning/requirementLearning';
+import { buildOpportunityContext } from '@/features/cv-builder/guidance';
 
 interface OpportunityDetailProps {
   job: MatchedOpportunityJob;
@@ -92,6 +93,7 @@ export function OpportunityDetail({
   const posted = formatPostedAgo(job.created_at);
   const freshness = getIngestionFreshness(job.updated_at);
   const salary = formatSalary(job.salary_min, job.salary_max, job.salary_currency);
+  const assistantOpportunity = buildOpportunityContext(job);
   const cta = getOpportunityCta({
     isExternal: job.is_external,
     hasSourceUrl: Boolean(job.source_url),
@@ -99,7 +101,7 @@ export function OpportunityDetail({
   });
 
   const interviewHref = `/interview-simulator?role=${encodeURIComponent(job.title)}&skills=${encodeURIComponent((job.skills ?? []).join(','))}`;
-  const cvHref = `/cv-builder?targetRole=${encodeURIComponent(job.title)}${
+  const cvHref = `/cv-builder?opportunity=${encodeURIComponent(job.id)}&targetRole=${encodeURIComponent(job.title)}${
     organisation ? `&company=${encodeURIComponent(organisation)}` : ''
   }&skills=${encodeURIComponent((job.skills ?? []).join(','))}`;
   const opportunityReturnTo = `/opportunities?job=${encodeURIComponent(job.id)}`;
@@ -241,7 +243,7 @@ export function OpportunityDetail({
           suggestedPrompt="Explain the most important requirement in plain language and suggest two questions I should research before applying."
           context={[
             { id: 'role', label: job.title, provenance: 'opportunity', content: [job.title, organisation, job.location, job.employment_type].filter(Boolean).join(' · ') },
-            { id: 'description', label: 'Job description', provenance: 'job_description', content: job.description ?? '' },
+            { id: 'description', label: 'Extracted requirements', provenance: 'job_description', content: assistantOpportunity.requirements.map((requirement) => `[${requirement.requirementId}] ${requirement.kind}: ${requirement.sourceText}`).join('\n') },
           ]}
         />
       </div>

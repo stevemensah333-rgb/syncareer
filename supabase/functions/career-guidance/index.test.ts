@@ -78,20 +78,30 @@ function harness(options: {
   return state;
 }
 
+const cvContext = [
+  { id: "target-opportunity", label: "Data Intern", provenance: "opportunity", content: "Data Intern" },
+  { id: "requirement-python", label: "Requirement", provenance: "job_description", content: "Python" },
+  { id: "evidence-project", label: "Evidence", provenance: "selected_cv_text", content: "Built a Python project" },
+];
+
 const proposalFor = (task: AssistantTask) =>
-  JSON.stringify({ kind: ALLOWED_KINDS[task][0], text: "Synthetic proposal.", sourceContextIds: ["role"] });
+  JSON.stringify({
+    kind: ALLOWED_KINDS[task][0],
+    text: "Synthetic proposal.",
+    sourceContextIds: task === "cv.rewrite_bullet" ? ["requirement-python", "evidence-project"] : ["role"],
+  });
 
 // --- request validation -----------------------------------------------------
 
 Deno.test("accepts every allowlisted task", async () => {
   for (const task of ASSISTANT_TASKS) {
     const h = harness({ gateway: () => Promise.resolve({ status: 200, text: proposalFor(task) }) });
-    const res = await handleV2(requestBody({ task, requestId: RID }), "t", h.deps, cors);
+    const res = await handleV2(requestBody({ task, requestId: RID, context: task === "cv.rewrite_bullet" ? cvContext : baseContext }), "t", h.deps, cors);
     assertEquals(res.status, 200, task);
     const body = await res.json();
     assertEquals(body.usage.consumed, true);
     assertEquals(body.requestId, RID);
-    assertEquals(body.proposal.sourceContextIds, ["role"]);
+    assertEquals(body.proposal.sourceContextIds, task === "cv.rewrite_bullet" ? ["requirement-python", "evidence-project"] : ["role"]);
   }
 });
 
@@ -135,6 +145,16 @@ Deno.test("a malformed v2 request returns 422 and never bills", async () => {
   assertEquals((await res.json()).usage.consumed, false);
 });
 
+Deno.test("CV requests require an opportunity, requirement and selected evidence before gateway execution", async () => {
+  let called = false;
+  const h = harness({ gateway: () => { called = true; return Promise.resolve({ status: 200, text: proposalFor("cv.rewrite_bullet") }); } });
+  const res = await handleV2(requestBody({ task: "cv.rewrite_bullet" }), "t", h.deps, cors);
+  assertEquals(res.status, 422);
+  assertEquals((await res.json()).error, "cv_context");
+  assertEquals(called, false);
+  assertEquals(h.consumed, 0);
+});
+
 // --- prompt construction ----------------------------------------------------
 
 Deno.test("prompt uses only supplied context and forbids invention", () => {
@@ -172,6 +192,14 @@ Deno.test("rejects malformed, empty, wrong-kind and context-inventing output", (
 Deno.test("unsafe model output returns 422 and does not consume quota", async () => {
   const h = harness({ gateway: () => Promise.resolve({ status: 200, text: "{}" }) });
   const res = await handleV2(requestBody(), "t", h.deps, cors);
+  assertEquals(res.status, 422);
+  assertEquals((await res.json()).error, "no_safe_proposal");
+  assertEquals(h.consumed, 0);
+});
+
+Deno.test("CV model output must cite both requirement and evidence context", async () => {
+  const h = harness({ gateway: () => Promise.resolve({ status: 200, text: JSON.stringify({ kind: "rewrite", text: "Built a Python project", sourceContextIds: ["evidence-project"] }) }) });
+  const res = await handleV2(requestBody({ task: "cv.rewrite_bullet", context: cvContext }), "t", h.deps, cors);
   assertEquals(res.status, 422);
   assertEquals((await res.json()).error, "no_safe_proposal");
   assertEquals(h.consumed, 0);

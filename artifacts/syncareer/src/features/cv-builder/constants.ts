@@ -96,13 +96,6 @@ export const SECTION_TIPS: Record<string, string[]> = {
   ],
 };
 
-export const QUICK_PROMPTS = [
-  { label: 'Improve bullet points', prompt: 'Help me write stronger bullet points for my experience section' },
-  { label: 'Suggest skills', prompt: 'Suggest relevant skills based on my background' },
-  { label: 'Professional summary', prompt: 'Help me write a compelling professional summary' },
-  { label: 'Action verbs', prompt: 'Give me powerful action verbs for my CV' },
-] as const;
-
 // ── File upload limits ───────────────────────────────────────────
 
 export const MAX_UPLOAD_FILE_SIZE = 5 * 1024 * 1024; // 5MB

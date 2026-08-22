@@ -99,6 +99,7 @@ const VALIDATION_STATUS: Record<ValidationFailure, number> = {
   context_empty: 422,
   context_too_many: 422,
   context_duplicate_id: 422,
+  cv_context: 422,
   context_item_too_long: 422,
   context_total_too_long: 422,
 };
@@ -191,6 +192,16 @@ export async function handleV2(
     await deps.release(user.userId, request.requestId);
     deps.log({ requestId, userId: user.userId, task: request.task, status: 422, durationMs: clock() - started, quota: "not_consumed", gateway: "ok", failure: validated.failure });
     return failure(requestId, 422, "no_safe_proposal", quota, cors);
+  }
+
+  if (request.task === "cv.rewrite_bullet") {
+    const citesEvidence = validated.proposal.sourceContextIds.some((id) => id.startsWith("evidence-"));
+    const citesRequirement = validated.proposal.sourceContextIds.some((id) => id.startsWith("requirement-"));
+    if (!citesEvidence || !citesRequirement) {
+      await deps.release(user.userId, request.requestId);
+      deps.log({ requestId, userId: user.userId, task: request.task, status: 422, durationMs: clock() - started, quota: "not_consumed", gateway: "ok", failure: "model_missing_grounding" });
+      return failure(requestId, 422, "no_safe_proposal", quota, cors);
+    }
   }
 
   const committed = await deps.consumeQuota(token, user.userId);

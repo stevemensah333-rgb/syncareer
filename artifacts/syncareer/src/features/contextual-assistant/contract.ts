@@ -27,6 +27,36 @@ export interface AssistantContextItem {
   personal?: boolean;
 }
 
+const requestInputSchema = z.object({
+  task: z.enum(assistantTasks),
+  instruction: z.string().trim().min(1).max(2_000),
+  context: z.array(z.object({
+    id: z.string().trim().min(1).max(64),
+    label: z.string().max(200),
+    provenance: z.enum(['opportunity', 'job_description', 'primary_cv', 'selected_cv_text', 'application_notes', 'interview_report']),
+    content: z.string().trim().min(1).max(8_000),
+  })).min(1).max(12).superRefine((items, context) => {
+    if (new Set(items.map((item) => item.id)).size !== items.length) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: 'Context IDs must be unique.' });
+    }
+    if (items.reduce((total, item) => total + item.content.length, 0) > 24_000) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: 'Context is too large.' });
+    }
+  }),
+});
+
+const allowedKinds: Record<AssistantTask, readonly AssistantProposal['kind'][]> = {
+  'opportunity.explain_requirement': ['explanation'],
+  'opportunity.compare_evidence': ['explanation', 'outline'],
+  'opportunity.research_questions': ['outline'],
+  'cv.rewrite_bullet': ['rewrite'],
+  'application.draft_follow_up': ['draft'],
+  'application.clarify_next_action': ['explanation', 'outline'],
+  'application.organise_notes': ['outline'],
+  'interview.explain_feedback': ['explanation'],
+  'interview.practice_question': ['practice_question'],
+};
+
 const responseSchema = z.object({
   version: z.literal(2),
   requestId: z.string().min(1),
@@ -39,7 +69,7 @@ const responseSchema = z.object({
 });
 
 export type AssistantProposal = NonNullable<z.infer<typeof responseSchema>['proposal']>;
-export type AssistantRequestErrorCode = 'unauthorized' | 'quota' | 'rate-limit' | 'network' | 'malformed' | 'server' | 'no-proposal' | 'cancelled';
+export type AssistantRequestErrorCode = 'unauthorized' | 'quota' | 'rate-limit' | 'network' | 'timeout' | 'malformed' | 'server' | 'no-proposal' | 'cancelled';
 
 export class AssistantRequestError extends Error {
   constructor(public readonly code: AssistantRequestErrorCode, message: string) { super(message); }
@@ -53,7 +83,13 @@ export class AssistantRequestError extends Error {
  */
 export async function requestContextualAssistance(task: AssistantTask, instruction: string, context: AssistantContextItem[], signal?: AbortSignal): Promise<AssistantProposal> {
   if (signal?.aborted) throw new AssistantRequestError('cancelled', 'The assistant request was cancelled.');
+  const selectedContext = context.map(({ id, label, provenance, content }) => ({ id, label, provenance, content }));
+  const requestInput = requestInputSchema.safeParse({ task, instruction, context: selectedContext });
+  if (!requestInput.success) {
+    throw new AssistantRequestError('malformed', 'The selected context is incomplete or too large. Nothing was sent.');
+  }
   const { data: { session } } = await supabase.auth.getSession();
+  if (signal?.aborted) throw new AssistantRequestError('cancelled', 'The assistant request was cancelled.');
   if (!session?.access_token) {
     try {
       captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, {
@@ -75,21 +111,33 @@ export async function requestContextualAssistance(task: AssistantTask, instructi
 
   const requestId = crypto.randomUUID();
   let response: Response;
+  const requestController = new AbortController();
+  let timedOut = false;
+  const abortFromCaller = () => requestController.abort();
+  signal?.addEventListener('abort', abortFromCaller, { once: true });
+  const timeout = window.setTimeout(() => {
+    timedOut = true;
+    requestController.abort();
+  }, 30_000);
   try {
     response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/career-guidance`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      signal,
+      signal: requestController.signal,
       body: JSON.stringify({
         version: 2, requestId, task, instruction: instruction.trim(),
-        context: context.map(({ id, label, provenance, content }) => ({ id, label, provenance, content })),
+        context: selectedContext,
       }),
     });
   } catch (cause) {
     // A caller-initiated cancellation is not a product failure: no analytics,
     // and the caller decides whether to surface anything.
-    if (signal?.aborted || (cause instanceof DOMException && cause.name === 'AbortError')) {
+    if (signal?.aborted) {
       throw new AssistantRequestError('cancelled', 'The assistant request was cancelled.');
+    }
+    if (timedOut || (cause instanceof DOMException && cause.name === 'AbortError')) {
+      try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'timeout' }); } catch {}
+      throw new AssistantRequestError('timeout', 'The assistant took too long to respond. Nothing was changed.');
     }
     try {
       captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, {
@@ -99,6 +147,9 @@ export async function requestContextualAssistance(task: AssistantTask, instructi
       });
     } catch { /* never break */ }
     throw new AssistantRequestError('network', 'The assistant could not be reached. Check your connection and retry.');
+  } finally {
+    window.clearTimeout(timeout);
+    signal?.removeEventListener('abort', abortFromCaller);
   }
 
   // The caller went away while the response was in flight — drop the result
@@ -131,6 +182,10 @@ export async function requestContextualAssistance(task: AssistantTask, instructi
   if (!parsed.data.proposal) {
     try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'no_proposal' }); } catch {}
     throw new AssistantRequestError('no-proposal', 'No usable proposal was returned. Nothing was changed.');
+  }
+  if (!allowedKinds[task].includes(parsed.data.proposal.kind)) {
+    try { captureProductEvent(ANALYTICS_EVENTS.CONTEXTUAL_AI_FINISHED, { task: task as AnalyticsAssistantTask, result: 'failure', failure_code: 'malformed' }); } catch {}
+    throw new AssistantRequestError('malformed', 'The assistant returned the wrong proposal type. Nothing was changed.');
   }
   const allowedIds = new Set(context.map((item) => item.id));
   if (parsed.data.proposal.sourceContextIds.some((id) => !allowedIds.has(id))) {

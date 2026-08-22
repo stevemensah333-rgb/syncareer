@@ -18,12 +18,12 @@ interface LegalPageLayoutProps {
   children: ReactNode;
 }
 
-export function LegalPageLayout({ document, eyebrow, title, description, effectiveDate, sections, children }: LegalPageLayoutProps) {
+export function LegalPageLayout({ document: documentType, eyebrow, title, description, effectiveDate, sections, children }: LegalPageLayoutProps) {
   useLayoutEffect(() => {
     if (!window.location.hash) return;
     const id = decodeURIComponent(window.location.hash.slice(1));
-    document.getElementById(id)?.scrollIntoView({ block: 'start' });
-    const timer = window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }), 500);
+    window.document.getElementById(id)?.scrollIntoView({ block: 'start' });
+    const timer = window.setTimeout(() => window.document.getElementById(id)?.scrollIntoView({ block: 'start' }), 500);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -34,8 +34,8 @@ export function LegalPageLayout({ document, eyebrow, title, description, effecti
         <div className="mx-auto flex min-h-16 max-w-[1240px] flex-wrap items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
           <Link to="/" className="flex min-h-11 items-center gap-2 rounded-md font-semibold" aria-label="Syncareer home"><img src={syncareerLogo} alt="" className="h-7 w-7" />Syncareer</Link>
           <nav aria-label="Legal documents" className="flex flex-wrap items-center gap-1 text-sm">
-            <LegalNavLink to="/terms" active={document === 'terms'}>Terms</LegalNavLink>
-            <LegalNavLink to="/privacy" active={document === 'privacy'}>Privacy</LegalNavLink>
+            <LegalNavLink to="/terms" active={documentType === 'terms'}>Terms</LegalNavLink>
+            <LegalNavLink to="/privacy" active={documentType === 'privacy'}>Privacy</LegalNavLink>
             <a href="mailto:syncareer01@gmail.com" className="flex min-h-11 items-center rounded-md px-3 font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Contact</a>
             <Link to="/" className="flex min-h-11 items-center rounded-md border px-3 font-medium">Back to Syncareer</Link>
           </nav>
@@ -61,12 +61,12 @@ export function LegalPageLayout({ document, eyebrow, title, description, effecti
             <div className="hidden lg:block"><p className="mb-3 text-sm font-semibold">Contents</p><LegalContents sections={sections} /></div>
           </aside>
 
-          <article id="legal-document" tabIndex={-1} aria-labelledby={`${document}-document-title`} className="legal-document mt-8 min-w-0 focus:outline-none lg:mt-0">
-            <h2 id={`${document}-document-title`} className="sr-only">Complete {title}</h2>
+          <article id="legal-document" tabIndex={-1} aria-labelledby={`${documentType}-document-title`} className="legal-document mt-8 min-w-0 focus:outline-none lg:mt-0">
+            <h2 id={`${documentType}-document-title`} className="sr-only">Complete {title}</h2>
             {children}
             <footer className="legal-screen-only mt-14 border-t pt-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <Link to={document === 'terms' ? '/privacy' : '/terms'} className="font-semibold text-primary underline underline-offset-4">{document === 'terms' ? 'Read the Privacy Policy' : 'Read the Terms and Conditions'}</Link>
+                <Link to={documentType === 'terms' ? '/privacy' : '/terms'} className="font-semibold text-primary underline underline-offset-4">{documentType === 'terms' ? 'Read the Privacy Policy' : 'Read the Terms and Conditions'}</Link>
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => window.print()} className="inline-flex min-h-11 items-center gap-2 rounded-md border px-3 text-sm font-medium"><Printer className="h-4 w-4" aria-hidden="true" />Print</button>
                   <a href="#legal-page-top" className="inline-flex min-h-11 items-center gap-2 rounded-md border px-3 text-sm font-medium"><ArrowUp className="h-4 w-4" aria-hidden="true" />Back to top</a>
