@@ -65,7 +65,9 @@ const responseSchema = z.object({
     text: z.string().trim().min(1).max(12_000),
     sourceContextIds: z.array(z.string()).max(12),
   }).nullable(),
-  usage: z.object({ consumed: z.boolean(), used: z.number().int().nonnegative(), limit: z.number().int().positive().nullable() }),
+  // `limit` is the quota ceiling reported by the entitlement function. It uses
+  // -1 (and null) to mean "unlimited", so any integer is valid here.
+  usage: z.object({ consumed: z.boolean(), used: z.number().int().nonnegative(), limit: z.number().int().nullable() }),
 });
 
 export type AssistantProposal = NonNullable<z.infer<typeof responseSchema>['proposal']>;
