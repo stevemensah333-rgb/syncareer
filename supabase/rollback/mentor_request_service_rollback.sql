@@ -25,3 +25,8 @@ ALTER TABLE public.counsellor_details
   DROP COLUMN IF EXISTS expertise_tags,
   DROP COLUMN IF EXISTS years_experience,
   DROP COLUMN IF EXISTS availability_status;
+
+-- The forward migration makes legacy phone fields nullable so new mentors do
+-- not have to supply phone contact. This rollback deliberately does not restore
+-- NOT NULL: rows created after cutover may contain NULL. Backfill those fields
+-- before restoring the old constraints if the legacy scheduler is reactivated.

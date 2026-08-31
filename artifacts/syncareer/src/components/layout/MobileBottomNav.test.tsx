@@ -43,8 +43,8 @@ describe('MobileBottomNav', () => {
     const { tabs, moreItems } = getMobileNavigation('career_counsellor');
     expect(tabs.map((item) => item.href)).toEqual([
       '/mentor/profile',
-      '/mentor/availability',
       '/mentorship/requests',
+      '/mentor/availability',
     ]);
     expect(moreItems.map((item) => item.href)).toEqual([
       '/settings',

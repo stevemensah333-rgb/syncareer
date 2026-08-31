@@ -61,18 +61,8 @@ export const counsellorNavGroups: NavGroup[] = [
     label: 'Main',
     items: [
       { title: 'Profile', icon: Users, href: '/mentor/profile' },
-      { title: 'Availability', icon: Calendar, href: '/mentor/availability' },
-    ],
-  },
-  {
-    label: 'Mentorship',
-    items: [
       { title: 'Requests', icon: ClipboardList, href: '/mentorship/requests' },
-    ],
-  },
-  {
-    label: 'Account',
-    items: [
+      { title: 'Availability', icon: Calendar, href: '/mentor/availability' },
       { title: 'Settings', icon: Settings, href: '/settings' },
     ],
   },

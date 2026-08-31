@@ -241,7 +241,9 @@ const AppContent = () => (
               <Route path="/mentor/profile" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><MentorAccount /></RoleRoute></ProtectedRoute>
               } />
-              <Route path="/mentor/availability" element={<Navigate to="/mentor/profile" replace />} />
+              <Route path="/mentor/availability" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><MentorAccount /></RoleRoute></ProtectedRoute>
+              } />
               <Route path="/counsellor-dashboard" element={<Navigate to="/mentor/profile" replace />} />
               <Route path="/counsellor-availability" element={<Navigate to="/mentor/profile" replace />} />
               <Route path="/counsellor-sessions" element={<Navigate to="/mentorship/requests" replace />} />
