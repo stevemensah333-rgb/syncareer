@@ -6,7 +6,7 @@ import syncareerLogo from '@/assets/syncareer-logo.svg';
 import {
   LayoutDashboard, Briefcase, ClipboardList, Target,
   FileText, Mic, Settings,
-  Users, Calendar, UserCheck, ChevronRight, ChevronLeft,
+  Users, Calendar, ChevronRight, ChevronLeft,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -36,6 +36,7 @@ export const studentNavGroups: NavGroup[] = [
       { title: 'Home', icon: LayoutDashboard, href: '/dashboard' },
       { title: 'Opportunities', icon: Briefcase, href: '/opportunities' },
       { title: 'Applications', icon: ClipboardList, href: '/applications' },
+      { title: 'Mentors', icon: Users, href: '/mentors' },
       { title: 'Practice', icon: Target, href: '/practice' },
     ],
   },
@@ -44,6 +45,7 @@ export const studentNavGroups: NavGroup[] = [
     items: [
       { title: 'CV Builder', icon: FileText, href: '/cv-builder' },
       { title: 'Interview Simulator', icon: Mic, href: '/interview-simulator' },
+      { title: 'Mentor Requests', icon: Calendar, href: '/mentorship/requests' },
     ],
   },
   {
@@ -58,15 +60,14 @@ export const counsellorNavGroups: NavGroup[] = [
   {
     label: 'Main',
     items: [
-      { title: 'My Profile', icon: Users, href: '/counsellor-dashboard' },
-      { title: 'Availability', icon: Calendar, href: '/counsellor-availability' },
+      { title: 'Profile', icon: Users, href: '/mentor/profile' },
+      { title: 'Availability', icon: Calendar, href: '/mentor/availability' },
     ],
   },
   {
-    label: 'Schedule',
+    label: 'Mentorship',
     items: [
-      { title: 'Sessions', icon: ClipboardList, href: '/counsellor-sessions' },
-      { title: 'My Clients', icon: UserCheck, href: '/counsellor-clients' },
+      { title: 'Requests', icon: ClipboardList, href: '/mentorship/requests' },
     ],
   },
   {

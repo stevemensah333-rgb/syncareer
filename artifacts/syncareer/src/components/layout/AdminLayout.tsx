@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, MessageSquare, Users } from 'lucide-react';
+import { LogOut, MessageSquare, ShieldCheck, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/layout/PageHeader';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
@@ -14,6 +14,7 @@ interface AdminLayoutProps {
 const navLinks = [
   { label: 'Feedback', href: '/admin/feedback', icon: MessageSquare },
   { label: 'Users', href: '/admin/users', icon: Users },
+  { label: 'Mentors', href: '/admin/mentors', icon: ShieldCheck },
 ];
 
 export function AdminLayout({ children, title }: AdminLayoutProps) {

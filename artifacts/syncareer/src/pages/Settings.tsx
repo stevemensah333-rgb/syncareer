@@ -113,7 +113,7 @@ const Settings = () => {
   const getUserTypeLabel = (userType: string | null) => {
     switch (userType) {
       case 'student': return 'Student';
-      case 'career_counsellor': return 'Career Counsellor';
+      case 'career_counsellor': return 'Career Mentor';
       default: return 'Not specified';
     }
   };

@@ -40,8 +40,6 @@ export const prefetchStudentRoutes = () => {
 };
 
 export const prefetchCounsellorRoutes = () => {
-  prefetch(() => import("@/pages/counsellor/CounsellorDashboard"));
-  prefetch(() => import("@/pages/counsellor/CounsellorSessions"));
-  prefetch(() => import("@/pages/counsellor/CounsellorClients"));
-  prefetch(() => import("@/pages/counsellor/CounsellorAvailability"));
+  prefetch(() => import("@/pages/mentorship/MentorAccount"));
+  prefetch(() => import("@/pages/mentorship/MentorshipRequests"));
 };

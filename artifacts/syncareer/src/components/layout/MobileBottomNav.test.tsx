@@ -18,9 +18,11 @@ describe('MobileBottomNav', () => {
       '/applications',
     ]);
     expect(moreItems.map((item) => item.href)).toEqual([
+      '/mentors',
       '/practice',
       '/cv-builder',
       '/interview-simulator',
+      '/mentorship/requests',
       '/settings',
     ]);
   });
@@ -37,15 +39,14 @@ describe('MobileBottomNav', () => {
     expect(screen.getByRole('button', { name: 'More navigation' }).className).toContain('focus-visible:ring-2');
   });
 
-  it('keeps counsellor clients and settings reachable under More', () => {
+  it('keeps mentor requests and settings reachable', () => {
     const { tabs, moreItems } = getMobileNavigation('career_counsellor');
     expect(tabs.map((item) => item.href)).toEqual([
-      '/counsellor-dashboard',
-      '/counsellor-availability',
-      '/counsellor-sessions',
+      '/mentor/profile',
+      '/mentor/availability',
+      '/mentorship/requests',
     ]);
     expect(moreItems.map((item) => item.href)).toEqual([
-      '/counsellor-clients',
       '/settings',
     ]);
   });

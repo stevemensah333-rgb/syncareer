@@ -72,7 +72,7 @@ const ALL_CATEGORY_SETTINGS: { id: keyof NotificationPreferences; label: string;
   },
   {
     id: 'counsellor_bookings',
-    label: 'Counsellor Bookings',
+    label: 'Mentor Requests',
     description: 'Booking confirmations and session updates',
   },
   {

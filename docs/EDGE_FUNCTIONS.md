@@ -10,6 +10,7 @@ These functions have source in this repository:
 | Function | Role | `verify_jwt` | Auth model |
 |---|---|---|---|
 | `send-transactional-email` | Email delivery | true | Authenticated |
+| `process-mentorship-email-outbox` | Queues idempotent mentor lifecycle emails | true | Service role only |
 | `send-onboarding-nudges` | Onboarding emails (cron) | true | Service role / cron |
 | `process-email-queue` | Email queue worker (pgmq + cron) | true | Service role / worker |
 | `aggregate-external-jobs` | External job aggregation (cron) | true | Service role / cron |

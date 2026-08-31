@@ -11,7 +11,7 @@ interface RoleRouteProps {
 
 const ROLE_HOME_ROUTES: Record<UserRole, string> = {
   student: '/dashboard',
-  career_counsellor: '/counsellor-dashboard',
+  career_counsellor: '/mentor/profile',
 };
 
 export function getHomeRouteForRole(role: string | null): string {

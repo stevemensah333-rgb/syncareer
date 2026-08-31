@@ -162,19 +162,19 @@ Lovable classification: `@lovable.dev/cloud-auth-js` and `src/integrations/lovab
 8. **Known defect/claim:** success route can be visited directly and makes an unverified activation claim. Pricing claims (limits, refund guarantee, plan savings, payment methods) were not reconciled against provider configuration or policy. Exact server-side amount/currency/status/ownership/idempotency verification is unverified because deployed function source was not recovered in this stage.
 9. **Tests:** subscription service and access-hook tests; no pricing, Paystack, or success-route test.
 
-### Counsellor entry points
+### Mentor request service
 
-Routes: `/counsellor-dashboard`, `/counsellor-availability`, `/counsellor-sessions`, `/counsellor-clients`, `/counsellor/complete-credentials`; student booking/rating entry points are embedded in the application tracker and counsellor dialogs.
+Routes: `/mentors`, `/mentors/:mentorId`, `/mentorship/requests`, `/mentor/profile`, and `/admin/mentors`. Legacy counsellor routes redirect into this service.
 
-1. **User goal:** publish a counsellor profile/availability, manage sessions/clients, upload credentials, or book/rate counselling.
-2. **Primary object:** `counsellor_details`, availability, bookings, sessions, reviews, credentials, and client notes.
-3. **Data/ownership:** pages first derive counsellor/user identity from the authenticated session and owned detail row; booking ownership uses student `user_id` and counsellor id. Exact RLS is unverified.
-4. **Reality:** **real, code-verified** Supabase UI/callers; no live booking/session flow was exercised.
-5. **States:** route-level role redirects; page spinners; missing-profile states; explicit client empty/error state; dashboard empty bookings/reviews; upload progress/error. Several fetch failures are console-only or collapse into missing-detail states.
-6. **Keyboard/mobile:** signed-in layouts and form controls are responsive by code; calendar, messaging, upload/crop, and mobile interactions are unverified.
-7. **Dependencies:** Supabase Auth/PostgREST; `avatars` and `documents` Storage buckets. No direct Paystack/PostHog call in these entry pages.
-8. **Known defect/claim:** credential upload/storage policies, private-document access, meeting links, and role/RLS enforcement require live safe verification. No end-to-end counsellor fixture exists.
-9. **Tests:** no focused counsellor page tests found.
+1. **User goal:** find a company-email-verified career mentor, send a focused request tied to an application/CV, and continue an accepted introduction over email.
+2. **Primary object:** `counsellor_details` remains the profile owner record; `mentor_verifications` and `mentorship_requests` are the active trust and workflow records.
+3. **Data/ownership:** only approved, available mentors appear in the public view. Requests and verification decisions use security-definer operations with explicit caller checks; direct client writes are not allowed.
+4. **Reality:** **repository-implemented, deployment pending**. The migration, RLS test, UI, email templates, outbox processor and rollback are tracked; live application and end-to-end email delivery remain unverified.
+5. **States:** verification pending/approved/rejected/revoked; availability accepting/limited/paused; requests pending/accepted/declined/withdrawn/completed.
+6. **Contact boundary:** pending requests hide emails and CV contents. Acceptance unlocks the selected CV for that mentor and queues introduction emails to both participants.
+7. **Dependencies:** Supabase Auth/Postgres/RLS, existing transactional-email queue, and the service-only mentorship outbox processor.
+8. **Legacy:** booking, schedule, session, message, review, price and credential tables remain intact but have no active application route.
+9. **Tests:** focused directory-filter tests and `supabase/tests/mentorship_service_rls.sql`; live RLS and email retry behavior require an isolated restore/deployed verification.
 
 ### Supporting hub and fallback routes
 

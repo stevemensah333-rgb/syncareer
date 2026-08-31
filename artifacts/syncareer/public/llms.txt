@@ -1,6 +1,6 @@
 # Syncareer
 
-> AI-powered career intelligence platform helping African students and graduates discover careers, build ATS-ready CVs, practice interviews, and connect with vetted career counsellors.
+> AI-powered career intelligence platform helping African students and graduates discover careers, build ATS-ready CVs, practice interviews, and connect with verified career mentors.
 
 Syncareer combines a RIASEC-based career assessment, an AI CV builder, a voice-based interview simulator (SynAssist), a public portfolio system, and an opportunities hub aggregating native and external job postings. Students get personalized career recommendations, market intelligence for their major, and a Career Readiness Score that updates as they complete actions.
 

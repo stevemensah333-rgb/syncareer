@@ -63,7 +63,7 @@ are upserted first; only after that succeeds is `profiles.onboarding_completed`
 updated. Initial read failures, unsupported roles, validation failures, RLS
 failures, and network failures have visible retry-safe states.
 
-The canonical counsellor profile role is `career_counsellor`. Repository
+The canonical mentor profile role remains internally named `career_counsellor`. Repository
 migration `20260811153000_fix_counsellor_onboarding_role.sql` corrects the
 `counsellor_details` INSERT policy while retaining both `auth.uid() = user_id`
 and the stored-profile role check. It does not permit client-side role changes.
@@ -76,6 +76,13 @@ row while students and cross-owner writes remain denied; then run
 `supabase/rollback/counsellor_onboarding_role_policy_rollback.sql`; it restores
 the previous policy and therefore deliberately restores the counsellor setup
 failure.
+
+The active product no longer schedules counsellor sessions. The additive mentor
+request boundary is documented in `docs/MENTORSHIP_SERVICE.md`. Profile discovery
+reads an approved, privacy-limited view; request creation and state transitions
+run through authorization-checking database functions; accepted introductions
+use the existing transactional email queue through a service-only outbox. Legacy
+booking/session tables are retained for recovery and are not the active workflow.
 
 ### Home/dashboard flow
 

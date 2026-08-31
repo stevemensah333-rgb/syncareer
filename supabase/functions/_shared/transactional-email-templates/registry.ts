@@ -12,9 +12,11 @@ export interface TemplateEntry {
 import { template as welcome } from './welcome.tsx'
 import { template as assessmentNudge } from './assessment-nudge.tsx'
 import { template as cvNudge } from './cv-nudge.tsx'
+import { mentorshipTemplates } from './mentorship.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcome,
   'assessment-nudge': assessmentNudge,
   'cv-nudge': cvNudge,
+  ...mentorshipTemplates,
 }

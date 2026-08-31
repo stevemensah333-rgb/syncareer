@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -17,9 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { countries } from '@/utils/countries';
+import { mentorshipApi } from '@/features/mentorship/api';
 import { OnboardingShell } from '@/features/onboarding/OnboardingShell';
 import { WelcomeScreen } from '@/features/onboarding/WelcomeScreen';
 import {
@@ -99,8 +99,11 @@ const Onboarding = () => {
   const [degreeType, setDegreeType] = useState('');
 
   const [counsellorFullName, setCounsellorFullName] = useState('');
-  const [countryCode, setCountryCode] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [currentRole, setCurrentRole] = useState('');
+  const [organization, setOrganization] = useState('');
+  const [mentorBio, setMentorBio] = useState('');
+  const [expertise, setExpertise] = useState('');
+  const [yearsExperience, setYearsExperience] = useState('0');
 
   useEffect(() => {
     mounted.current = true;
@@ -196,17 +199,15 @@ const Onboarding = () => {
       } else {
         const detailsResult = await supabase
           .from('counsellor_details')
-          .select('full_name, country_code, phone_number')
+          .select('full_name')
           .eq('user_id', session.user.id)
           .maybeSingle();
         if (detailsResult.error) {
-          throw new OnboardingFlowError('We could not load your counsellor details. Try again to continue.', 'details');
+          throw new OnboardingFlowError('We could not load your mentor details. Try again to continue.', 'details');
         }
         if (!mounted.current) return;
         const details = detailsResult.data;
         setCounsellorFullName(details?.full_name?.trim() || fullName);
-        setCountryCode(details?.country_code ?? '');
-        setPhoneNumber(details?.phone_number ?? '');
       }
 
       let welcomeSeen = false;
@@ -276,8 +277,11 @@ const Onboarding = () => {
     } else {
       const result = counsellorSchema.safeParse({
         fullName: counsellorFullName,
-        countryCode,
-        phoneNumber,
+        currentRole,
+        organization,
+        bio: mentorBio,
+        expertise,
+        yearsExperience,
       });
       if (!result.success) {
         setFormError(result.error.issues[0]?.message ?? 'Check the highlighted details and try again.');
@@ -291,7 +295,7 @@ const Onboarding = () => {
     try {
       if (!profileExists) {
         if (userType !== 'student') {
-          throw new OnboardingFlowError('Your counsellor role must be verified before setup can be completed.', 'role');
+          throw new OnboardingFlowError('Your mentor role must be verified before setup can be completed.', 'role');
         }
         const profileInsert = await supabase.from('profiles').insert({
           id: userId,
@@ -320,12 +324,21 @@ const Onboarding = () => {
           {
             user_id: userId,
             full_name: counsellorFullName.trim(),
-            country_code: countryCode,
-            phone_number: phoneNumber.trim(),
+            country_code: '',
+            phone_number: '',
           },
           { onConflict: 'user_id' },
         );
         if (detailsResult.error) throw detailsResult.error;
+        await mentorshipApi.updateProfile({
+          fullName: counsellorFullName,
+          currentRole,
+          bio: mentorBio,
+          expertiseTags: expertise.split(',').map((tag) => tag.trim()).filter(Boolean),
+          yearsExperience: Number(yearsExperience),
+          availabilityStatus: 'paused',
+        });
+        await mentorshipApi.submitVerification(organization);
       }
 
       const profileUpdate = await supabase
@@ -403,18 +416,18 @@ const Onboarding = () => {
 
   return (
     <OnboardingShell
-      eyebrow={isStudent ? 'Student profile' : 'Counsellor profile'}
-      title={isStudent ? 'Add your study details' : 'Add your contact details'}
+      eyebrow={isStudent ? 'Student profile' : 'Mentor profile'}
+      title={isStudent ? 'Add your study details' : 'Build your mentor profile'}
       subtitle={isStudent
         ? 'These details help Syncareer keep your opportunity and application context relevant.'
-        : 'Students who book with you will use these details to identify and contact you.'}
+        : 'Your organization email and professional details will be reviewed before your profile is listed.'}
       currentStep={2}
       totalSteps={2}
     >
       <form onSubmit={handleSubmit} noValidate>
         <Card>
           <CardHeader className="border-b">
-            <CardTitle>{isStudent ? 'Education' : 'Professional contact'}</CardTitle>
+            <CardTitle>{isStudent ? 'Education' : 'Professional profile'}</CardTitle>
             <p className="text-sm text-muted-foreground">
               Fields marked with <span aria-hidden="true">*</span><span className="sr-only">an asterisk</span> are required.
             </p>
@@ -519,45 +532,10 @@ const Onboarding = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-                  <div className="space-y-2">
-                    <Label htmlFor="onboarding-country-code">Country code *</Label>
-                    <Select value={countryCode} onValueChange={setCountryCode} disabled={saving}>
-                      <SelectTrigger id="onboarding-country-code" aria-required="true">
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <ScrollArea className="h-64">
-                          {countries.map((country) => (
-                            <SelectItem key={`${country.code}-${country.name}`} value={`+${country.code}`}>
-                              {country.name} (+{country.code})
-                            </SelectItem>
-                          ))}
-                        </ScrollArea>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="onboarding-phone">Phone number *</Label>
-                    <Input
-                      id="onboarding-phone"
-                      name="tel"
-                      autoComplete="tel-national"
-                      value={phoneNumber}
-                      onChange={(event) => setPhoneNumber(event.target.value)}
-                      placeholder="e.g. 24 123 4567"
-                      inputMode="tel"
-                      required
-                      maxLength={20}
-                      disabled={saving}
-                    />
-                  </div>
-                </div>
-
-                <p className="rounded-lg border bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">
-                  Your phone number is shown only to clients who book a session with you. You can add your bio, specialisation, availability, and session price after setup.
-                </p>
+                <div className="grid gap-5 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="onboarding-role">Current role *</Label><Input id="onboarding-role" value={currentRole} maxLength={120} onChange={(e) => setCurrentRole(e.target.value)} placeholder="e.g. Product Designer" /></div><div className="space-y-2"><Label htmlFor="onboarding-org">Organization *</Label><Input id="onboarding-org" autoComplete="organization" value={organization} maxLength={160} onChange={(e) => setOrganization(e.target.value)} /></div></div>
+                <div className="space-y-2"><Label htmlFor="onboarding-bio">Professional bio *</Label><Textarea id="onboarding-bio" value={mentorBio} maxLength={1000} rows={5} onChange={(e) => setMentorBio(e.target.value)} placeholder="Describe the experience and perspective you can offer students." /></div>
+                <div className="grid gap-5 md:grid-cols-[1fr_180px]"><div className="space-y-2"><Label htmlFor="onboarding-expertise">Expertise *</Label><Input id="onboarding-expertise" value={expertise} onChange={(e) => setExpertise(e.target.value)} placeholder="CV review, Data analytics, Fintech" /><p className="text-xs text-muted-foreground">Separate tags with commas.</p></div><div className="space-y-2"><Label htmlFor="onboarding-years">Years of experience *</Label><Input id="onboarding-years" type="number" min={0} max={60} value={yearsExperience} onChange={(e) => setYearsExperience(e.target.value)} /></div></div>
+                <p className="rounded-lg border bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">Your profile remains hidden while the Syncareer team verifies your confirmed organization email. Contact details are exchanged only after you accept a request.</p>
               </div>
             )}
           </CardContent>

@@ -22,7 +22,7 @@ export function WelcomeScreen({
     userType === 'career_counsellor'
       ? [
           'Create the contact profile students see when they book',
-          'Manage availability and upcoming counselling sessions',
+          'Manage your mentor profile, request capacity and introductions',
           'Keep client and session information in one workspace',
         ]
       : [

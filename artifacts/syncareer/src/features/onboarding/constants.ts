@@ -78,11 +78,9 @@ export const counsellorSchema = z.object({
     .trim()
     .min(1, 'Full name is required')
     .max(100, 'Name must be less than 100 characters'),
-  countryCode: z.string().min(1, 'Country code is required'),
-  phoneNumber: z
-    .string()
-    .trim()
-    .min(6, 'Enter a valid phone number')
-    .max(20, 'Phone number must be less than 20 characters')
-    .regex(/^[0-9 ()-]+$/, 'Phone number can only contain numbers, spaces, brackets, or hyphens'),
+  currentRole: z.string().trim().min(2, 'Current role is required').max(120),
+  organization: z.string().trim().min(2, 'Organization is required').max(160),
+  bio: z.string().trim().min(20, 'Add a short professional bio').max(1000),
+  expertise: z.string().trim().min(2, 'Add at least one expertise tag').max(500),
+  yearsExperience: z.coerce.number().int().min(0).max(60),
 });

@@ -51,17 +51,15 @@ const Apply = lazy(() => import("./pages/Apply"));
 // Admin pages
 const FeedbackDashboard = lazy(() => import("./pages/admin/FeedbackDashboard"));
 const UsersDashboard = lazy(() => import("./pages/admin/UsersDashboard"));
-const CredentialReview = lazy(() => import("./pages/admin/CredentialReview"));
+const MentorVerification = lazy(() => import("./pages/admin/MentorVerification"));
 
 // Shared pages
 const Settings = lazy(() => import("./pages/Settings"));
 
-// Counsellor pages
-const CounsellorDashboard = lazy(() => import("./pages/counsellor/CounsellorDashboard"));
-const CounsellorAvailability = lazy(() => import("./pages/counsellor/CounsellorAvailability"));
-const CounsellorSessions = lazy(() => import("./pages/counsellor/CounsellorSessions"));
-const CounsellorClients = lazy(() => import("./pages/counsellor/CounsellorClients"));
-const CredentialUpload = lazy(() => import("./pages/counsellor/CredentialUpload"));
+const MentorDirectory = lazy(() => import("./pages/mentorship/MentorDirectory"));
+const MentorDetails = lazy(() => import("./pages/mentorship/MentorDetails"));
+const MentorshipRequests = lazy(() => import("./pages/mentorship/MentorshipRequests"));
+const MentorAccount = lazy(() => import("./pages/mentorship/MentorAccount"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -229,23 +227,26 @@ const AppContent = () => (
               <Route path="/apply" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><Apply /></RoleRoute></ProtectedRoute>
               } />
+              <Route path="/mentors" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['student']}><MentorDirectory /></RoleRoute></ProtectedRoute>
+              } />
+              <Route path="/mentors/:mentorId" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['student']}><MentorDetails /></RoleRoute></ProtectedRoute>
+              } />
+              <Route path="/mentorship/requests" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['student', 'career_counsellor']}><MentorshipRequests /></RoleRoute></ProtectedRoute>
+              } />
 
-              {/* COUNSELLOR-ONLY ROUTES */}
-              <Route path="/counsellor-dashboard" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><CounsellorDashboard /></RoleRoute></ProtectedRoute>
+              {/* MENTOR-ONLY ROUTES; the internal role remains career_counsellor. */}
+              <Route path="/mentor/profile" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><MentorAccount /></RoleRoute></ProtectedRoute>
               } />
-              <Route path="/counsellor-availability" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><CounsellorAvailability /></RoleRoute></ProtectedRoute>
-              } />
-              <Route path="/counsellor-sessions" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><CounsellorSessions /></RoleRoute></ProtectedRoute>
-              } />
-              <Route path="/counsellor-clients" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><CounsellorClients /></RoleRoute></ProtectedRoute>
-              } />
-              <Route path="/counsellor/complete-credentials" element={
-                <ProtectedRoute><RoleRoute allowedRoles={['career_counsellor']}><CredentialUpload /></RoleRoute></ProtectedRoute>
-              } />
+              <Route path="/mentor/availability" element={<Navigate to="/mentor/profile" replace />} />
+              <Route path="/counsellor-dashboard" element={<Navigate to="/mentor/profile" replace />} />
+              <Route path="/counsellor-availability" element={<Navigate to="/mentor/profile" replace />} />
+              <Route path="/counsellor-sessions" element={<Navigate to="/mentorship/requests" replace />} />
+              <Route path="/counsellor-clients" element={<Navigate to="/mentorship/requests" replace />} />
+              <Route path="/counsellor/complete-credentials" element={<Navigate to="/mentor/profile" replace />} />
 
               {/* ADMIN ROUTES */}
               <Route path="/admin/feedback" element={
@@ -255,7 +256,10 @@ const AppContent = () => (
                 <ProtectedRoute><AdminRoute><UsersDashboard /></AdminRoute></ProtectedRoute>
               } />
               <Route path="/admin/credentials" element={
-                <ProtectedRoute><AdminRoute><CredentialReview /></AdminRoute></ProtectedRoute>
+                <Navigate to="/admin/mentors" replace />
+              } />
+              <Route path="/admin/mentors" element={
+                <ProtectedRoute><AdminRoute><MentorVerification /></AdminRoute></ProtectedRoute>
               } />
 
               <Route path="*" element={<NotFound />} />

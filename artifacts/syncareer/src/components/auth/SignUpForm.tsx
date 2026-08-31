@@ -19,7 +19,7 @@ import { ACCOUNT_ROLES } from '@/lib/accountRoles';
 
 const ROLE_OPTIONS = [
   { value: ACCOUNT_ROLES[0], label: 'Student / Job seeker' },
-  { value: ACCOUNT_ROLES[1], label: 'Career counsellor' },
+  { value: ACCOUNT_ROLES[1], label: 'Career mentor' },
 ];
 
 export default function SignUpForm() {
@@ -123,7 +123,7 @@ export default function SignUpForm() {
           <GoogleSignInButton label="Sign up with Google" returnTo={returnTo === '/' ? '/onboarding' : returnTo} />
         ) : (
           <p className="rounded-lg border bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">
-            Counsellor accounts use email sign-up so the selected account role is preserved for verification.
+            Mentor accounts use an organization email. The Syncareer team verifies the email domain before your profile is listed.
           </p>
         )}
         <div className="flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">

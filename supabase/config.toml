@@ -9,6 +9,9 @@ verify_jwt = true
 [functions.send-onboarding-nudges]
 verify_jwt = true
 
+[functions.process-mentorship-email-outbox]
+verify_jwt = true
+
 [functions.aggregate-external-jobs]
 verify_jwt = true
 
@@ -32,5 +35,4 @@ verify_jwt = false
 
 [functions.mcp]
 verify_jwt = false
-
 

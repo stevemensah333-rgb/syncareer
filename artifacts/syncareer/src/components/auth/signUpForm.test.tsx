@@ -61,13 +61,13 @@ describe('SignUpForm (email sign-up contract)', () => {
     });
   });
 
-  it('preserves counsellor role through email signup and does not offer role-losing Google signup', async () => {
+  it('preserves mentor role through organization-email signup and does not offer role-losing Google signup', async () => {
     renderForm();
     fireEvent.click(screen.getByRole('combobox', { name: /I'm joining as/i }));
-    fireEvent.click(await screen.findByRole('option', { name: 'Career counsellor' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Career mentor' }));
 
     expect(screen.queryByRole('button', { name: /Sign up with Google/i })).toBeNull();
-    expect(screen.getByText(/Counsellor accounts use email sign-up/i)).toBeTruthy();
+    expect(screen.getByText(/Mentor accounts use an organization email/i)).toBeTruthy();
 
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Kojo Asante' } });
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'kojo@example.com' } });

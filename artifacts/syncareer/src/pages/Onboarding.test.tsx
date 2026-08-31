@@ -199,7 +199,7 @@ describe('Onboarding interface', () => {
 
     renderPage();
 
-    expect(await screen.findByRole('heading', { name: 'Add your contact details' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Build your mentor profile' })).toBeTruthy();
     expect(rpc).toHaveBeenCalledWith('initialize_my_profile_from_auth_metadata');
   });
 

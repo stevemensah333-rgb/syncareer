@@ -100,6 +100,12 @@ export function ApplicationWorkspaceDetail({ application, resumes, interviews, s
       <Button size="sm" disabled={!actionDirty || workspaceState === 'saving'} onClick={() => onWorkspace({ next_action: nextAction, next_action_due: nextAction.trim() ? due || null : null })}>{workspaceState === 'saving' && <Loader2 className="h-4 w-4 animate-spin" />}Save next action</Button>
       <SaveMessage state={workspaceState} />
     </section>}
+    {!only && <section className="space-y-2 rounded-lg border p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Human guidance</p>
+      <h3 className="font-semibold">Ask a verified mentor</h3>
+      <p className="text-sm text-muted-foreground">Request focused CV, interview, portfolio or industry guidance for this application.</p>
+      <Button variant="outline" size="sm" asChild><Link to={`/mentors?application=${encodeURIComponent(application.id)}`}><MessageSquare className="h-4 w-4" />Find a mentor</Link></Button>
+    </section>}
     {(!only || only === 'cv') && <section className="space-y-2">
       <h3 className="font-semibold">Targeted CV</h3>
       <Select value={application.resume_id ?? 'none'} onValueChange={(value) => onWorkspace({ resume_id: value === 'none' ? null : value })}>
