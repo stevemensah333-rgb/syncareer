@@ -84,6 +84,12 @@ CREATE TABLE public.mentorship_email_outbox (
 CREATE INDEX mentorship_email_outbox_pending
   ON public.mentorship_email_outbox (created_at) WHERE status IN ('pending', 'failed');
 
+GRANT SELECT ON public.mentor_verifications TO authenticated;
+GRANT ALL ON public.mentor_verifications TO service_role;
+GRANT SELECT ON public.mentorship_requests TO authenticated;
+GRANT ALL ON public.mentorship_requests TO service_role;
+GRANT ALL ON public.mentorship_email_outbox TO service_role;
+
 ALTER TABLE public.mentor_verifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mentorship_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mentorship_email_outbox ENABLE ROW LEVEL SECURITY;
