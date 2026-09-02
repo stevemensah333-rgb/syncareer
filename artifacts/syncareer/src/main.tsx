@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
+import './assets/fonts/literata.css'
 import './index.css'
 import './i18n/config'
 import { initializeAnalytics } from './services/analytics'

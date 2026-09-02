@@ -22,6 +22,8 @@ export default {
 			fontFamily: {
 				sans: ['Inter var', 'sans-serif'],
 				serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+				dossier: ['"Literata Variable"', 'Literata', 'Georgia', 'serif'],
+				mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 			},
 			colors: {
 				'landing-cream': 'hsl(var(--landing-cream))',
