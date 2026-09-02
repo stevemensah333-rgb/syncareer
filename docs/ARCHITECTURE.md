@@ -169,6 +169,41 @@ ApplicationTracker.tsx (job_applications ⋈ job_postings, applicant-owned)
 
 See [`PAYMENT_AND_SUBSCRIPTIONS.md`](./PAYMENT_AND_SUBSCRIPTIONS.md).
 
+### Evidence dossier domain
+
+The evidence system adds durable, reusable evidence objects behind the
+application workspace (`20260903000000_evidence_dossier.sql`; **pending live
+application through Lovable** — see [`SCHEMA_RECONCILIATION.md`](./SCHEMA_RECONCILIATION.md)):
+
+- Tables (all RLS-enabled, owner `SELECT`-only; every mutation flows through a
+  SECURITY DEFINER function whose caller identity is `auth.uid()`):
+  `evidence_items`, `evidence_sources`, `application_requirements`,
+  `application_evidence_links`, `resume_evidence_links`.
+- Application-CV lineage: `resumes.document_scope` (`base` | `application`)
+  and `resumes.source_resume_id`; an application-scoped CV can be linked from
+  at most one `job_applications` row (enforced by the
+  `enforce_application_cv_exclusive_link` trigger).
+- Server operations: `initialize_application_requirements`,
+  `add_manual_application_requirement`, `remove_application_requirement`,
+  `create_application_cv` (transactional + idempotent), `create_evidence_item`,
+  `update_evidence_item`, `confirm_evidence_item`, `archive_evidence_item`,
+  `add_evidence_source`, `remove_evidence_source`,
+  `link_evidence_to_requirement`, `unlink_evidence_from_requirement`,
+  `link_evidence_to_resume_entry`, `unlink_evidence_from_resume_entry`.
+- Ownership is enforced by composite foreign keys (`…_owner_fkey`) that pair
+  every child row's `user_id` with its parent, so cross-tenant references fail
+  even under privileged synthetic writes.
+- Support status (`draft` / `needs_source` / `supported` / `archived`) is
+  derived client-side in `src/features/evidence/supportStatus.ts` — never
+  stored, and "supported" never implies external verification.
+- Frontend seam: `src/features/evidence/api.ts` validates every row with zod
+  before it reaches the UI. Until Lovable regenerates the Supabase types after
+  the migration is applied, that module holds the one adapter aware of the
+  generated-type gap.
+- Mentors (career_counsellor) gain no access to evidence relations.
+- Rollback: `supabase/rollback/evidence_dossier_rollback.sql`; tests:
+  `supabase/tests/evidence_dossier_rls.sql`.
+
 ## Backend data model
 
 - Application tables live in `public`, RLS-enabled, ownership keyed on

@@ -176,6 +176,16 @@ Routes: `/mentors`, `/mentors/:mentorId`, `/mentorship/requests`, `/mentor/profi
 8. **Legacy:** booking, schedule, session, message, review, price and credential tables remain intact but have no active application route.
 9. **Tests:** focused directory-filter tests and `supabase/tests/mentorship_service_rls.sql`; live RLS and email retry behavior require an isolated restore/deployed verification.
 
+### Evidence dossier foundation (backend code complete, live schema pending)
+
+1. **User goal:** turn real experiences into reusable, evidence-based application material instead of rewriting them per application.
+2. **Primary object:** owner-scoped `evidence_items` with attached `evidence_sources`, linked to `application_requirements` and CV entries through dedicated link tables.
+3. **Data/ownership:** all five tables are RLS SELECT-only for the owner; every write flows through a SECURITY DEFINER operation deriving identity from `auth.uid()`. Composite owner-matched foreign keys reject cross-tenant references.
+4. **Reality:** **repository-implemented, live application pending**. `20260903000000_evidence_dossier.sql`, its rollback, RLS test, and the `src/features/evidence/` frontend module (types, zod validation, derived support status, suggestions, API seam, view model) are tracked. Lovable must apply the migration (after the reviewed application-workspace migrations) and regenerate types; no UI consumes the module yet.
+5. **States:** evidence draft/confirmed/archived with derived support status (needs_source/supported); "supported" means the student attached a source and never implies external verification.
+6. **Boundaries:** no backfill of CV/interview content into evidence; suggestions are local, deterministic, and require explicit confirmation; mentors gain no evidence access; no file uploads.
+7. **Tests:** `features/evidence/*.test.ts` (52 local assertions) and `supabase/tests/evidence_dossier_rls.sql`; live RLS requires an isolated restore.
+
 ### Supporting hub and fallback routes
 
 - `/practice`, `/build`, and `/apply` are real static signed-in hubs linking to the requested workflows. Their cards are clickable containers with nested buttons; keyboard activation of the whole card is not equivalent to pointer activation, a known accessibility gap. No focused tests.
