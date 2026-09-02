@@ -15,7 +15,7 @@ BEGIN
 
   SELECT count(*) INTO v_count FROM pg_policies
   WHERE schemaname='public' AND tablename='mentorship_email_outbox'
-    AND roles @> ARRAY['service_role'];
+    AND roles @> ARRAY['service_role']::name[];
   IF v_count=0 THEN RAISE EXCEPTION 'mentorship email outbox service policy missing'; END IF;
 
   SELECT count(*) INTO v_count FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace

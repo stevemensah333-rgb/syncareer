@@ -115,29 +115,6 @@ CREATE POLICY "Service role manages mentorship email outbox"
   ON public.mentorship_email_outbox FOR ALL TO service_role
   USING (true) WITH CHECK (true);
 
-CREATE OR REPLACE FUNCTION public.invalidate_mentor_verification_on_email_change()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
-AS $$
-BEGIN
-  IF lower(coalesce(NEW.email,'')) IS DISTINCT FROM lower(coalesce(OLD.email,'')) THEN
-    UPDATE public.mentor_verifications mv SET
-      email_domain=lower(split_part(NEW.email,'@',2)), status='pending',
-      canonical_company_name=NULL, decided_at=NULL, verified_at=NULL,
-      reviewed_by=NULL, rejection_reason=NULL, submitted_at=now(), updated_at=now()
-    FROM public.counsellor_details cd
-    WHERE mv.mentor_id=cd.id AND cd.user_id=NEW.id;
-    UPDATE public.counsellor_details SET availability_status='paused', updated_at=now()
-    WHERE user_id=NEW.id;
-  END IF;
-  RETURN NEW;
-END;
-$$;
-DROP TRIGGER IF EXISTS invalidate_mentor_verification_email ON auth.users;
-CREATE TRIGGER invalidate_mentor_verification_email
-AFTER UPDATE OF email ON auth.users
-FOR EACH ROW EXECUTE FUNCTION public.invalidate_mentor_verification_on_email_change();
-REVOKE ALL ON FUNCTION public.invalidate_mentor_verification_on_email_change() FROM PUBLIC, anon, authenticated;
-
 CREATE OR REPLACE VIEW public.mentor_profiles_public
 WITH (security_barrier = true) AS
 SELECT
@@ -442,8 +419,6 @@ GRANT EXECUTE ON FUNCTION public.update_my_mentor_profile(text,text,text,text[],
 GRANT EXECUTE ON FUNCTION public.get_admin_mentor_verifications() TO authenticated;
 
 -- Fire-and-forget the service-only outbox processor after each lifecycle event.
--- If the existing email-infrastructure vault secret is temporarily unavailable,
--- the row remains pending and can be retried by invoking the processor later.
 CREATE OR REPLACE FUNCTION public.kick_mentorship_email_outbox()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, vault, extensions
 AS $$
@@ -467,28 +442,6 @@ CREATE TRIGGER mentorship_email_outbox_kick
 AFTER INSERT ON public.mentorship_email_outbox
 FOR EACH STATEMENT EXECUTE FUNCTION public.kick_mentorship_email_outbox();
 REVOKE ALL ON FUNCTION public.kick_mentorship_email_outbox() FROM PUBLIC, anon, authenticated;
-
--- Retry rows that could not be handed to the existing transactional queue.
-DO $$
-BEGIN
-  BEGIN PERFORM cron.unschedule('process-mentorship-email-outbox'); EXCEPTION WHEN OTHERS THEN NULL; END;
-  PERFORM cron.schedule(
-    'process-mentorship-email-outbox',
-    '*/5 * * * *',
-    $job$
-      SELECT net.http_post(
-        url := 'https://fsorkxlcasekndigezlx.supabase.co/functions/v1/process-mentorship-email-outbox',
-        headers := jsonb_build_object(
-          'Authorization', 'Bearer ' || (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name='email_queue_service_role_key' LIMIT 1),
-          'Content-Type', 'application/json'
-        ),
-        body := '{}'::jsonb
-      );
-    $job$
-  );
-EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'Mentorship outbox cron was not installed; deploy it through the supported Lovable scheduler: %', SQLERRM;
-END $$;
 
 -- Existing mentors enter the new system as unverified and remain hidden until review.
 INSERT INTO public.mentor_verifications (mentor_id, email_domain, claimed_organization, status)
