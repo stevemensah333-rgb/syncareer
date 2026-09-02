@@ -15,7 +15,7 @@ Syncareer owns mentor discovery, company-email verification, request consent, li
 
 Apply `20260831120000_mentor_request_service.sql`, deploy `process-mentorship-email-outbox`, deploy the updated transactional email registry, then regenerate Supabase types through Lovable and synchronize both tracked copies with `pnpm schema:types:sync --confirm-lovable-regenerated`.
 
-The migration reuses the existing `email_queue_service_role_key` vault secret to invoke the outbox processor. Failed outbox entries remain retryable; invoke `process-mentorship-email-outbox` with a service-role JWT to retry them. Monitor `mentorship_email_outbox`, the existing transactional queue, and `email_send_log`.
+The outbox is drained event-driven: an insert trigger invokes `process-mentorship-email-outbox` using the existing `email_queue_service_role_key` vault secret. There is no recurring polling job. Failed outbox entries remain retryable; invoke `process-mentorship-email-outbox` with a service-role JWT to retry them. Monitor `mentorship_email_outbox`, the existing transactional queue, and `email_send_log`.
 
 Legacy booking, availability, session, message, credential and review tables are preserved for recovery. Their application routes redirect to the mentor service. Delete those tables only in a later approved migration after confirming zero live dependencies.
 
