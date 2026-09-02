@@ -1,0 +1,9 @@
+-- No automatic rollback is provided.
+--
+-- The forward migration records the permission boundary already present in
+-- Live: public.handle_new_user() is a trigger function and must not be callable
+-- by browser roles. Restoring PUBLIC, anon, or authenticated EXECUTE would
+-- weaken that boundary and is not required by any active application path.
+--
+-- If a future, reviewed architecture deliberately introduces a direct caller,
+-- grant EXECUTE only to that narrowly scoped database role in a new migration.
