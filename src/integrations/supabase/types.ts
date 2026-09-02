@@ -2187,6 +2187,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      initialize_my_profile_from_auth_metadata: { Args: never; Returns: string }
       is_counsellor_owner: { Args: { counsellor_id: string }; Returns: boolean }
       list_mentor_profiles: {
         Args: never
