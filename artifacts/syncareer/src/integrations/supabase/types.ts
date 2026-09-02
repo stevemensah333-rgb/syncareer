@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -133,6 +133,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           work_interest_score_json?: Json
+        }
+        Relationships: []
+      }
+      assistant_requests: {
+        Row: {
+          created_at: string
+          id: string
+          proposal: Json | null
+          request_id: string
+          status: string
+          task: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          proposal?: Json | null
+          request_id: string
+          status?: string
+          task: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          proposal?: Json | null
+          request_id?: string
+          status?: string
+          task?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -300,6 +333,13 @@ export type Database = {
             referencedRelation: "counsellor_profiles_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "counsellor_availability_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_profiles_public"
+            referencedColumns: ["mentor_id"]
+          },
         ]
       }
       counsellor_bookings: {
@@ -364,137 +404,72 @@ export type Database = {
             referencedRelation: "counsellor_profiles_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "counsellor_bookings_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_profiles_public"
+            referencedColumns: ["mentor_id"]
+          },
         ]
-      }
-      counsellor_credentials: {
-        Row: {
-          counsellor_id: string
-          created_at: string
-          credential_type: string
-          document_name: string
-          document_url: string
-          expiry_date: string | null
-          id: string
-          issue_date: string
-          issuer_name: string
-          notes: string | null
-          updated_at: string
-          verification_status: string
-          verified_at: string | null
-          verified_by: string | null
-        }
-        Insert: {
-          counsellor_id: string
-          created_at?: string
-          credential_type: string
-          document_name: string
-          document_url: string
-          expiry_date?: string | null
-          id?: string
-          issue_date: string
-          issuer_name: string
-          notes?: string | null
-          updated_at?: string
-          verification_status?: string
-          verified_at?: string | null
-          verified_by?: string | null
-        }
-        Update: {
-          counsellor_id?: string
-          created_at?: string
-          credential_type?: string
-          document_name?: string
-          document_url?: string
-          expiry_date?: string | null
-          id?: string
-          issue_date?: string
-          issuer_name?: string
-          notes?: string | null
-          updated_at?: string
-          verification_status?: string
-          verified_at?: string | null
-          verified_by?: string | null
-        }
-        Relationships: []
       }
       counsellor_details: {
         Row: {
+          availability_status: string
           avatar_url: string | null
           bio: string | null
-          country_code: string
+          country_code: string | null
           created_at: string
+          current_role: string | null
+          expertise_tags: string[]
           full_name: string
           hiring_price: number | null
           id: string
           location: string | null
           meeting_link: string | null
-          meeting_platform: string | null
-          phone_number: string
+          phone_number: string | null
           specialization: string | null
           updated_at: string
           user_id: string
+          years_experience: number
         }
         Insert: {
+          availability_status?: string
           avatar_url?: string | null
           bio?: string | null
-          country_code: string
+          country_code?: string | null
           created_at?: string
+          current_role?: string | null
+          expertise_tags?: string[]
           full_name: string
           hiring_price?: number | null
           id?: string
           location?: string | null
           meeting_link?: string | null
-          meeting_platform?: string | null
-          phone_number: string
+          phone_number?: string | null
           specialization?: string | null
           updated_at?: string
           user_id: string
+          years_experience?: number
         }
         Update: {
+          availability_status?: string
           avatar_url?: string | null
           bio?: string | null
-          country_code?: string
+          country_code?: string | null
           created_at?: string
+          current_role?: string | null
+          expertise_tags?: string[]
           full_name?: string
           hiring_price?: number | null
           id?: string
           location?: string | null
           meeting_link?: string | null
-          meeting_platform?: string | null
-          phone_number?: string
+          phone_number?: string | null
           specialization?: string | null
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      counsellor_messages: {
-        Row: {
-          booking_id: string
-          created_at: string
-          id: string
-          message: string
-          read_at: string | null
-          sender_id: string
-          sender_type: string
-        }
-        Insert: {
-          booking_id: string
-          created_at?: string
-          id?: string
-          message: string
-          read_at?: string | null
-          sender_id: string
-          sender_type: string
-        }
-        Update: {
-          booking_id?: string
-          created_at?: string
-          id?: string
-          message?: string
-          read_at?: string | null
-          sender_id?: string
-          sender_type?: string
+          years_experience?: number
         }
         Relationships: []
       }
@@ -547,6 +522,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "counsellor_profiles_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counsellor_reviews_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_profiles_public"
+            referencedColumns: ["mentor_id"]
           },
         ]
       }
@@ -614,6 +596,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "counsellor_profiles_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counsellor_sessions_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_profiles_public"
+            referencedColumns: ["mentor_id"]
           },
         ]
       }
@@ -915,6 +904,227 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      mentor_verifications: {
+        Row: {
+          canonical_company_name: string | null
+          claimed_organization: string
+          decided_at: string | null
+          email_domain: string
+          id: string
+          mentor_id: string
+          rejection_reason: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          canonical_company_name?: string | null
+          claimed_organization: string
+          decided_at?: string | null
+          email_domain: string
+          id?: string
+          mentor_id: string
+          rejection_reason?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          canonical_company_name?: string | null
+          claimed_organization?: string
+          decided_at?: string | null
+          email_domain?: string
+          id?: string
+          mentor_id?: string
+          rejection_reason?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_verifications_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: true
+            referencedRelation: "counsellor_booking_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_verifications_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: true
+            referencedRelation: "counsellor_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_verifications_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: true
+            referencedRelation: "counsellor_profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_verifications_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: true
+            referencedRelation: "mentor_profiles_public"
+            referencedColumns: ["mentor_id"]
+          },
+        ]
+      }
+      mentorship_email_outbox: {
+        Row: {
+          attempts: number
+          created_at: string
+          event_key: string
+          id: string
+          last_error: string | null
+          processed_at: string | null
+          recipient_user_id: string
+          request_id: string | null
+          status: string
+          template_data: Json
+          template_name: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          event_key: string
+          id?: string
+          last_error?: string | null
+          processed_at?: string | null
+          recipient_user_id: string
+          request_id?: string | null
+          status?: string
+          template_data?: Json
+          template_name: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          event_key?: string
+          id?: string
+          last_error?: string | null
+          processed_at?: string | null
+          recipient_user_id?: string
+          request_id?: string | null
+          status?: string
+          template_data?: Json
+          template_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_email_outbox_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentorship_requests: {
+        Row: {
+          completed_at: string | null
+          context: string
+          created_at: string
+          deadline: string | null
+          decided_at: string | null
+          goal: string
+          id: string
+          job_application_id: string | null
+          mentee_id: string
+          mentor_id: string
+          request_type: string
+          resume_id: string | null
+          status: string
+          supporting_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          context: string
+          created_at?: string
+          deadline?: string | null
+          decided_at?: string | null
+          goal: string
+          id?: string
+          job_application_id?: string | null
+          mentee_id: string
+          mentor_id: string
+          request_type: string
+          resume_id?: string | null
+          status?: string
+          supporting_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          context?: string
+          created_at?: string
+          deadline?: string | null
+          decided_at?: string | null
+          goal?: string
+          id?: string
+          job_application_id?: string | null
+          mentee_id?: string
+          mentor_id?: string
+          request_type?: string
+          resume_id?: string | null
+          status?: string
+          supporting_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_requests_job_application_id_fkey"
+            columns: ["job_application_id"]
+            isOneToOne: false
+            referencedRelation: "job_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentorship_requests_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "counsellor_booking_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentorship_requests_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "counsellor_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentorship_requests_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "counsellor_profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentorship_requests_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_profiles_public"
+            referencedColumns: ["mentor_id"]
+          },
+          {
+            foreignKeyName: "mentorship_requests_resume_id_fkey"
+            columns: ["resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mock_interviews: {
         Row: {
@@ -1823,6 +2033,13 @@ export type Database = {
             referencedRelation: "counsellor_profiles_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "counsellor_bookings_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_profiles_public"
+            referencedColumns: ["mentor_id"]
+          },
         ]
       }
       counsellor_profiles_public: {
@@ -1864,8 +2081,87 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_profiles_public: {
+        Row: {
+          availability_status: string | null
+          avatar_url: string | null
+          bio: string | null
+          company_name: string | null
+          current_role: string | null
+          email_domain: string | null
+          expertise_tags: string[] | null
+          full_name: string | null
+          mentor_id: string | null
+          verified_at: string | null
+          years_experience: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      admin_mentor_verification: {
+        Args: {
+          p_company_name?: string
+          p_decision: string
+          p_rejection_reason?: string
+          p_verification_id: string
+        }
+        Returns: {
+          canonical_company_name: string | null
+          claimed_organization: string
+          decided_at: string | null
+          email_domain: string
+          id: string
+          mentor_id: string
+          rejection_reason: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          verified_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "mentor_verifications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_mentorship_request: {
+        Args: {
+          p_context: string
+          p_deadline?: string
+          p_goal: string
+          p_job_application_id?: string
+          p_mentor_id: string
+          p_request_type: string
+          p_resume_id?: string
+          p_supporting_url?: string
+        }
+        Returns: {
+          completed_at: string | null
+          context: string
+          created_at: string
+          deadline: string | null
+          decided_at: string | null
+          goal: string
+          id: string
+          job_application_id: string | null
+          mentee_id: string
+          mentor_id: string
+          request_type: string
+          resume_id: string | null
+          status: string
+          supporting_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "mentorship_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1875,17 +2171,15 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_admin_mentor_verifications: { Args: never; Returns: Json }
+      get_mentorship_request_context: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
+      get_my_mentor_profile: { Args: never; Returns: Json }
+      get_my_mentorship_requests: { Args: never; Returns: Json }
       get_my_referral_code: { Args: never; Returns: string }
       get_profile_user_type: { Args: { _id: string }; Returns: string }
-      initialize_my_profile_from_auth_metadata: { Args: never; Returns: string | null }
-      migrate_skills_to_relational: {
-        Args: never
-        Returns: {
-          mapped_count: number
-          source_table: string
-          unmapped_count: number
-        }[]
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1894,6 +2188,28 @@ export type Database = {
         Returns: boolean
       }
       is_counsellor_owner: { Args: { counsellor_id: string }; Returns: boolean }
+      list_mentor_profiles: {
+        Args: never
+        Returns: {
+          availability_status: string | null
+          avatar_url: string | null
+          bio: string | null
+          company_name: string | null
+          current_role: string | null
+          email_domain: string | null
+          expertise_tags: string[] | null
+          full_name: string | null
+          mentor_id: string | null
+          verified_at: string | null
+          years_experience: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "mentor_profiles_public"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1910,6 +2226,92 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      respond_to_mentorship_request: {
+        Args: { p_decision: string; p_request_id: string }
+        Returns: {
+          completed_at: string | null
+          context: string
+          created_at: string
+          deadline: string | null
+          decided_at: string | null
+          goal: string
+          id: string
+          job_application_id: string | null
+          mentee_id: string
+          mentor_id: string
+          request_type: string
+          resume_id: string | null
+          status: string
+          supporting_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "mentorship_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_mentor_verification: {
+        Args: { p_claimed_organization: string }
+        Returns: {
+          canonical_company_name: string | null
+          claimed_organization: string
+          decided_at: string | null
+          email_domain: string
+          id: string
+          mentor_id: string
+          rejection_reason: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          verified_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "mentor_verifications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_mentorship_request_status: {
+        Args: { p_action: string; p_request_id: string }
+        Returns: {
+          completed_at: string | null
+          context: string
+          created_at: string
+          deadline: string | null
+          decided_at: string | null
+          goal: string
+          id: string
+          job_application_id: string | null
+          mentee_id: string
+          mentor_id: string
+          request_type: string
+          resume_id: string | null
+          status: string
+          supporting_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "mentorship_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_my_mentor_profile: {
+        Args: {
+          p_availability_status: string
+          p_bio: string
+          p_current_role: string
+          p_expertise_tags: string[]
+          p_full_name: string
+          p_years_experience: number
+        }
+        Returns: Json
       }
       user_has_counsellor_booking: {
         Args: { counsellor_details_id: string }
