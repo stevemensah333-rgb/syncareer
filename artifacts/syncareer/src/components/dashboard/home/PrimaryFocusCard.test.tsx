@@ -33,10 +33,10 @@ describe('PrimaryFocusCard', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/Continue your application/)).toBeTruthy();
+    expect(screen.getByText(/Current application dossier/)).toBeTruthy();
     expect(screen.getByText('Software Engineer')).toBeTruthy();
     expect(screen.getByText('Acme')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Open tracker/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Open dossier/ })).toBeTruthy();
   });
 
   it('renders saved focus with tailor CV action', () => {

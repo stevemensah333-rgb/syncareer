@@ -34,8 +34,10 @@ import {
   type DossierStage,
 } from '@/components/dossier';
 import { cn } from '@/lib/utils';
+import { OpportunityDetail } from '@/components/opportunities/OpportunityDetail';
+import type { MatchedOpportunityJob } from '@/features/opportunities/opportunity';
 
-type ReviewScreen = 'home' | 'dossier' | 'cv' | 'shell';
+type ReviewScreen = 'home' | 'dossier' | 'cv' | 'opportunities' | 'shell';
 
 const applicationStages: DossierStage[] = [
   { id: 'applied', label: 'Applied', state: 'done' },
@@ -55,9 +57,35 @@ const evidenceItems = [
   },
 ];
 
+const fixtureOpportunity: MatchedOpportunityJob = {
+  id: 'opportunity-01',
+  title: 'Graduate Data Analyst',
+  department: null,
+  location: 'Accra, Ghana',
+  employment_type: 'full-time',
+  salary_min: null,
+  salary_max: null,
+  salary_currency: null,
+  description: 'Support recurring reporting, organize service data, and explain findings to programme teams.',
+  requirements: 'Comfort with SQL, clear written communication, and experience working with structured data.',
+  skills: ['SQL', 'Data reporting', 'Written communication'],
+  created_at: '2026-08-28T09:00:00.000Z',
+  employer_id: null,
+  source: 'company careers',
+  source_url: 'https://example.com/careers/graduate-data-analyst',
+  is_external: true,
+  application_deadline: '2026-09-12T23:59:59.000Z',
+  company_name: 'Cedar Analytics',
+  company_domain: null,
+  experience_level: 'entry',
+  external_id: 'cedar-001',
+  status: 'active',
+  updated_at: '2026-09-01T12:00:00.000Z',
+};
+
 function readScreen(): ReviewScreen {
   const requested = new URLSearchParams(window.location.search).get('screen');
-  return requested === 'dossier' || requested === 'cv' || requested === 'shell' ? requested : 'home';
+  return requested === 'dossier' || requested === 'cv' || requested === 'opportunities' || requested === 'shell' ? requested : 'home';
 }
 
 export function EvidenceDossierReview() {
@@ -96,9 +124,9 @@ export function EvidenceDossierReview() {
             <p className="dossier-eyebrow text-primary">Syncareer design review</p>
             <p className="text-xs text-muted-foreground">Fixture data only · never shipped in the product bundle</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex border border-border bg-background" aria-label="Review screen">
-              {(['home', 'dossier', 'cv'] as const).map((item) => (
+          <div className="hidden min-w-0 flex-wrap items-center justify-end gap-2 sm:flex sm:w-auto">
+            <div className="flex max-w-full overflow-x-auto border border-border bg-background" aria-label="Review screen">
+              {(['home', 'opportunities', 'dossier', 'cv'] as const).map((item) => (
                 <button
                   key={item}
                   type="button"
@@ -115,8 +143,9 @@ export function EvidenceDossierReview() {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-        {screen === 'home' && <HomeFixture onOpenDossier={() => changeScreen('dossier')} />}
+      <main className="mx-auto min-w-0 w-[calc(100%-2rem)] max-w-[1440px] overflow-x-hidden py-5 sm:w-[calc(100%-3rem)] lg:w-[calc(100%-4rem)] lg:py-7">
+        {screen === 'home' && <HomeFixture onOpenDossier={() => changeScreen('dossier')} state={params.get('state') ?? 'active'} />}
+        {screen === 'opportunities' && <MemoryRouter><OpportunityFixture detailOnly={params.get('detail') === 'true'} /></MemoryRouter>}
         {screen === 'dossier' && <DossierFixture onOpenCv={() => changeScreen('cv')} />}
         {screen === 'cv' && <CvFixture onBack={() => changeScreen('dossier')} />}
       </main>
@@ -204,7 +233,7 @@ function MentorShellContent() {
   );
 }
 
-function HomeFixture({ onOpenDossier }: { onOpenDossier: () => void }) {
+function HomeFixture({ onOpenDossier, state }: { onOpenDossier: () => void; state: string }) {
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
@@ -216,10 +245,23 @@ function HomeFixture({ onOpenDossier }: { onOpenDossier: () => void }) {
         <Button type="button" variant="outline"><Search />Find an opportunity</Button>
       </header>
 
+      {state === 'partial' && <RecordState tone="warning" title="Some records are temporarily unavailable" description="Saved opportunities could not be refreshed. Applications that loaded successfully are still shown." action={<Button type="button" variant="outline" size="sm">Retry</Button>} />}
+
+      {state === 'empty' ? (
+        <WorkingDocument label="Empty application desk">
+          <div className="grid border-b border-border md:grid-cols-[8rem_1fr]">
+            <div className="border-b border-border bg-muted/40 px-4 py-5 md:border-b-0 md:border-r"><p className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Desk / Empty</p></div>
+            <div className="p-6 md:p-10"><p className="dossier-eyebrow text-primary">Your next piece of work</p><h2 className="dossier-title mt-3 text-2xl">Start with a real opportunity</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Review a current listing, save it if it is worth investigating, then continue into an application workspace.</p><Button type="button" className="mt-5">Find an opportunity<ChevronRight /></Button></div>
+          </div>
+          <div className="h-20 border-b border-border bg-muted/20" aria-hidden="true" />
+        </WorkingDocument>
+      ) : (
+
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.75fr)]">
         <div className="min-w-0 space-y-6">
           <WorkingDocument label="Current application dossier">
             <DossierHeader
+              titleAs="h2"
               eyebrow="Current dossier / Updated today"
               title="Graduate Data Analyst"
               description="Cedar Analytics · Accra · Entry level"
@@ -257,11 +299,39 @@ function HomeFixture({ onOpenDossier }: { onOpenDossier: () => void }) {
               <RecordRow title="Review mentor reply" eyebrow="Mentorship" detail="Portfolio feedback accepted" status={<Mail className="h-4 w-4 text-primary" />} onClick={() => undefined} />
             </RecordList>
           </section>
-          <RecordState tone="warning" title="One deadline is close" description="A saved opportunity closes in three days. Decide whether it belongs in your application desk." action={<Button type="button" variant="outline" size="sm">Review</Button>} />
+          {(state === 'deadline' || state === 'active') && <RecordState tone="warning" title="One deadline is close" description="A saved opportunity closes in three days. Decide whether it belongs in your application desk." action={<Button type="button" variant="outline" size="sm">Review</Button>} />}
         </aside>
+      </div>
+      )}
+    </div>
+  );
+}
+
+function OpportunityFixture({ detailOnly }: { detailOnly: boolean }) {
+  const detail = <OpportunityDetail job={fixtureOpportunity} saved application={null} savingBookmark={false} tracking={false} onToggleSave={() => undefined} onTrack={() => undefined} />;
+  if (detailOnly) return <section style={{ width: 'calc(100vw - 2rem)' }} className="min-w-0 max-w-full overflow-hidden border border-border bg-card">{detail}</section>;
+
+  return (
+    <div className="space-y-4">
+      <header className="border-b border-border pb-5"><p className="dossier-eyebrow">Opportunity records</p><h1 className="dossier-title mt-1 text-[32px] leading-9">Opportunities</h1><p className="mt-2 text-sm text-muted-foreground">Review current external listings, inspect their source, and carry the right role into an application dossier.</p></header>
+      <section className="dossier-document" aria-label="Opportunity search and filters">
+        <div className="border-b border-border px-4 py-4"><p className="dossier-eyebrow">Opportunity index</p><div className="relative mt-3"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><input aria-label="Search opportunities" className="h-10 w-full border border-input bg-background pl-9 pr-3 text-sm" placeholder="Search titles, organisations, or skills" /></div></div>
+        <div className="flex flex-wrap gap-2 px-4 py-3"><Button type="button" variant="outline" size="sm">All types</Button><Button type="button" variant="outline" size="sm">Any experience</Button><Button type="button" variant="outline" size="sm">Any deadline</Button><span className="ml-auto font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">3 records</span></div>
+      </section>
+      <div className="grid min-h-[650px] overflow-hidden border border-border bg-card lg:grid-cols-[minmax(340px,420px)_1fr]">
+        <section className="divide-y divide-border border-border lg:border-r" aria-label="Opportunity records">
+          <FixtureOpportunityRow selected title="Graduate Data Analyst" company="Cedar Analytics" detail="Accra · Full-time" />
+          <FixtureOpportunityRow title="Research Operations Associate" company="Morrow Labs" detail="Remote · Contract" />
+          <FixtureOpportunityRow title="Junior Product Analyst" company="Northstar Systems" detail="Kumasi · Full-time" />
+        </section>
+        <section className="hidden overflow-y-auto lg:block" aria-label="Selected opportunity">{detail}</section>
       </div>
     </div>
   );
+}
+
+function FixtureOpportunityRow({ title, company, detail, selected = false }: { title: string; company: string; detail: string; selected?: boolean }) {
+  return <button type="button" aria-current={selected || undefined} className={cn('min-h-[132px] w-full border-l-2 p-4 text-left', selected ? 'border-primary bg-secondary' : 'border-transparent')}><p className="dossier-eyebrow">{company}</p><p className="mt-2 text-sm font-semibold">{title}</p><p className="mt-2 text-xs text-muted-foreground">{detail}</p><span className="mt-3 inline-flex border border-border bg-card px-2 py-1 font-mono text-[10px] uppercase">Source retained</span></button>;
 }
 
 function DossierFixture({ onOpenCv }: { onOpenCv: () => void }) {

@@ -1,11 +1,17 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowRight, MapPin, Briefcase, Clock, FileText, Bookmark } from 'lucide-react';
-import { STATUS_COLORS, formatShortDate, getDaysAgo } from '@/features/application-tracker/constants';
-import { statusLabel, ORDERED_STATUSES, nextStepForApplicationStatus, getDaysUntilDeadline, getDeadlineLabel } from './utils';
+import { ArrowRight, BriefcaseBusiness, FileText, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  ApplicationStageRail,
+  DossierHeader,
+  DossierSection,
+  RecordState,
+  WorkingDocument,
+  type DossierStage,
+} from '@/components/dossier';
+import { Button } from '@/components/ui/button';
+import { formatShortDate, getDaysAgo } from '@/features/application-tracker/constants';
+import { buildJourney, statusLabel } from '@/features/application-tracker/workflow';
+import { getDaysUntilDeadline, getDeadlineLabel, nextStepForApplicationStatus } from './utils';
 
 export interface PrimaryJob {
   id: string;
@@ -36,148 +42,175 @@ export interface PrimarySaved {
 }
 
 type Props =
-  | { type: 'application'; data: PrimaryApplication }
-  | { type: 'saved'; data: PrimarySaved }
+  | { type: 'application'; data: PrimaryApplication; cvStarted?: boolean }
+  | { type: 'saved'; data: PrimarySaved; cvStarted?: boolean }
   | { type: 'none' };
+
+function StatusLabel({ children, tone = 'neutral' }: { children: string; tone?: 'neutral' | 'attention' }) {
+  return (
+    <span
+      className={
+        tone === 'attention'
+          ? 'inline-flex min-h-7 items-center border border-warning bg-[hsl(var(--dossier-clay-wash))] px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-warning'
+          : 'inline-flex min-h-7 items-center border border-border bg-muted/50 px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-foreground'
+      }
+    >
+      {children}
+    </span>
+  );
+}
+
+function Fact({ label, value, tone }: { label: string; value: string; tone?: 'warning' | 'success' }) {
+  return (
+    <div
+      className={`border-l-2 px-3 py-2 ${
+        tone === 'warning'
+          ? 'border-l-warning bg-[hsl(var(--dossier-clay-wash))]'
+          : tone === 'success'
+            ? 'border-l-success bg-[hsl(var(--dossier-jade-wash))]'
+            : 'border-l-border bg-muted/30'
+      }`}
+    >
+      <p className="dossier-eyebrow">{label}</p>
+      <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
+    </div>
+  );
+}
 
 export function PrimaryFocusCard(props: Props) {
   const navigate = useNavigate();
 
-  if (props.type === 'none') {
-    return null;
-  }
+  if (props.type === 'none') return null;
 
   if (props.type === 'saved') {
     const job = props.data.job;
     if (!job) return null;
-    const days = getDaysUntilDeadline(job.application_deadline ?? null);
-    const deadlineInfo = getDeadlineLabel(days);
+    const deadlineInfo = getDeadlineLabel(getDaysUntilDeadline(job.application_deadline ?? null));
+
     return (
-      <Card className="border-primary/25 bg-card overflow-hidden">
-        <CardContent className="p-6 md:p-7">
-          <div className="flex flex-col gap-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1 min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Continue your application</p>
-                <h2 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight truncate">
-                  {job.title}
-                </h2>
-                <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
-                  {job.company_name && <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{job.company_name}</span>}
-                  {job.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{job.location}</span>}
-                  {job.employment_type && <span className="capitalize">{job.employment_type}</span>}
-                </div>
-              </div>
-              <Badge variant="secondary" className="shrink-0 text-[11px]">
-                <Bookmark className="h-3 w-3 mr-1" /> Saved
-              </Badge>
+      <WorkingDocument label="Current opportunity decision">
+        <DossierHeader
+          titleAs="h2"
+          eyebrow="Saved opportunity / Decision needed"
+          title={job.title}
+          description="Review the opportunity, tailor your evidence, and decide whether to start an application dossier."
+          metadata={
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {job.company_name && <span className="inline-flex items-center gap-1.5"><BriefcaseBusiness className="h-3.5 w-3.5" />{job.company_name}</span>}
+              {job.location && <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{job.location}</span>}
+              {job.employment_type && <span className="capitalize">{job.employment_type}</span>}
+              <span>Saved {formatShortDate(props.data.created_at)}</span>
             </div>
-
-            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />Saved {formatShortDate(props.data.created_at)}</span>
-              {deadlineInfo && (
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${deadlineInfo.tone === 'urgent' ? 'bg-destructive/10 text-destructive' : deadlineInfo.tone === 'soon' ? 'bg-warning/15 text-warning' : 'bg-muted text-muted-foreground'}`}>
-                  {deadlineInfo.label}
-                </span>
-              )}
-            </div>
-
-            <div className="rounded-lg bg-primary/5 border border-primary/10 p-4 space-y-2">
-              <p className="text-sm font-medium text-foreground">Next: apply to this role</p>
-              <p className="text-[13px] text-muted-foreground leading-relaxed">
-                You saved {job.title} {job.company_name ? `at ${job.company_name}` : ''}. Tailor your CV to the posting and submit your application.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={() => navigate(`/opportunities?job=${encodeURIComponent(props.data.job_id)}`)} className="gap-1.5">
-                Continue application <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" onClick={() => navigate(`/cv-builder?targetRole=${encodeURIComponent(job.title)}`)}>
-                <FileText className="h-4 w-4 mr-1.5" /> Tailor CV
-              </Button>
-            </div>
+          }
+          status={<StatusLabel>Saved</StatusLabel>}
+          actions={
+            <Button onClick={() => navigate(`/opportunities?job=${encodeURIComponent(props.data.job_id)}`)} className="gap-1.5">
+              Review opportunity <ArrowRight className="h-4 w-4" />
+            </Button>
+          }
+        />
+        <DossierSection index="01" label="Decision" title="Prepare before you apply">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Fact label="Record state" value="Saved for review" />
+            <Fact
+              label="Deadline"
+              value={deadlineInfo?.label ?? 'No deadline recorded'}
+              tone={deadlineInfo?.tone === 'urgent' || deadlineInfo?.tone === 'soon' ? 'warning' : undefined}
+            />
+            <Fact label="Base CV" value={props.cvStarted ? 'Available to tailor' : 'Not started'} tone={props.cvStarted ? 'success' : undefined} />
           </div>
-        </CardContent>
-      </Card>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => navigate(`/cv-builder?targetRole=${encodeURIComponent(job.title)}`)}>
+              <FileText className="mr-1.5 h-4 w-4" /> Tailor CV
+            </Button>
+          </div>
+        </DossierSection>
+      </WorkingDocument>
     );
   }
 
-  // application
   const app = props.data;
   const job = app.job;
   const role = job?.title ?? app.job_title_snapshot ?? 'Application';
   const company = job?.company_name ?? app.company_name_snapshot;
-  const next = nextStepForApplicationStatus(app.status, role);
-  const statusIdx = ORDERED_STATUSES.indexOf(app.status);
-  const days = job?.application_deadline ? getDaysUntilDeadline(job.application_deadline) : null;
-  const deadlineInfo = getDeadlineLabel(days);
+  const suggestedNext = nextStepForApplicationStatus(app.status, role);
+  const journey = buildJourney(app.status);
+  const stages: DossierStage[] = journey.steps.map((step) => ({
+    id: step.stage,
+    label: step.label,
+    state: step.state,
+  }));
+  const deadlineInfo = getDeadlineLabel(getDaysUntilDeadline(job?.application_deadline ?? null));
+  const hasRecordedAction = Boolean(app.next_action?.trim());
 
   return (
-    <Card className="border-primary/20 bg-card overflow-hidden">
-      <CardContent className="p-6 md:p-7">
-        <div className="flex flex-col gap-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1.5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Continue your application</p>
-              <h2 className="text-xl md:text-[22px] font-semibold tracking-tight leading-tight truncate">
-                {role}
-              </h2>
-              <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
-                {company && <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" />{company}</span>}
-                {job?.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{job.location}</span>}
-                {job?.employment_type && <span className="capitalize">{job.employment_type}</span>}
-              </div>
-            </div>
-            <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${STATUS_COLORS[app.status] ?? 'bg-muted text-muted-foreground'}`}>
-              {statusLabel(app.status)}
-            </span>
+    <WorkingDocument label="Current application dossier">
+      <DossierHeader
+        titleAs="h2"
+        eyebrow="Current application dossier"
+        title={role}
+        description={company ?? 'Organization not recorded'}
+        metadata={
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {job?.location && <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{job.location}</span>}
+            {job?.employment_type && <span className="capitalize">{job.employment_type}</span>}
+            <span>Applied {formatShortDate(app.created_at)}</span>
+            <span>Updated {getDaysAgo(app.updated_at)}</span>
           </div>
+        }
+        status={<StatusLabel>{statusLabel(app.status)}</StatusLabel>}
+        actions={
+          <Button onClick={() => navigate(`/applications?application=${encodeURIComponent(app.id)}`)} className="gap-1.5">
+            Open dossier <ArrowRight className="h-4 w-4" />
+          </Button>
+        }
+      />
 
-          {/* Where am I — linear status */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-[12px] font-medium text-muted-foreground">Progress</p>
-              <p className="text-[12px] text-muted-foreground">{formatShortDate(app.created_at)} · {getDaysAgo(app.updated_at)}</p>
-            </div>
-            <ol className="flex items-center gap-1.5" aria-label="Application progress">
-              {ORDERED_STATUSES.map((s, idx) => {
-                const isDone = statusIdx >= idx && statusIdx !== -1;
-                const isCurrent = s === app.status;
-                return (
-                  <li key={s} className="flex items-center gap-1.5 flex-1">
-                    <div className={`h-1.5 flex-1 rounded-full ${isDone ? 'bg-primary' : 'bg-muted'} ${isCurrent ? 'ring-2 ring-primary/20' : ''}`} />
-                  </li>
-                );
-              })}
-            </ol>
-            <div className="flex justify-between text-[11px] text-muted-foreground">
-              <span>Applied</span>
-              <span>Offer</span>
-            </div>
-            {deadlineInfo && (
-              <span className={`inline-flex mt-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${deadlineInfo.tone === 'urgent' ? 'bg-destructive/10 text-destructive' : deadlineInfo.tone === 'soon' ? 'bg-warning/15 text-warning' : 'bg-muted text-muted-foreground'}`}>
-                {deadlineInfo.label}
-              </span>
-            )}
-          </div>
+      <ApplicationStageRail stages={stages} />
 
-          {/* What should I do next */}
-          <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
-            <p className="text-[13px] font-semibold text-foreground">{app.next_action || next.title}</p>
-            <p className="text-[13px] leading-relaxed text-muted-foreground">{app.next_action ? (app.next_action_due ? `Due ${formatShortDate(app.next_action_due)}` : 'No due date set') : next.description}</p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={() => navigate(`/applications?application=${encodeURIComponent(app.id)}`)} className="gap-1.5">
-              Open tracker <ArrowRight className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" onClick={() => navigate(next.href)}>
-              {next.ctaLabel}
-            </Button>
-          </div>
+      {journey.unknownStatus && (
+        <div className="border-b border-border p-4 sm:px-6">
+          <RecordState
+            tone="warning"
+            title="This application has an unfamiliar status"
+            description="The stored status is shown as recorded. Syncareer has not inferred any missing application stages."
+          />
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      <DossierSection
+        index="01"
+        label={hasRecordedAction ? 'Recorded next action' : 'Suggested next action'}
+        title={hasRecordedAction ? app.next_action!.trim() : suggestedNext.title}
+        description={
+          hasRecordedAction
+            ? app.next_action_due
+              ? `Due ${formatShortDate(app.next_action_due)}`
+              : 'No due date recorded.'
+            : suggestedNext.description
+        }
+      >
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Fact label="Application stage" value={statusLabel(app.status)} />
+          <Fact
+            label="Deadline"
+            value={deadlineInfo?.label ?? 'No deadline recorded'}
+            tone={deadlineInfo?.tone === 'urgent' || deadlineInfo?.tone === 'soon' ? 'warning' : undefined}
+          />
+          <Fact
+            label="Application CV"
+            value={app.resume_id ? 'Linked to this application' : props.cvStarted ? 'Base CV available' : 'Not started'}
+            tone={app.resume_id ? 'success' : undefined}
+          />
+        </div>
+        {!hasRecordedAction && (
+          <div className="mt-4">
+            <Button variant="outline" onClick={() => navigate(suggestedNext.href)}>
+              {suggestedNext.ctaLabel}
+            </Button>
+          </div>
+        )}
+      </DossierSection>
+    </WorkingDocument>
   );
 }

@@ -18,13 +18,13 @@ export function DeadlinePill({ state, variant = 'row' }: DeadlinePillProps) {
 
   const base =
     variant === 'row'
-      ? 'text-xs px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1'
-      : 'text-sm px-2.5 py-1 rounded-full font-medium inline-flex items-center gap-1.5';
+      ? 'min-h-6 border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.04em] inline-flex items-center gap-1'
+      : 'min-h-7 border px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.04em] inline-flex items-center gap-1.5';
   const icon = variant === 'row' ? 'h-3 w-3' : 'h-3.5 w-3.5';
 
   if (state.kind === 'passed') {
     return (
-      <span className={cn(base, 'bg-destructive/10 text-destructive border border-destructive/30')}>
+      <span className={cn(base, 'border-destructive/30 bg-destructive/10 text-destructive')}>
         <CalendarX2 className={icon} />
         {state.label}
       </span>
@@ -33,7 +33,7 @@ export function DeadlinePill({ state, variant = 'row' }: DeadlinePillProps) {
 
   if (deadlineIsUrgent(state)) {
     return (
-      <span className={cn(base, 'bg-destructive/10 text-destructive')}>
+      <span className={cn(base, 'border-destructive/30 bg-destructive/10 text-destructive')}>
         <AlertCircle className={icon} />
         {state.label}
       </span>
@@ -41,7 +41,7 @@ export function DeadlinePill({ state, variant = 'row' }: DeadlinePillProps) {
   }
 
   return (
-    <span className={cn(base, 'bg-muted text-muted-foreground')}>
+    <span className={cn(base, 'border-border bg-muted text-muted-foreground')}>
       <CalendarClock className={icon} />
       {state.label}
     </span>

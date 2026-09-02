@@ -1,7 +1,6 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, FileText, Mic, Briefcase, CheckCircle2 } from 'lucide-react';
+import { FileText, Mic, Briefcase, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { RecordList, RecordRow } from '@/components/dossier';
 
 export interface NextAction {
   id: string;
@@ -23,31 +22,25 @@ export function NextActionsList({ actions }: { actions: NextAction[] }) {
   if (actions.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-[14px] font-semibold">Next actions</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0 space-y-2">
+    <section className="dossier-document" aria-labelledby="next-actions-title">
+      <header className="border-b border-border px-4 py-4">
+        <h2 id="next-actions-title" className="text-sm font-semibold">Action docket</h2>
+      </header>
+      <RecordList className="border-y-0" label="Next actions">
         {actions.map(action => {
           const Icon = ICON_MAP[action.icon];
           return (
-            <button
+            <RecordRow
               key={action.id}
+              eyebrow="Next action"
+              title={action.title}
+              detail={action.description}
               onClick={() => navigate(action.href)}
-              className="w-full text-left rounded-lg border bg-card p-3 flex items-start gap-3 hover:border-primary/30 hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150"
-            >
-              <span className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                <Icon className="h-4 w-4 text-muted-foreground" />
-              </span>
-              <span className="flex-1 min-w-0">
-                <span className="block text-[13px] font-medium text-foreground">{action.title}</span>
-                <span className="block text-[12px] text-muted-foreground mt-0.5 leading-snug">{action.description}</span>
-              </span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground/50 shrink-0 mt-1" />
-            </button>
+              status={<span className="flex h-8 w-8 shrink-0 items-center justify-center border border-border bg-muted"><Icon className="h-4 w-4 text-muted-foreground" /></span>}
+            />
           );
         })}
-      </CardContent>
-    </Card>
+      </RecordList>
+    </section>
   );
 }

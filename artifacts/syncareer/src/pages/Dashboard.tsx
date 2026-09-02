@@ -14,10 +14,13 @@ import { ACTIVE_STATUSES, scoreResume, getDaysUntilDeadline } from '@/components
 import { SavedDecisions } from '@/components/dashboard/home/SavedDecisions';
 import { applicationCompany, applicationTitle, dashboardDataState, selectPrimaryFocus, type DashboardApplication, type DashboardSavedJob } from '@/features/dashboard/continuation';
 import { loadDashboardData, type DashboardLoadError } from '@/features/dashboard/data';
-import { AlertCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { RecordState } from '@/components/dossier';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { profile, studentDetails, loading: profileLoading } = useUserProfile();
   const userId = useSupabaseUserId();
 
@@ -186,31 +189,43 @@ export default function Dashboard() {
   return (
     <StudentLayout title="">
       <div className="space-y-6">
-        {/* Greeting */}
-        <Greeting fullName={profile?.full_name ?? null} major={major} school={university} />
+        <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <Greeting fullName={profile?.full_name ?? null} major={major} school={university} />
+          <Button variant="outline" onClick={() => navigate('/opportunities')} className="self-start gap-1.5 sm:self-auto">
+            Find an opportunity <ArrowRight className="h-4 w-4" />
+          </Button>
+        </header>
 
         {loading ? (
-          <div className="grid gap-4">
-            <div className="h-40 animate-pulse rounded-lg bg-muted" />
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="md:col-span-2 space-y-4">
-                <div className="h-56 animate-pulse rounded-lg bg-muted" />
-                <div className="h-72 animate-pulse rounded-lg bg-muted" />
+          <div className="grid gap-6" aria-busy="true" aria-label="Loading application desk">
+            <div className="dossier-document overflow-hidden">
+              <div className="h-36 animate-pulse border-b border-border bg-muted/60 motion-reduce:animate-none" />
+              <div className="h-12 animate-pulse border-b border-border bg-muted/40 motion-reduce:animate-none" />
+              <div className="h-44 animate-pulse bg-muted/25 motion-reduce:animate-none" />
+            </div>
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.8fr)]">
+              <div className="space-y-6">
+                <div className="h-64 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none" />
+                <div className="h-48 animate-pulse border border-border bg-muted/30 motion-reduce:animate-none" />
               </div>
-              <div className="space-y-4">
-                <div className="h-40 animate-pulse rounded-lg bg-muted" />
-                <div className="h-48 animate-pulse rounded-lg bg-muted" />
+              <div className="space-y-6">
+                <div className="h-44 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none" />
+                <div className="h-52 animate-pulse border border-border bg-muted/30 motion-reduce:animate-none" />
               </div>
             </div>
           </div>
         ) : (
           <div className="space-y-6">
-            {loadErrors.length > 0 && <div role="alert" className="flex flex-col gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex gap-2"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" /><span>{coreDataUnavailable ? 'Your current work could not be loaded.' : `Some dashboard data could not be loaded: ${loadErrors.join(', ')}. Available sections are still shown.`}</span></div>
-              <Button size="sm" variant="outline" onClick={() => setReloadKey((value) => value + 1)}>Retry</Button>
-            </div>}
+            {loadErrors.length > 0 && (
+              <RecordState
+                tone={coreDataUnavailable ? 'error' : 'warning'}
+                title={coreDataUnavailable ? 'Your current work could not be loaded' : 'Some records are temporarily unavailable'}
+                description={coreDataUnavailable ? 'Retry to load your applications and saved opportunities.' : `Unavailable sources: ${loadErrors.join(', ')}. The records that loaded successfully are still shown.`}
+                action={<Button size="sm" variant="outline" onClick={() => setReloadKey((value) => value + 1)}>Retry</Button>}
+              />
+            )}
 
-            {!coreDataUnavailable && (primaryFocus.type === 'start' ? <EmptyState hasApplicationHistory={applications.length > 0} showAssessment={!major && !assessmentDone} /> : <PrimaryFocusCard {...primaryFocus} />)}
+            {!coreDataUnavailable && (primaryFocus.type === 'start' ? <EmptyState hasApplicationHistory={applications.length > 0} showAssessment={!major && !assessmentDone} /> : <PrimaryFocusCard {...primaryFocus} cvStarted={cvCompletion > 0} />)}
 
             {!coreDataUnavailable && <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.8fr)]">
               <div className="min-w-0 space-y-6">

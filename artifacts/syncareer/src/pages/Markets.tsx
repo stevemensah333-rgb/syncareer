@@ -1,6 +1,5 @@
 import React, { memo, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,9 +8,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Briefcase, MapPin, Search, Bookmark, BookmarkCheck, X, BarChart3,
-  AlertCircle, RefreshCw, Lock, AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
@@ -29,7 +27,6 @@ import {
   type OpportunityJob,
 } from '@/features/opportunities/opportunity';
 import { classifyTrackerError, startTrackingApplication } from '@/features/application-tracker/tracking';
-import { STATUS_COLORS } from '@/features/application-tracker/constants';
 import { statusLabel, type ApplicationRef } from '@/features/application-tracker/workflow';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import {
@@ -37,6 +34,7 @@ import {
   rankAndDeduplicateOpportunities,
   type OpportunityProfileSignals,
 } from '@/features/opportunities/ranking';
+import { RecordState } from '@/components/dossier';
 
 const EMPLOYMENT_TYPES = ['all', 'full-time', 'part-time', 'internship', 'contract', 'remote'];
 const EXPERIENCE_LEVELS = ['all', 'entry', 'mid', 'senior'];
@@ -85,7 +83,7 @@ const OpportunityRow = memo(function OpportunityRow({
   const provenance = getProvenanceFacts(job);
   const freshness = getIngestionFreshness(job.updated_at);
   return (
-    <div className="relative">
+    <div className="relative bg-card">
       <OpportunityPreview job={job} saved={saved} application={application}>
         <button
           onClick={() => onSelect(job.id)}
@@ -93,8 +91,8 @@ const OpportunityRow = memo(function OpportunityRow({
           data-opportunity-id={job.id}
           aria-label={`${job.title}${organisation ? ` at ${organisation}` : ''}. Open details.`}
           aria-current={isSelected ? 'true' : undefined}
-          className={`w-full text-left p-4 pr-12 border-l-4 transition-colors ${
-            isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50'
+          className={`w-full min-h-[132px] border-l-2 p-4 pr-12 text-left transition-colors duration-150 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none ${
+            isSelected ? 'border-primary bg-secondary' : 'border-transparent hover:border-primary/40 hover:bg-muted/50'
           }`}
         >
           <div className="flex items-start gap-3">
@@ -118,16 +116,12 @@ const OpportunityRow = memo(function OpportunityRow({
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 {deadline.kind === 'none' ? <span className="text-xs text-muted-foreground">Deadline not provided</span> : <DeadlinePill state={deadline} />}
                 {job.is_external && (
-                  <Badge variant="outline" className="text-[10px] capitalize px-1.5 py-0">
-                    via {provenance.sourceLabel}
-                  </Badge>
+                  <span className="border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] capitalize">via {provenance.sourceLabel}</span>
                 )}
                 <span className={`text-[10px] ${freshness.kind === 'stale' ? 'text-warning' : 'text-muted-foreground'}`}>{freshness.label}</span>
                 {application && (
                   <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                      STATUS_COLORS[application.status] ?? 'bg-muted text-muted-foreground'
-                    }`}
+                    className="border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.04em] text-foreground"
                   >
                     Tracked · {statusLabel(application.status)}
                   </span>
@@ -537,10 +531,18 @@ const Opportunities = () => {
   };
 
   return (
-    <PageLayout title="Latest opportunities" description="Active external listings are ordered by fit when profile details are available. Confirm details on the original source.">
+    <PageLayout title="Opportunities" description="Review current external listings, inspect their source, and carry the right role into an application dossier.">
       {/* Search + filter bar */}
-      <div className="space-y-3 mb-4">
-        <div className="flex gap-2">
+      <section className="dossier-document mb-4" aria-label="Opportunity search and filters">
+        <div className="border-b border-border px-4 py-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="dossier-eyebrow">Opportunity index</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">Search and narrow the working list</p>
+            </div>
+            <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{filtered.length} {filtered.length === 1 ? 'record' : 'records'}</span>
+          </div>
+          <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -570,8 +572,9 @@ const Opportunities = () => {
             <BarChart3 className="h-4 w-4" />
             Market Intelligence
           </Button>
+          </div>
         </div>
-        <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex flex-wrap items-center gap-2 px-4 py-3">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger aria-label="Filter by opportunity type" className="w-auto min-w-[130px]">
               <SelectValue />
@@ -614,10 +617,8 @@ const Opportunities = () => {
               Reset ({activeFilterCount})
             </Button>
           )}
-          <div className="ml-auto text-sm text-muted-foreground">
-            {filtered.length} {filtered.length === 1 ? 'job' : 'jobs'}
-          </div>
         </div>
+        <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         {rankingSummary && tab === 'all' ? (
           <p role="status" className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <BarChart3 className="h-3.5 w-3.5 shrink-0" />
@@ -626,29 +627,33 @@ const Opportunities = () => {
           </p>
         ) : null}
         <Tabs value={tab} onValueChange={(v) => setTab(v as 'all' | 'saved')}>
-          <TabsList>
-            <TabsTrigger value="all">Latest</TabsTrigger>
-            <TabsTrigger value="saved" className="gap-1.5">
+          <TabsList className="rounded-none border border-border bg-muted/50 p-0">
+            <TabsTrigger value="all" className="rounded-none">Latest</TabsTrigger>
+            <TabsTrigger value="saved" className="gap-1.5 rounded-none">
               <Bookmark className="h-3.5 w-3.5" />
               Saved ({savedIds.size})
             </TabsTrigger>
           </TabsList>
         </Tabs>
-      </div>
+        </div>
+      </section>
 
       {partialWarning ? (
-        <div role="status" className="mb-3 flex flex-col gap-2 rounded-lg border border-warning/30 bg-warning/5 px-3 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <span className="flex items-start gap-2 text-muted-foreground"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />{partialWarning}</span>
-          <Button variant="outline" size="sm" onClick={load}>Refresh state</Button>
-        </div>
+        <RecordState
+          tone="warning"
+          title="Saved and tracked state may be out of date"
+          description={partialWarning}
+          action={<Button variant="outline" size="sm" onClick={load}>Refresh state</Button>}
+          className="mb-3"
+        />
       ) : null}
 
       {isLoading ? (
-        <div className="grid lg:grid-cols-[minmax(340px,420px)_1fr] gap-4 h-[calc(100vh-280px)] min-h-[500px]">
-          <Card className="p-4 space-y-4" aria-busy="true" aria-label="Loading opportunities">
+        <div className="grid min-h-[500px] border border-border bg-card lg:h-[calc(100vh-300px)] lg:grid-cols-[minmax(340px,420px)_1fr]" aria-busy="true" aria-label="Loading opportunities">
+          <div className="space-y-4 border-border p-4 lg:border-r">
             {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-start gap-3">
-                <Skeleton className="h-10 w-10 rounded-md" />
+              <div key={i} className="flex items-start gap-3 border-b border-border pb-4">
+                <Skeleton className="h-10 w-10 rounded-sm" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-2/3" />
                   <Skeleton className="h-3 w-1/3" />
@@ -656,43 +661,27 @@ const Opportunities = () => {
                 </div>
               </div>
             ))}
-          </Card>
-          <Card className="hidden lg:block p-6 space-y-4">
+          </div>
+          <div className="hidden space-y-4 p-6 lg:block">
             <Skeleton className="h-7 w-1/2" />
             <Skeleton className="h-4 w-1/3" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
-          </Card>
+          </div>
         </div>
       ) : loadStatus === 'error' ? (
-        <Card className="p-10 text-center max-w-xl mx-auto" role="alert">
-          {loadError?.category === 'permission' || loadError?.category === 'auth-expired' ? (
-            <Lock className="h-10 w-10 mx-auto mb-3 text-muted-foreground/60" />
-          ) : (
-            <AlertCircle className="h-10 w-10 mx-auto mb-3 text-destructive/70" />
-          )}
-          <h2 className="font-semibold text-lg mb-1">
-            {loadError?.category === 'permission'
-              ? 'You do not have access to opportunities'
-              : loadError?.category === 'auth-expired'
-                ? 'Your session has expired'
-                : 'Opportunities could not be loaded'}
-          </h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            {loadError?.userMessage ?? 'Something went wrong while loading opportunities.'}
-          </p>
-          {loadError?.category !== 'permission' && (
-            <Button onClick={load} variant="outline" className="gap-1.5">
-              <RefreshCw className="h-4 w-4" />
-              Try again
-            </Button>
-          )}
-        </Card>
+        <RecordState
+          tone="error"
+          title={loadError?.category === 'permission' ? 'You do not have access to opportunities' : loadError?.category === 'auth-expired' ? 'Your session has expired' : 'Opportunities could not be loaded'}
+          description={loadError?.userMessage ?? 'Something went wrong while loading opportunities.'}
+          action={loadError?.category !== 'permission' ? <Button onClick={load} variant="outline" className="gap-1.5"><RefreshCw className="h-4 w-4" />Try again</Button> : undefined}
+          className="mx-auto max-w-2xl"
+        />
       ) : (
         <>
           {/* Two-pane layout */}
-          <div className="grid lg:grid-cols-[minmax(340px,420px)_1fr] gap-4 h-[calc(100vh-280px)] min-h-[500px]">
-            <Card className="overflow-hidden flex flex-col">
+          <div className="grid min-h-[500px] overflow-hidden border border-border bg-card lg:h-[calc(100vh-300px)] lg:grid-cols-[minmax(340px,420px)_1fr]">
+            <section className="flex min-h-0 flex-col border-border lg:border-r" aria-label="Opportunity records">
               <div
                 ref={listRef}
                 className="flex-1 overflow-y-auto divide-y"
@@ -700,16 +689,13 @@ const Opportunities = () => {
                 onScroll={(event) => sessionStorage.setItem(SCROLL_STORAGE_KEY, String(event.currentTarget.scrollTop))}
               >
                 {filtered.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    <Briefcase className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                    <p className="font-medium text-sm text-foreground">{emptyState().title}</p>
-                    <p className="text-sm mt-1">{emptyState().body}</p>
-                    {activeFilterCount > 0 && (
-                      <Button variant="ghost" size="sm" onClick={resetFilters} className="mt-3 gap-1">
-                        <X className="h-3 w-3" />
-                        Reset filters
-                      </Button>
-                    )}
+                  <div className="p-4">
+                    <RecordState
+                      tone="empty"
+                      title={emptyState().title}
+                      description={emptyState().body}
+                      action={activeFilterCount > 0 ? <Button variant="outline" size="sm" onClick={resetFilters} className="gap-1"><X className="h-3 w-3" />Reset filters</Button> : undefined}
+                    />
                   </div>
                 ) : (
                   <>
@@ -742,8 +728,8 @@ const Opportunities = () => {
                   </>
                 )}
               </div>
-            </Card>
-            <Card className="hidden lg:block overflow-hidden">
+            </section>
+            <section className="hidden min-h-0 overflow-hidden lg:block" aria-label="Selected opportunity">
               <div className="h-full overflow-y-auto">
                 {selected ? (
                   <OpportunityDetail
@@ -762,7 +748,7 @@ const Opportunities = () => {
                   </div>
                 )}
               </div>
-            </Card>
+            </section>
           </div>
 
           {/* Mobile / touch detail sheet (bottom drawer) */}

@@ -13,9 +13,7 @@ import {
   MessageSquare,
   ShieldQuestion,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   experienceLevelLabel,
   formatPostedAgo,
@@ -35,6 +33,7 @@ import { ContextualAssistantDrawer } from '@/components/assistant/ContextualAssi
 import { RequirementEvidenceActions } from '@/components/learning/RequirementEvidenceActions';
 import { buildEvidenceHref } from '@/features/learning/requirementLearning';
 import { buildOpportunityContext } from '@/features/cv-builder/guidance';
+import { RecordState } from '@/components/dossier';
 
 interface OpportunityDetailProps {
   job: MatchedOpportunityJob;
@@ -58,7 +57,7 @@ function formatSalary(min: number | null, max: number | null, currency: string |
 
 function FactRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-0.5 border-l-2 border-border pl-3">
       <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
       <dd className="text-sm">{value}</dd>
     </div>
@@ -107,7 +106,7 @@ export function OpportunityDetail({
   const opportunityReturnTo = `/opportunities?job=${encodeURIComponent(job.id)}`;
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="min-w-0 max-w-full space-y-6 overflow-x-hidden p-4 sm:p-6">
       {onBack ? (
         <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 gap-1.5 lg:hidden">
           <ArrowLeft className="h-4 w-4" />
@@ -115,10 +114,11 @@ export function OpportunityDetail({
         </Button>
       ) : null}
       {/* Header: role, organisation, key facts */}
-      <div className="flex items-start gap-4">
+      <header className="flex items-start gap-4 border-b border-border pb-6">
         <CompanyLogo job={job} size={56} />
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl font-bold leading-tight">{job.title}</h2>
+          <p className="dossier-eyebrow text-primary">Opportunity record</p>
+          <h2 className="dossier-title mt-1 text-xl leading-7 sm:text-2xl sm:leading-8">{job.title}</h2>
           <p className="text-sm text-muted-foreground mt-1">
             {organisation ?? 'Organisation not specified'}
             {posted ? ` · Added to Syncareer ${posted}` : ''}
@@ -148,9 +148,9 @@ export function OpportunityDetail({
               </span>
             )}
             {application && (
-              <Badge variant="secondary" className="text-xs">
+              <span className="border border-border bg-muted px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.06em] text-foreground">
                 In tracker · {statusLabel(application.status)}
-              </Badge>
+              </span>
             )}
           </div>
         </div>
@@ -170,19 +170,14 @@ export function OpportunityDetail({
             <Bookmark className="h-5 w-5" />
           )}
         </Button>
-      </div>
+      </header>
 
       {/* Expired deadline honesty banner */}
       {deadline.kind === 'passed' && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-muted-foreground">
-          The deadline listed on this posting has passed. The application may no longer be open —
-          check the original posting before spending time on an application.
-        </div>
+        <RecordState tone="error" title="The listed deadline has passed" description="The application may no longer be open. Check the original posting before spending time on an application." />
       )}
       {freshness.kind === 'stale' && (
-        <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm text-muted-foreground">
-          {freshness.label}. Confirm that the role is still open on the original source.
-        </div>
+        <RecordState tone="warning" title="This source record may be stale" description={`${freshness.label}. Confirm that the role is still open on the original source.`} />
       )}
 
       {/* Primary actions */}
@@ -211,9 +206,7 @@ export function OpportunityDetail({
           </p>
         </div>
       ) : cta === 'source-unavailable' ? (
-        <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-          The original source link is unavailable, so Syncareer cannot send you to the application page. Try finding the role directly on {provenance.sourceLabel}.
-        </div>
+        <RecordState tone="warning" title="Original source unavailable" description={`Syncareer cannot send you to the application page. Try finding the role directly on ${provenance.sourceLabel}.`} />
       ) : (
         <Button className="w-full gap-2" onClick={onTrack} disabled={tracking}>
           {tracking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Briefcase className="h-4 w-4" />}
@@ -249,9 +242,9 @@ export function OpportunityDetail({
       </div>
 
       {/* Eligibility facts — no inferred match score */}
-      <Card>
-        <CardContent className="p-4 space-y-3">
-          <p className="font-semibold text-sm">Role facts</p>
+      <section className="border-t border-border pt-5" aria-labelledby="role-facts-title">
+        <div className="space-y-4">
+          <div><p className="dossier-eyebrow">01 / Brief</p><h3 id="role-facts-title" className="dossier-title mt-1 text-lg leading-6">Role facts</h3></div>
           <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <FactRow label="Level" value={level ?? 'Not provided'} />
             <FactRow label="Type" value={job.employment_type || 'Not provided'} />
@@ -269,16 +262,17 @@ export function OpportunityDetail({
               </div>
             </div>
           ) : <p className="text-sm text-muted-foreground">No skills were provided by the source.</p>}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {/* Provenance — never claims verification */}
-      <Card>
-        <CardContent className="p-4 space-y-2">
-          <p className="font-semibold text-sm flex items-center gap-1.5">
+      <section className="border-t border-border pt-5" aria-labelledby="source-details-title">
+        <div className="space-y-3">
+          <p className="dossier-eyebrow">02 / Provenance</p>
+          <h3 id="source-details-title" className="dossier-title flex items-center gap-1.5 text-lg leading-6">
             <ShieldQuestion className="h-4 w-4 text-muted-foreground" />
             Source details
-          </p>
+          </h3>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
             <FactRow label="Source" value={provenance.sourceLabel} />
             <FactRow
@@ -304,19 +298,21 @@ export function OpportunityDetail({
             <FactRow label="Ingestion freshness" value={freshness.label} />
           </dl>
           <p className="text-xs text-muted-foreground leading-relaxed">{PROVENANCE_NOTE}</p>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {/* Description & requirements */}
-      <div>
-        <h4 className="font-semibold text-sm mb-2">Description</h4>
+      <section className="border-t border-border pt-5" aria-labelledby="opportunity-description-title">
+        <p className="dossier-eyebrow">03 / Source text</p>
+        <h3 id="opportunity-description-title" className="dossier-title mb-2 mt-1 text-lg leading-6">Description</h3>
         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.description}</p>
-      </div>
+      </section>
       {job.requirements ? (
-        <div>
-          <h4 className="font-semibold text-sm mb-2">Requirements</h4>
+        <section className="border-t border-border pt-5" aria-labelledby="opportunity-requirements-title">
+          <p className="dossier-eyebrow">04 / Requirements</p>
+          <h3 id="opportunity-requirements-title" className="dossier-title mb-2 mt-1 text-lg leading-6">Requirements</h3>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.requirements}</p>
-        </div>
+        </section>
       ) : (
         <p className="text-sm text-muted-foreground">No requirements were listed for this posting.</p>
       )}

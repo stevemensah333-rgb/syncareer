@@ -18,18 +18,13 @@ export function Greeting({ fullName, major, school }: GreetingProps) {
   const time = getTimeOfDay();
 
   return (
-    <div className="flex flex-col gap-1">
-      <h2 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.02em] leading-tight text-foreground">
-        {firstName ? (
-          <>
-            {time}, <span className="text-primary">{firstName}</span>
-          </>
-        ) : (
-          <>{time}</>
-        )}
-      </h2>
+    <div className="min-w-0">
+      <p className="dossier-eyebrow">{firstName ? `${time}, ${firstName}` : time}</p>
+      <h1 className="dossier-title mt-1 text-[26px] leading-8 text-foreground sm:text-[32px] sm:leading-9">
+        Application Desk
+      </h1>
       {major && (
-        <p className="text-[13px] text-muted-foreground">
+        <p className="mt-1 text-[13px] text-muted-foreground">
           {major}
           {school ? ` · ${school}` : ''}
         </p>

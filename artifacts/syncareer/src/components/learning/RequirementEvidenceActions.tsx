@@ -75,7 +75,7 @@ export function RequirementEvidenceActions({
 
   return (
     <div
-      className="space-y-3 rounded-lg border bg-card p-3"
+      className="space-y-3 border-l-2 border-border bg-muted/20 p-3"
       data-testid={`requirement-${requirement}`}
     >
       <div>
@@ -144,7 +144,7 @@ export function RequirementEvidenceActions({
       </div>
 
       {decision === "learning" && (
-        <div role="status" className="rounded-md bg-muted p-3 text-sm">
+        <div role="status" className="border-l-2 border-border bg-muted p-3 text-sm">
           Keep this as a learning target until you have truthful evidence. A
           practice idea can help you create that evidence.
         </div>
@@ -152,7 +152,7 @@ export function RequirementEvidenceActions({
       {decision === "practice" && (
         <div
           role="status"
-          className="space-y-2 rounded-md bg-primary/5 p-3 text-sm"
+          className="space-y-2 border-l-2 border-primary bg-secondary p-3 text-sm"
         >
           <p className="flex items-center gap-2 font-medium">
             <Lightbulb className="h-4 w-4 text-primary" />
@@ -175,7 +175,7 @@ export function RequirementEvidenceActions({
             {resources.map((resource) => (
               <article
                 key={resource.url}
-                className="rounded-md bg-muted p-3 text-sm"
+                className="border-l-2 border-border bg-muted p-3 text-sm"
               >
                 <p className="font-medium">{resource.title}</p>
                 <p>
@@ -203,7 +203,7 @@ export function RequirementEvidenceActions({
             ))}
           </div>
         ) : (
-          <div role="status" className="rounded-md bg-muted p-3 text-sm">
+          <div role="status" className="border-l-2 border-border bg-muted p-3 text-sm">
             No maintained external resource is configured for this requirement
             yet. Syncareer will not send you to an unchecked search result. Try
             the practice/project idea instead.
