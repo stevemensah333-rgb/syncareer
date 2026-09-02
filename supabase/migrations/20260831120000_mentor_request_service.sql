@@ -2,7 +2,7 @@
 -- Legacy counsellor booking/session data is intentionally preserved.
 
 ALTER TABLE public.counsellor_details
-  ADD COLUMN IF NOT EXISTS current_role text,
+  ADD COLUMN IF NOT EXISTS "current_role" text,
   ADD COLUMN IF NOT EXISTS expertise_tags text[] NOT NULL DEFAULT '{}',
   ADD COLUMN IF NOT EXISTS years_experience integer NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS availability_status text NOT NULL DEFAULT 'paused';
@@ -139,7 +139,7 @@ SELECT
   cd.full_name,
   cd.avatar_url,
   cd.bio,
-  cd.current_role,
+  cd."current_role",
   cd.expertise_tags,
   cd.years_experience,
   cd.availability_status,
@@ -340,7 +340,7 @@ RETURNS jsonb LANGUAGE sql SECURITY DEFINER SET search_path = public
 AS $$
   SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x.created_at DESC), '[]'::jsonb)
   FROM (
-    SELECT mr.*, cd.full_name AS mentor_name, cd.current_role AS mentor_role,
+    SELECT mr.*, cd.full_name AS mentor_name, cd."current_role" AS mentor_role,
       mv.canonical_company_name AS mentor_company,
       p.full_name AS mentee_name,
       r.title AS resume_title,
@@ -361,7 +361,7 @@ CREATE OR REPLACE FUNCTION public.get_my_mentor_profile()
 RETURNS jsonb LANGUAGE sql SECURITY DEFINER SET search_path = public
 AS $$
   SELECT to_jsonb(x) FROM (
-    SELECT cd.id AS mentor_id, cd.full_name, cd.avatar_url, cd.bio, cd.current_role,
+    SELECT cd.id AS mentor_id, cd.full_name, cd.avatar_url, cd.bio, cd."current_role",
       cd.expertise_tags, cd.years_experience, cd.availability_status,
       mv.id AS verification_id, mv.status AS verification_status,
       mv.claimed_organization, mv.canonical_company_name, mv.email_domain,
@@ -386,7 +386,7 @@ BEGIN
   IF p_years_experience NOT BETWEEN 0 AND 60 OR p_availability_status NOT IN ('accepting','limited','paused') THEN RAISE EXCEPTION 'Invalid profile details'; END IF;
   SELECT array_agg(DISTINCT trim(tag)) INTO v_tags FROM unnest(p_expertise_tags) tag WHERE trim(tag)<>'';
   IF coalesce(cardinality(v_tags),0) NOT BETWEEN 1 AND 12 THEN RAISE EXCEPTION 'Add between 1 and 12 expertise tags'; END IF;
-  UPDATE public.counsellor_details SET full_name=trim(p_full_name), current_role=trim(p_current_role),
+  UPDATE public.counsellor_details SET full_name=trim(p_full_name), "current_role"=trim(p_current_role),
     bio=trim(p_bio), expertise_tags=v_tags,
     years_experience=p_years_experience, availability_status=p_availability_status, updated_at=now()
   WHERE user_id=auth.uid() RETURNING * INTO v_row;
@@ -402,7 +402,7 @@ DECLARE v_result jsonb;
 BEGIN
   IF NOT public.has_role(auth.uid(), 'admin') THEN RAISE EXCEPTION 'Forbidden'; END IF;
   SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x.submitted_at DESC), '[]'::jsonb) INTO v_result FROM (
-    SELECT mv.*, cd.full_name, cd.current_role, cd.bio, cd.expertise_tags, cd.years_experience,
+    SELECT mv.*, cd.full_name, cd."current_role", cd.bio, cd.expertise_tags, cd.years_experience,
       u.email AS organization_email
     FROM public.mentor_verifications mv
     JOIN public.counsellor_details cd ON cd.id=mv.mentor_id
