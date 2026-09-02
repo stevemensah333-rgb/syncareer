@@ -13,7 +13,7 @@ describe('getPageTitle', () => {
 
     expect(new Set(titles).size).toBe(titles.length);
     expect(titles).toEqual([
-      'Dashboard | Syncareer',
+      'Application Desk | Syncareer',
       'Opportunities | Syncareer',
       'Applications | Syncareer',
       'CV builder | Syncareer',
@@ -24,6 +24,8 @@ describe('getPageTitle', () => {
   it('covers dynamic, authentication, and unknown routes without falling back to a stale title', () => {
     expect(getPageTitle('/blog/evidence-based-cv')).toBe('Page not found | Syncareer');
     expect(getPageTitle('/sign-in/forgot-password')).toBe('Reset password | Syncareer');
+    expect(getPageTitle('/applications/application-id')).toBe('Application dossier | Syncareer');
+    expect(getPageTitle('/mentors/mentor-id')).toBe('Mentor profile | Syncareer');
     expect(getPageTitle('/missing-route')).toBe('Page not found | Syncareer');
   });
 });

@@ -10,7 +10,7 @@ import { AppSidebar, studentNavGroups } from './AppSidebar';
  * that every primary destination is reachable from the desktop rail.
  */
 
-function renderSidebar(initialEntry = '/dashboard') {
+function renderSidebar(initialEntry = '/dashboard', withDossier = false) {
   function Harness() {
     const [collapsed, setCollapsed] = useState(false);
     return (
@@ -18,6 +18,7 @@ function renderSidebar(initialEntry = '/dashboard') {
         groups={studentNavGroups}
         isCollapsed={collapsed}
         onToggleCollapsed={() => setCollapsed((p) => !p)}
+        currentDossier={withDossier ? { id: 'app-1', title: 'Data Analyst', company: 'Cedar', statusLabel: 'In review' } : null}
       />
     );
   }
@@ -41,10 +42,14 @@ describe('AppSidebar (navigation)', () => {
   it('exposes the core student destinations', () => {
     renderSidebar();
     const links = screen.getAllByRole('link').map((l) => (l as HTMLAnchorElement).getAttribute('href'));
-    for (const href of ['/dashboard', '/opportunities', '/applications', '/practice', '/cv-builder', '/interview-simulator', '/settings']) {
-      expect(links).toContain(href);
-    }
-    expect(links).not.toContain('/ai-coach');
+    expect(links).toEqual(['/dashboard', '/opportunities', '/applications', '/mentors']);
+  });
+
+  it('separates the current dossier from primary navigation', () => {
+    renderSidebar('/dashboard', true);
+    const dossier = screen.getByRole('link', { name: 'Current dossier: Data Analyst' });
+    expect(dossier.getAttribute('href')).toBe('/applications?application=app-1');
+    expect(screen.getByText('Cedar · In review')).toBeTruthy();
   });
 
   it('collapses and expands via the toggle, updating its accessible state', () => {

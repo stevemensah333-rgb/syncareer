@@ -532,3 +532,18 @@ body.compact-view [class*="CardHeader"] {
 body.compact-view [class*="CardContent"] {
   padding-top: 0;
 }
+
+body.compact-view .workspace-content {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+body.compact-view .workspace-page-header > div {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+
+body.compact-view .dossier-section {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}

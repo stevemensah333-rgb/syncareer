@@ -17,6 +17,7 @@ export function CounsellorLayout({ children, title, description, breadcrumbs }: 
       description={description}
       breadcrumbs={breadcrumbs}
       navigation={counsellorNavGroups}
+      role="mentor"
     >
       {children}
     </AuthenticatedLayout>

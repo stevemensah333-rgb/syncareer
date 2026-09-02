@@ -4,6 +4,7 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { AppSidebar, type NavGroup } from '@/components/layout/AppSidebar';
 import { PageHeader, type BreadcrumbItem } from '@/components/layout/PageHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCurrentDossier } from '@/features/navigation/useCurrentDossier';
 import { cn } from '@/lib/utils';
 
 interface AuthenticatedLayoutProps {
@@ -12,6 +13,7 @@ interface AuthenticatedLayoutProps {
   description?: string;
   breadcrumbs?: BreadcrumbItem[];
   navigation: NavGroup[];
+  role: 'student' | 'mentor';
 }
 
 /** Shared authenticated workspace shell. Role-specific layouts supply only
@@ -23,9 +25,11 @@ export function AuthenticatedLayout({
   description,
   breadcrumbs,
   navigation,
+  role,
 }: AuthenticatedLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const isMobile = useIsMobile();
+  const currentDossier = useCurrentDossier(role === 'student');
 
   return (
     <div className="workspace-shell min-h-screen bg-background text-foreground">
@@ -47,6 +51,7 @@ export function AuthenticatedLayout({
             groups={navigation}
             isCollapsed={isCollapsed}
             onToggleCollapsed={() => setIsCollapsed((current) => !current)}
+            currentDossier={role === 'student' ? currentDossier : null}
           />
         </div>
       )}
@@ -66,8 +71,13 @@ export function AuthenticatedLayout({
           isMobile && 'pb-[calc(3.75rem+env(safe-area-inset-bottom,0px))]',
         )}
       >
-        <PageHeader title={title} description={description} breadcrumbs={breadcrumbs} />
-        <div className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+        <PageHeader
+          title={title}
+          description={description}
+          breadcrumbs={breadcrumbs}
+          variant={role === 'mentor' ? 'operational' : 'document'}
+        />
+        <div className="workspace-content mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
           {children}
         </div>
       </main>

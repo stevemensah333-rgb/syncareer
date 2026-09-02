@@ -28,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import SubscriptionManager from '@/components/subscription/SubscriptionManager';
 import { SecuritySection } from '@/components/settings/SecuritySection';
 import AnimatedSection from '@/components/landing/AnimatedSection';
+import { applyDisplayPreferences, readDisplayPreferences } from '@/lib/displayPreferences';
 
 type SettingsSection = 'profile' | 'account' | 'notifications' | 'security' | 'regional' | 'preferences' | 'subscription';
 
@@ -69,14 +70,9 @@ const Settings = () => {
   const isStudentRole = !profile?.user_type || profile.user_type === 'student';
   const [userEmail, setUserEmail] = useState<string>('');
   const [deletingAccount, setDeletingAccount] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  });
-  const [isCompactView, setIsCompactView] = useState(() => {
-    const saved = localStorage.getItem('compactView');
-    return saved === 'true';
-  });
+  const initialDisplayPreferences = React.useMemo(() => readDisplayPreferences(), []);
+  const [isDarkMode, setIsDarkMode] = useState(initialDisplayPreferences.dark);
+  const [isCompactView, setIsCompactView] = useState(initialDisplayPreferences.compact);
   const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
   const [selectedCountry, setSelectedCountry] = useState(() => localStorage.getItem('userCountry') || '');
   const [selectedTimezone, setSelectedTimezone] = useState(() => localStorage.getItem('userTimezone') || Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -119,24 +115,8 @@ const Settings = () => {
   };
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (isDarkMode) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
-
-  useEffect(() => {
-    localStorage.setItem('compactView', isCompactView.toString());
-    if (isCompactView) {
-      document.body.classList.add('compact-view');
-    } else {
-      document.body.classList.remove('compact-view');
-    }
-  }, [isCompactView]);
+    applyDisplayPreferences({ dark: isDarkMode, compact: isCompactView });
+  }, [isDarkMode, isCompactView]);
 
   const handleSave = () => {
     if (selectedLanguage !== i18n.language) {

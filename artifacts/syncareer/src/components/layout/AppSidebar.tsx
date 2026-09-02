@@ -4,9 +4,15 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
 import {
-  LayoutDashboard, Briefcase, ClipboardList, Target,
-  FileText, Mic, Settings,
-  Users, Calendar, ChevronRight, ChevronLeft,
+  BriefcaseBusiness,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  FileStack,
+  LayoutDashboard,
+  Settings,
+  Users,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -24,34 +30,26 @@ interface AppSidebarProps {
   groups: NavGroup[];
   isCollapsed: boolean;
   onToggleCollapsed: () => void;
+  currentDossier?: CurrentDossierLink | null;
 }
 
-/** Student destinations — one source of truth for desktop and mobile
- *  navigation. Deep routes for `/build`, `/apply`,
- *  and `/analysis` remain live; they are reached from here or via their hubs. */
+export interface CurrentDossierLink {
+  id: string;
+  title: string;
+  company: string | null;
+  statusLabel: string;
+}
+
+/** Primary student destinations. CV, interview, request history, and settings
+ * remain available contextually and through the account menu. */
 export const studentNavGroups: NavGroup[] = [
-  {
-    label: 'Main',
-    items: [
-      { title: 'Home', icon: LayoutDashboard, href: '/dashboard' },
-      { title: 'Opportunities', icon: Briefcase, href: '/opportunities' },
-      { title: 'Applications', icon: ClipboardList, href: '/applications' },
-      { title: 'Mentors', icon: Users, href: '/mentors' },
-      { title: 'Practice', icon: Target, href: '/practice' },
-    ],
-  },
   {
     label: 'Workspace',
     items: [
-      { title: 'CV Builder', icon: FileText, href: '/cv-builder' },
-      { title: 'Interview Simulator', icon: Mic, href: '/interview-simulator' },
-      { title: 'Mentor Requests', icon: Calendar, href: '/mentorship/requests' },
-    ],
-  },
-  {
-    label: 'Account',
-    items: [
-      { title: 'Settings', icon: Settings, href: '/settings' },
+      { title: 'Home', icon: LayoutDashboard, href: '/dashboard' },
+      { title: 'Opportunities', icon: BriefcaseBusiness, href: '/opportunities' },
+      { title: 'Applications', icon: ClipboardList, href: '/applications' },
+      { title: 'Mentors', icon: Users, href: '/mentors' },
     ],
   },
 ];
@@ -70,12 +68,12 @@ export const counsellorNavGroups: NavGroup[] = [
 
 /** True when the current path is the destination or within its subtree. Root
  *  is never a prefix match so `/` does not light up every route. */
-function isRouteActive(pathname: string, href: string): boolean {
+export function isRouteActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppSidebar({ groups, isCollapsed, onToggleCollapsed }: AppSidebarProps) {
+export function AppSidebar({ groups, isCollapsed, onToggleCollapsed, currentDossier }: AppSidebarProps) {
   const { pathname } = useLocation();
 
   return (
@@ -86,33 +84,19 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed }: AppSideba
         isCollapsed ? 'w-[68px]' : 'w-64'
       )}
     >
-      <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-2.5">
+      <div className={cn('flex h-14 items-center border-b border-sidebar-border px-3', isCollapsed && 'justify-center px-2')}>
         <div
           className={cn(
             'flex min-w-0 items-center gap-2 px-1.5 text-sm font-semibold tracking-tight text-sidebar-foreground',
-            isCollapsed && 'sr-only'
+            isCollapsed && 'justify-center px-0'
           )}
         >
           <img src={syncareerLogo} alt="" className="h-7 w-auto shrink-0" />
-          <span>Syncareer</span>
+          {!isCollapsed && <span>Syncareer</span>}
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleCollapsed}
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-expanded={!isCollapsed}
-          className="h-11 w-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:h-9 lg:w-9"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
       </div>
 
-      <nav aria-label="Workspace navigation" className="flex-1 overflow-y-auto px-3 py-4">
+      <nav aria-label="Workspace navigation" className="flex-1 overflow-y-auto px-3 py-5">
         <ul className="space-y-6">
           {groups.map((group) => (
             <li key={group.label}>
@@ -131,18 +115,18 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed }: AppSideba
                         aria-current={isActive ? 'page' : undefined}
                         title={isCollapsed ? item.title : undefined}
                         className={cn(
-                          'relative flex min-h-11 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors duration-150 lg:min-h-9',
+                          'relative flex min-h-11 items-center gap-3 border border-transparent px-2.5 text-sm transition-colors duration-150 lg:min-h-10',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-1',
                           isCollapsed && 'justify-center px-0',
                           isActive
-                            ? 'bg-primary/10 font-medium text-primary'
+                            ? 'border-sidebar-border bg-secondary font-medium text-primary'
                             : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                         )}
                       >
                         {isActive && (
                           <span
                             aria-hidden="true"
-                            className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary"
+                            className="absolute -left-px top-1/2 h-6 w-0.5 -translate-y-1/2 bg-primary"
                           />
                         )}
                         <item.icon
@@ -168,6 +152,48 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed }: AppSideba
           ))}
         </ul>
       </nav>
+
+      {currentDossier && (
+        <div className="border-t border-sidebar-border p-3">
+          <Link
+            to={`/applications?application=${encodeURIComponent(currentDossier.id)}`}
+            aria-label={`Current dossier: ${currentDossier.title}`}
+            title={isCollapsed ? `Current dossier: ${currentDossier.title}` : undefined}
+            className={cn(
+              'block min-h-11 border border-sidebar-border bg-secondary/60 text-sidebar-foreground transition-colors duration-150 hover:border-primary/45 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+              isCollapsed ? 'flex items-center justify-center p-2' : 'p-3',
+            )}
+          >
+            {isCollapsed ? (
+              <FileStack className="h-5 w-5 text-primary" />
+            ) : (
+              <>
+                <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">Current dossier</span>
+                <span className="mt-1.5 block truncate text-sm font-semibold">{currentDossier.title}</span>
+                <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                  {[currentDossier.company, currentDossier.statusLabel].filter(Boolean).join(' · ')}
+                </span>
+              </>
+            )}
+          </Link>
+        </div>
+      )}
+
+      <div className="border-t border-sidebar-border p-3">
+        <Button
+          variant="ghost"
+          onClick={onToggleCollapsed}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!isCollapsed}
+          className={cn(
+            'h-11 w-full justify-start gap-3 px-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:h-10',
+            isCollapsed && 'justify-center px-0',
+          )}
+        >
+          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          {!isCollapsed && <span>Collapse</span>}
+        </Button>
+      </div>
     </aside>
   );
 }

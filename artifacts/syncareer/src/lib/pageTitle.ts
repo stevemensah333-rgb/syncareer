@@ -10,7 +10,7 @@ const exactTitles: Record<string, string> = {
   '/signed-out': 'Signed out | Syncareer',
   '/reset-password': 'Reset password | Syncareer',
   '/settings': 'Settings | Syncareer',
-  '/dashboard': 'Dashboard | Syncareer',
+  '/dashboard': 'Application Desk | Syncareer',
   '/opportunities': 'Opportunities | Syncareer',
   '/analysis': 'Market analysis | Syncareer',
   '/ai-coach': 'Assistant | Syncareer',
@@ -28,6 +28,7 @@ const exactTitles: Record<string, string> = {
   '/mentors': 'Find a mentor | Syncareer',
   '/mentorship/requests': 'Mentor requests | Syncareer',
   '/mentor/profile': 'Mentor profile | Syncareer',
+  '/mentor/availability': 'Mentor availability | Syncareer',
   '/admin/mentors': 'Mentor verification | Syncareer',
   '/admin/feedback': 'Feedback dashboard | Syncareer',
   '/admin/users': 'User management | Syncareer',
@@ -39,5 +40,7 @@ export function getPageTitle(pathname: string): string {
   if (pathname.endsWith('/forgot-password')) return 'Reset password | Syncareer';
   if (pathname.startsWith('/sign-in')) return 'Sign in | Syncareer';
   if (pathname.startsWith('/sign-up')) return 'Create your account | Syncareer';
+  if (pathname.startsWith('/applications/')) return 'Application dossier | Syncareer';
+  if (pathname.startsWith('/mentors/')) return 'Mentor profile | Syncareer';
   return exactTitles[pathname] ?? 'Page not found | Syncareer';
 }

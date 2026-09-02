@@ -11,19 +11,11 @@ vi.mock('@/contexts/UserProfileContext', () => ({
 
 describe('MobileBottomNav', () => {
   it('derives student destinations from the canonical navigation model', () => {
-    const { tabs, moreItems } = getMobileNavigation('student');
-    expect(tabs.map((item) => item.href)).toEqual([
+    expect(getMobileNavigation('student').map((item) => item.href)).toEqual([
       '/dashboard',
       '/opportunities',
       '/applications',
-    ]);
-    expect(moreItems.map((item) => item.href)).toEqual([
       '/mentors',
-      '/practice',
-      '/cv-builder',
-      '/interview-simulator',
-      '/mentorship/requests',
-      '/settings',
     ]);
   });
 
@@ -36,17 +28,14 @@ describe('MobileBottomNav', () => {
     );
     expect(screen.getByRole('navigation', { name: 'Mobile workspace navigation' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Opportunities' }).getAttribute('aria-current')).toBe('page');
-    expect(screen.getByRole('button', { name: 'More navigation' }).className).toContain('focus-visible:ring-2');
+    expect(screen.getByRole('link', { name: 'Mentors' }).className).toContain('focus-visible:ring-2');
   });
 
   it('keeps mentor requests and settings reachable', () => {
-    const { tabs, moreItems } = getMobileNavigation('career_counsellor');
-    expect(tabs.map((item) => item.href)).toEqual([
+    expect(getMobileNavigation('career_counsellor').map((item) => item.href)).toEqual([
       '/mentor/profile',
       '/mentorship/requests',
       '/mentor/availability',
-    ]);
-    expect(moreItems.map((item) => item.href)).toEqual([
       '/settings',
     ]);
   });

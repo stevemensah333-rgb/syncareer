@@ -4,6 +4,7 @@ import './assets/fonts/literata.css'
 import './index.css'
 import './i18n/config'
 import { initializeAnalytics } from './services/analytics'
+import { initializeDisplayPreferences } from './lib/displayPreferences'
 
 const removeLegacyBrowserCaches = async () => {
   if ('serviceWorker' in navigator) {
@@ -25,6 +26,7 @@ const runWhenIdle = (task: () => void, timeout = 3000) => {
   setTimeout(task, Math.min(timeout, 1000));
 };
 
+initializeDisplayPreferences();
 createRoot(document.getElementById("root")!).render(<App />);
 
 runWhenIdle(() => {

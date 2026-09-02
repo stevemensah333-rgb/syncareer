@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ArrowLeft,
+  Bell,
   BriefcaseBusiness,
   CalendarClock,
   Check,
@@ -9,8 +10,13 @@ import {
   Mail,
   Mic2,
   Search,
+  User,
 } from 'lucide-react';
+import { MemoryRouter } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { AppSidebar, counsellorNavGroups, studentNavGroups } from '@/components/layout/AppSidebar';
+import { MobileBottomNavView } from '@/components/layout/MobileBottomNav';
+import { PageHeader } from '@/components/layout/PageHeader';
 import {
   ApplicationStageRail,
   DossierActionBar,
@@ -29,7 +35,7 @@ import {
 } from '@/components/dossier';
 import { cn } from '@/lib/utils';
 
-type ReviewScreen = 'home' | 'dossier' | 'cv';
+type ReviewScreen = 'home' | 'dossier' | 'cv' | 'shell';
 
 const applicationStages: DossierStage[] = [
   { id: 'applied', label: 'Applied', state: 'done' },
@@ -51,7 +57,7 @@ const evidenceItems = [
 
 function readScreen(): ReviewScreen {
   const requested = new URLSearchParams(window.location.search).get('screen');
-  return requested === 'dossier' || requested === 'cv' ? requested : 'home';
+  return requested === 'dossier' || requested === 'cv' || requested === 'shell' ? requested : 'home';
 }
 
 export function EvidenceDossierReview() {
@@ -64,6 +70,16 @@ export function EvidenceDossierReview() {
     document.body.classList.toggle('compact-view', compact);
     return () => document.body.classList.remove('compact-view');
   }, [compact]);
+
+  if (screen === 'shell') {
+    return (
+      <ShellFixture
+        collapsed={params.get('collapsed') === 'true'}
+        role={params.get('role') === 'mentor' ? 'mentor' : 'student'}
+        dark={dark}
+      />
+    );
+  }
 
   const changeScreen = (next: ReviewScreen) => {
     setScreen(next);
@@ -105,6 +121,86 @@ export function EvidenceDossierReview() {
         {screen === 'cv' && <CvFixture onBack={() => changeScreen('dossier')} />}
       </main>
     </div>
+  );
+}
+
+function ShellFixture({ collapsed, role, dark }: { collapsed: boolean; role: 'student' | 'mentor'; dark: boolean }) {
+  const isMentor = role === 'mentor';
+  const route = isMentor ? '/mentorship/requests' : '/applications/example-dossier';
+  const sidebarWidth = collapsed ? 'md:ml-[68px]' : 'md:ml-64';
+  const topbarLeft = collapsed ? 'md:left-[68px]' : 'md:left-64';
+
+  return (
+    <MemoryRouter initialEntries={[route]}>
+      <div className={cn('evidence-dossier-fixture min-h-screen bg-background text-foreground', dark && 'dark')}>
+        <div className={cn('fixed inset-y-0 left-0 z-40 hidden md:block', collapsed ? 'w-[68px]' : 'w-64')}>
+          <AppSidebar
+            groups={isMentor ? counsellorNavGroups : studentNavGroups}
+            isCollapsed={collapsed}
+            onToggleCollapsed={() => undefined}
+            currentDossier={isMentor ? null : { id: 'example-dossier', title: 'Graduate Data Analyst', company: 'Cedar Analytics', statusLabel: 'In review' }}
+          />
+        </div>
+
+        <header className={cn('fixed inset-x-0 top-0 z-30 h-14 border-b border-border bg-card', topbarLeft)}>
+          <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
+            <span className="text-sm font-semibold md:hidden">Syncareer</span>
+            <span className="hidden md:block" aria-hidden="true" />
+            <div className="flex items-center gap-2">
+              <button type="button" aria-label="Notifications" className="flex h-11 w-11 items-center justify-center text-muted-foreground md:h-9 md:w-9"><Bell className="h-4 w-4" /></button>
+              <button type="button" aria-label="Account menu" className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-secondary text-primary md:h-9 md:w-9"><User className="h-4 w-4" /></button>
+            </div>
+          </div>
+        </header>
+
+        <main className={cn('min-h-screen pb-20 pt-14 transition-[margin] duration-150 md:pb-0', sidebarWidth)}>
+          {isMentor && (
+            <PageHeader
+              title="Mentorship requests"
+              description="Review focused requests and introduce yourself by email when you can help."
+              variant="operational"
+            />
+          )}
+          <div className="workspace-content mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+            {isMentor ? <MentorShellContent /> : <StudentShellContent />}
+          </div>
+        </main>
+        <MobileBottomNavView userType={isMentor ? 'career_counsellor' : 'student'} />
+      </div>
+    </MemoryRouter>
+  );
+}
+
+function StudentShellContent() {
+  return (
+    <WorkingDocument label="Graduate Data Analyst application dossier">
+      <DossierHeader
+        eyebrow="Current dossier / Updated today"
+        title="Graduate Data Analyst"
+        description="Cedar Analytics · Accra · Entry level"
+        status={<span className="border border-primary/40 bg-secondary px-2 py-1 text-[11px] font-semibold text-primary">IN REVIEW</span>}
+        actions={<Button type="button">Continue evidence</Button>}
+      />
+      <ApplicationStageRail stages={applicationStages} />
+      <DossierSection index="01" label="Next action" title="Strengthen the SQL evidence">
+        <p className="max-w-2xl text-sm leading-6 text-muted-foreground">Attach the source for your dashboard example before using it in the application CV.</p>
+      </DossierSection>
+    </WorkingDocument>
+  );
+}
+
+function MentorShellContent() {
+  return (
+    <section className="dossier-document">
+      <div className="border-b border-border px-4 py-4 sm:px-6">
+        <p className="dossier-eyebrow">Request inbox</p>
+        <h2 className="mt-1 text-base font-semibold">Pending requests</h2>
+      </div>
+      <RecordList label="Pending mentorship requests">
+        <RecordRow title="Resume/CV review" eyebrow="Ama Mensah · Received today" detail="Graduate Data Analyst application · CV title visible; contact details remain private" status={<span className="text-xs font-semibold text-warning">Pending</span>} onClick={() => undefined} />
+        <RecordRow title="Role/industry insight" eyebrow="Kojo Owusu · Received yesterday" detail="Product Operations application · Context ready for review" status={<span className="text-xs font-semibold text-warning">Pending</span>} onClick={() => undefined} />
+      </RecordList>
+    </section>
   );
 }
 

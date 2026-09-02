@@ -15,6 +15,12 @@ describe('PageHeader', () => {
     expect(screen.getByRole('heading', { name: 'Opportunities', level: 1 })).toBeTruthy();
     expect(screen.getByText('Browse ranked roles')).toBeTruthy();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1 }).className).toContain('font-dossier');
+  });
+
+  it('uses operational typography when requested', () => {
+    render(<PageHeader title="Mentor requests" variant="operational" />);
+    expect(screen.getByRole('heading', { name: 'Mentor requests' }).className).toContain('font-sans');
   });
 
   it('renders a breadcrumb trail with the current page marked', () => {

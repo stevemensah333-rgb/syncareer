@@ -14,6 +14,7 @@ interface PageHeaderProps {
   breadcrumbs?: BreadcrumbItem[];
   actions?: React.ReactNode;
   className?: string;
+  variant?: 'document' | 'operational';
 }
 
 /** Compact page header with an optional breadcrumb trail and action slot.
@@ -24,16 +25,17 @@ export function PageHeader({
   breadcrumbs,
   actions,
   className,
+  variant = 'document',
 }: PageHeaderProps) {
   if (!title) return null;
   return (
     <header
       className={cn(
-        'border-b border-border bg-card',
+        'workspace-page-header border-b border-border bg-card',
         className
       )}
     >
-      <div className="mx-auto w-full max-w-[1440px] px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-3.5 sm:px-6 lg:px-8">
         {breadcrumbs && breadcrumbs.length > 0 && (
           <nav aria-label="Breadcrumb" className="mb-1.5 flex items-center gap-1 text-xs text-muted-foreground">
             {breadcrumbs.map((crumb, i) => {
@@ -60,7 +62,12 @@ export function PageHeader({
         )}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-xl font-semibold tracking-[-0.015em] text-foreground md:text-[22px]">
+            <h1 className={cn(
+              'text-xl text-foreground md:text-[22px]',
+              variant === 'document'
+                ? 'font-dossier font-semibold tracking-[-0.02em]'
+                : 'font-sans font-semibold tracking-[-0.015em]',
+            )}>
               {title}
             </h1>
             {description && (

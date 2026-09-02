@@ -17,6 +17,7 @@ export function StudentLayout({ children, title, description, breadcrumbs }: Stu
       description={description}
       breadcrumbs={breadcrumbs}
       navigation={studentNavGroups}
+      role="student"
     >
       {children}
     </AuthenticatedLayout>

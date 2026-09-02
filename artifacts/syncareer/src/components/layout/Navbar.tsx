@@ -1,14 +1,11 @@
-
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, LogOut, MessageCircle, HelpCircle, Phone, Mail, CreditCard, Shield } from 'lucide-react';
+import { BellRing, CreditCard, HelpCircle, LogOut, Mail, Phone, Settings, Shield, User } from 'lucide-react';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
 
 import { cn } from '@/lib/utils';
 
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useAuth } from '@/lib/auth';
@@ -64,9 +61,16 @@ export function Navbar({ className }: NavbarProps) {
     }
   };
 
+  const initials = profile?.full_name
+    ?.split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || null;
+
   return (
     <>
-      <header className={cn("fixed left-0 right-0 top-0 z-30 h-14 border-b bg-card/95 backdrop-blur-sm transition-[left] duration-150 ease-out motion-reduce:transition-none", className)}>
+      <header className={cn("fixed left-0 right-0 top-0 z-30 h-14 border-b bg-card transition-[left] duration-150 ease-out motion-reduce:transition-none", className)}>
         <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 md:hidden">
             <img src={syncareerLogo} alt="" className="h-7 w-auto object-contain" />
@@ -75,18 +79,6 @@ export function Navbar({ className }: NavbarProps) {
           <div className="hidden md:block" aria-hidden="true" />
           
           <div className="flex items-center gap-1.5">
-            {!isCounsellor && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-11 w-11 md:h-9 md:w-9"
-                onClick={() => navigate('/mentors')}
-                aria-label="Find a mentor"
-              >
-                <MessageCircle className="h-4 w-4" />
-              </Button>
-            )}
-
             <NotificationsDropdown />
             
             <DropdownMenu>
@@ -97,25 +89,39 @@ export function Navbar({ className }: NavbarProps) {
                   className="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:h-9 md:w-9"
                 >
                 <Avatar className="h-9 w-9 cursor-pointer border transition-colors duration-150 hover:border-primary/50">
+                  <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
                   <AvatarFallback className="bg-primary/10 text-primary">
-                    <User className="h-5 w-5" />
+                    {initials || <User className="h-5 w-5" />}
                   </AvatarFallback>
                 </Avatar>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel className="space-y-0.5">
+                  <span className="block truncate">{profile?.full_name || 'My account'}</span>
+                  <span className="block text-[11px] font-normal text-muted-foreground">{isCounsellor ? 'Career mentor' : 'Student'}</span>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/settings?tab=profile')} className="cursor-pointer">
                   <User className="h-4 w-4 mr-2" />
                   Profile
                 </DropdownMenuItem>
                 {!isCounsellor && (
-                  <DropdownMenuItem onClick={() => navigate('/settings?tab=subscription')} className="cursor-pointer">
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Subscription
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem onClick={() => navigate('/mentorship/requests')} className="cursor-pointer">
+                      <BellRing className="h-4 w-4 mr-2" />
+                      Mentor requests
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/settings?tab=subscription')} className="cursor-pointer">
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Subscription
+                    </DropdownMenuItem>
+                  </>
                 )}
+                <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
                 {isAdmin && (
                   <>
                     <DropdownMenuSeparator />

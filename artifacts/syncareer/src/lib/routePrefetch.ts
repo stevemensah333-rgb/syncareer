@@ -34,9 +34,8 @@ export const prefetchLandingRoutes = () => {
 export const prefetchStudentRoutes = () => {
   prefetch(() => import("@/pages/Dashboard"));
   prefetch(() => import("@/pages/Markets"));
-  prefetch(() => import("@/pages/CVBuilder"));
-  
-  prefetch(() => import("@/pages/Analysis"));
+  prefetch(() => import("@/pages/ApplicationTracker"));
+  prefetch(() => import("@/pages/mentorship/MentorDirectory"));
 };
 
 export const prefetchCounsellorRoutes = () => {
