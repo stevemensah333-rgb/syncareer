@@ -21,7 +21,7 @@ export function RecentApplications({ items }: { items: RecentApp[] }) {
 
   if (items.length === 0) {
     return (
-      <section className="dossier-document" aria-labelledby="recent-applications-title">
+      <section className="surface-content" aria-labelledby="recent-applications-title">
         <header className="border-b border-border px-4 py-4">
           <h2 id="recent-applications-title" className="text-sm font-semibold">Recent applications</h2>
         </header>
@@ -38,7 +38,7 @@ export function RecentApplications({ items }: { items: RecentApp[] }) {
   }
 
   return (
-    <section className="dossier-document" aria-labelledby="recent-applications-title">
+    <section className="surface-content" aria-labelledby="recent-applications-title">
       <header className="border-b border-border px-4 py-3">
         <div className="flex items-center justify-between">
           <h2 id="recent-applications-title" className="text-sm font-semibold">Recent applications</h2>

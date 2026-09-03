@@ -42,7 +42,7 @@ export function WelcomeScreen({
       currentStep={1}
       totalSteps={2}
     >
-      <div className="dossier-document p-5 sm:p-6">
+      <div className="surface-content p-5 sm:p-6">
           <h2 className="text-base font-semibold">What you can do in Syncareer</h2>
           <ul className="mt-4 divide-y" aria-label="Syncareer workspace features">
             {benefits.map((benefit) => (

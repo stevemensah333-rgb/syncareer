@@ -5,8 +5,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Syncareer design system
+ * -----------------------
+ * ONE visual system for landing, auth, onboarding and the authenticated
+ * workspace. Everything below is expressed as semantic tokens; pages should
+ * consume the tokens (or the Tailwind aliases in tailwind.config.ts) instead
+ * of introducing page-local palettes, radii or type scales.
+ *
+ * Layer order:
+ *   1. Global semantic tokens (:root / .dark)          — colors, geometry, spacing
+ *   2. Shared element/typography/surface primitives     — .type-*, .surface-*
+ *   3. Product patterns (dossier)                       — scoped, opt-in only
+ */
+
 @layer base {
   :root {
+    /* ---------------------------------------------------------------
+     * 1. COLOR — one system, used by every surface of the product.
+     * --------------------------------------------------------------- */
+
     /* Workspace canvas: cool near-white */
     --background: 216 33% 98%;
     /* Text: dark navy-charcoal */
@@ -56,7 +74,31 @@
     --input: 218 22% 84%;
     --ring: 221 83% 53%;
 
-    --radius: 0.625rem;
+    /* ---------------------------------------------------------------
+     * 4. GEOMETRY — restrained, consistent radii. `--radius` remains the
+     * shadcn base (cards/panels); the named tokens below let controls,
+     * inputs, modals and documents stay deliberately distinct without
+     * every component choosing its own value.
+     * --------------------------------------------------------------- */
+    --radius: 0.5rem;
+    --radius-control: 0.375rem;  /* buttons, tabs, menu items */
+    --radius-input: 0.375rem;    /* inputs, selects, textareas */
+    --radius-surface: 0.5rem;    /* cards, panels, popovers */
+    --radius-overlay: 0.625rem;  /* dialogs, sheets, drawers */
+    --radius-document: 2px;      /* dossier / document geometry */
+    --radius-pill: 9999px;       /* badges, avatars, progress only */
+
+    /* ---------------------------------------------------------------
+     * 3. SPACING — one page rhythm shared by every shell.
+     * --------------------------------------------------------------- */
+    --page-max-width: 1440px;
+    --page-gutter: 1rem;
+    --page-gutter-sm: 1.5rem;
+    --page-gutter-lg: 2rem;
+    --page-block: 1.25rem;
+    --page-block-lg: 1.5rem;
+    --section-gap: 1.5rem;
+    --stack-gap: 1rem;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 26% 15%;
@@ -66,6 +108,12 @@
     --sidebar-accent-foreground: 222 26% 15%;
     --sidebar-border: 222 20% 90%;
     --sidebar-ring: 221 83% 53%;
+
+    /* Evidence washes for the dossier pattern, derived from the single
+       global palette so the dossier reads as the same product. */
+    --dossier-indigo-wash: 221 60% 96%;
+    --dossier-jade-wash: 166 44% 94%;
+    --dossier-clay-wash: 38 70% 94%;
 
   }
 
@@ -118,6 +166,10 @@
     --sidebar-accent-foreground: 220 14% 92%;
     --sidebar-border: 222 24% 20%;
     --sidebar-ring: 217 91% 60%;
+
+    --dossier-indigo-wash: 221 40% 20%;
+    --dossier-jade-wash: 166 34% 16%;
+    --dossier-clay-wash: 32 40% 18%;
   }
 }
 
@@ -158,10 +210,155 @@
     }
   }
 
-  /* Shared Syncareer canvas — warm near-white with a very subtle
-     blue/lavender atmospheric wash for application and public product shells. */
+  /* ---------------------------------------------------------------
+   * 2. TYPOGRAPHY — one hierarchy for the whole product.
+   *
+   *   .type-display    hero / marketing headline
+   *   .type-page-title page (h1) title
+   *   .type-section    section (h2/h3) title
+   *   .type-body       default reading text
+   *   .type-secondary  supporting text
+   *   .type-meta       metadata, timestamps, counts
+   *   .type-label      form labels and quiet eyebrows (sentence case)
+   *
+   * Uppercase micro-labels are deliberately limited to `.eyebrow`, which is
+   * reserved for document/dossier contexts.
+   * --------------------------------------------------------------- */
+  .type-display {
+    @apply text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-5xl;
+  }
+
+  .type-page-title {
+    @apply text-[26px] font-semibold leading-8 tracking-[-0.02em] text-foreground sm:text-[32px] sm:leading-9;
+  }
+
+  .type-section-title {
+    @apply text-base font-semibold leading-tight tracking-[-0.01em] text-foreground sm:text-lg;
+  }
+
+  .type-body {
+    @apply text-sm leading-6 text-foreground;
+  }
+
+  .type-secondary {
+    @apply text-sm leading-6 text-muted-foreground;
+  }
+
+  .type-meta {
+    @apply text-xs leading-5 text-muted-foreground;
+  }
+
+  .type-label {
+    @apply text-xs font-medium leading-5 text-muted-foreground;
+  }
+
+  /* Quiet uppercase eyebrow. Reserved for document/dossier surfaces —
+     see `.dossier-eyebrow`, which is an alias of this rule. */
   .eyebrow {
     @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground;
+  }
+
+  /* ---------------------------------------------------------------
+   * 7. ICONOGRAPHY — lucide-react is the single icon system.
+   *
+   * Sizing convention (use Tailwind's `size-*`, not mixed h-/w- pairs):
+   *   size-3.5 (14px)  inside badges and dense metadata rows
+   *   size-4   (16px)  DEFAULT — buttons, inputs, list rows, nav
+   *   size-5   (20px)  section headers and standalone affordances
+   *   size-6   (24px)  empty-state and status illustrations
+   *
+   * Buttons and badges already force their icon size via
+   * `[&_svg]:size-4` / `[&_svg]:size-3`, so callers should not re-specify it.
+   * Decorative icons must carry `aria-hidden="true"`.
+   * --------------------------------------------------------------- */
+
+  /* ---------------------------------------------------------------
+   * 5. SURFACES — exactly three visual levels.
+   *
+   *   .surface-canvas   the workspace/page background
+   *   .surface-content  the default bordered content surface (no shadow)
+   *   .surface-raised   reserved for genuine elevation (overlays, focus)
+   * --------------------------------------------------------------- */
+  .surface-canvas {
+    @apply bg-background text-foreground;
+  }
+
+  .surface-content {
+    @apply border border-border bg-card text-card-foreground;
+    border-radius: var(--radius-surface);
+  }
+
+  .surface-raised {
+    @apply border border-border bg-popover text-popover-foreground shadow-card;
+    border-radius: var(--radius-overlay);
+  }
+
+  /* ---------------------------------------------------------------
+   * 3. SPACING — shared page geometry. Every shell (landing, auth,
+   * onboarding, workspace) uses the same container and rhythm.
+   * --------------------------------------------------------------- */
+  .page-container {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--page-max-width);
+    padding-inline: var(--page-gutter);
+  }
+
+  @media (min-width: 640px) {
+    .page-container { padding-inline: var(--page-gutter-sm); }
+  }
+
+  @media (min-width: 1024px) {
+    .page-container { padding-inline: var(--page-gutter-lg); }
+  }
+
+  .page-block {
+    padding-block: var(--page-block);
+  }
+
+  @media (min-width: 1024px) {
+    .page-block { padding-block: var(--page-block-lg); }
+  }
+
+  .page-stack > * + * {
+    margin-top: var(--section-gap);
+  }
+
+  /* ---------------------------------------------------------------
+   * 8. STATES — one interaction vocabulary.
+   *
+   * Radix/shadcn controls already implement these; `.interactive` gives the
+   * same behaviour to bespoke clickable rows, cards and tiles so they don't
+   * each invent their own hover/focus treatment.
+   * --------------------------------------------------------------- */
+  .interactive {
+    @apply transition-colors duration-150 ease-out
+      hover:bg-muted/60
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
+      motion-reduce:transition-none;
+  }
+
+  /* Selected / current record. Uses a left rule plus a tint so selection is
+     never communicated by colour alone. */
+  .is-selected,
+  [data-selected='true'].interactive {
+    @apply border-l-2 border-l-primary bg-primary/[0.06];
+  }
+
+  .is-disabled,
+  .interactive:disabled,
+  .interactive[aria-disabled='true'] {
+    @apply pointer-events-none opacity-50;
+  }
+
+  /* Local loading. Keeps layout stable and signals busy-ness to AT. */
+  .is-loading {
+    @apply pointer-events-none animate-pulse opacity-70 motion-reduce:animate-none;
+  }
+
+  /* Inline field error. Pairs with `aria-invalid` on the control itself. */
+  .is-error {
+    @apply border-destructive text-destructive;
   }
 
   .landing-application-record [role='tabpanel'] {
@@ -187,8 +384,10 @@
     transform: scaleX(1);
   }
 
+  /* Flat canvas. Depth on the landing hero comes from the structural
+     grid rule below, not from a colour gradient. */
   .landing-hero {
-    background: linear-gradient(105deg, hsl(var(--background)) 0%, hsl(var(--background)) 58%, hsl(var(--primary) / 0.035) 100%);
+    background-color: hsl(var(--background));
   }
 
   .landing-hero-grid {
@@ -252,111 +451,31 @@
     .landing-record-tab-indicator { transition: none; }
   }
 
+  /* Legacy alias. There is one canvas in the system — the flat workspace
+     background. Kept so existing public/admin shells keep working; prefer
+     `.surface-canvas` in new code. */
   .app-canvas {
-    background-color: hsl(var(--background));
-    background-image:
-      radial-gradient(
-        900px 480px at 100% -12%,
-        hsl(var(--info) / 0.05),
-        transparent 60%
-      ),
-      radial-gradient(
-        760px 420px at -8% 30%,
-        hsl(var(--primary) / 0.045),
-        transparent 55%
-      );
+    @apply surface-canvas;
   }
 
-  /* Evidence Dossier tokens are scoped to authenticated workspaces and the
-     development-only visual review fixture. Public and auth surfaces retain
-     their existing palette until a separately approved brand pass. */
+  /* ---------------------------------------------------------------
+   * DOSSIER RULE
+   *
+   * The dossier is a PRODUCT PATTERN, not the brand identity. It no longer
+   * re-themes the whole authenticated shell — the workspace uses the single
+   * global Syncareer palette declared in `:root`, exactly like the landing,
+   * auth and onboarding surfaces.
+   *
+   * What remains dossier-specific is *pattern*, not palette: document
+   * geometry (2px), the Literata document title face, rule-line sections and
+   * the evidence washes below. Apply it to applications, requirements,
+   * evidence, application review and application-specific CV tailoring only.
+   * --------------------------------------------------------------- */
   .workspace-shell,
   .evidence-dossier-fixture {
-    --background: 45 35% 93%;
-    --foreground: 153 16% 11%;
-    --card: 48 100% 99%;
-    --card-foreground: 153 16% 11%;
-    --popover: 48 100% 99%;
-    --popover-foreground: 153 16% 11%;
-    --primary: 233 34% 39%;
-    --primary-foreground: 48 100% 99%;
-    --secondary: 230 55% 96%;
-    --secondary-foreground: 233 29% 22%;
-    --muted: 40 22% 94%;
-    --muted-foreground: 140 4% 40%;
-    --accent: 230 55% 96%;
-    --accent-foreground: 233 34% 32%;
-    --destructive: 4 76% 40%;
-    --destructive-foreground: 48 100% 99%;
-    --success: 166 66% 25%;
-    --success-foreground: 48 100% 99%;
-    --warning: 21 53% 39%;
-    --warning-foreground: 48 100% 99%;
-    --danger: 4 76% 40%;
-    --danger-foreground: 48 100% 99%;
-    --info: 233 34% 39%;
-    --info-foreground: 48 100% 99%;
-    --border: 40 19% 81%;
-    --input: 40 16% 72%;
-    --ring: 233 34% 39%;
-    --radius: 0.375rem;
-    --sidebar-background: 48 100% 99%;
-    --sidebar-foreground: 153 16% 11%;
-    --sidebar-primary: 233 34% 39%;
-    --sidebar-primary-foreground: 48 100% 99%;
-    --sidebar-accent: 230 55% 96%;
-    --sidebar-accent-foreground: 233 29% 22%;
-    --sidebar-border: 40 19% 81%;
-    --sidebar-ring: 233 34% 39%;
-    --dossier-indigo-wash: 230 55% 96%;
-    --dossier-jade-wash: 153 31% 93%;
-    --dossier-clay-wash: 27 56% 93%;
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: theme('fontFamily.sans');
-  }
-
-  .dark .workspace-shell,
-  .dark .evidence-dossier-fixture,
-  .evidence-dossier-fixture.dark {
-    --background: 120 8% 8%;
-    --foreground: 45 35% 93%;
-    --card: 120 7% 11%;
-    --card-foreground: 45 35% 93%;
-    --popover: 120 7% 11%;
-    --popover-foreground: 45 35% 93%;
-    --primary: 235 100% 84%;
-    --primary-foreground: 233 29% 16%;
-    --secondary: 233 29% 22%;
-    --secondary-foreground: 45 35% 93%;
-    --muted: 120 5% 16%;
-    --muted-foreground: 120 5% 70%;
-    --accent: 233 29% 22%;
-    --accent-foreground: 235 100% 88%;
-    --destructive: 5 100% 75%;
-    --destructive-foreground: 120 8% 8%;
-    --success: 157 42% 62%;
-    --success-foreground: 120 8% 8%;
-    --warning: 22 67% 68%;
-    --warning-foreground: 120 8% 8%;
-    --danger: 5 100% 75%;
-    --danger-foreground: 120 8% 8%;
-    --info: 235 100% 84%;
-    --info-foreground: 233 29% 16%;
-    --border: 120 5% 22%;
-    --input: 120 5% 30%;
-    --ring: 235 100% 84%;
-    --sidebar-background: 120 7% 11%;
-    --sidebar-foreground: 45 35% 93%;
-    --sidebar-primary: 235 100% 84%;
-    --sidebar-primary-foreground: 233 29% 16%;
-    --sidebar-accent: 233 29% 22%;
-    --sidebar-accent-foreground: 45 35% 93%;
-    --sidebar-border: 120 5% 22%;
-    --sidebar-ring: 235 100% 84%;
-    --dossier-indigo-wash: 233 29% 22%;
-    --dossier-jade-wash: 164 41% 16%;
-    --dossier-clay-wash: 18 34% 19%;
   }
 
   .dossier-title {
@@ -365,13 +484,15 @@
     letter-spacing: -0.025em;
   }
 
+  /* Alias of the shared `.eyebrow` rule — kept so dossier markup reads
+     intentionally, but there is only one eyebrow definition. */
   .dossier-eyebrow {
-    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground;
+    @apply eyebrow;
   }
 
   .dossier-document {
-    @apply border border-border bg-card text-card-foreground;
-    border-radius: 2px;
+    @apply surface-content;
+    border-radius: var(--radius-document);
   }
 
   .dossier-section {
@@ -380,7 +501,7 @@
 
   .evidence-reference {
     @apply inline-flex min-h-6 items-center border border-border bg-card px-1.5 text-[11px] font-semibold tracking-[0.04em] text-foreground;
-    border-radius: 2px;
+    border-radius: var(--radius-document);
   }
 
   .evidence-thread-track {
@@ -426,28 +547,14 @@
   }
 
   .workspace-panel {
-    @apply border bg-card;
-    border-radius: 2px;
+    @apply border border-border bg-card;
+    border-radius: var(--radius-document);
   }
 
   .workspace-row {
     @apply border-b px-3 py-2.5 last:border-b-0 sm:px-4;
   }
 
-  /* Glass morphism */
-  .glass {
-    @apply bg-white/10 backdrop-blur-lg border border-white/20 shadow-glass;
-  }
-
-  .glass-dark {
-    @apply bg-black/20 backdrop-blur-lg border border-white/10 shadow-glass;
-  }
-
-  /* Card transitions — short, calm, and reserved for interactivity */
-  .card-hover-effect {
-    @apply transition-colors duration-150 ease-out;
-  }
-  
   /* Custom scrollbar for webkit browsers */
   ::-webkit-scrollbar {
     width: 8px;
@@ -464,29 +571,6 @@
   
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/50;
-  }
-
-  /* Chart & data visualization styles */
-  .chart-container {
-    @apply w-full h-full min-h-[200px] rounded-lg overflow-hidden;
-  }
-
-  .animate-enter {
-    @apply animate-slide-up;
-  }
-
-  /* Stock price trends */
-  .trend-up {
-    @apply text-success;
-  }
-  
-  .trend-down {
-    @apply text-danger;
-  }
-
-  /* Loading states */
-  .loading-pulse {
-    @apply animate-pulse-gentle;
   }
 
   /* Safe area for notched phones */

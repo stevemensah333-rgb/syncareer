@@ -177,7 +177,7 @@ export default function SubscriptionManager() {
               </div>
             )}
             {isExpiringSoon() && (
-              <div className="flex items-center gap-2 p-3 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-sm">
+              <div className="flex items-center gap-2 p-3 rounded-md bg-warning/10 border border-warning/20 text-warning text-sm">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
                 Your plan expires in {daysLeft()} day{daysLeft() !== 1 ? 's' : ''}. Renew to keep full access.
               </div>
@@ -229,7 +229,7 @@ export default function SubscriptionManager() {
                     </div>
                     <Progress
                       value={pct}
-                      className={`h-1.5 ${atLimit ? '[&>div]:bg-destructive' : pct >= 80 ? '[&>div]:bg-amber-500' : ''}`}
+                      className={`h-1.5 ${atLimit ? '[&>div]:bg-destructive' : pct >= 80 ? '[&>div]:bg-warning' : ''}`}
                     />
                   </div>
                 );

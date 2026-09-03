@@ -35,7 +35,7 @@ export default function MentorDirectory() {
 
   return <PageLayout title="Find a mentor" description="Connect with verified professionals for focused, application-relevant guidance.">
     <div className="space-y-5">
-      <div className="dossier-document grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_170px_170px_170px_170px]">
+      <div className="surface-content grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_170px_170px_170px_170px]">
         <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input aria-label="Search mentors" className="pl-9" placeholder="Name, role, company or skill" value={search} onChange={(e) => setFilter('q', e.target.value)} /></div>
         <Select value={experience} onValueChange={(v) => setFilter('experience', v)}><SelectTrigger aria-label="Experience"><SelectValue placeholder="Experience" /></SelectTrigger><SelectContent><SelectItem value="all">All experience</SelectItem><SelectItem value="0-2">0–2 years</SelectItem><SelectItem value="3-5">3–5 years</SelectItem><SelectItem value="6-10">6–10 years</SelectItem><SelectItem value="10+">10+ years</SelectItem></SelectContent></Select>
         <Select value={role} onValueChange={(v) => setFilter('role', v)}><SelectTrigger aria-label="Current role"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All roles</SelectItem>{roles.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>

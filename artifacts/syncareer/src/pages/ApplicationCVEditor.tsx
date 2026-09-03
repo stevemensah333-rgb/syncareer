@@ -244,7 +244,7 @@ export default function ApplicationCVEditor() {
 
   if (loading) {
     return (
-      <PageLayout title="Application CV" description="Loading the application CV.">
+      <PageLayout title="Application CV" description="Loading the application CV." headerVariant="document">
         <div aria-busy="true" aria-label="Loading application CV" className="space-y-4">
           <div className="h-40 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none" />
         </div>
@@ -254,7 +254,7 @@ export default function ApplicationCVEditor() {
 
   if (notFound) {
     return (
-      <PageLayout title="Application CV">
+      <PageLayout title="Application CV" headerVariant="document">
         <RecordState
           tone="error"
           title="Dossier not found"
@@ -271,7 +271,7 @@ export default function ApplicationCVEditor() {
 
   if (pageError || !application) {
     return (
-      <PageLayout title="Application CV">
+      <PageLayout title="Application CV" headerVariant="document">
         <RecordState
           tone="error"
           title="The application could not be loaded"
@@ -355,7 +355,7 @@ export default function ApplicationCVEditor() {
 
   if (!application.resume_id) {
     return (
-      <PageLayout title="Application CV" description="Create this application's own CV copy.">
+      <PageLayout title="Application CV" description="Create this application's own CV copy." headerVariant="document">
         <WorkingDocument label="Application CV creation">
           <div className="space-y-5 p-4 sm:p-6">
             {cvMissing && (
@@ -427,7 +427,7 @@ export default function ApplicationCVEditor() {
   }
 
   return (
-    <PageLayout title="Application CV" description={`Tailored CV for ${roleTitle}.`}>
+    <PageLayout title="Application CV" description={`Tailored CV for ${roleTitle}.`} headerVariant="document">
       {evidenceError && (
         <RecordState
           tone="warning"

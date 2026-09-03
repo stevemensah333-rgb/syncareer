@@ -18,10 +18,10 @@ const trendIcon = (trend: string) => {
 
 const categoryColor: Record<string, string> = {
   Hot: "bg-primary/10 text-primary border-primary/20",
-  Growing: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  Trend: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  Growing: "bg-success/10 text-success border-success/20",
+  Trend: "bg-info/10 text-info border-info/20",
   Alert: "bg-destructive/10 text-destructive border-destructive/20",
-  Emerging: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+  Emerging: "bg-accent text-accent-foreground border-accent-foreground/20",
 };
 
 const formatUSD = (val: number) =>

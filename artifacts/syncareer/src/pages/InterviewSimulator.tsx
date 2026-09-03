@@ -431,7 +431,7 @@ const InterviewSimulator = () => {
                   <CardContent className="space-y-2">
                     {interviewHistory.map((interview) => {
                       const score = interview.overall_score;
-                      const scoreColor = score === null ? 'text-muted-foreground' : score >= 75 ? 'text-green-600 dark:text-green-400' : score >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-destructive';
+                      const scoreColor = score === null ? 'text-muted-foreground' : score >= 75 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-destructive';
                       const date = new Date(interview.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
                       return (
                         <div key={interview.id} className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2.5 text-sm">

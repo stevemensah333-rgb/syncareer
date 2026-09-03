@@ -95,7 +95,9 @@ describe('Onboarding interface', () => {
     expect(main?.getAttribute('style')).toBeNull();
     expect(container.querySelector('.font-serif')).toBeNull();
     expect(container.querySelector('.italic')).toBeNull();
-    expect(heading.className).toContain('font-semibold');
+    // Onboarding uses the shared product title style, not a document/marketing one.
+    expect(heading.className).toContain('type-page-title');
+    expect(heading.className).not.toContain('dossier-title');
     expect(container.textContent).toContain('Account setup');
   });
 

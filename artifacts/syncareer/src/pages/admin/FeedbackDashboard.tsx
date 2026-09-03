@@ -201,7 +201,7 @@ const FeedbackDashboard = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <ThumbsUp className="h-8 w-8 text-green-600" />
+                <ThumbsUp className="h-8 w-8 text-success" />
                 <div>
                   <p className="text-2xl font-bold">{stats.positiveRate}%</p>
                   <p className="text-xs text-muted-foreground">Positive Rate</p>
@@ -345,7 +345,7 @@ const FeedbackDashboard = () => {
                 {filteredComments.map(f => (
                   <div key={f.id} className="flex items-start gap-3 p-3 rounded-lg border">
                     {f.response_type === 'positive' ? (
-                      <ThumbsUp className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <ThumbsUp className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
                     ) : (
                       <ThumbsDown className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
                     )}

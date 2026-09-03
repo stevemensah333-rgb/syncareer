@@ -45,7 +45,7 @@ export default function MentorshipRequests() {
         <article key={request.id} className="space-y-3 py-5">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="dossier-eyebrow">{MENTORSHIP_REQUEST_TYPES[request.request_type]}</p>
+              <p className="type-label">{MENTORSHIP_REQUEST_TYPES[request.request_type]}</p>
               <h2 className="mt-1 font-semibold">{request.goal}</h2>
               <p className="text-sm text-muted-foreground">{mentor ? request.mentee_name : `${request.mentor_name}${request.mentor_company ? ` · ${request.mentor_company}` : ''}`}</p>
             </div>

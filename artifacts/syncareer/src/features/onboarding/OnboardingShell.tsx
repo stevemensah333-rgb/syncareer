@@ -26,7 +26,7 @@ export function OnboardingShell({
     <main
       id="main-content"
       tabIndex={-1}
-      className="min-h-screen bg-background px-4 py-6 text-foreground focus:outline-none sm:px-6 sm:py-10"
+      className="surface-canvas min-h-screen bg-background px-4 py-6 focus:outline-none sm:px-6 sm:py-10"
     >
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-8 flex items-center justify-between gap-4">
@@ -35,7 +35,7 @@ export function OnboardingShell({
             className="inline-flex items-center gap-2 rounded-md text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Syncareer home"
           >
-            <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+            <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-control bg-primary text-sm font-bold text-primary-foreground">
               S
             </span>
             Syncareer
@@ -45,16 +45,16 @@ export function OnboardingShell({
 
         <header className="mb-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="dossier-eyebrow text-primary">{eyebrow}</p>
+            <p className="type-label text-primary">{eyebrow}</p>
             {hasProgress && (
               <p className="text-xs font-medium text-muted-foreground">
                 Step {currentStep} of {totalSteps}
               </p>
             )}
           </div>
-          <h1 className="dossier-title mt-2 text-[26px] leading-8 tracking-[-0.01em] sm:text-[32px] sm:leading-9">{title}</h1>
+          <h1 className="type-page-title mt-2">{title}</h1>
           {subtitle && (
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
+            <p className="type-secondary mt-2 max-w-xl">
               {subtitle}
             </p>
           )}

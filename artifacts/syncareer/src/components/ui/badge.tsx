@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 [&_svg]:size-3 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -21,6 +21,15 @@ const badgeVariants = cva(
         info:
           "border-transparent bg-info text-info-foreground hover:bg-info/80",
         outline: "text-foreground",
+        // Soft status tones. Preferred for inline status indicators, where a
+        // solid fill is too loud. They replace the ad-hoc tinted pills that
+        // individual pages used to hand-roll.
+        "soft-neutral": "border-border bg-muted text-muted-foreground",
+        "soft-success": "border-success/25 bg-success/10 text-success",
+        "soft-warning": "border-warning/25 bg-warning/10 text-warning",
+        "soft-destructive": "border-destructive/25 bg-destructive/10 text-destructive",
+        "soft-info": "border-info/25 bg-info/10 text-info",
+        "soft-primary": "border-primary/25 bg-primary/10 text-primary",
       },
     },
     defaultVariants: {

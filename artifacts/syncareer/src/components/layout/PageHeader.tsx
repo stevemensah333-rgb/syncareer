@@ -14,6 +14,9 @@ interface PageHeaderProps {
   breadcrumbs?: BreadcrumbItem[];
   actions?: React.ReactNode;
   className?: string;
+  /** `operational` (default) is the standard product page title. `document`
+   *  opts into the dossier type treatment and is reserved for
+   *  application/evidence surfaces — see the dossier rule in index.css. */
   variant?: 'document' | 'operational';
 }
 
@@ -25,7 +28,7 @@ export function PageHeader({
   breadcrumbs,
   actions,
   className,
-  variant = 'document',
+  variant = 'operational',
 }: PageHeaderProps) {
   if (!title) return null;
   return (
@@ -71,7 +74,7 @@ export function PageHeader({
               {title}
             </h1>
             {description && (
-              <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">
+              <p className="type-secondary mt-0.5 max-w-2xl">
                 {description}
               </p>
             )}

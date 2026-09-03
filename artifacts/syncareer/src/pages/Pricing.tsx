@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate } from 'react-router-dom';
 import PaystackButton from '@/components/payment/PaystackButton';
@@ -51,27 +52,25 @@ export default function PricingPage() {
   if (loading) {
     return (
       <main id="main-content" className="flex items-center justify-center min-h-screen" role="status" aria-live="polite">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-          <p className="text-muted-foreground">Loading pricing...</p>
+        <div className="space-y-4 text-center">
+          <Spinner className="mx-auto size-6 text-muted-foreground" />
+          <p className="type-secondary">Loading pricing…</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main id="main-content" className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-16 px-4 sm:px-6 lg:px-8">
+    <main id="main-content" className="surface-canvas min-h-screen py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <AnimatedSection y={20}>
         <div className="text-center mb-16 space-y-4">
-          <div className="inline-block px-4 py-2 bg-slate-700/50 rounded-full border border-slate-600">
-            <span className="text-sm text-slate-300">Transparent Pricing</span>
-          </div>
-          <h1 className="text-5xl sm:text-6xl font-bold text-balance">
+          <p className="type-label text-primary">Transparent pricing</p>
+          <h1 className="type-display text-balance">
             Unlock Your Career Potential
           </h1>
-          <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+          <p className="type-secondary mx-auto max-w-2xl text-base">
             Choose the plan that works for you. Pay with Mobile Money or Card.
           </p>
         </div>
@@ -80,27 +79,27 @@ export default function PricingPage() {
         {/* Billing Toggle */}
         <AnimatedSection delay={0.08} y={20}>
         <div className="flex justify-center mb-12">
-          <div className="inline-flex bg-slate-700/50 rounded-lg p-1 border border-slate-600">
+          <div className="inline-flex rounded-control border border-border bg-muted p-1">
             <button
               onClick={() => setSelectedBilling('monthly')}
-              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              className={`rounded-control px-6 py-2 text-sm font-medium transition-colors ${
                 selectedBilling === 'monthly'
-                  ? 'bg-slate-600 text-white'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-card text-foreground shadow-card'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Monthly
             </button>
             <button
               onClick={() => setSelectedBilling('yearly')}
-              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              className={`rounded-control px-6 py-2 text-sm font-medium transition-colors ${
                 selectedBilling === 'yearly'
-                  ? 'bg-slate-600 text-white'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-card text-foreground shadow-card'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Yearly
-              <span className="ml-2 inline-block px-3 py-1 bg-green-500/20 text-green-300 text-xs rounded-full">
+              <span className="ml-2 inline-block rounded-full border border-success/25 bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
                 Save 17%
               </span>
             </button>
@@ -112,73 +111,66 @@ export default function PricingPage() {
         <AnimatedSection delay={0.12} y={20}>
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
           {/* Free Tier */}
-          <Card className="bg-slate-800/50 border-slate-700 p-8 flex flex-col justify-between hover:bg-slate-800/70 transition-colors">
+          <Card className="flex flex-col justify-between p-8">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Free</h2>
-              <p className="text-slate-400 mb-6">For exploration and early-stage students.</p>
+              <h2 className="type-section-title mb-2 text-2xl">Free</h2>
+              <p className="type-secondary mb-6">For exploration and early-stage students.</p>
               <div className="mb-8">
-                <span className="text-4xl font-bold">GH₵0</span>
-                <span className="text-slate-400 ml-2">forever</span>
+                <span className="text-4xl font-semibold tracking-[-0.02em]">GH₵0</span>
+                <span className="type-secondary ml-2">forever</span>
               </div>
               <ul className="space-y-4 mb-8">
                 {features.free.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-slate-300">{feature}</span>
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" aria-hidden="true" />
+                    <span className="type-body">{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <Button
-              variant="outline"
-              className="w-full bg-slate-700 text-white border-slate-600 hover:bg-slate-600"
-              disabled
-            >
+            <Button variant="outline" className="w-full" disabled>
               {isPremium ? 'Downgrade' : 'Current Plan'}
             </Button>
           </Card>
 
           {/* Premium Tier */}
-          <Card className="bg-gradient-to-br from-slate-700 to-slate-800 border-slate-600 p-8 flex flex-col justify-between relative ring-2 ring-green-500/50">
-            <div className="absolute -top-4 right-4 bg-green-500 text-slate-900 px-4 py-1 rounded-full text-sm font-semibold">
+          <Card className="relative flex flex-col justify-between border-primary p-8">
+            <div className="absolute -top-3 right-4 rounded-full bg-primary px-3 py-0.5 text-xs font-medium text-primary-foreground">
               Recommended
             </div>
             <div>
-              <h2 className="text-2xl font-bold mb-2">Premium</h2>
-              <p className="text-slate-300 mb-6">For committed students serious about their careers.</p>
+              <h2 className="type-section-title mb-2 text-2xl">Premium</h2>
+              <p className="type-secondary mb-6">For committed students serious about their careers.</p>
               <div className="mb-8">
-                <span className="text-4xl font-bold">
+                <span className="text-4xl font-semibold tracking-[-0.02em]">
                   GH₵{selectedBilling === 'monthly' ? '30' : '300'}
                 </span>
-                <span className="text-slate-400 ml-2">
+                <span className="type-secondary ml-2">
                   {selectedBilling === 'monthly' ? '/month' : '/year'}
                 </span>
                 {selectedBilling === 'yearly' && (
-                  <div className="text-sm text-green-400 mt-2">Save GH₵60/year vs monthly</div>
+                  <div className="mt-2 text-sm font-medium text-success">Save GH₵60/year vs monthly</div>
                 )}
               </div>
               <ul className="space-y-4 mb-8">
                 {features.premium.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-slate-100">{feature}</span>
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" aria-hidden="true" />
+                    <span className="type-body">{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
             {isPremium ? (
-              <Button
-                disabled
-                className="w-full bg-green-500 text-slate-900 font-semibold"
-              >
+              <Button disabled className="w-full">
                 Already Premium
               </Button>
             ) : (
               <PaystackButton
                 plan={selectedBilling}
                 onSuccess={() => navigate('/subscription-success')}
-                className="w-full bg-green-500 text-slate-900 hover:bg-green-600 font-semibold"
+                className="w-full"
               >
                 Upgrade to Premium
               </PaystackButton>
@@ -190,7 +182,7 @@ export default function PricingPage() {
         {/* Payment Methods */}
         <AnimatedSection delay={0.16} y={20}>
         <div className="text-center mb-12">
-          <p className="text-slate-400 text-sm">
+          <p className="type-secondary">
             Accepted: MTN Mobile Money • Telecel Cash • AirtelTigo Money • Visa/Mastercard
           </p>
         </div>
@@ -198,8 +190,8 @@ export default function PricingPage() {
 
         {/* FAQ Section */}
         <AnimatedSection delay={0.2} y={20}>
-        <div className="max-w-3xl mx-auto border-t border-slate-700 pt-16">
-          <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+        <div className="mx-auto max-w-3xl border-t border-border pt-16">
+          <h2 className="type-section-title mb-12 text-center text-2xl sm:text-3xl">Frequently asked questions</h2>
           <div className="space-y-6">
             {[
               {
@@ -219,9 +211,9 @@ export default function PricingPage() {
                 a: 'We offer a 30-day money-back guarantee on annual plans. Contact support for details.',
               },
             ].map((item, idx) => (
-              <div key={idx} className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-                <h3 className="font-semibold mb-2">{item.q}</h3>
-                <p className="text-slate-300">{item.a}</p>
+              <div key={idx} className="surface-content p-6">
+                <h3 className="type-section-title mb-2 text-base">{item.q}</h3>
+                <p className="type-secondary">{item.a}</p>
               </div>
             ))}
           </div>
@@ -230,16 +222,16 @@ export default function PricingPage() {
 
         {/* CTA Section */}
         <AnimatedSection delay={0.24} y={20}>
-        <div className="text-center mt-16 pt-12 border-t border-slate-700">
-          <h2 className="text-2xl font-bold mb-4">Ready to accelerate your career?</h2>
-          <p className="text-slate-300 mb-6">
+        <div className="mt-16 border-t border-border pt-12 text-center">
+          <h2 className="type-section-title mb-4 text-2xl">Ready to accelerate your career?</h2>
+          <p className="type-secondary mb-6">
             Join thousands of professionals transforming their careers with Syncareer.
           </p>
           {!isPremium && (
             <PaystackButton
               plan={selectedBilling}
               onSuccess={() => navigate('/subscription-success')}
-              className="bg-green-500 text-slate-900 hover:bg-green-600 font-semibold px-8 py-3"
+              className="px-8"
             >
               Get Started Today
             </PaystackButton>

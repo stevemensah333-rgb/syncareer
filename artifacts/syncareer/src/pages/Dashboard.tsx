@@ -198,7 +198,7 @@ export default function Dashboard() {
 
         {loading ? (
           <div className="grid gap-6" aria-busy="true" aria-label="Loading application desk">
-            <div className="dossier-document overflow-hidden">
+            <div className="surface-content overflow-hidden">
               <div className="h-36 animate-pulse border-b border-border bg-muted/60 motion-reduce:animate-none" />
               <div className="h-12 animate-pulse border-b border-border bg-muted/40 motion-reduce:animate-none" />
               <div className="h-44 animate-pulse bg-muted/25 motion-reduce:animate-none" />

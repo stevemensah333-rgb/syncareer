@@ -564,7 +564,7 @@ const Assessment = () => {
 
         {/* Guest bottom CTA */}
         {isGuest && (
-          <Card className="border-primary/30 bg-landing-cream text-center">
+          <Card className="border-primary/30 bg-accent text-center">
             <CardContent className="pt-8 pb-8 space-y-3">
               <h3 className="text-xl font-semibold tracking-tight md:text-2xl">
                 Ready for the next step?

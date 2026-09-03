@@ -8,14 +8,16 @@ interface StudentLayoutProps {
   title: string;
   description?: string;
   breadcrumbs?: BreadcrumbItem[];
+  headerVariant?: 'document' | 'operational';
 }
 
-export function StudentLayout({ children, title, description, breadcrumbs }: StudentLayoutProps) {
+export function StudentLayout({ children, title, description, breadcrumbs, headerVariant }: StudentLayoutProps) {
   return (
     <AuthenticatedLayout
       title={title}
       description={description}
       breadcrumbs={breadcrumbs}
+      headerVariant={headerVariant}
       navigation={studentNavGroups}
       role="student"
     >

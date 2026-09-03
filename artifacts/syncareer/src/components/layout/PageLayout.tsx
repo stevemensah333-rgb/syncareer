@@ -10,6 +10,9 @@ interface PageLayoutProps {
   title: string;
   description?: string;
   breadcrumbs?: BreadcrumbItem[];
+  /** Opt into dossier/document title typography. Reserved for application,
+   *  evidence and application-CV surfaces. */
+  headerVariant?: 'document' | 'operational';
 }
 
 /**
@@ -17,13 +20,13 @@ interface PageLayoutProps {
  * The user's role is fetched from UserProfileContext (always from DB, never cached client-side).
  * ProtectedRoute + RoleRoute ensure the profile is loaded before this renders.
  */
-export function PageLayout({ children, title, description, breadcrumbs }: PageLayoutProps) {
+export function PageLayout({ children, title, description, breadcrumbs, headerVariant }: PageLayoutProps) {
   const { profile } = useUserProfile();
   const userType = profile?.user_type;
 
   if (userType === 'career_counsellor') {
     return (
-      <CounsellorLayout title={title} description={description} breadcrumbs={breadcrumbs}>
+      <CounsellorLayout title={title} description={description} breadcrumbs={breadcrumbs} headerVariant={headerVariant}>
         {children}
       </CounsellorLayout>
     );
@@ -31,7 +34,7 @@ export function PageLayout({ children, title, description, breadcrumbs }: PageLa
 
   // Default: student layout
   return (
-    <StudentLayout title={title} description={description} breadcrumbs={breadcrumbs}>
+    <StudentLayout title={title} description={description} breadcrumbs={breadcrumbs} headerVariant={headerVariant}>
       {children}
     </StudentLayout>
   );

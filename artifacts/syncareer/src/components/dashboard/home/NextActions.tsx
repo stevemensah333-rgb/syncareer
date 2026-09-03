@@ -22,7 +22,7 @@ export function NextActionsList({ actions }: { actions: NextAction[] }) {
   if (actions.length === 0) return null;
 
   return (
-    <section className="dossier-document" aria-labelledby="next-actions-title">
+    <section className="surface-content" aria-labelledby="next-actions-title">
       <header className="border-b border-border px-4 py-4">
         <h2 id="next-actions-title" className="text-sm font-semibold">Action docket</h2>
       </header>
