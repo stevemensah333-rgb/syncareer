@@ -142,6 +142,136 @@ Use semantic design tokens rather than scattering raw colours through components
 - Tooltips are for short explanations. Rich previews are for structured contextual information.
 - Use one consistent card-preview pattern rather than unrelated hover implementations.
 
+## Syncareer Product & Interface Doctrine
+
+This doctrine governs product design and interface work. It sits **alongside**
+the engineering, security, Supabase, Lovable, and testing policy above and does
+not replace any of it. Where a design idea conflicts with a security,
+data-truthfulness, or maintainability rule, the engineering policy wins.
+
+### Product definition
+
+Syncareer is a **career operating environment**, not a tool collection. Every
+screen belongs to one of three verbs:
+
+- **Discover** — opportunities, companies, mentors, career exploration.
+- **Prove** — evidence, requirements, applications, CV, application readiness.
+- **Advance** — interview, assessment, skills, feedback, next actions.
+
+Design decisions must strengthen the path `discover → prove → advance`. A change
+that adds a screen without connecting career objects is a regression.
+
+Syncareer must not read as a generic AI startup, an AI wrapper, a student CRUD
+dashboard, a template SaaS app, a bag of unrelated pages, or a clone of
+CareerOS, DataCamp, Coursera, Linear, Vercel, or Supabase.
+
+### Reference principle
+
+External products may be studied for **principles only**: CareerOS for career
+density, interconnected objects, and progressive disclosure; DataCamp for a
+deliberate token system and information hierarchy; Coursera for progression,
+states, and guided workflows. Never copy layouts, colours, wording, branding, or
+distinctive visual compositions.
+
+### Visual identity
+
+- A recognisable application canvas: subtle blue/blue-grey environmental
+  background, white work surfaces, deep blue/teal brand identity.
+- Restrained semantic accents, strong typography, deliberate whitespace,
+  moderate geometry, restrained borders, very limited shadows.
+- No gratuitous gradients, no glassmorphism, no animated AI decoration, no
+  visual noise.
+- Distinctiveness comes from composition, interaction, typography, colour
+  relationships, visual objects, progression language, and
+  application/evidence relationships — never from unusual CSS tricks.
+- The token system in `artifacts/syncareer/src/index.css` and
+  `tailwind.config.ts` is the single source of truth (see
+  `docs/DESIGN_TOKENS.md`). Consume semantic tokens; do not introduce
+  page-local palettes, type scales, or radii.
+
+### Three visual modes, one product
+
+| Mode | Surfaces | Character |
+|---|---|---|
+| **Discover** | Dashboard, Opportunities, Mentors, exploration | spacious, visual, approachable, lighter density, recognisable career objects |
+| **Prove** | Applications, requirements, evidence, application review, tailoring | dossier/workspace, precise, information-dense, evidence-first, strong context preservation |
+| **Advance** | Interview, Assessment, Skills, development workflows | progressive, interactive, focused, feedback-oriented, clear progression |
+
+All modes share typography, colour, spacing scale, control primitives,
+iconography, status semantics, focus states, accessibility behaviour,
+responsive behaviour, and motion principles. They must **not** be forced into
+identical layouts. **Distinct workspace, same product** is a core rule.
+
+### Dossier rule
+
+The dossier is a signature Syncareer pattern for the Prove mode
+(`src/components/dossier/`, `src/features/application-dossier/`). Preserve and
+strengthen it, and keep it scoped: Dashboard, Opportunities, Interview,
+Assessment, Mentors, and Landing must not become documents. Existing scope
+tests (`dossierScope.test.ts`) encode this; keep them passing.
+
+Terminology stays plain: Application, Requirements, Evidence, Progress, Next
+step, Activity. Do not invent new vocabulary where an ordinary word works.
+
+### Human design rule
+
+Every visible element must answer at least one of: what does this tell me? what
+can I do with it? what state is it communicating? what context does it
+preserve? Do not add UI because a component library offers a component, and do
+not display data merely because it exists.
+
+### AI principle
+
+AI is embedded intelligence, not the brand. Prefer contextual suggestions,
+explanations, recommendations, evidence guidance, and feedback inside the
+workflow. Avoid large standalone AI chat panels, AI avatars, sparkle motifs,
+repeated "AI-powered" labelling, and other AI clichés.
+
+### Motion principle
+
+Motion communicates cause and effect, hierarchy, continuity, state, progress,
+context, and feedback. Keep transitions in the 120–180ms range, respect
+`prefers-reduced-motion`, and avoid motion that distracts, blocks interaction,
+shifts layout, adds cognitive noise, burns CPU, or feels like a demo.
+
+### Performance principle
+
+Visual quality must not cost responsiveness. Prefer CSS transforms/opacity,
+CSS scroll-driven animation where appropriate, lightweight transitions, lazy
+loading, reserved image dimensions, and minimal client-side JavaScript for
+visual effects. Do not add large animation libraries without a demonstrated
+need.
+
+### Accessibility principle
+
+Accessibility is product quality: keyboard access, visible focus, semantic
+HTML, sufficient contrast, meaningful labels, touch-friendly targets,
+reduced-motion support, and screen-reader compatibility are non-negotiable.
+
+### Responsive principle
+
+Mobile is a deliberate layout, not a compressed desktop. At any viewport there
+must be exactly one global navigation mechanism and one contextual navigation
+mechanism, no unnecessary horizontal navigation, and no hover-dependent
+functionality.
+
+### SEO principle
+
+Public pages are search-friendly; authenticated application pages must not be
+unintentionally indexed. Maintain unique titles, useful descriptions, canonical
+URLs, semantic headings, Open Graph/social metadata, a sitemap, robots rules,
+and structured data only where visible page content supports it. Never fabricate
+ratings, testimonials, user counts, partner logos, employment outcomes, success
+percentages, ATS-performance claims, search volume, or customer numbers — this
+reinforces the existing prohibition on unverifiable marketing claims.
+
+### Engineering principle for interface code
+
+A future engineer must understand the interface without knowing which AI, which
+prompt, or which visual reference produced it. Interface code stays
+understandable, composable, and maintainable, and follows the same smallest-
+coherent-change and verification rules as the rest of the repository.
+
 ## TypeScript and validation
 
 - Do not weaken TypeScript compiler options, add blanket ignores, or use broad `any` types or casts to obtain a green typecheck.
