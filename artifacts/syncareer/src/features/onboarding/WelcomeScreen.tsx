@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { ArrowRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { OnboardingShell } from './OnboardingShell';
 import type { OnboardingRole } from './constants';
 
@@ -43,8 +42,7 @@ export function WelcomeScreen({
       currentStep={1}
       totalSteps={2}
     >
-      <Card>
-        <CardContent className="p-5 sm:p-6">
+      <div className="dossier-document p-5 sm:p-6">
           <h2 className="text-base font-semibold">What you can do in Syncareer</h2>
           <ul className="mt-4 divide-y" aria-label="Syncareer workspace features">
             {benefits.map((benefit) => (
@@ -62,8 +60,7 @@ export function WelcomeScreen({
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
     </OnboardingShell>
   );
 }

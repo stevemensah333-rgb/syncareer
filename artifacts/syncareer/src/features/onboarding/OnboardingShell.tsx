@@ -45,14 +45,14 @@ export function OnboardingShell({
 
         <header className="mb-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">{eyebrow}</p>
+            <p className="dossier-eyebrow text-primary">{eyebrow}</p>
             {hasProgress && (
               <p className="text-xs font-medium text-muted-foreground">
                 Step {currentStep} of {totalSteps}
               </p>
             )}
           </div>
-          <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">{title}</h1>
+          <h1 className="dossier-title mt-2 text-[26px] leading-8 tracking-[-0.01em] sm:text-[32px] sm:leading-9">{title}</h1>
           {subtitle && (
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
               {subtitle}
