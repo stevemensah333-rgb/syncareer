@@ -1166,6 +1166,7 @@ export type Database = {
       mock_interviews: {
         Row: {
           answers: Json
+          application_id: string | null
           completed_at: string | null
           created_at: string
           difficulty: string
@@ -1181,6 +1182,7 @@ export type Database = {
         }
         Insert: {
           answers?: Json
+          application_id?: string | null
           completed_at?: string | null
           created_at?: string
           difficulty?: string
@@ -1196,6 +1198,7 @@ export type Database = {
         }
         Update: {
           answers?: Json
+          application_id?: string | null
           completed_at?: string | null
           created_at?: string
           difficulty?: string
@@ -1209,7 +1212,15 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mock_interviews_application_owner_fkey"
+            columns: ["application_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "job_applications"
+            referencedColumns: ["id", "applicant_id"]
+          },
+        ]
       }
       notification_preferences: {
         Row: {
