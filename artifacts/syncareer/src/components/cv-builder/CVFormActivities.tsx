@@ -248,7 +248,7 @@ export const CVFormActivities: React.FC<CVFormActivitiesProps> = ({
                                 size="sm"
                                 onClick={() => onSuggestBullet(bulletPath, bullet)}
                                 className="h-7 px-2 text-xs text-primary hover:bg-primary/10 rounded-control"
-                                title="Get AI contextual rewrite"
+                                title="Get a suggested rewrite"
                               >
                                 <Sparkles className="mr-1 h-3 w-3" aria-hidden="true" />
                                 Improve

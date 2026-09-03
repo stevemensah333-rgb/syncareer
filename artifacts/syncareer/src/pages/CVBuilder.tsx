@@ -102,7 +102,7 @@ const CVBuilder = () => {
         if (!active) return;
         if (error || !data) {
           setOpportunityContext(null);
-          setOpportunityContextError('The selected opportunity could not be loaded. Choose it again before requesting AI wording.');
+          setOpportunityContextError('The selected opportunity could not be loaded. Choose it again before requesting a rewrite.');
           return;
         }
         try {
@@ -114,7 +114,7 @@ const CVBuilder = () => {
       } catch {
         if (active) {
           setOpportunityContext(null);
-          setOpportunityContextError('The selected opportunity could not be loaded. Choose it again before requesting AI wording.');
+          setOpportunityContextError('The selected opportunity could not be loaded. Choose it again before requesting a rewrite.');
         }
       } finally {
         if (active) setOpportunityContextLoading(false);
@@ -212,7 +212,7 @@ const CVBuilder = () => {
   return (
     <PageLayout
       title="CV Builder"
-      description="Create, edit, and maintain your primary career CV with evidence and guided scoring."
+      description="Create, edit, and maintain your primary career CV with evidence and a clear completion checklist."
       breadcrumbs={[{ label: 'Home', to: '/dashboard' }, { label: 'CV Builder' }]}
     >
       {loadFailure ? (

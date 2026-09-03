@@ -15,7 +15,7 @@ export default function SubscriptionSuccessPage() {
         </>
       }
       title="Premium activated"
-      description="Your payment has been verified and premium features are now unlocked."
+      description="Your payment has been verified and your Premium plan is active."
       actions={<Button onClick={() => navigate('/dashboard')}>Go to dashboard</Button>}
     />
   );

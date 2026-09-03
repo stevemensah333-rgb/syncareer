@@ -74,7 +74,7 @@ export const ReferralCard: React.FC = () => {
             {copied ? 'Copied!' : 'Copy Link'}
           </Button>
           <WhatsAppShareButton
-            text="Join me on Syncareer — an AI-powered career platform for students. Use my referral code and we both get premium features!"
+            text="Join me on Syncareer — a career platform for students. Use my referral code and we both get premium features!"
             url={referralUrl}
             className="flex-1"
           >

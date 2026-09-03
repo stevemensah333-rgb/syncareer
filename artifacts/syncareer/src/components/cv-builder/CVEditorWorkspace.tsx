@@ -565,10 +565,10 @@ export function CVEditorWorkspace({
                   size="sm"
                   onClick={applyUndo}
                   className="rounded-control text-xs"
-                  title="Undo last AI rewrite change"
+                  title="Undo the last suggested rewrite"
                 >
                   <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-                  Undo AI change
+                  Undo rewrite
                 </Button>
               )}
 
@@ -852,7 +852,7 @@ export function CVEditorWorkspace({
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Contextual AI Guidance
+                  Wording help
                 </h3>
               </div>
               <Button
@@ -868,7 +868,7 @@ export function CVEditorWorkspace({
             <p className="text-xs text-muted-foreground leading-relaxed">
               {assistantOpportunity
                 ? `Grounded in requirement context for ${assistantOpportunity.title}.`
-                : 'Select an opportunity to enable job-grounded bullet rewrite proposals.'}
+                : 'Select an opportunity to get bullet rewrites grounded in the role.'}
             </p>
 
             {showAIAssistance && (

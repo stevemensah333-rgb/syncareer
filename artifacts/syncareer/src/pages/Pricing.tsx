@@ -44,8 +44,8 @@ export default function PricingPage() {
       'Career assessments: Unlimited retakes',
       'Job applications tracked: Unlimited',
       'Analytics: Real-time dashboard',
-      'Personalized AI career recommendations',
-      'Priority support & early feature access',
+      'Career recommendations for your profile',
+      'Priority support',
     ],
   };
 
@@ -68,7 +68,7 @@ export default function PricingPage() {
         <div className="text-center mb-16 space-y-4">
           <p className="type-label text-primary">Transparent pricing</p>
           <h1 className="type-display text-balance">
-            Unlock Your Career Potential
+            Free to start. Upgrade when you need more.
           </h1>
           <p className="type-secondary mx-auto max-w-2xl text-base">
             Choose the plan that works for you. Pay with Mobile Money or Card.
@@ -140,7 +140,7 @@ export default function PricingPage() {
             </div>
             <div>
               <h2 className="type-section-title mb-2 text-2xl">Premium</h2>
-              <p className="type-secondary mb-6">For committed students serious about their careers.</p>
+              <p className="type-secondary mb-6">For students applying and interviewing regularly.</p>
               <div className="mb-8">
                 <span className="text-4xl font-semibold tracking-[-0.02em]">
                   GH₵{selectedBilling === 'monthly' ? '30' : '300'}
@@ -223,9 +223,9 @@ export default function PricingPage() {
         {/* CTA Section */}
         <AnimatedSection delay={0.24} y={20}>
         <div className="mt-16 border-t border-border pt-12 text-center">
-          <h2 className="type-section-title mb-4 text-2xl">Ready to accelerate your career?</h2>
+          <h2 className="type-section-title mb-4 text-2xl">Want more from Syncareer?</h2>
           <p className="type-secondary mb-6">
-            Join thousands of professionals transforming their careers with Syncareer.
+            Upgrade to remove the limits on assessments, mock interviews, and CV exports.
           </p>
           {!isPremium && (
             <PaystackButton
@@ -233,7 +233,7 @@ export default function PricingPage() {
               onSuccess={() => navigate('/subscription-success')}
               className="px-8"
             >
-              Get Started Today
+              Upgrade to Premium
             </PaystackButton>
           )}
         </div>

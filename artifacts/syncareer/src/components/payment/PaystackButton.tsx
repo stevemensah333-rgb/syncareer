@@ -56,7 +56,7 @@ export default function PaystackButton({
         const result = await response.json();
 
         if (result.status === 'success') {
-          toast.success('Premium activated! All features are now unlocked.', { duration: 5000 });
+          toast.success('Premium activated. Your new limits apply now.', { duration: 5000 });
           // Small delay to let DB propagate, then trigger refetch
           setTimeout(() => {
             onSuccess?.();

@@ -181,6 +181,6 @@ describe('CVEditorWorkspace interaction & professional workbench', () => {
 
     fireEvent.click(improveBtn);
     // Contextual AI panel should open
-    expect(screen.getByText('Contextual AI Guidance')).toBeTruthy();
+    expect(screen.getByText('Wording help')).toBeTruthy();
   });
 });

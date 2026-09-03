@@ -196,7 +196,7 @@ export function CVAIAssistant({
             </div>
           ) : !opportunity ? (
             <div className="rounded-surface border border-border bg-muted/40 p-3 text-xs space-y-2">
-              <p className="font-medium text-foreground">Choose an opportunity before requesting AI wording.</p>
+              <p className="font-medium text-foreground">Choose an opportunity before requesting a rewrite.</p>
               <p className="text-muted-foreground leading-relaxed">
                 Job-specific guidance needs a real role and candidate evidence; generic CV prompts are disabled here.
               </p>
@@ -423,7 +423,7 @@ export function CVAIAssistant({
                   </p>
                   <Button size="sm" variant="outline" className="rounded-control text-xs" onClick={() => { onUndo(); setState('idle'); }}>
                     <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-                    Undo AI change
+                    Undo rewrite
                   </Button>
                 </div>
               )}

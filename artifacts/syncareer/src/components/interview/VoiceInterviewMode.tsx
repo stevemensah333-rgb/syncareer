@@ -339,7 +339,7 @@ export function VoiceInterviewMode({
             <section className="rounded-surface border border-info/40 bg-accent/40 p-5 sm:p-6 space-y-3">
               <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-info" />
-                AI Evaluator Synthesis
+                Summary
               </h2>
               <p className="text-xs text-muted-foreground">
                 Generated qualitative synthesis; review it against your verified transcript above.
