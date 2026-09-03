@@ -81,14 +81,35 @@ export default function Landing() {
       </a>
       <LandingHeader
         onSignIn={goToSignIn}
-        onSignUp={() => { captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: 'opportunities', placement: 'header' }); startWithOpportunity(); }}
+        onSignUp={() => {
+          captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: "opportunities", placement: "header" });
+          startWithOpportunity();
+        }}
         primaryActionLabel="Explore opportunities"
       />
       <main id="main-content" tabIndex={-1} className="focus:outline-none">
-        <HeroSection onGetStarted={() => { captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: 'opportunities', placement: 'hero' }); startWithOpportunity(); }} onAssessment={() => { captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: 'assessment', placement: 'hero' }); startAssessment(); }} />
+        <HeroSection
+          onGetStarted={() => {
+            captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: "opportunities", placement: "hero" });
+            startWithOpportunity();
+          }}
+          onAssessment={() => {
+            captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: "assessment", placement: "hero" });
+            startAssessment();
+          }}
+        />
         <ProductStory />
         <FAQSection />
-        <FinalCTASection onGetStarted={() => { captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: 'opportunities', placement: 'final' }); startWithOpportunity(); }} onAssessment={() => { captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: 'assessment', placement: 'final' }); startAssessment(); }} />
+        <FinalCTASection
+          onGetStarted={() => {
+            captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: "opportunities", placement: "final" });
+            startWithOpportunity();
+          }}
+          onAssessment={() => {
+            captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: "assessment", placement: "final" });
+            startAssessment();
+          }}
+        />
       </main>
       <LandingFooter />
     </div>
@@ -105,5 +126,9 @@ function SignedInLandingRedirect() {
     else navigate(getHomeRouteForRole(profile.user_type || null), { replace: true });
   }, [loading, navigate, profile]);
 
-  return <div className="grid min-h-screen place-items-center bg-background" role="status" aria-live="polite"><span className="text-sm text-muted-foreground">Opening your workspace…</span></div>;
+  return (
+    <div className="grid min-h-screen place-items-center bg-background" role="status" aria-live="polite">
+      <span className="text-sm text-muted-foreground">Opening your workspace…</span>
+    </div>
+  );
 }

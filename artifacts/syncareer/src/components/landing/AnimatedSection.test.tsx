@@ -32,9 +32,25 @@ class MockIntersectionObserver {
   }
 }
 
+let originalCSSSupports: typeof CSS.supports | undefined;
+
 beforeEach(() => {
   MockIntersectionObserver.instances = [];
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
+  // Force the IntersectionObserver fallback path by making CSS.supports
+  // report no support for scroll-driven animations.  happy-dom returns
+  // true for CSS.supports('animation-timeline','view()') which triggers
+  // the CSS-only path that doesn't set inline opacity/transform styles.
+  if (typeof CSS !== 'undefined') {
+    originalCSSSupports = CSS.supports.bind(CSS);
+    vi.stubGlobal('CSS', {
+      ...CSS,
+      supports: (...args: Parameters<typeof CSS.supports>) => {
+        if (args[0] === 'animation-timeline') return false;
+        return originalCSSSupports!(...args);
+      },
+    });
+  }
 });
 
 afterEach(() => {

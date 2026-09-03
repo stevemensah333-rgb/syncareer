@@ -21,12 +21,22 @@ export default function LandingHeader({
   primaryActionLabel = "Get started",
 }: LandingHeaderProps) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileNavRef = useRef<HTMLDivElement>(null);
 
+  // Track scroll position for subtle header shadow
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
-    const focusable = Array.from(mobileNavRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? []);
+    const focusable = Array.from(
+      mobileNavRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [],
+    );
     focusable[0]?.focus();
     const manageMenuFocus = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -50,7 +60,11 @@ export default function LandingHeader({
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+    <header
+      className={`sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 transition-shadow duration-200 ${
+        scrolled ? "shadow-[0_1px_3px_0_rgba(16,24,40,0.04)]" : ""
+      }`}
+    >
       <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex min-h-11 items-center gap-2 rounded-md" aria-label="Syncareer home">
           <img src={syncareerLogo} alt="" className="h-7 w-7" />
