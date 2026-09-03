@@ -696,34 +696,64 @@ export type Database = {
       job_applications: {
         Row: {
           applicant_id: string
+          company_name_snapshot: string | null
           cover_letter: string | null
           created_at: string
+          deadline_snapshot: string | null
+          external_id_snapshot: string | null
           id: string
-          job_id: string
+          job_id: string | null
+          job_title_snapshot: string | null
+          location_snapshot: string | null
+          next_action: string | null
+          next_action_due: string | null
           notes: string | null
+          resume_id: string | null
           resume_url: string | null
+          source_snapshot: string | null
+          source_url_snapshot: string | null
           status: string
           updated_at: string
         }
         Insert: {
           applicant_id: string
+          company_name_snapshot?: string | null
           cover_letter?: string | null
           created_at?: string
+          deadline_snapshot?: string | null
+          external_id_snapshot?: string | null
           id?: string
-          job_id: string
+          job_id?: string | null
+          job_title_snapshot?: string | null
+          location_snapshot?: string | null
+          next_action?: string | null
+          next_action_due?: string | null
           notes?: string | null
+          resume_id?: string | null
           resume_url?: string | null
+          source_snapshot?: string | null
+          source_url_snapshot?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
           applicant_id?: string
+          company_name_snapshot?: string | null
           cover_letter?: string | null
           created_at?: string
+          deadline_snapshot?: string | null
+          external_id_snapshot?: string | null
           id?: string
-          job_id?: string
+          job_id?: string | null
+          job_title_snapshot?: string | null
+          location_snapshot?: string | null
+          next_action?: string | null
+          next_action_due?: string | null
           notes?: string | null
+          resume_id?: string | null
           resume_url?: string | null
+          source_snapshot?: string | null
+          source_url_snapshot?: string | null
           status?: string
           updated_at?: string
         }
@@ -734,6 +764,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "job_postings"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_resume_owner_fkey"
+            columns: ["resume_id", "applicant_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
+            referencedColumns: ["id", "user_id"]
           },
         ]
       }
