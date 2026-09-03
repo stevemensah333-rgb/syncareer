@@ -6,13 +6,30 @@ import type {
   DashboardSavedJob,
 } from './continuation';
 
-export type DashboardLoadError = 'assessment' | 'applications' | 'saved opportunities' | 'CV';
+export type DashboardLoadError = 'assessment' | 'applications' | 'saved opportunities' | 'CV' | 'interview practice';
+
+/** Recorded career direction from the most recent completed assessment. */
+export interface DashboardDirection {
+  primary: string | null;
+  secondary: string | null;
+  tertiary: string | null;
+}
+
+/** Recorded interview practice. Scores are intentionally excluded — the
+ *  feedback is LLM output and is not treated as a metric. */
+export interface DashboardInterview {
+  total: number;
+  lastRole: string | null;
+  lastAt: string | null;
+}
 
 export interface DashboardDataBundle {
   assessmentDone: boolean;
+  direction: DashboardDirection | null;
   applications: DashboardApplication[];
   savedJobs: DashboardSavedJob[];
   resume: unknown | null;
+  interview: DashboardInterview;
   errors: DashboardLoadError[];
 }
 
@@ -35,6 +52,11 @@ interface LiveApplicationRow {
 interface LiveSavedJobRow {
   job_id: string;
   created_at: string;
+}
+
+interface LiveInterviewRow {
+  job_role: string | null;
+  created_at: string | null;
 }
 
 export const DASHBOARD_APPLICATION_SELECT = `
@@ -112,6 +134,29 @@ function toJobMap(data: unknown): Map<string, DashboardJob> {
   return new Map(jobs.map((job) => [job.id, job]));
 }
 
+function toDirection(data: unknown): DashboardDirection | null {
+  if (!isRecord(data)) return null;
+  const primary = stringValue(data.primary_interest);
+  const secondary = stringValue(data.secondary_interest);
+  const tertiary = stringValue(data.tertiary_interest);
+  if (!primary && !secondary && !tertiary) return null;
+  return { primary, secondary, tertiary };
+}
+
+function toInterview(data: unknown): DashboardInterview {
+  if (!Array.isArray(data)) return { total: 0, lastRole: null, lastAt: null };
+  const rows = data.flatMap((value): LiveInterviewRow[] => {
+    if (!isRecord(value)) return [];
+    return [{ job_role: stringValue(value.job_role), created_at: stringValue(value.created_at) }];
+  });
+  const latest = rows[0];
+  return {
+    total: rows.length,
+    lastRole: latest?.job_role ?? null,
+    lastAt: latest?.created_at ?? null,
+  };
+}
+
 async function settle(request: PromiseLike<unknown>): Promise<QueryResult> {
   try {
     const result = await request;
@@ -134,11 +179,11 @@ export async function loadDashboardData(
   client: DashboardClient,
   userId: string,
 ): Promise<DashboardDataBundle> {
-  const [assessmentResult, applicationsResult, savedResult, resumeResult] = await Promise.all([
+  const [assessmentResult, applicationsResult, savedResult, resumeResult, interviewResult] = await Promise.all([
     settle(
       client
         .from('assessments')
-        .select('completed_at')
+        .select('completed_at, primary_interest, secondary_interest, tertiary_interest')
         .eq('user_id', userId)
         .not('completed_at', 'is', null)
         .order('completed_at', { ascending: false })
@@ -171,6 +216,14 @@ export async function loadDashboardData(
         .limit(1)
         .maybeSingle(),
     ),
+    settle(
+      client
+        .from('mock_interviews')
+        .select('job_role, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20),
+    ),
   ]);
 
   const errors: DashboardLoadError[] = [];
@@ -178,6 +231,7 @@ export async function loadDashboardData(
   if (applicationsResult.error) errors.push('applications');
   if (savedResult.error) errors.push('saved opportunities');
   if (resumeResult.error) errors.push('CV');
+  if (interviewResult.error) errors.push('interview practice');
 
   const savedRows = savedResult.error ? [] : toSavedRows(savedResult.data);
   let jobsById = new Map<string, DashboardJob>();
@@ -198,6 +252,7 @@ export async function loadDashboardData(
 
   return {
     assessmentDone: !assessmentResult.error && Boolean(assessmentResult.data),
+    direction: assessmentResult.error ? null : toDirection(assessmentResult.data),
     applications: applicationsResult.error ? [] : toApplications(applicationsResult.data),
     savedJobs: savedRows.map((row) => ({
       job_id: row.job_id,
@@ -205,6 +260,7 @@ export async function loadDashboardData(
       job: jobsById.get(row.job_id) ?? null,
     })),
     resume: resumeResult.error ? null : resumeResult.data,
+    interview: interviewResult.error ? { total: 0, lastRole: null, lastAt: null } : toInterview(interviewResult.data),
     errors,
   };
 }
