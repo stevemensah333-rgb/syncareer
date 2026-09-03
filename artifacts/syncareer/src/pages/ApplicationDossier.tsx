@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, FileText, Loader2, MessageSquare, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
+  ApplicationStageRail,
   DossierActionBar,
   DossierHeader,
   DossierSection,
@@ -51,6 +52,9 @@ import {
   unlinkEvidenceFromRequirement,
 } from '@/features/evidence/api';
 import type { EvidenceCategory, EvidenceSourceType } from '@/features/evidence/types';
+import { buildRequirementThreads, threadCoverage } from '@/features/evidence/dossierViewModel';
+import { deriveSupportStatus } from '@/features/evidence/supportStatus';
+import { cn } from '@/lib/utils';
 import { ContextualAssistantDrawer } from '@/components/assistant/ContextualAssistantDrawer';
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
@@ -69,9 +73,30 @@ const SECTION_LABELS: Record<SectionId, string> = {
   mentor: 'Mentor',
 };
 
+function parseSectionParam(value: string | null): SectionId | null {
+  return value && (SECTION_ORDER as readonly string[]).includes(value) ? (value as SectionId) : null;
+}
+
+/** URL form of an inspector selection: `requirement:<id>` or `evidence:<id>`. */
+function parseFocusParam(value: string | null): InspectorSelection {
+  if (!value) return null;
+  const separator = value.indexOf(':');
+  if (separator <= 0) return null;
+  const kind = value.slice(0, separator);
+  const id = value.slice(separator + 1);
+  if (!id) return null;
+  if (kind === 'requirement' || kind === 'evidence') return { kind, id };
+  return null;
+}
+
+function focusParamValue(selection: InspectorSelection): string | null {
+  return selection ? `${selection.kind}:${selection.id}` : null;
+}
+
 export default function ApplicationDossier() {
   const { applicationId } = useParams<{ applicationId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const userId = useSupabaseUserId();
   const isMobile = useIsMobile();
   const isCompact = useDossierCompact(isMobile);
@@ -84,9 +109,16 @@ export default function ApplicationDossier() {
   const [applicationError, setApplicationError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [activeSection, setActiveSection] = useState<SectionId>('brief');
+  // Deep-link state lives in the URL: `section` for the visible section and
+  // `focus` for the inspected requirement/evidence. Selection changes are
+  // written back with replace so sharing and refresh keep the context.
+  const [activeSection, setActiveSection] = useState<SectionId>(
+    () => parseSectionParam(searchParams.get('section')) ?? 'brief',
+  );
+  const initialFocusParam = useRef<string | null>(searchParams.get('focus'));
   const [inspectorSelection, setInspectorSelection] = useState<InspectorSelection>(null);
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
+  const [pendingFocus, setPendingFocus] = useState<{ section: SectionId; elementId: string } | null>(null);
   const [statusSaving, setStatusSaving] = useState(false);
   const [notesState, setNotesState] = useState<SaveState>('idle');
   const [workspaceState, setWorkspaceState] = useState<SaveState>('idle');
@@ -120,6 +152,18 @@ export default function ApplicationDossier() {
     if (!loading && bundle) pageRef.current?.focus();
   }, [loading, bundle, applicationId]);
 
+  // A `section` deep link scrolls the document to that section once on load.
+  const initialSectionScrolled = useRef(false);
+  useEffect(() => {
+    if (loading || !bundle || initialSectionScrolled.current || isCompact) return;
+    initialSectionScrolled.current = true;
+    if (activeSection !== 'brief') {
+      requestAnimationFrame(() => {
+        sectionRefs.current[activeSection]?.scrollIntoView({ behavior: 'auto', block: 'start' });
+      });
+    }
+  }, [loading, bundle, activeSection, isCompact]);
+
   const application = bundle?.application ?? null;
   const facts = useMemo(() => (application ? applicationFacts(application) : null), [application]);
   const organisation = facts ? (getOrganisation(facts) ?? 'Organisation not specified') : '';
@@ -128,8 +172,53 @@ export default function ApplicationDossier() {
   const journey = useMemo(() => buildJourney(application?.status ?? ''), [application?.status]);
   const evidence = bundle?.evidence ?? null;
 
-  // Default the context panel to the first requirement, then to the first
-  // evidence record when requirements are not yet available.
+  // Progress facts for the strip under the header: requirement coverage and
+  // evidence readiness, derived from the same rows the sections render.
+  const evidenceFacts = useMemo(() => {
+    if (!evidence) return null;
+    const threads = buildRequirementThreads(
+      evidence.requirements,
+      evidence.links,
+      evidence.items,
+      evidence.sources,
+      evidence.resumeLinks,
+    );
+    const coverage = threadCoverage(threads);
+    const sourceCount = new Map<string, number>();
+    for (const source of evidence.sources) {
+      sourceCount.set(source.evidence_id, (sourceCount.get(source.evidence_id) ?? 0) + 1);
+    }
+    const readyCount = evidence.items.filter(
+      (item) => deriveSupportStatus(item.review_status, sourceCount.get(item.id) ?? 0) === 'supported',
+    ).length;
+    return { coverage, readyCount, totalCount: evidence.items.length };
+  }, [evidence]);
+
+  const updateUrlParams = useCallback(
+    (changes: { section?: SectionId; focus?: string | null }) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (changes.section !== undefined) next.set('section', changes.section);
+          if (changes.focus !== undefined) {
+            if (changes.focus === null) next.delete('focus');
+            else next.set('focus', changes.focus);
+          }
+          return next.toString() === prev.toString() ? prev : next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  // Keep the URL in step with the current inspector selection.
+  useEffect(() => {
+    updateUrlParams({ focus: focusParamValue(inspectorSelection) });
+  }, [inspectorSelection, updateUrlParams]);
+
+  // Default the context panel to the first requirement (honouring a `focus`
+  // URL parameter on first load), then repair stale selections after edits.
   useEffect(() => {
     if (!evidence) return;
     if (inspectorSelection?.kind === 'requirement' && !evidence.requirements.some((item) => item.id === inspectorSelection.id)) {
@@ -141,6 +230,17 @@ export default function ApplicationDossier() {
       return;
     }
     if (!inspectorSelection) {
+      const requested = parseFocusParam(initialFocusParam.current);
+      initialFocusParam.current = null;
+      if (
+        requested &&
+        ((requested.kind === 'requirement' && evidence.requirements.some((item) => item.id === requested.id)) ||
+          (requested.kind === 'evidence' && evidence.items.some((item) => item.id === requested.id)))
+      ) {
+        setInspectorSelection(requested);
+        setActiveSection(requested.kind === 'requirement' ? 'requirements' : 'ledger');
+        return;
+      }
       setInspectorSelection(
         evidence.requirements[0]
           ? { kind: 'requirement', id: evidence.requirements[0].id }
@@ -149,6 +249,46 @@ export default function ApplicationDossier() {
             : null,
       );
     }
+  }, [evidence, inspectorSelection]);
+
+  // Deferred focus move: closes the sheet on compact layouts, activates the
+  // target section, then focuses the control once it is rendered.
+  const focusControl = useCallback(
+    (section: SectionId, elementId: string) => {
+      if (isCompact) setMobileInspectorOpen(false);
+      setActiveSection(section);
+      setPendingFocus({ section, elementId });
+    },
+    [isCompact],
+  );
+
+  useEffect(() => {
+    if (!pendingFocus) return;
+    const frame = requestAnimationFrame(() => {
+      const element = document.getElementById(pendingFocus.elementId);
+      if (element) {
+        if (!isCompact) {
+          sectionRefs.current[pendingFocus.section]?.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+        element.focus({ preventScroll: true });
+      }
+      setPendingFocus(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [pendingFocus, isCompact]);
+
+  // Screen-reader announcement for inspector changes: selection is otherwise
+  // communicated visually in the right panel.
+  const inspectorAnnouncement = useMemo(() => {
+    if (!evidence || !inspectorSelection) return '';
+    if (inspectorSelection.kind === 'requirement') {
+      const requirement = evidence.requirements.find((item) => item.id === inspectorSelection.id);
+      if (!requirement) return '';
+      const linkedCount = evidence.links.filter((link) => link.requirement_id === requirement.id).length;
+      return `Inspecting requirement ${requirement.label}. ${linkedCount} ${linkedCount === 1 ? 'evidence item' : 'evidence items'} attached.`;
+    }
+    const item = evidence.items.find((candidate) => candidate.id === inspectorSelection.id);
+    return item ? `Inspecting evidence ${item.title}.` : '';
   }, [evidence, inspectorSelection]);
 
   const handleSelectRequirement = (requirementId: string) => {
@@ -271,6 +411,9 @@ export default function ApplicationDossier() {
     setBundle((current) => (current?.evidence ? { ...current, evidence: patch(current.evidence) } : current));
   };
 
+  const requirementLabel = (requirementId: string): string | null =>
+    bundle?.evidence?.requirements.find((requirement) => requirement.id === requirementId)?.label ?? null;
+
   const handleLinkEvidence = async (requirementId: string, evidenceId: string, relevanceNote: string | null): Promise<boolean> => {
     const previous = bundle?.evidence ?? null;
     const optimisticLink = {
@@ -296,6 +439,8 @@ export default function ApplicationDossier() {
       links: current.links.map((link) => (link.id === optimisticLink.id ? result.data : link)),
     }));
     setEvidenceWarning(null);
+    const label = requirementLabel(requirementId);
+    toast.success(label ? `Evidence linked to “${label}”` : 'Evidence linked');
     return true;
   };
 
@@ -312,6 +457,7 @@ export default function ApplicationDossier() {
       return false;
     }
     setEvidenceWarning(null);
+    toast.success('Evidence unlinked');
     return true;
   };
 
@@ -362,6 +508,7 @@ export default function ApplicationDossier() {
     setSectionBusy(false);
     if (!result.ok) return result.userMessage;
     patchEvidence((current) => ({ ...current, items: [result.data, ...current.items] }));
+    toast.success('Evidence saved as a draft');
     return null;
   };
 
@@ -377,6 +524,7 @@ export default function ApplicationDossier() {
       ...current,
       items: current.items.map((item) => (item.id === evidenceId ? result.data : item)),
     }));
+    toast.success('Evidence confirmed');
     return true;
   };
 
@@ -392,6 +540,7 @@ export default function ApplicationDossier() {
       ...current,
       items: current.items.map((item) => (item.id === evidenceId ? result.data : item)),
     }));
+    toast.success('Evidence archived');
     return true;
   };
 
@@ -410,6 +559,7 @@ export default function ApplicationDossier() {
     setSectionBusy(false);
     if (!result.ok) return result.userMessage;
     patchEvidence((current) => ({ ...current, sources: [...current.sources, result.data] }));
+    toast.success('Source attached');
     return null;
   };
 
@@ -701,7 +851,7 @@ export default function ApplicationDossier() {
         <RecordState
           tone="warning"
           title="Evidence records are temporarily unavailable"
-          description={bundle?.evidenceError?.userMessage ?? 'Retry to load the ledger.'}
+          description={bundle?.evidenceError?.userMessage ?? 'Retry to load evidence.'}
           action={
             <Button size="sm" variant="outline" onClick={reload}>
               Retry
@@ -713,6 +863,9 @@ export default function ApplicationDossier() {
   );
 
   const cvHref = application ? `/applications/${encodeURIComponent(application.id)}/cv` : '/cv-builder';
+  const practiceHref = application
+    ? `/applications/${encodeURIComponent(application.id)}/interview`
+    : '/interview-simulator';
 
   const renderCv = () => (
     <DossierSection
@@ -779,7 +932,6 @@ export default function ApplicationDossier() {
   const renderInterview = () => {
     const linked = (bundle?.interviews ?? []).filter((interview) => interview.application_id === application?.id);
     const available = (bundle?.interviews ?? []).filter((interview) => !interview.application_id);
-    const practiceHref = application ? `/applications/${encodeURIComponent(application.id)}/interview` : '/interview-simulator';
     return (
       <DossierSection label="Interview" title="Interview">
         <div className="space-y-4">
@@ -926,6 +1078,7 @@ export default function ApplicationDossier() {
   const selectSection = (section: string) => {
     const id = section as SectionId;
     setActiveSection(id);
+    updateUrlParams({ section: id });
     if (isCompact) return;
     const target = sectionRefs.current[id];
     if (target) {
@@ -963,13 +1116,86 @@ export default function ApplicationDossier() {
     );
   };
 
+  // Progress strip: the application at a glance — stage, requirement
+  // coverage, evidence readiness, linked material and the next step.
+  const linkedResume = application.resume_id
+    ? bundle?.resumes.find((resume) => resume.id === application.resume_id)
+    : undefined;
+  const coverage = evidenceFacts?.coverage ?? null;
+  const dueDetail =
+    application.next_action && application.next_action_due
+      ? `${dueState === 'overdue' ? 'Overdue' : dueState === 'today' ? 'Due today' : 'Upcoming'} · ${application.next_action_due}`
+      : undefined;
+
+  const renderProgressStrip = () => (
+    <div className="border-b border-border bg-card">
+      <ApplicationStageRail stages={railStages} label="Stage progress" />
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 py-4 sm:px-6 lg:grid-cols-4">
+        <Fact
+          label="Progress"
+          value={
+            coverage
+              ? coverage.requirementCount > 0
+                ? `${coverage.supportedRequirementCount} of ${coverage.requirementCount} requirements supported`
+                : 'No requirements recorded'
+              : 'Requirements unavailable'
+          }
+          tone={
+            coverage && coverage.requirementCount > 0
+              ? coverage.gapRequirementCount === 0
+                ? 'success'
+                : 'warning'
+              : undefined
+          }
+        />
+        <Fact
+          label="Evidence"
+          value={evidenceFacts ? `${evidenceFacts.readyCount} of ${evidenceFacts.totalCount} ready` : 'Unavailable'}
+          tone={evidenceFacts && evidenceFacts.readyCount > 0 ? 'success' : undefined}
+        />
+        <Fact
+          label="Application CV"
+          value={
+            linkedResume
+              ? linkedResume.title || 'Untitled CV'
+              : application.resume_id
+                ? 'Linked CV'
+                : 'Not linked'
+          }
+        />
+        <Fact
+          label="Next step"
+          value={application.next_action || 'None set'}
+          detail={dueDetail}
+          tone={dueState === 'overdue' || dueState === 'today' ? 'warning' : undefined}
+        />
+      </div>
+    </div>
+  );
+
   const inspectorTitle = 'Evidence context';
+  const inspectorActions = {
+    onLinkEvidenceForRequirement: (requirementId: string) =>
+      focusControl('requirements', `dossier-link-${requirementId}`),
+    onAddRequirement: () => focusControl('requirements', 'dossier-add-requirement'),
+    onAddSourceForEvidence: (evidenceId: string) => focusControl('ledger', `dossier-source-${evidenceId}`),
+    onConfirmEvidence: (evidenceId: string) => handleConfirmEvidence(evidenceId),
+  };
 
   return (
     <div ref={pageRef} tabIndex={-1} className="space-y-0 focus:outline-none">
-      <div className={isCompact ? 'grid gap-4' : 'grid items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_320px]'}>
+      <p aria-live="polite" className="sr-only">
+        {inspectorAnnouncement}
+      </p>
+      <div
+        className={
+          isCompact
+            ? 'grid gap-4'
+            : 'grid items-start gap-5 xl:grid-cols-[230px_minmax(0,1fr)_330px]'
+        }
+      >
         {!isCompact && (
-          <div className="hidden lg:sticky lg:top-4 lg:block lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:overscroll-contain">
+          <div className="hidden xl:sticky xl:top-4 xl:block xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:overscroll-contain">
             <DossierIndexNav
               applicationTitle={facts.title || 'Tracked application'}
               description={[organisation, facts.location].filter(Boolean).join(' · ')}
@@ -1075,6 +1301,8 @@ export default function ApplicationDossier() {
               metadata={<span className="font-mono">{statusLabel(application.status)}</span>}
             />
 
+            {renderProgressStrip()}
+
             {isCompact ? (
               <>
                 {evidenceWarning && (
@@ -1102,7 +1330,7 @@ export default function ApplicationDossier() {
                 </DossierActionBar>
               </>
             ) : (
-              <div className="divide-y divide-border">
+              <>
                 {evidenceWarning && (
                   <div className="p-4 sm:px-6">
                     <RecordState
@@ -1124,14 +1352,28 @@ export default function ApplicationDossier() {
                     </div>
                   ))}
                 </div>
-              </div>
+                <DossierActionBar>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={practiceHref}>
+                      <MessageSquare aria-hidden="true" className="h-4 w-4" />
+                      Practice interview
+                    </Link>
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={cvHref}>
+                      <FileText aria-hidden="true" className="h-4 w-4" />
+                      {application.resume_id ? 'Open CV editor' : 'Prepare CV'}
+                    </Link>
+                  </Button>
+                </DossierActionBar>
+              </>
             )}
           </WorkingDocument>
         </div>
 
         {!isCompact && evidence && (
           <div className="hidden xl:sticky xl:top-4 xl:block xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:overscroll-contain">
-            <ApplicationEvidenceInspector data={evidence} selection={inspectorSelection} />
+            <ApplicationEvidenceInspector data={evidence} selection={inspectorSelection} {...inspectorActions} />
           </div>
         )}
       </div>
@@ -1146,7 +1388,7 @@ export default function ApplicationDossier() {
               </SheetDescription>
             </SheetHeader>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
-              <ApplicationEvidenceInspector data={evidence} selection={inspectorSelection} />
+              <ApplicationEvidenceInspector data={evidence} selection={inspectorSelection} {...inspectorActions} />
             </div>
           </SheetContent>
         </Sheet>
@@ -1176,5 +1418,38 @@ function SaveMessage({ state }: { state: SaveState }) {
     <p role="status" className={`text-xs ${state === 'failed' ? 'text-destructive' : 'text-muted-foreground'}`}>
       {state === 'saving' ? 'Saving…' : state === 'saved' ? 'Saved' : 'Save failed. Your changes are still here; retry when ready.'}
     </p>
+  );
+}
+
+function Fact({
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+  tone?: 'success' | 'warning';
+}) {
+  return (
+    <div
+      className={cn(
+        'min-w-0 border-l-2 pl-3',
+        tone === 'success' ? 'border-success' : tone === 'warning' ? 'border-warning' : 'border-border',
+      )}
+    >
+      <p className="dossier-eyebrow">{label}</p>
+      <p
+        className={cn(
+          'mt-1 truncate text-sm font-semibold',
+          tone === 'success' && 'text-success',
+          tone === 'warning' && 'text-warning',
+        )}
+      >
+        {value}
+      </p>
+      {detail && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{detail}</p>}
+    </div>
   );
 }

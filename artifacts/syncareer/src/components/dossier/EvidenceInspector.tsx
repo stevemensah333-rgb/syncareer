@@ -6,18 +6,20 @@ import { cn } from '@/lib/utils';
 interface EvidenceInspectorProps {
   title: string;
   description?: string;
+  /** Kind of record being inspected; shown above the title. */
+  eyebrow?: string;
   children: ReactNode;
   onClose?: () => void;
   className?: string;
 }
 
-export function EvidenceInspector({ title, description, children, onClose, className }: EvidenceInspectorProps) {
+export function EvidenceInspector({ title, description, eyebrow = 'Evidence', children, onClose, className }: EvidenceInspectorProps) {
   return (
     <aside aria-label="Evidence context" className={cn('border border-border bg-card', className)}>
       <header className="flex items-start justify-between gap-3 border-b border-border px-4 py-4">
-        <div>
-          <p className="dossier-eyebrow">Evidence</p>
-          <h2 className="mt-1 text-sm font-semibold text-foreground">{title}</h2>
+        <div className="min-w-0">
+          <p className="dossier-eyebrow">{eyebrow}</p>
+          <h2 className="mt-1 break-words text-sm font-semibold text-foreground">{title}</h2>
           {description && <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>}
         </div>
         {onClose && <Button type="button" variant="ghost" size="icon" className="h-11 w-11 shrink-0" onClick={onClose} aria-label="Close evidence inspector"><X /></Button>}

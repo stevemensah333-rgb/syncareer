@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { installSupabaseMock } from '@/test/supabaseMock';
 import { supabase } from '@/integrations/supabase/client';
 import ApplicationDossier from './ApplicationDossier';
@@ -102,14 +102,54 @@ function evidenceFixtures() {
   };
 }
 
-function renderDossier(applicationId = APPLICATION_ID) {
+function LocationProbe() {
+  const location = useLocation();
+  return <div data-testid="location-search">{location.search}</div>;
+}
+
+function renderDossier(applicationId = APPLICATION_ID, search = '') {
   return render(
-    <MemoryRouter initialEntries={[`/applications/${applicationId}`]}>
+    <MemoryRouter initialEntries={[`/applications/${applicationId}${search}`]}>
+      <LocationProbe />
       <Routes>
         <Route path="/applications/:applicationId" element={<ApplicationDossier />} />
       </Routes>
     </MemoryRouter>,
   );
+}
+
+const REQUIREMENT_ID = 'fa0a9a1e-0000-4000-8000-000000000001';
+const LINK_ID = 'fa0a9a1e-0000-4000-8000-000000000002';
+const SECOND_REQUIREMENT_ID = 'fa0a9a1e-0000-4000-8000-000000000003';
+
+function requirementRow(id: string, label: string, detail: string, sortOrder: number) {
+  return {
+    id,
+    application_id: APPLICATION_ID,
+    user_id: USER,
+    label,
+    detail,
+    origin: 'posting_skill' as const,
+    sort_order: sortOrder,
+    created_at: new Date(NOW).toISOString(),
+    updated_at: new Date(NOW).toISOString(),
+  };
+}
+
+function installLinkedDossier(requirements: Array<Record<string, unknown>>, links: Array<Record<string, unknown>>) {
+  const evidence = evidenceFixtures();
+  evidence.application_requirements.data = requirements;
+  evidence.application_evidence_links.data = links;
+  installSupabaseMock({
+    tables: {
+      job_applications: { data: makeApplicationRow(), error: null },
+      resumes: { data: [], error: null },
+      mock_interviews: { data: [], error: null },
+      ...evidence,
+    },
+    maybeSingle: { job_applications: { data: makeApplicationRow(), error: null } },
+  });
+  (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [], error: null });
 }
 
 beforeEach(() => {
@@ -153,6 +193,11 @@ describe('Application Dossier page', () => {
     expect((screen.getByLabelText('Application notes') as HTMLTextAreaElement).value).toBe('Prepare SQL stories');
     // The linked interview session appears as a practice record.
     expect(screen.getByText('Graduate Analyst practice')).toBeTruthy();
+    // The progress strip renders the stage rail and coverage facts.
+    expect(screen.getByRole('list', { name: 'Stage progress' })).toBeTruthy();
+    expect(screen.getByText('No requirements recorded')).toBeTruthy();
+    expect(screen.getByText('1 of 1 ready')).toBeTruthy();
+    expect(screen.getByText('Not linked')).toBeTruthy();
   });
 
   it('shows a not-found state for a missing or foreign application', async () => {
@@ -268,5 +313,94 @@ describe('Application Dossier page', () => {
 
     expect(await screen.findByText('The source posting is unavailable')).toBeTruthy();
     expect(screen.getAllByText('Tracked application').length).toBeGreaterThan(0);
+  });
+
+  it('honours a focus URL parameter pointing at evidence', async () => {
+    installLinkedDossier(
+      [requirementRow(REQUIREMENT_ID, 'SQL reporting', 'Build and explain reporting queries.', 0)],
+      [
+        {
+          id: LINK_ID,
+          requirement_id: REQUIREMENT_ID,
+          evidence_id: EVIDENCE_ID,
+          user_id: USER,
+          relevance_note: 'Explains the dashboard',
+          created_at: new Date(NOW).toISOString(),
+        },
+      ],
+    );
+    renderDossier(APPLICATION_ID, `?focus=evidence%3A${EVIDENCE_ID}`);
+
+    // "Ready to use" is only shown when the evidence record itself is the
+    // selection; the default requirement selection would say "Evidence ready".
+    expect(await screen.findByText('Ready to use')).toBeTruthy();
+    expect(screen.getAllByText('Relevance: Explains the dashboard').length).toBeGreaterThan(0);
+    expect(screen.getByText('1 of 1 requirements supported')).toBeTruthy();
+  });
+
+  it('selecting a requirement updates the inspector and the URL state', async () => {
+    installLinkedDossier(
+      [
+        requirementRow(REQUIREMENT_ID, 'SQL reporting', 'Build and explain reporting queries.', 0),
+        requirementRow(SECOND_REQUIREMENT_ID, 'Written communication', 'Explain findings clearly.', 1),
+      ],
+      [
+        {
+          id: LINK_ID,
+          requirement_id: REQUIREMENT_ID,
+          evidence_id: EVIDENCE_ID,
+          user_id: USER,
+          relevance_note: 'Explains the dashboard',
+          created_at: new Date(NOW).toISOString(),
+        },
+      ],
+    );
+    renderDossier();
+
+    // The first requirement is selected by default.
+    expect(await screen.findByText('Evidence ready')).toBeTruthy();
+    // Selecting the second requirement swaps the inspector immediately.
+    fireEvent.click(screen.getByRole('button', { name: /^Requirement Written communication/ }));
+    expect(await screen.findByText('No evidence yet')).toBeTruthy();
+    // The selection is written to the URL so it survives refresh and sharing.
+    await waitFor(() => {
+      const search = screen.getByTestId('location-search').textContent ?? '';
+      expect(search).toContain('focus=requirement');
+      expect(search).toContain(SECOND_REQUIREMENT_ID);
+    });
+    // Screen readers hear the context change.
+    expect(screen.getByText(/Inspecting requirement Written communication/)).toBeTruthy();
+  });
+
+  it('the inspector next step focuses the matching requirement control', async () => {
+    installLinkedDossier(
+      [requirementRow(REQUIREMENT_ID, 'SQL reporting', 'Build and explain reporting queries.', 0)],
+      [],
+    );
+    renderDossier();
+
+    // The requirement has no evidence, so the inspector offers one next step.
+    const nextStep = await screen.findByRole('button', { name: 'Link evidence' });
+    fireEvent.click(nextStep);
+    await waitFor(() => {
+      expect(document.activeElement?.id).toBe(`dossier-link-${REQUIREMENT_ID}`);
+    });
+  });
+
+  it('opens the evidence sheet from a requirement on compact layouts', async () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+    installLinkedDossier(
+      [requirementRow(REQUIREMENT_ID, 'SQL reporting', 'Build and explain reporting queries.', 0)],
+      [],
+    );
+    renderDossier();
+
+    // Switch to the requirements section, then select the requirement.
+    fireEvent.click(await screen.findByRole('button', { name: 'Requirements' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Requirement SQL reporting/ }));
+    // The inspector opens as a sheet with the selected requirement context.
+    expect(await screen.findByRole('heading', { name: 'Evidence context' })).toBeTruthy();
+    expect(screen.getByText('No evidence yet')).toBeTruthy();
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 });
   });
 });

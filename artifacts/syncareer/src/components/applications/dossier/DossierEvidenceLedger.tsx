@@ -156,8 +156,7 @@ export function DossierEvidenceLedger({
 
       {items.length === 0 ? (
         <p className="border-y border-border py-6 text-sm text-muted-foreground">
-          Your evidence ledger is empty. Add specific, checkable examples — they become reusable across every
-          application.
+          No evidence saved yet. Add specific, checkable examples — they become reusable across every application.
         </p>
       ) : (
         <RecordList label="Evidence records">
@@ -204,16 +203,17 @@ export function DossierEvidenceLedger({
                     )}
                     {item.review_status !== 'archived' && (
                       <>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          disabled={busy}
-                          aria-label={`Add source to ${item.title}`}
-                          onClick={() => openSourceDialog(item)}
-                        >
-                          Source
-                        </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy}
+                        aria-label={`Add source to ${item.title}`}
+                        onClick={() => openSourceDialog(item)}
+                        id={`dossier-source-${item.id}`}
+                      >
+                        Source
+                      </Button>
                         <Button
                           type="button"
                           size="sm"

@@ -142,7 +142,14 @@ export function DossierRequirementsEvidence({
             Import posting skills
           </Button>
         )}
-        <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setManualOpen(true)}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={busy}
+          onClick={() => setManualOpen(true)}
+          id="dossier-add-requirement"
+        >
           <Plus aria-hidden="true" className="h-4 w-4" />
           Add requirement
         </Button>
@@ -186,6 +193,8 @@ export function DossierRequirementsEvidence({
                 size="sm"
                 variant="ghost"
                 onClick={() => openLinkDialog(thread.requirement)}
+                id={`dossier-link-${thread.requirement.id}`}
+                aria-label={`Link evidence to ${thread.requirement.label}`}
               >
                 <Link2 aria-hidden="true" className="h-4 w-4" />
                 Link evidence
