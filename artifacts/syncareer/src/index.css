@@ -398,6 +398,45 @@
     mask-image: linear-gradient(100deg, transparent 0%, transparent 38%, black 72%, transparent 100%);
   }
 
+  /* ---------------------------------------------------------------
+   * PUBLIC JOURNEY — shared surface language.
+   *
+   * Landing, sign in / sign up and onboarding are one continuous product.
+   * They share the same structural grid backdrop (drawn from --border, not a
+   * decorative gradient) so each screen reads as a step in the same journey
+   * rather than a separate template. The backdrop is a quiet structural cue,
+   * never a colour wash.
+   * --------------------------------------------------------------- */
+  .public-grid {
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.4) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.4) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  /* Softly faded backdrop for the auth / onboarding shells: the grid is only
+     visible toward the top of the screen and dissolves into the canvas. */
+  .public-grid-fade {
+    mask-image: radial-gradient(120% 90% at 50% -10%, black 0%, black 32%, transparent 72%);
+    -webkit-mask-image: radial-gradient(120% 90% at 50% -10%, black 0%, black 32%, transparent 72%);
+  }
+
+  /* Brand eyebrow used across the public journey. Sentence-cased, primary
+     coloured, with a short leading rule so section intros feel deliberate and
+     unmistakably Syncareer without inventing a second type scale. */
+  .brand-eyebrow {
+    @apply inline-flex items-center gap-2 text-sm font-semibold text-primary;
+  }
+
+  .brand-eyebrow::before {
+    content: '';
+    width: 1.5rem;
+    height: 2px;
+    border-radius: 999px;
+    background: hsl(var(--primary));
+    flex: none;
+  }
+
   @keyframes landing-record-panel-forward {
     from { opacity: 0.45; transform: translateX(8px); }
     to { opacity: 1; transform: translateX(0); }
