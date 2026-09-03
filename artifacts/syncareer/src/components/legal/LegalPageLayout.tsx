@@ -45,8 +45,8 @@ export function LegalPageLayout({ document: documentType, eyebrow, title, descri
       <main id="main-content">
         <header className="border-b bg-secondary/45">
           <div className="mx-auto max-w-[1240px] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
-            <p className="text-xs font-semibold tracking-[0.14em] text-primary">{eyebrow}</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">{title}</h1>
+            <p className="dossier-eyebrow text-primary">{eyebrow}</p>
+            <h1 className="dossier-title mt-3 text-[32px] leading-9 tracking-[-0.01em] sm:text-[36px] sm:leading-10">{title}</h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">{description}</p>
             <p className="mt-5 text-sm font-medium">Effective date: {effectiveDate}</p>
           </div>

@@ -16,12 +16,13 @@ export default function AuthShell({ title, subtitle, children }: AuthShellProps)
           Syncareer
         </a>
         <header>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{title}</h1>
+          <p className="dossier-eyebrow">Syncareer account</p>
+          <h1 className="dossier-title mt-2 text-[26px] leading-8 tracking-[-0.01em] text-foreground sm:text-[32px] sm:leading-9">{title}</h1>
           <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
           {subtitle}
           </p>
         </header>
-        <div className="mt-6 rounded-xl border bg-card p-5 sm:p-7">{children}</div>
+        <div className="dossier-document mt-6 p-5 sm:p-7">{children}</div>
       </div>
     </main>
   );
