@@ -25,8 +25,10 @@
      * 1. COLOR — one system, used by every surface of the product.
      * --------------------------------------------------------------- */
 
-    /* Workspace canvas: cool near-white */
-    --background: 216 33% 98%;
+    /* Workspace canvas: pale blue-grey. The canvas is the environment —
+       sidebar and top bar sit directly on it, and white surfaces inside it
+       read as purposeful work areas. */
+    --background: 216 33% 97%;
     /* Text: dark navy-charcoal */
     --foreground: 222 26% 15%;
 
@@ -76,7 +78,7 @@
 
     /* Named semantic aliases — same palette, vocabulary for workspaces.
        Do not treat these as a second colour system. */
-    --canvas: 216 33% 98%;
+    --canvas: 216 33% 97%;
     --surface: 0 0% 100%;
     --surface-secondary: 216 24% 95%;
     --surface-elevated: 0 0% 100%;
@@ -144,13 +146,15 @@
     --mode-density: 1.25rem;
     --workspace-max-width: var(--page-max-width);
 
-    --sidebar-background: 0 0% 100%;
+    /* Navigation rail: part of the canvas environment, not a white panel.
+       Accent = quiet hover fill; border shares the single hairline system. */
+    --sidebar-background: 216 33% 97%;
     --sidebar-foreground: 222 26% 15%;
     --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 216 30% 96%;
+    --sidebar-accent: 216 24% 95%;
     --sidebar-accent-foreground: 222 26% 15%;
-    --sidebar-border: 222 20% 90%;
+    --sidebar-border: 218 22% 89%;
     --sidebar-ring: 221 83% 53%;
 
     /* Evidence washes for the dossier pattern, derived from the single
@@ -217,7 +221,7 @@
     --error: 0 72% 51%;
     --error-foreground: 0 0% 100%;
 
-    --sidebar-background: 222 26% 11%;
+    --sidebar-background: 222 28% 10%;
     --sidebar-foreground: 220 14% 96%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 222 28% 10%;

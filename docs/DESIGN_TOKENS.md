@@ -28,7 +28,7 @@ or radii.
 
 | Token | Role | Hue |
 |---|---|---|
-| `--background` | cool near-white workspace canvas | `216 33% 98%` |
+| `--background` | pale blue-grey workspace canvas | `216 33% 97%` |
 | `--card` / `--popover` | white content surfaces | `0 0% 100%` |
 | `--foreground` | dark navy-charcoal text | `222 26% 15%` |
 | `--primary` | cobalt primary actions | `221 83% 53%` |
@@ -182,27 +182,52 @@ opportunities, mentors. `PageHeader` therefore defaults to
 
 ## Application shell
 
+The authenticated shell is one environment, not a stack of templates: the
+canvas is the environment, the navigation rail and top bar sit directly on it,
+and white surfaces inside it are purposeful work areas.
+
 - **Shared shell:** `AuthenticatedLayout` owns the fixed global bar, responsive
   content geometry, page header, and mobile navigation. `StudentLayout` and
   `CounsellorLayout` supply only their role-specific navigation model.
+- **Navigation model:** student destinations are grouped conceptually —
+  **Workspace** (Home, Opportunities, Applications), **Build** (CV Builder),
+  **Practice** (Interview), **Connect** (Mentors) — and every href is a real
+  route. Contextual destinations (assessment, analysis, mentorship requests,
+  settings) stay inside their workflows and the account menu.
 - **Desktop:** the full-height `AppSidebar` owns Syncareer branding and all
-  signed-in navigation (`w-64` expanded, `w-[68px]` collapsed). The top bar is
-  offset by the rail and contains only counselling/help, notifications, and
-  profile/account controls. Active destinations get `bg-primary/10
-  text-primary`, a left indicator, and `aria-current`.
-- **Mobile:** `MobileBottomNav` (`md:hidden`) derives from the same canonical
-  role navigation groups as desktop. Three primary destinations remain visible
-  and every remaining destination is reachable from "More". Targets are at
-  least 44px high and use `min-w-0` so narrow labels cannot push controls off
-  screen.
-- **Page header:** shared `PageHeader` (compact title + optional breadcrumb
-  trail + optional actions). Empty titles render nothing so pages like
-  Dashboard that own their greeting stay clean.
+  signed-in navigation (`w-64` expanded, `w-[68px]` collapsed). The rail is
+  canvas-coloured with a hairline `--sidebar-border`, never a white panel.
+  Active destinations get the `--selected` tint, `--selected-foreground` text,
+  a primary left rule, and `aria-current`; the owning group label turns
+  primary. Hover uses `--sidebar-accent`.
+- **Collapse:** the rail collapses on desktop only. The state persists across
+  navigation and reloads (`useSidebarCollapsed`, localStorage) because the
+  layout remounts per route. Collapsed, labels stay in the accessibility tree
+  (group labels become `sr-only`), icons centre with `title` tooltips, and the
+  toggle keeps `aria-expanded`.
+- **Top bar:** canvas-coloured with a hairline bottom border. It carries the
+  persistent location context — the page's explicit breadcrumb trail, or a
+  derived `group / destination` trail from the navigation model (so context
+  survives scrolling and sub-routes like an application dossier) — plus
+  notifications and the account menu. Mobile shows the brand instead; location
+  is already stated by the bottom nav. Nothing else is added to fill space.
+- **Mobile:** `MobileBottomNav` (`md:hidden`) is the single global navigation
+  pattern, derived from the same canonical groups. Up to four destinations fit
+  as tabs; beyond that the bar keeps the primary three and moves the rest into
+  a bottom-sheet "More" (grouped, keyboard-accessible, 150ms slide). Targets
+  are at least 44px high and use `min-w-0` so narrow labels cannot push
+  controls off screen. The full sidebar is never shown alongside it, and
+  contextual navigation lives inside feature workflows.
+- **Page header:** shared `PageHeader` renders the title (plus optional
+  description and actions) directly on the canvas; breadcrumbs live in the top
+  bar. Empty titles render nothing so pages like Dashboard that own their
+  greeting stay clean.
 - **Content:** `max-w-[1440px]` gutter container with responsive
   `px-4 sm:px-6 lg:px-8` padding and compact `py-5 lg:py-6` rhythm.
-- **Canvas:** `.workspace-shell` is a flat cool near-white canvas with crisp
-  white working surfaces. `.app-canvas` is now a legacy alias of
-  `.surface-canvas` — there is one canvas treatment across the product.
+- **Canvas:** `.workspace-shell` is the flat pale blue-grey canvas. Chrome
+  (rail, top bar) and page background share it; white `--card` surfaces float
+  in it as work areas. `.app-canvas` is a legacy alias of `.surface-canvas` —
+  there is one canvas treatment across the product.
 - **Surfaces:** shared cards use a quiet border and no default shadow. Dialogs,
   sheets, popovers, and toasts retain shadows because they represent elevation.
   `workspace-panel` and `workspace-row` provide explicit dense panel/list

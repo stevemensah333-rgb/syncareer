@@ -1,7 +1,5 @@
-
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { PageHeader } from './PageHeader';
 
 describe('PageHeader', () => {
@@ -24,25 +22,5 @@ describe('PageHeader', () => {
   it('uses document typography only when explicitly requested', () => {
     render(<PageHeader title="Application CV" variant="document" />);
     expect(screen.getByRole('heading', { name: 'Application CV' }).className).toContain('font-dossier');
-  });
-
-  it('renders a breadcrumb trail with the current page marked', () => {
-    render(
-      <MemoryRouter initialEntries={['/cv-builder']}>
-        <PageHeader
-          title="CV Builder"
-          breadcrumbs={[
-            { label: 'Home', to: '/dashboard' },
-            { label: 'Build', to: '/build' },
-            { label: 'CV Builder' },
-          ]}
-        />
-      </MemoryRouter>
-    );
-    const home = screen.getByRole('link', { name: 'Home' });
-    expect((home as HTMLAnchorElement).getAttribute('href')).toBe('/dashboard');
-    const current = screen.getByText('CV Builder', { selector: 'span[aria-current="page"]' });
-    expect(current.getAttribute('aria-current')).toBe('page');
-    expect(home.className).toContain('focus-visible:ring-2');
   });
 });

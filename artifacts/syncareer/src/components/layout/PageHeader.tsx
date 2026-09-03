@@ -1,17 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
-export interface BreadcrumbItem {
-  label: string;
-  to?: string;
-}
+import { cn } from '@/lib/utils';
 
 interface PageHeaderProps {
   title: string;
   description?: string;
-  breadcrumbs?: BreadcrumbItem[];
   actions?: React.ReactNode;
   className?: string;
   /** `operational` (default) is the standard product page title. `document`
@@ -20,50 +13,22 @@ interface PageHeaderProps {
   variant?: 'document' | 'operational';
 }
 
-/** Compact page header with an optional breadcrumb trail and action slot.
- *  Used by the authenticated shells to keep titles predictable and dense. */
+/** Page title block on the workspace canvas. Location context (breadcrumbs)
+ *  lives in the fixed top bar; this header stays with the content it names.
+ *  Empty titles render nothing so pages like Dashboard that own their
+ *  greeting stay clean. */
 export function PageHeader({
   title,
   description,
-  breadcrumbs,
   actions,
   className,
   variant = 'operational',
 }: PageHeaderProps) {
   if (!title) return null;
   return (
-    <header
-      className={cn(
-        'workspace-page-header border-b border-border bg-card',
-        className
-      )}
-    >
-      <div className="mx-auto w-full max-w-[1440px] px-4 py-3.5 sm:px-6 lg:px-8">
-        {breadcrumbs && breadcrumbs.length > 0 && (
-          <nav aria-label="Breadcrumb" className="mb-1.5 flex items-center gap-1 text-xs text-muted-foreground">
-            {breadcrumbs.map((crumb, i) => {
-              const isLast = i === breadcrumbs.length - 1;
-              return (
-                <React.Fragment key={`${crumb.label}-${i}`}>
-                  {i > 0 && <ChevronRight aria-hidden="true" className="h-3 w-3 shrink-0 text-muted-foreground/60" />}
-                  {crumb.to && !isLast ? (
-                    <Link
-                      to={crumb.to}
-                      className="rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      {crumb.label}
-                    </Link>
-                  ) : (
-                    <span aria-current={isLast ? 'page' : undefined} className={cn(isLast && 'font-medium text-foreground')}>
-                      {crumb.label}
-                    </span>
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </nav>
-        )}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <header className={cn('workspace-page-header', className)}>
+      <div className="page-container pt-5 lg:pt-6">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">
             <h1 className={cn(
               'text-xl text-foreground md:text-[22px]',

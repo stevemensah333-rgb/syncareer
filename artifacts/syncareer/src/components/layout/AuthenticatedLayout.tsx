@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Navbar } from '@/components/layout/Navbar';
+import React from 'react';
+import { Navbar, type BreadcrumbItem } from '@/components/layout/Navbar';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { AppSidebar, type NavGroup } from '@/components/layout/AppSidebar';
-import { PageHeader, type BreadcrumbItem } from '@/components/layout/PageHeader';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { useSidebarCollapsed } from '@/components/layout/useSidebarCollapsed';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useCurrentDossier } from '@/features/navigation/useCurrentDossier';
 import { cn } from '@/lib/utils';
@@ -19,9 +20,11 @@ interface AuthenticatedLayoutProps {
   headerVariant?: 'document' | 'operational';
 }
 
-/** Shared authenticated workspace shell. Role-specific layouts supply only
- * their navigation model so spacing, focus order, and responsive behavior stay
- * consistent for students and counsellors. */
+/** Shared authenticated workspace shell. The canvas is the environment: the
+ *  navigation rail and top bar sit directly on it, and page content places
+ *  white work surfaces inside it. Role-specific layouts supply only their
+ *  navigation model so spacing, focus order, and responsive behavior stay
+ *  consistent for students and counsellors. */
 export function AuthenticatedLayout({
   children,
   title,
@@ -31,7 +34,7 @@ export function AuthenticatedLayout({
   role,
   headerVariant = 'operational',
 }: AuthenticatedLayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, toggleCollapsed } = useSidebarCollapsed();
   const isMobile = useIsMobile();
   const currentDossier = useCurrentDossier(role === 'student');
 
@@ -54,7 +57,7 @@ export function AuthenticatedLayout({
           <AppSidebar
             groups={navigation}
             isCollapsed={isCollapsed}
-            onToggleCollapsed={() => setIsCollapsed((current) => !current)}
+            onToggleCollapsed={toggleCollapsed}
             currentDossier={role === 'student' ? currentDossier : null}
           />
         </div>
@@ -64,6 +67,8 @@ export function AuthenticatedLayout({
         className={cn(
           !isMobile && (isCollapsed ? 'left-[68px]' : 'left-64'),
         )}
+        breadcrumbs={breadcrumbs}
+        navigation={navigation}
       />
 
       <main
@@ -78,7 +83,6 @@ export function AuthenticatedLayout({
         <PageHeader
           title={title}
           description={description}
-          breadcrumbs={breadcrumbs}
           variant={headerVariant}
         />
         <div className="workspace-content page-container page-block">

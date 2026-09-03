@@ -3,7 +3,7 @@ import React from 'react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { StudentLayout } from '@/components/layout/StudentLayout';
 import { CounsellorLayout } from '@/components/layout/CounsellorLayout';
-import type { BreadcrumbItem } from '@/components/layout/PageHeader';
+import type { BreadcrumbItem } from '@/components/layout/Navbar';
 
 interface PageLayoutProps {
   children: React.ReactNode;

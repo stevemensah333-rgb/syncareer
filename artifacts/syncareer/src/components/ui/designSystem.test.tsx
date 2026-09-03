@@ -13,10 +13,15 @@ const html = read('index.html');
 
 describe('Syncareer design system foundation', () => {
   it('keeps a cool canvas rather than a pure-white page', () => {
-    expect(stylesheet).toMatch(/--background:\s*216 33% 98%/);
-    expect(stylesheet).toMatch(/--canvas:\s*216 33% 98%/);
+    expect(stylesheet).toMatch(/--background:\s*216 33% 97%/);
+    expect(stylesheet).toMatch(/--canvas:\s*216 33% 97%/);
     expect(stylesheet).not.toMatch(/--background:\s*0 0% 100%/);
     expect(stylesheet).not.toMatch(/--canvas:\s*0 0% 100%/);
+  });
+
+  it('keeps the navigation rail on the canvas, not a white panel', () => {
+    expect(stylesheet).toMatch(/--sidebar-background:\s*216 33% 97%/);
+    expect(stylesheet).not.toMatch(/--sidebar-background:\s*0 0% 100%/);
   });
 
   it('exposes the required semantic colour tokens', () => {
