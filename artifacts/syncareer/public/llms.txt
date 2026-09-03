@@ -1,18 +1,15 @@
 # Syncareer
 
-> AI-powered career intelligence platform helping African students and graduates discover careers, build ATS-ready CVs, practice interviews, and connect with verified career mentors.
-
-Syncareer combines a RIASEC-based career assessment, an AI CV builder, a voice-based interview simulator (SynAssist), a public portfolio system, and an opportunities hub aggregating native and external job postings. Students get personalized career recommendations, market intelligence for their major, and a Career Readiness Score that updates as they complete actions.
+> An opportunity-first career workspace for African students and recent graduates. Save real opportunities, connect their requirements to your evidence, improve your CV, practise for the interview, and track the outcome.
 
 ## Pages
 
-- [Home](/): Platform overview and sign-up.
-- [Pricing](/pricing): Subscription plans for students.
-- [Sign in](/sign-in): Existing user login.
-- [Sign up](/sign-up): Create a new account.
-- [Privacy Policy](/privacy): How user data is handled.
-- [Terms and Conditions](/terms): Platform terms of use.
+- [Home](/): Platform overview, product story, FAQs, and sign-up.
+- [Career assessment](/assessment): A public 45-question RIASEC interest assessment; results are shown without an account.
+- [Pricing](/pricing): Free and Premium plans.
+- [Terms and Conditions](/terms): Rules governing access to and use of Syncareer.
+- [Privacy Policy](/privacy): How Syncareer collects, uses and handles information.
 
-## Optional
+## Notes
 
-- [Public portfolio example](/u/): Student portfolios live at `/u/{username}`.
+- Authenticated surfaces (dashboard, opportunities, applications, CV builder, interview simulator, mentors, settings) require an account and are not indexed.

@@ -20,7 +20,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter var', 'sans-serif'],
+				sans: ['Inter', 'sans-serif'],
 				serif: ['Georgia', 'serif'],
 				dossier: ['"Literata Variable"', 'Literata', 'Georgia', 'serif'],
 				mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],

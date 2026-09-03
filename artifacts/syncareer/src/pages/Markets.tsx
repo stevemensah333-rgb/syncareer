@@ -21,7 +21,6 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
-import { setRobotsMeta } from '@/lib/seo';
 import { OpportunityCard } from '@/components/opportunities/OpportunityCard';
 import { OpportunityDetail } from '@/components/opportunities/OpportunityDetail';
 import { getDeadlineState, type OpportunityJob } from '@/features/opportunities/opportunity';
@@ -160,14 +159,6 @@ const Opportunities = () => {
   useEffect(() => {
     load();
   }, [load]);
-
-  // Personalised content: never indexable while mounted. robots.txt also
-  // disallows the route; this is the page-level guarantee for crawlers that
-  // render JS. Restored on unmount so public routes keep the global default.
-  useEffect(() => {
-    setRobotsMeta('noindex, nofollow');
-    return () => setRobotsMeta('index, follow');
-  }, []);
 
   const rankingProfile = useMemo<OpportunityProfileSignals>(
     () => ({

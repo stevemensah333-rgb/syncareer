@@ -61,8 +61,14 @@ const Assessment = () => {
       ogDescription: 'Use a 45-question RIASEC assessment as one input while choosing a direction.',
       ogUrl: 'https://syncareer.me/assessment',
       ogImage: 'https://syncareer.me/og-image.png',
+      ogImageWidth: 1200,
+      ogImageHeight: 630,
+      ogImageAlt: 'Syncareer — Turn a real opportunity into a stronger application.',
       canonical: 'https://syncareer.me/assessment',
       twitterCard: 'summary_large_image',
+      twitterTitle: 'Explore Your Work Interest Themes — Syncareer',
+      twitterDescription: 'Use a 45-question RIASEC assessment as one input while choosing a direction.',
+      twitterImage: 'https://syncareer.me/og-image.png',
     });
 
     setBreadcrumbSchema([

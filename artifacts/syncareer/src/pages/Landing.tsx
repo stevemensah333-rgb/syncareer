@@ -35,21 +35,33 @@ export default function Landing() {
       ogTitle: "Syncareer — From Opportunity to Stronger Application",
       ogDescription: SEO_DESCRIPTION,
       ogUrl: SITE_URL,
+      ogImage: `${SITE_URL}/og-image.png`,
+      ogImageWidth: 1200,
+      ogImageHeight: 630,
+      ogImageAlt: "Syncareer — Turn a real opportunity into a stronger application.",
       twitterCard: "summary_large_image",
+      twitterTitle: "Syncareer — From Opportunity to Stronger Application",
+      twitterDescription: SEO_DESCRIPTION,
+      twitterImage: `${SITE_URL}/og-image.png`,
     });
 
     setOrganizationSchema({
       name: "Syncareer",
       url: SITE_URL,
-      logo: `${SITE_URL}/favicon.png`,
+      logo: `${SITE_URL}/logo.png`,
     });
 
     setApplicationSchema({
       name: "Syncareer",
       description: SEO_DESCRIPTION,
       url: SITE_URL,
-      image: `${SITE_URL}/favicon.png`,
+      image: `${SITE_URL}/og-image.png`,
       applicationCategory: "BusinessApplication",
+    });
+
+    generateStructuredData("WebSite", {
+      name: "Syncareer",
+      url: SITE_URL,
     });
 
     generateStructuredData("FAQPage", {

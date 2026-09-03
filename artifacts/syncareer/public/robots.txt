@@ -1,28 +1,41 @@
-# Syncareer Robots.txt
+# Syncareer robots.txt
+# Public marketing, pricing, assessment and legal pages are indexable.
+# Authenticated workspaces and personal surfaces must not be indexed.
+
 User-agent: *
 Allow: /
-Disallow: /home
-Disallow: /onboarding
-Disallow: /skills
-Disallow: /learn
+
+# Student workspace (personal data)
+Disallow: /dashboard
 Disallow: /opportunities
-Disallow: /portfolio
-Disallow: /performance
+Disallow: /applications
 Disallow: /analysis
-Disallow: /settings
 Disallow: /ai-coach
 Disallow: /interview-simulator
-Disallow: /applications
-Disallow: /my-company
-Disallow: /talent-insights
-Disallow: /post-job
-Disallow: /train
-Disallow: /hire-ai
-Disallow: /applicants
+Disallow: /cv-builder
+Disallow: /build
+Disallow: /practice
+Disallow: /apply
+Disallow: /mentors
+Disallow: /mentorship
+
+# Counsellor / mentor workspace
+Disallow: /mentor
 Disallow: /counsellor-dashboard
 Disallow: /counsellor-availability
 Disallow: /counsellor-sessions
-Disallow: /communities
+Disallow: /counsellor-clients
+Disallow: /counsellor
+
+# Account and admin surfaces
+Disallow: /onboarding
+Disallow: /settings
+Disallow: /admin
+
+# Transactional / utility pages
+Disallow: /subscription-success
+Disallow: /signed-out
+Disallow: /unsubscribe
 
 # Sitemap location
 Sitemap: https://syncareer.me/sitemap.xml

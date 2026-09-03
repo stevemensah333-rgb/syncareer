@@ -3,14 +3,20 @@
  */
 
 export interface PageMetadata {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   keywords?: string;
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
+  ogImageAlt?: string;
   ogUrl?: string;
   twitterCard?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
   canonical?: string;
 }
 
@@ -19,16 +25,20 @@ export interface PageMetadata {
  */
 export function setMetaTags(metadata: PageMetadata) {
   // Title
-  document.title = metadata.title;
-  
+  if (metadata.title) {
+    document.title = metadata.title;
+  }
+
   // Meta description
-  updateMetaTag('name', 'description', metadata.description);
-  
+  if (metadata.description) {
+    updateMetaTag('name', 'description', metadata.description);
+  }
+
   // Keywords
   if (metadata.keywords) {
     updateMetaTag('name', 'keywords', metadata.keywords);
   }
-  
+
   // Open Graph tags
   if (metadata.ogTitle) {
     updateMetaTag('property', 'og:title', metadata.ogTitle);
@@ -39,15 +49,33 @@ export function setMetaTags(metadata: PageMetadata) {
   if (metadata.ogImage) {
     updateMetaTag('property', 'og:image', metadata.ogImage);
   }
+  if (metadata.ogImageWidth) {
+    updateMetaTag('property', 'og:image:width', String(metadata.ogImageWidth));
+  }
+  if (metadata.ogImageHeight) {
+    updateMetaTag('property', 'og:image:height', String(metadata.ogImageHeight));
+  }
+  if (metadata.ogImageAlt) {
+    updateMetaTag('property', 'og:image:alt', metadata.ogImageAlt);
+  }
   if (metadata.ogUrl) {
     updateMetaTag('property', 'og:url', metadata.ogUrl);
   }
-  
+
   // Twitter Card
   if (metadata.twitterCard) {
     updateMetaTag('name', 'twitter:card', metadata.twitterCard);
   }
-  
+  if (metadata.twitterTitle) {
+    updateMetaTag('name', 'twitter:title', metadata.twitterTitle);
+  }
+  if (metadata.twitterDescription) {
+    updateMetaTag('name', 'twitter:description', metadata.twitterDescription);
+  }
+  if (metadata.twitterImage) {
+    updateMetaTag('name', 'twitter:image', metadata.twitterImage);
+  }
+
   // Canonical URL
   if (metadata.canonical) {
     let canonical = document.querySelector('link[rel="canonical"]');
@@ -121,7 +149,7 @@ export function setOrganizationSchema(org: {
     name: org.name,
     logo: org.logo,
     url: org.url,
-    sameAs: org.sameAs || [],
+    ...(org.sameAs && org.sameAs.length > 0 ? { sameAs: org.sameAs } : {}),
   });
 }
 
