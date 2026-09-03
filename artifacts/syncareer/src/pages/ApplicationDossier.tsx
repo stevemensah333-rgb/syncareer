@@ -929,7 +929,7 @@ export default function ApplicationDossier() {
     if (isCompact) return;
     const target = sectionRefs.current[id];
     if (target) {
-      requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      requestAnimationFrame(() => target.scrollIntoView({ behavior: 'auto', block: 'start' }));
     }
   };
 
