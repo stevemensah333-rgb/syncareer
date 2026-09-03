@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
-  ApplicationStageRail,
   DossierActionBar,
   DossierHeader,
   DossierSection,
@@ -15,6 +16,8 @@ import {
 } from '@/components/dossier';
 import { DossierRequirementsEvidence } from '@/components/applications/dossier/DossierRequirementsEvidence';
 import { DossierEvidenceLedger } from '@/components/applications/dossier/DossierEvidenceLedger';
+import { DossierIndexNav, type IndexNavStage } from '@/components/applications/dossier/DossierIndexNav';
+import { ApplicationEvidenceInspector, type InspectorSelection } from '@/components/applications/dossier/ApplicationEvidenceInspector';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -57,8 +60,8 @@ const SECTION_ORDER = ['brief', 'progress', 'requirements', 'ledger', 'cv', 'int
 type SectionId = (typeof SECTION_ORDER)[number];
 
 const SECTION_LABELS: Record<SectionId, string> = {
-  brief: 'Brief',
-  progress: 'Progress',
+  brief: 'Overview',
+  progress: 'Next step',
   requirements: 'Requirements',
   ledger: 'Evidence',
   cv: 'CV',
@@ -71,7 +74,9 @@ export default function ApplicationDossier() {
   const navigate = useNavigate();
   const userId = useSupabaseUserId();
   const isMobile = useIsMobile();
+  const isCompact = useDossierCompact(isMobile);
   const pageRef = useRef<HTMLDivElement | null>(null);
+  const sectionRefs = useRef<Partial<Record<SectionId, HTMLDivElement | null>>>({});
 
   const [loading, setLoading] = useState(true);
   const [bundle, setBundle] = useState<DossierBundle | null>(null);
@@ -80,6 +85,8 @@ export default function ApplicationDossier() {
   const [reloadKey, setReloadKey] = useState(0);
 
   const [activeSection, setActiveSection] = useState<SectionId>('brief');
+  const [inspectorSelection, setInspectorSelection] = useState<InspectorSelection>(null);
+  const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
   const [statusSaving, setStatusSaving] = useState(false);
   const [notesState, setNotesState] = useState<SaveState>('idle');
   const [workspaceState, setWorkspaceState] = useState<SaveState>('idle');
@@ -120,6 +127,39 @@ export default function ApplicationDossier() {
   const dueState = application ? nextActionDueState(application.next_action, application.next_action_due) : 'none';
   const journey = useMemo(() => buildJourney(application?.status ?? ''), [application?.status]);
   const evidence = bundle?.evidence ?? null;
+
+  // Default the context panel to the first requirement, then to the first
+  // evidence record when requirements are not yet available.
+  useEffect(() => {
+    if (!evidence) return;
+    if (inspectorSelection?.kind === 'requirement' && !evidence.requirements.some((item) => item.id === inspectorSelection.id)) {
+      setInspectorSelection(evidence.requirements[0] ? { kind: 'requirement', id: evidence.requirements[0].id } : null);
+      return;
+    }
+    if (inspectorSelection?.kind === 'evidence' && !evidence.items.some((item) => item.id === inspectorSelection.id)) {
+      setInspectorSelection(evidence.requirements[0] ? { kind: 'requirement', id: evidence.requirements[0].id } : null);
+      return;
+    }
+    if (!inspectorSelection) {
+      setInspectorSelection(
+        evidence.requirements[0]
+          ? { kind: 'requirement', id: evidence.requirements[0].id }
+          : evidence.items[0]
+            ? { kind: 'evidence', id: evidence.items[0].id }
+            : null,
+      );
+    }
+  }, [evidence, inspectorSelection]);
+
+  const handleSelectRequirement = (requirementId: string) => {
+    setInspectorSelection({ kind: 'requirement', id: requirementId });
+    if (isCompact) setMobileInspectorOpen(true);
+  };
+
+  const handleSelectEvidence = (evidenceId: string) => {
+    setInspectorSelection({ kind: 'evidence', id: evidenceId });
+    if (isCompact) setMobileInspectorOpen(true);
+  };
 
   const [notes, setNotes] = useState('');
   const [nextAction, setNextAction] = useState('');
@@ -408,7 +448,7 @@ export default function ApplicationDossier() {
   // ── Section renderers (plain calls, not components, to preserve focus) ───
 
   const renderBrief = () => (
-    <DossierSection index="01" label="Brief" title="The role as recorded">
+    <DossierSection label="Overview" title="The role as recorded">
       {application?.job === null && (
         <RecordState
           tone="warning"
@@ -458,7 +498,7 @@ export default function ApplicationDossier() {
   );
 
   const renderProgress = () => (
-    <DossierSection index="02" label="Progress" title="Where the application stands">
+    <DossierSection label="Next step" title="Where the application stands">
       <div className="space-y-5">
         <div className="space-y-2">
           <p className="dossier-eyebrow">Stage</p>
@@ -595,9 +635,8 @@ export default function ApplicationDossier() {
 
   const renderRequirements = () => (
     <DossierSection
-      index="03"
-      label="Requirements and evidence"
-      title="What the role asks for"
+      label="Requirements"
+      title="Requirements"
       description="Each requirement lists the evidence you have attached to answer it."
     >
       {evidence ? (
@@ -609,6 +648,10 @@ export default function ApplicationDossier() {
           resumeLinks={evidence.resumeLinks}
           postingSkillCount={facts?.skills?.length ?? 0}
           busy={sectionBusy}
+          selectedRequirementId={inspectorSelection?.kind === 'requirement' ? inspectorSelection.id : null}
+          onSelectRequirement={handleSelectRequirement}
+          selectedEvidenceId={inspectorSelection?.kind === 'evidence' ? inspectorSelection.id : null}
+          onSelectEvidence={handleSelectEvidence}
           onLinkEvidence={handleLinkEvidence}
           onUnlinkEvidence={handleUnlinkEvidence}
           onImportPostingSkills={handleImportSkills}
@@ -632,9 +675,8 @@ export default function ApplicationDossier() {
 
   const renderLedger = () => (
     <DossierSection
-      index="04"
-      label="Evidence ledger"
-      title="What you can show"
+      label="Evidence"
+      title="Evidence"
       description="A durable record of real work, projects, and achievements you can attach to any application."
     >
       {evidence ? (
@@ -647,6 +689,8 @@ export default function ApplicationDossier() {
             label: interview.job_role || 'Interview practice',
           }))}
           busy={sectionBusy}
+          selectedEvidenceId={inspectorSelection?.kind === 'evidence' ? inspectorSelection.id : null}
+          onSelectEvidence={handleSelectEvidence}
           onCreateEvidence={handleCreateEvidence}
           onConfirmEvidence={handleConfirmEvidence}
           onArchiveEvidence={handleArchiveEvidence}
@@ -672,9 +716,8 @@ export default function ApplicationDossier() {
 
   const renderCv = () => (
     <DossierSection
-      index="05"
-      label="CV record"
-      title="Tailored application CV"
+      label="CV"
+      title="CV"
       description="The application CV is an independent copy of a base CV; editing it never changes the original."
     >
       <div className="space-y-4">
@@ -738,7 +781,7 @@ export default function ApplicationDossier() {
     const available = (bundle?.interviews ?? []).filter((interview) => !interview.application_id);
     const practiceHref = application ? `/applications/${encodeURIComponent(application.id)}/interview` : '/interview-simulator';
     return (
-      <DossierSection index="06" label="Interview preparation" title="Practice records">
+      <DossierSection label="Interview" title="Interview">
         <div className="space-y-4">
           {linked.length === 0 ? (
             <p className="text-sm text-muted-foreground">No interview practice linked to this application yet.</p>
@@ -786,10 +829,9 @@ export default function ApplicationDossier() {
     const requests: DossierMentorRequest[] = bundle?.mentorRequests ?? [];
     return (
       <DossierSection
-        index="07"
-        label="Mentor requests"
-        title="Human guidance for this application"
-        description="Requests connect at the application level. Your evidence ledger is never shared with mentors."
+        label="Mentor"
+        title="Mentor"
+        description="Requests connect at the application level. Your evidence is never shared with mentors."
       >
         <div className="space-y-4">
           {requests.length === 0 ? (
@@ -866,7 +908,11 @@ export default function ApplicationDossier() {
     );
   }
 
-  const railStages = journey.steps.map((step) => ({ id: step.stage, label: step.label, state: step.state }));
+  const railStages: IndexNavStage[] = journey.steps.map((step) => ({
+    id: step.stage,
+    label: step.label,
+    state: step.state,
+  }));
   const sections = [
     { id: 'brief' as const, node: renderBrief() },
     { id: 'progress' as const, node: renderProgress() },
@@ -877,105 +923,251 @@ export default function ApplicationDossier() {
     { id: 'mentor' as const, node: renderMentor() },
   ];
 
+  const selectSection = (section: string) => {
+    const id = section as SectionId;
+    setActiveSection(id);
+    if (isCompact) return;
+    const target = sectionRefs.current[id];
+    if (target) {
+      requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  };
+
+  const handleSectionKey = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let nextIndex: number | undefined;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % SECTION_ORDER.length;
+    else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + SECTION_ORDER.length) % SECTION_ORDER.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = SECTION_ORDER.length - 1;
+    if (nextIndex === undefined) return;
+    const next = SECTION_ORDER[nextIndex];
+    if (!next) return;
+    event.preventDefault();
+    selectSection(next);
+  };
+
+  const renderSection = (id: SectionId) => {
+    const section = sections.find((candidate) => candidate.id === id);
+    if (!section) return null;
+    return (
+      <div
+        key={id}
+        id={`dossier-section-${id}`}
+        ref={(node) => {
+          sectionRefs.current[id] = node;
+        }}
+        className="scroll-mt-4"
+      >
+        {section.node}
+      </div>
+    );
+  };
+
+  const inspectorTitle = 'Evidence context';
+
   return (
     <div ref={pageRef} tabIndex={-1} className="space-y-0 focus:outline-none">
-      <div className="mb-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/applications')}>
-          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-          All applications
-        </Button>
-      </div>
-
-      <WorkingDocument label={`Application dossier: ${facts.title || 'Tracked application'}`}>
-        <DossierHeader
-          eyebrow="Application dossier"
-          title={facts.title || 'Tracked application'}
-          description={[organisation, facts.location].filter(Boolean).join(' · ')}
-          metadata={<span className="font-mono">{statusLabel(application.status)}</span>}
-        />
-        <ApplicationStageRail stages={railStages} label="Application stages" />
-
-        {isMobile ? (
-          <>
-            <nav aria-label="Dossier sections" className="overflow-x-auto border-b border-border bg-card">
-              <div className="flex min-w-max px-2">
-                {SECTION_ORDER.map((section, index) => {
-                  const active = section === activeSection;
-                  return (
-                    <button
-                      key={section}
-                      type="button"
-                      aria-pressed={active}
-                      tabIndex={0}
-                      onClick={() => setActiveSection(section)}
-                      onKeyDown={(event) => {
-                        const currentIndex = SECTION_ORDER.indexOf(activeSection);
-                        if (event.key === 'ArrowRight') {
-                          event.preventDefault();
-                          setActiveSection(SECTION_ORDER[(currentIndex + 1) % SECTION_ORDER.length]!);
-                        } else if (event.key === 'ArrowLeft') {
-                          event.preventDefault();
-                          setActiveSection(
-                            SECTION_ORDER[(currentIndex - 1 + SECTION_ORDER.length) % SECTION_ORDER.length]!,
-                          );
-                        } else if (event.key === 'Home') {
-                          event.preventDefault();
-                          setActiveSection('brief');
-                        } else if (event.key === 'End') {
-                          event.preventDefault();
-                          setActiveSection(SECTION_ORDER[SECTION_ORDER.length - 1]!);
-                        }
-                      }}
-                      className={`relative min-h-12 border-r border-border px-3 text-xs font-medium transition-colors duration-150 last:border-r-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none ${
-                        active ? 'bg-secondary text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                      }`}
-                    >
-                      <span className="mr-1.5 font-mono text-[10px] text-muted-foreground">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      {SECTION_LABELS[section]}
-                      {active && <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </nav>
-            <div className="p-4">{sections.find((section) => section.id === activeSection)?.node}</div>
-            <DossierActionBar>
-              <Button size="sm" variant="outline" asChild>
-                <Link to={cvHref}>
-                  <FileText aria-hidden="true" className="h-4 w-4" />
-                  {application.resume_id ? 'Open CV editor' : 'Prepare CV'}
-                </Link>
-              </Button>
-            </DossierActionBar>
-          </>
-        ) : (
-          <div className="divide-y divide-border">
-            {evidenceWarning && (
-              <div className="p-4 sm:px-6">
-                <RecordState
-                  tone="warning"
-                  title="That change did not save"
-                  description={evidenceWarning}
-                  action={
-                    <Button size="sm" variant="outline" onClick={() => setEvidenceWarning(null)}>
-                      Dismiss
-                    </Button>
-                  }
-                />
-              </div>
-            )}
-            {sections.map((section) => (
-              <div key={section.id} className="px-4 py-6 sm:px-6">
-                {section.node}
-              </div>
-            ))}
+      <div className={isCompact ? 'grid gap-4' : 'grid items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_320px]'}>
+        {!isCompact && (
+          <div className="hidden lg:sticky lg:top-4 lg:block lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:overscroll-contain">
+            <DossierIndexNav
+              applicationTitle={facts.title || 'Tracked application'}
+              description={[organisation, facts.location].filter(Boolean).join(' · ')}
+              statusLabel={statusLabel(application.status)}
+              stages={railStages}
+              sections={SECTION_ORDER.map((id) => ({ id, label: SECTION_LABELS[id] }))}
+              activeSectionId={activeSection}
+              onSelectSection={selectSection}
+            />
           </div>
         )}
-      </WorkingDocument>
+
+        <div className="min-w-0">
+          {isCompact && (
+            <div className="mb-4">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/applications')}>
+                <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+                All applications
+              </Button>
+            </div>
+          )}
+
+          {isCompact && (
+            <div className="mb-4 space-y-2">
+              <nav aria-label="Application sections" className="overflow-x-auto border border-border bg-card">
+                <div className="flex min-w-max px-2">
+                  {SECTION_ORDER.map((section, index) => {
+                    const active = section === activeSection;
+                    return (
+                      <button
+                        key={section}
+                        type="button"
+                        aria-pressed={active}
+                        tabIndex={0}
+                        onClick={() => selectSection(section)}
+                        onKeyDown={(event) => handleSectionKey(event, index)}
+                        className={`relative min-h-12 border-r border-border px-3 text-xs font-medium transition-colors duration-150 last:border-r-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none ${
+                          active ? 'bg-secondary text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        }`}
+                      >
+                        {SECTION_LABELS[section]}
+                        {active && <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </nav>
+
+              <div className="flex items-center justify-end gap-2">
+                {inspectorSelection && (
+                  <Button size="sm" variant="outline" onClick={() => setMobileInspectorOpen(true)}>
+                    {inspectorTitle}
+                  </Button>
+                )}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button size="sm" variant="ghost" aria-label="More application navigation">
+                      More
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-72">
+                    <div>
+                      <p className="dossier-eyebrow">Application</p>
+                      <h2 className="mt-1 text-sm font-semibold">{facts.title || 'Tracked application'}</h2>
+                      <p className="mt-1 text-xs text-muted-foreground">{statusLabel(application.status)}</p>
+                    </div>
+                    <div className="mt-4">
+                      <p className="dossier-eyebrow">Stage</p>
+                      <ol aria-label="Application stages" className="mt-2 space-y-2">
+                        {railStages.map((stage) => (
+                          <li key={stage.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span
+                              aria-hidden="true"
+                              className={`flex h-4 w-4 items-center justify-center border bg-card ${
+                                stage.state === 'done'
+                                  ? 'border-success bg-success text-success-foreground'
+                                  : stage.state === 'current'
+                                    ? 'border-primary text-primary'
+                                    : 'border-border text-muted-foreground'
+                              }`}
+                            >
+                              {stage.state === 'done' ? '✓' : stage.state === 'current' ? '●' : '·'}
+                            </span>
+                            <span className="sr-only">{stage.state}</span>
+                            <span className={stage.state === 'current' ? 'font-semibold text-foreground' : ''}>
+                              {stage.label}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
+
+          <WorkingDocument label={`Application: ${facts.title || 'Tracked application'}`}>
+            <DossierHeader
+              eyebrow="Application"
+              title={facts.title || 'Tracked application'}
+              description={[organisation, facts.location].filter(Boolean).join(' · ')}
+              metadata={<span className="font-mono">{statusLabel(application.status)}</span>}
+            />
+
+            {isCompact ? (
+              <>
+                {evidenceWarning && (
+                  <div className="p-4">
+                    <RecordState
+                      tone="warning"
+                      title="That change did not save"
+                      description={evidenceWarning}
+                      action={
+                        <Button size="sm" variant="outline" onClick={() => setEvidenceWarning(null)}>
+                          Dismiss
+                        </Button>
+                      }
+                    />
+                  </div>
+                )}
+                <div className="p-4">{renderSection(activeSection)}</div>
+                <DossierActionBar>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={cvHref}>
+                      <FileText aria-hidden="true" className="h-4 w-4" />
+                      {application.resume_id ? 'Open CV editor' : 'Prepare CV'}
+                    </Link>
+                  </Button>
+                </DossierActionBar>
+              </>
+            ) : (
+              <div className="divide-y divide-border">
+                {evidenceWarning && (
+                  <div className="p-4 sm:px-6">
+                    <RecordState
+                      tone="warning"
+                      title="That change did not save"
+                      description={evidenceWarning}
+                      action={
+                        <Button size="sm" variant="outline" onClick={() => setEvidenceWarning(null)}>
+                          Dismiss
+                        </Button>
+                      }
+                    />
+                  </div>
+                )}
+                <div className="divide-y divide-border">
+                  {SECTION_ORDER.map((id) => (
+                    <div key={id} className="px-4 py-6 sm:px-6">
+                      {renderSection(id)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </WorkingDocument>
+        </div>
+
+        {!isCompact && evidence && (
+          <div className="hidden xl:sticky xl:top-4 xl:block xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:overscroll-contain">
+            <ApplicationEvidenceInspector data={evidence} selection={inspectorSelection} />
+          </div>
+        )}
+      </div>
+
+      {isCompact && evidence && (
+        <Sheet open={mobileInspectorOpen} onOpenChange={setMobileInspectorOpen}>
+          <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+            <SheetHeader className="border-b border-border px-4 py-4 text-left">
+              <SheetTitle className="dossier-title text-lg">{inspectorTitle}</SheetTitle>
+              <SheetDescription className="text-xs text-muted-foreground">
+                Context for the currently selected requirement or evidence.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
+              <ApplicationEvidenceInspector data={evidence} selection={inspectorSelection} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
+}
+
+function useDossierCompact(isMobile: boolean): boolean {
+  const readCompact = () =>
+    isMobile || (typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth < 1280);
+  const [compact, setCompact] = useState(readCompact);
+
+  useEffect(() => {
+    const update = () => setCompact(readCompact());
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [isMobile]);
+
+  return compact;
 }
 
 function SaveMessage({ state }: { state: SaveState }) {

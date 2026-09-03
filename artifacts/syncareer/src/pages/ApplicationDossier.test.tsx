@@ -96,9 +96,9 @@ function evidenceFixtures() {
       ],
       error: null,
     },
-    application_requirements: { data: [], error: null },
-    application_evidence_links: { data: [], error: null },
-    resume_evidence_links: { data: [], error: null },
+    application_requirements: { data: [] as Array<Record<string, unknown>>, error: null },
+    application_evidence_links: { data: [] as Array<Record<string, unknown>>, error: null },
+    resume_evidence_links: { data: [] as Array<Record<string, unknown>>, error: null },
   };
 }
 
@@ -134,20 +134,20 @@ describe('Application Dossier page', () => {
     (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [], error: null });
     renderDossier();
 
-    expect(await screen.findByText('Graduate Analyst')).toBeTruthy();
+    expect((await screen.findAllByText('Graduate Analyst')).length).toBeGreaterThan(0);
     expect(screen.getByText('The role as recorded')).toBeTruthy();
     expect(screen.getByText('Accra')).toBeTruthy();
     expect(screen.getByRole('list', { name: 'Application stages' })).toBeTruthy();
     // All sections are present on desktop.
     for (const title of [
       'Where the application stands',
-      'What the role asks for',
-      'What you can show',
-      'Tailored application CV',
-      'Practice records',
-      'Human guidance for this application',
+      'Requirements',
+      'Evidence',
+      'CV',
+      'Interview',
+      'Mentor',
     ]) {
-      expect(screen.getByText(title)).toBeTruthy();
+      expect(screen.getAllByText(title).length).toBeGreaterThan(0);
     }
     // Saved notes hydrate into the editor.
     expect((screen.getByLabelText('Application notes') as HTMLTextAreaElement).value).toBe('Prepare SQL stories');
@@ -179,10 +179,54 @@ describe('Application Dossier page', () => {
     (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [], error: null });
     renderDossier();
 
-    expect(await screen.findByText('Ledger rebuild')).toBeTruthy();
-    expect(screen.getByText('Supported')).toBeTruthy();
-    expect(screen.getByText('EV-DD0A9A')).toBeTruthy();
-    expect(screen.getByText('Society minutes, March')).toBeTruthy();
+    expect((await screen.findAllByText('Ledger rebuild')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Supported').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('EV-DD0A9A').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Society minutes, March').length).toBeGreaterThan(0);
+  });
+
+  it('shows evidence context and updates it for a selected evidence record', async () => {
+    const evidence = evidenceFixtures();
+    evidence.application_requirements.data = [
+      {
+        id: 'fa0a9a1e-0000-4000-8000-000000000001',
+        application_id: APPLICATION_ID,
+        user_id: USER,
+        label: 'SQL reporting',
+        detail: 'Build and explain reporting queries.',
+        origin: 'posting_skill' as const,
+        sort_order: 0,
+        created_at: new Date(NOW).toISOString(),
+        updated_at: new Date(NOW).toISOString(),
+      },
+    ];
+    evidence.application_evidence_links.data = [
+      {
+        id: 'fa0a9a1e-0000-4000-8000-000000000002',
+        requirement_id: 'fa0a9a1e-0000-4000-8000-000000000001',
+        evidence_id: EVIDENCE_ID,
+        user_id: USER,
+        relevance_note: 'Explains the dashboard',
+        created_at: new Date(NOW).toISOString(),
+      },
+    ];
+    installSupabaseMock({
+      tables: {
+        job_applications: { data: makeApplicationRow(), error: null },
+        resumes: { data: [], error: null },
+        mock_interviews: { data: [], error: null },
+        ...evidence,
+      },
+      maybeSingle: { job_applications: { data: makeApplicationRow(), error: null } },
+    });
+    (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [], error: null });
+    renderDossier();
+
+    expect(await screen.findByText('Evidence ready')).toBeTruthy();
+    expect(screen.getAllByText('SQL reporting').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Show context for Ledger rebuild' }));
+    expect(await screen.findByText('Ready to use')).toBeTruthy();
+    expect(screen.getAllByText('Relevance: Explains the dashboard').length).toBeGreaterThan(0);
   });
 
   it('renders mobile section navigation with a single active section', async () => {
@@ -200,10 +244,10 @@ describe('Application Dossier page', () => {
     renderDossier();
 
     expect(await screen.findByText('Graduate Analyst')).toBeTruthy();
-    expect(screen.getByRole('navigation', { name: 'Dossier sections' })).toBeTruthy();
+    expect(screen.getByRole('navigation', { name: 'Application sections' })).toBeTruthy();
     // Only the active section's content is rendered; switching shows the next.
     expect(screen.queryByText('Where the application stands')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: '02 Progress' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next step' }));
     expect(screen.getByText('Where the application stands')).toBeTruthy();
     expect(screen.queryByText('The role as recorded')).toBeNull();
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1280 });

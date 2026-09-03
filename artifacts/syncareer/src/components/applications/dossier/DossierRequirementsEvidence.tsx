@@ -45,6 +45,10 @@ interface Props extends RequirementHandlers {
   resumeLinks: ResumeEvidenceLinkRow[];
   postingSkillCount: number;
   busy: boolean;
+  selectedRequirementId?: string | null;
+  onSelectRequirement?: (requirementId: string) => void;
+  selectedEvidenceId?: string | null;
+  onSelectEvidence?: (evidenceId: string) => void;
 }
 
 function statusText(status: EvidenceSupportStatus): string {
@@ -59,6 +63,10 @@ export function DossierRequirementsEvidence({
   resumeLinks,
   postingSkillCount,
   busy,
+  selectedRequirementId,
+  onSelectRequirement,
+  selectedEvidenceId,
+  onSelectEvidence,
   onLinkEvidence,
   onUnlinkEvidence,
   onImportPostingSkills,
@@ -165,6 +173,12 @@ export function DossierRequirementsEvidence({
                   ...(entry.usedInInterview ? (['interview'] as const) : []),
                 ],
               }))}
+              selected={thread.requirement.id === selectedRequirementId}
+              onSelectRequirement={
+                onSelectRequirement ? () => onSelectRequirement(thread.requirement.id) : undefined
+              }
+              selectedEvidenceId={selectedEvidenceId ?? undefined}
+              onSelectEvidence={onSelectEvidence}
             />
             <div className="flex flex-wrap items-center gap-2 px-3 pb-3 md:px-4">
               <Button

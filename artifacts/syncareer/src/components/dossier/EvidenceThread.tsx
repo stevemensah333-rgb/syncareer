@@ -17,17 +17,56 @@ interface EvidenceThreadProps {
   evidence: EvidenceThreadItem[];
   selectedEvidenceId?: string;
   onSelectEvidence?: (id: string) => void;
+  selected?: boolean;
+  onSelectRequirement?: () => void;
   className?: string;
 }
 
-export function EvidenceThread({ requirement, detail, evidence, selectedEvidenceId, onSelectEvidence, className }: EvidenceThreadProps) {
-  return (
-    <section className={cn('grid gap-4 border-y border-border py-4 md:grid-cols-[minmax(150px,0.65fr)_minmax(0,1.35fr)]', className)} aria-label={`Evidence for ${requirement}`}>
-      <div className="px-3 md:border-r md:border-border md:px-4">
-        <p className="dossier-eyebrow">Requirement</p>
+export function EvidenceThread({
+  requirement,
+  detail,
+  evidence,
+  selectedEvidenceId,
+  onSelectEvidence,
+  selected,
+  onSelectRequirement,
+  className,
+}: EvidenceThreadProps) {
+  const requirementHeader = (interactive: boolean) => (
+    <div className="px-3 md:border-r md:border-border md:px-4">
+      <p className="dossier-eyebrow">Requirement</p>
+      {interactive ? (
+        <span className="mt-1 block text-sm font-semibold text-foreground">{requirement}</span>
+      ) : (
         <h3 className="mt-1 text-sm font-semibold text-foreground">{requirement}</h3>
-        {detail && <p className="mt-1 text-xs leading-5 text-muted-foreground">{detail}</p>}
-      </div>
+      )}
+      {detail && <p className="mt-1 text-xs leading-5 text-muted-foreground">{detail}</p>}
+    </div>
+  );
+
+  return (
+    <section
+      className={cn(
+        'grid gap-4 border-y border-border py-4 md:grid-cols-[minmax(150px,0.65fr)_minmax(0,1.35fr)]',
+        selected && 'bg-muted/30',
+        className,
+      )}
+      aria-label={`Evidence for ${requirement}`}
+      data-selected={selected || undefined}
+    >
+      {onSelectRequirement ? (
+        <button
+          type="button"
+          aria-current={selected ? 'true' : undefined}
+          aria-pressed={selected}
+          onClick={onSelectRequirement}
+          className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        >
+          {requirementHeader(true)}
+        </button>
+      ) : (
+        requirementHeader(false)
+      )}
       <div className="space-y-4 px-3 md:px-4">
         {evidence.length === 0 ? (
           <div className="evidence-thread-track" data-state="missing">
