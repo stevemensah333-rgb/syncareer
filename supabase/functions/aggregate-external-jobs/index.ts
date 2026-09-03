@@ -351,7 +351,7 @@ async function runAggregation(gatewayAuth: {
   }
 
   const results = await pool(pairs, MAX_CONCURRENT_SEARCHES, ({ plan, site }) =>
-    searchSource(apiKey, site, plan),
+    searchSource(gatewayAuth, site, plan),
   );
   const all = results.flat();
 
@@ -457,8 +457,9 @@ Deno.serve((req) => {
   }
 
   const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
-  if (!FIRECRAWL_API_KEY) {
-    console.error("FIRECRAWL_API_KEY not configured");
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!FIRECRAWL_API_KEY || !LOVABLE_API_KEY) {
+    console.error("FIRECRAWL_API_KEY or LOVABLE_API_KEY not configured");
     return new Response(
       JSON.stringify({ success: false, error: "Aggregation not configured" }),
       {
@@ -467,6 +468,10 @@ Deno.serve((req) => {
       },
     );
   }
+  const gatewayAuth = {
+    lovableApiKey: LOVABLE_API_KEY,
+    connectionKey: FIRECRAWL_API_KEY,
+  };
 
   const segments = segmentsForRun(new Date()).map((s) => s.id);
 
