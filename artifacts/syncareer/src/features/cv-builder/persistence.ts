@@ -476,6 +476,73 @@ export async function savePrimaryCV(
   }
 }
 
+/**
+ * Loads one specific owned resume row (base or application-scoped) by id.
+ * Returns null when the row does not exist or is not the caller's.
+ */
+export async function loadCvRow(
+  client: CvPersistenceClient,
+  userId: string,
+  resumeId: string,
+): Promise<{ cv: CVData } | null> {
+  if (!userId.trim()) throw { code: 'NO_SESSION', message: 'No authenticated user context' };
+
+  const { data, error } = await client
+    .from('resumes')
+    .select('id, personal_info, education, experience, projects, achievements, skills, references_section')
+    .eq('id', resumeId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return { cv: resumeRowToCVData(data) };
+}
+
+/**
+ * Updates one specific owned resume row in place, preserving its primary
+ * flag. Used by the application-scoped editor: the row already exists (it was
+ * created explicitly through `create_application_cv`), so this never inserts
+ * and never falls back to the primary CV. An empty update response is an
+ * error, not a silent success.
+ */
+export async function saveCvRow(
+  client: CvPersistenceClient,
+  userId: string,
+  resumeId: string,
+  cv: CVData,
+): Promise<CvSaveResult> {
+  try {
+    if (!userId.trim()) return classifySaveError({ code: 'NO_SESSION', message: 'No authenticated user context' });
+
+    const validation = validateCVData(cv);
+    if (!validation.ok) {
+      return {
+        ok: false,
+        category: 'validation',
+        code: null,
+        userMessage: firstValidationError(validation.errors),
+        fieldErrors: validation.errors,
+      };
+    }
+
+    const columns = cvDataToResumeColumns(cv);
+    const { data, error } = await client
+      .from('resumes')
+      .update({ ...columns })
+      .eq('id', resumeId)
+      .eq('user_id', userId)
+      .select('id')
+      .maybeSingle();
+    if (error) return classifySaveError(error);
+    if (!data?.id) {
+      return classifySaveError({ code: 'CV_UPDATE_NOT_CONFIRMED', message: 'No row returned after update' });
+    }
+    return { ok: true, resumeId: data.id };
+  } catch (error) {
+    return classifySaveError(error);
+  }
+}
+
 /** Best-effort mirror for SynAI. The primary CV save does not depend on it. */
 export async function syncCVSkills(
   client: CvPersistenceClient,

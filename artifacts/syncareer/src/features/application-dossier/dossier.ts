@@ -58,7 +58,7 @@ export interface DossierBundle {
   mentorRequestsError: DossierLoadError | null;
 }
 
-const APPLICATION_SELECT = `*, job:job_postings(title, location, employment_type, company_name, department, source, source_url, application_deadline, skills, experience_level, updated_at)`;
+const APPLICATION_SELECT = `*, job:job_postings(title, location, employment_type, company_name, department, description, source, source_url, application_deadline, skills, experience_level, updated_at)`;
 
 /** Loads one owned application. Returns null when the row does not exist or is not the caller's. */
 export async function loadDossierApplication(

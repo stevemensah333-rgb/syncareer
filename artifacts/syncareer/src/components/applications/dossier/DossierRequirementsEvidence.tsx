@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link2, Loader2, Plus, Sparkles, Trash2, Unlink } from 'lucide-react';
+import { Link2, ListPlus, Loader2, Plus, Trash2, Unlink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -130,7 +130,7 @@ export function DossierRequirementsEvidence({
       <div className="flex flex-wrap items-center gap-2">
         {postingSkillCount > 0 && (
           <Button type="button" size="sm" variant="outline" disabled={busy} onClick={submitImport}>
-            <Sparkles aria-hidden="true" className="h-4 w-4" />
+            <ListPlus aria-hidden="true" className="h-4 w-4" />
             Import posting skills
           </Button>
         )}

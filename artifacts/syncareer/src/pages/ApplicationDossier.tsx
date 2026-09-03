@@ -668,12 +668,7 @@ export default function ApplicationDossier() {
     </DossierSection>
   );
 
-  const cvHref =
-    application && facts
-      ? `/cv-builder?application=${encodeURIComponent(application.id)}${
-          application.job_id ? `&opportunity=${encodeURIComponent(application.job_id)}` : ''
-        }&targetRole=${encodeURIComponent(facts.title ?? '')}`
-      : '/cv-builder';
+  const cvHref = application ? `/applications/${encodeURIComponent(application.id)}/cv` : '/cv-builder';
 
   const renderCv = () => (
     <DossierSection
