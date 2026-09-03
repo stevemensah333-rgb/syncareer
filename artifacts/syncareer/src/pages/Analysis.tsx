@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, GraduationCap, RefreshCw, AlertCircle, BarChart3, TrendingUp, Download } from 'lucide-react';
+import { GraduationCap, RefreshCw, AlertCircle, BarChart3, TrendingUp, Download } from 'lucide-react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useMarketIntelligence } from '@/hooks/useMarketIntelligence';
 import { MarketOverviewTab } from '@/components/analysis/MarketOverviewTab';
@@ -73,12 +73,12 @@ const Analysis = () => {
 
         {/* Intelligence Header */}
         <AnimatedSection y={20}>
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <Card className="border-primary/20">
           <CardContent className="pt-5 pb-5">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-lg bg-primary/10 shrink-0 print:hidden">
-                  <Sparkles className="h-5 w-5 text-primary" />
+                  <BarChart3 className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">

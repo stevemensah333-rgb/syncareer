@@ -291,7 +291,7 @@ export function nextStepForApplicationStatus(
         title: 'Recruiter is reviewing',
         description: `The team is reviewing your application for ${role}. Prepare for the next stage by rehearsing role-specific answers.`,
         ctaLabel: 'Prepare for interview',
-        href: '/practice',
+        href: '/interview-simulator',
       };
     case 'shortlisted':
       return {

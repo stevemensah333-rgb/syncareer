@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useSubscription } from '@/hooks/useSubscription';
-import { } from '@/hooks/useSubscription';
 import { toast } from 'sonner';
 import {
+  ArrowUpRight,
   CheckCircle,
+  CheckCircle2,
   Calendar,
-  Sparkles,
   Lock,
   AlertCircle,
   TrendingUp,
@@ -144,7 +144,7 @@ export default function SubscriptionManager() {
           <h3 className="text-lg font-semibold">Current Plan</h3>
           {isPremium ? (
             <Badge className="flex items-center gap-1 bg-primary/10 text-primary border-primary/20">
-              <Sparkles className="h-3 w-3" />
+              <CheckCircle2 className="h-3 w-3" />
               Premium
             </Badge>
           ) : (
@@ -193,7 +193,7 @@ export default function SubscriptionManager() {
               onSuccess={() => { refetch(); toast.success('Premium activated!'); }}
               className="w-full"
             >
-              <Sparkles className="w-4 h-4 mr-2" />
+              <ArrowUpRight className="w-4 h-4 mr-2" />
               Upgrade to Premium — GH₵30/month
             </PaystackButton>
           </div>

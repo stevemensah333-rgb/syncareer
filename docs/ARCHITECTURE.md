@@ -204,6 +204,30 @@ application through Lovable** — see [`SCHEMA_RECONCILIATION.md`](./SCHEMA_RECO
 - Rollback: `supabase/rollback/evidence_dossier_rollback.sql`; tests:
   `supabase/tests/evidence_dossier_rls.sql`.
 
+### Canonical student routes
+
+The signed-in student experience is centred on applications:
+
+- `/dashboard` — Application Desk home.
+- `/opportunities` — discovery and application handoff.
+- `/applications` — searchable dossier index; the legacy
+  `?application=:id` deep link redirects to the canonical route with
+  meaningful filters preserved.
+- `/applications/:applicationId` — canonical Application Dossier (brief,
+  factual stage rail, progress/next action/notes, requirements and evidence
+  threads, evidence ledger, CV record, interview records, mentor requests).
+- `/applications/:applicationId/cv` — application-scoped CV Evidence Editor;
+  edits one application-owned `resumes` copy created explicitly through
+  `create_application_cv`; the standalone `/cv-builder` keeps editing the
+  primary CV and redirects legacy `?application=` links to this route.
+- `/applications/:applicationId/interview` — application-context interview
+  preparation; completed answers surface as reviewable evidence suggestions.
+- `/mentors`, `/mentors/:mentorId`, `/mentorship/requests` — mentor
+  connections; request creation preselects `?application=`.
+- `/build`, `/apply`, `/practice` are single-purpose legacy hubs that now
+  redirect to `/cv-builder`, `/opportunities`, and `/interview-simulator`
+  respectively, keeping old bookmarks valid.
+
 ## Backend data model
 
 - Application tables live in `public`, RLS-enabled, ownership keyed on

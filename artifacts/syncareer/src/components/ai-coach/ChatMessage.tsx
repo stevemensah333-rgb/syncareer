@@ -1,4 +1,3 @@
-import { Sparkles } from "lucide-react";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -53,9 +52,6 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
             : "bg-muted text-foreground"
         }`}
       >
-        {role === "assistant" && (
-          <Sparkles className="inline-block w-4 h-4 mr-2 mb-1 text-primary" />
-        )}
         <span className="whitespace-pre-wrap">{displayContent}</span>
       </div>
     </div>

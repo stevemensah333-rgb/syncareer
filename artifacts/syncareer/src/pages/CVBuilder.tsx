@@ -181,7 +181,7 @@ const CVBuilder = () => {
   ) : null;
 
   return (
-    <PageLayout title="CV Builder" description="Create, review, and save your primary CV." breadcrumbs={[{ label: 'Home', to: '/dashboard' }, { label: 'Build', to: '/build' }, { label: 'CV Builder' }]}>
+    <PageLayout title="CV Builder" description="Create, review, and save your primary CV." breadcrumbs={[{ label: 'Home', to: '/dashboard' }, { label: 'CV Builder' }]}>
       {loadFailure ? (
         <div className="mx-auto max-w-lg rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center" role="alert">
           <AlertCircle className="mx-auto mb-3 h-8 w-8 text-destructive" aria-hidden />

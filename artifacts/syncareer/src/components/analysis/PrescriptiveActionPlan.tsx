@@ -43,7 +43,7 @@ export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) =>
   const readiness = Math.round((have.length / top5.length) * 100);
 
   return (
-    <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent overflow-hidden">
+    <Card className="border-primary/40 overflow-hidden">
       <CardContent className="p-6 md:p-8 space-y-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
@@ -110,7 +110,7 @@ export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) =>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 pt-2">
-          <Button variant="outline" onClick={() => navigate('/apply')} className="gap-2">
+          <Button variant="outline" onClick={() => navigate('/opportunities')} className="gap-2">
             <Briefcase className="h-4 w-4" />
             See matching jobs
           </Button>

@@ -181,10 +181,19 @@ Routes: `/mentors`, `/mentors/:mentorId`, `/mentorship/requests`, `/mentor/profi
 1. **User goal:** turn real experiences into reusable, evidence-based application material instead of rewriting them per application.
 2. **Primary object:** owner-scoped `evidence_items` with attached `evidence_sources`, linked to `application_requirements` and CV entries through dedicated link tables.
 3. **Data/ownership:** all five tables are RLS SELECT-only for the owner; every write flows through a SECURITY DEFINER operation deriving identity from `auth.uid()`. Composite owner-matched foreign keys reject cross-tenant references.
-4. **Reality:** **repository-implemented, live application pending**. `20260903000000_evidence_dossier.sql`, its rollback, RLS test, and the `src/features/evidence/` frontend module (types, zod validation, derived support status, suggestions, API seam, view model) are tracked. Lovable must apply the migration (after the reviewed application-workspace migrations) and regenerate types; no UI consumes the module yet.
+4. **Reality:** **repository-implemented, live application pending**. `20260903000000_evidence_dossier.sql`, its rollback, RLS test, and the `src/features/evidence/` frontend module (types, zod validation, derived support status, suggestions, API seam, view model) are tracked. Lovable must apply the migration (after the reviewed application-workspace migrations) and regenerate types.
 5. **States:** evidence draft/confirmed/archived with derived support status (needs_source/supported); "supported" means the student attached a source and never implies external verification.
 6. **Boundaries:** no backfill of CV/interview content into evidence; suggestions are local, deterministic, and require explicit confirmation; mentors gain no evidence access; no file uploads.
-7. **Tests:** `features/evidence/*.test.ts` (52 local assertions) and `supabase/tests/evidence_dossier_rls.sql`; live RLS requires an isolated restore.
+7. **Tests:** `features/evidence/*.test.ts` and `supabase/tests/evidence_dossier_rls.sql`; live RLS requires an isolated restore.
+
+### Dossier surfaces consuming the evidence model (repository-implemented, live schema pending)
+
+- `/applications` — dossier index; rows open the canonical route; `?application=` redirects preserving `q`/`stage`.
+- `/applications/:id` — dossier: brief, factual stage rail (`buildJourney`), stage/next-action/notes editing, requirement threads with optimistic link/unlink (visible rollback), posting-skill import, evidence ledger with create/confirm/archive/source flows, CV record with explicit application-CV creation, interview records, application-level mentor requests.
+- `/applications/:id/cv` — application CV evidence editor: explicit copy creation (never silent), evidence shelf attaching usage links to CV entries, requirement inspector, `saveCvRow` updating only the application-scoped copy (base CV untouched, no intelligence refresh).
+- `/applications/:id/interview` — application-context preparation: requirements/evidence shown pre-session, existing voice-session machinery unchanged, completed answers offered as reviewable draft-evidence suggestions.
+- Mentor directory uses ruled record rows; request inbox uses ruled sections; presentation only — consent, contact disclosure, CV-access, and email-first semantics are unchanged.
+- Legacy `/build`, `/apply`, `/practice` hubs redirect to `/cv-builder`, `/opportunities`, `/interview-simulator`. Signed-in sparkles/gradients were removed from Analysis, AICoach chat, and subscription presentation; pricing/subscription-success (public, out of scope) keep their existing visuals.
 
 ### Supporting hub and fallback routes
 

@@ -30,11 +30,12 @@ export const prefetchLandingRoutes = () => {
   prefetch(() => import("@/pages/Pricing"));
 };
 
-// Signed-in student → warm the primary tabs
+// Signed-in student → warm the primary tabs and the dossier routes they open
 export const prefetchStudentRoutes = () => {
   prefetch(() => import("@/pages/Dashboard"));
   prefetch(() => import("@/pages/Markets"));
   prefetch(() => import("@/pages/ApplicationTracker"));
+  prefetch(() => import("@/pages/ApplicationDossier"));
   prefetch(() => import("@/pages/mentorship/MentorDirectory"));
 };
 
