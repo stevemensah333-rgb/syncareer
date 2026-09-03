@@ -1,13 +1,13 @@
-
 import { useState } from 'react';
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { AppSidebar, studentNavGroups } from './AppSidebar';
+import { AppSidebar, studentNavGroups, findNavContext } from './AppSidebar';
 
 /**
- * Navigation shell tests: active-state detection, the collapse control, and
- * that every primary destination is reachable from the desktop rail.
+ * Navigation shell tests: the conceptual grouping, active-state detection,
+ * the collapse control, and that every primary destination is reachable from
+ * the desktop rail.
  */
 
 function renderSidebar(initialEntry = '/dashboard', withDossier = false) {
@@ -35,14 +35,37 @@ describe('AppSidebar (navigation)', () => {
     const home = screen.getByRole('link', { name: 'Home' });
     const opportunities = screen.getByRole('link', { name: 'Opportunities' });
     expect(opportunities.getAttribute('aria-current')).toBe('page');
-    expect(opportunities.className).toContain('text-primary');
+    expect(opportunities.className).toContain('bg-selected');
     expect(home.hasAttribute('aria-current')).toBe(false);
   });
 
-  it('exposes the core student destinations', () => {
+  it('exposes the conceptual student destinations in order', () => {
     renderSidebar();
-    const links = screen.getAllByRole('link').map((l) => (l as HTMLAnchorElement).getAttribute('href'));
-    expect(links).toEqual(['/dashboard', '/opportunities', '/applications', '/mentors']);
+    const nav = screen.getByRole('navigation', { name: 'Workspace navigation' });
+    const links = within(nav).getAllByRole('link').map((l) => (l as HTMLAnchorElement).getAttribute('href'));
+    expect(links).toEqual([
+      '/dashboard',
+      '/opportunities',
+      '/applications',
+      '/cv-builder',
+      '/interview-simulator',
+      '/mentors',
+    ]);
+  });
+
+  it('groups destinations under their conceptual labels', () => {
+    renderSidebar();
+    for (const label of ['Workspace', 'Build', 'Practice', 'Connect']) {
+      expect(screen.getByText(label, { selector: 'p' })).toBeTruthy();
+    }
+  });
+
+  it('resolves the owning context for sub-routes', () => {
+    expect(findNavContext('/applications/app-1', studentNavGroups)).toEqual({
+      group: 'Workspace',
+      item: { title: 'Applications', icon: expect.anything(), href: '/applications' },
+    });
+    expect(findNavContext('/settings', studentNavGroups)).toBeNull();
   });
 
   it('separates the current dossier from primary navigation', () => {
@@ -60,13 +83,16 @@ describe('AppSidebar (navigation)', () => {
     expect(aside.className).toContain('w-64');
     fireEvent.click(toggle);
 
-    // Collapsed: narrower rail, toggle announces "expand".
+    // Collapsed: narrower rail, toggle announces "expand", group labels stay
+    // available to assistive tech only, and destinations gain title tooltips.
     expect(aside.className).toContain('w-[68px]');
     expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeTruthy();
+    expect(screen.getByText('Workspace', { selector: 'p' }).className).toContain('sr-only');
     expect(screen.getByRole('link', { name: 'Opportunities' }).getAttribute('title')).toBe('Opportunities');
 
     fireEvent.click(screen.getByRole('button', { name: 'Expand sidebar' }));
     expect(screen.getByRole('button', { name: 'Collapse sidebar' })).toBeTruthy();
+    expect(screen.getByText('Workspace', { selector: 'p' }).className).not.toContain('sr-only');
   });
 
   it('keeps navigation links keyboard-focusable with a visible focus treatment', () => {

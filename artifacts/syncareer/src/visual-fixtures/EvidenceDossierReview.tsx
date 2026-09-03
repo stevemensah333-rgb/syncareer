@@ -171,10 +171,10 @@ function ShellFixture({ collapsed, role, dark }: { collapsed: boolean; role: 'st
           />
         </div>
 
-        <header className={cn('fixed inset-x-0 top-0 z-30 h-14 border-b border-border bg-card', topbarLeft)}>
+        <header className={cn('fixed inset-x-0 top-0 z-30 h-14 border-b border-border bg-background', topbarLeft)}>
           <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
             <span className="text-sm font-semibold md:hidden">Syncareer</span>
-            <span className="hidden md:block" aria-hidden="true" />
+            <span className="hidden text-[13px] md:block">{isMentor ? 'Workspace · Requests' : 'Workspace · Applications'}</span>
             <div className="flex items-center gap-2">
               <button type="button" aria-label="Notifications" className="flex h-11 w-11 items-center justify-center text-muted-foreground md:h-9 md:w-9"><Bell className="h-4 w-4" /></button>
               <button type="button" aria-label="Account menu" className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-secondary text-primary md:h-9 md:w-9"><User className="h-4 w-4" /></button>

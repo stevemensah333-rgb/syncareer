@@ -46,7 +46,7 @@ export function NotificationsDropdown() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-11 w-11 md:h-9 md:w-9"
+          className="relative h-11 w-11 hover:bg-secondary active:bg-secondary md:h-9 md:w-9"
           aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
         >
           <Bell className="h-5 w-5" />

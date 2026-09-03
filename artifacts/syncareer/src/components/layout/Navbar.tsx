@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BellRing, CreditCard, HelpCircle, LogOut, Mail, Phone, Settings, Shield, User } from 'lucide-react';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
 
 import { cn } from '@/lib/utils';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useAuth } from '@/lib/auth';
@@ -23,15 +31,30 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
+import { findNavContext, type NavGroup } from './AppSidebar';
+
+export interface BreadcrumbItem {
+  label: string;
+  to?: string;
+}
 
 interface NavbarProps {
   className?: string;
+  /** Explicit page breadcrumbs. When absent the bar derives its context from
+   *  the role navigation model (section + destination). */
+  breadcrumbs?: BreadcrumbItem[];
+  navigation: NavGroup[];
 }
 
-export function Navbar({ className }: NavbarProps) {
+/** Fixed top bar of the authenticated shell. It sits on the workspace canvas,
+ *  carries the persistent location context (mobile shows the brand instead,
+ *  where the bottom nav already states location) and the account utilities.
+ *  Nothing else is added to fill space. */
+export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { profile } = useUserProfile();
-  
+
   const supabaseUserId = useSupabaseUserId();
   const { signOut } = useAuth();
 
@@ -68,105 +91,146 @@ export function Navbar({ className }: NavbarProps) {
     .map((part) => part[0]?.toUpperCase())
     .join('') || null;
 
+  const navContext = findNavContext(pathname, navigation);
+  const crumbs: BreadcrumbItem[] = breadcrumbs ?? (navContext
+    ? [{ label: navContext.group }, { label: navContext.item.title }]
+    : []);
+
   return (
-    <>
-      <header className={cn("fixed left-0 right-0 top-0 z-30 h-14 border-b bg-card transition-[left] duration-150 ease-out motion-reduce:transition-none", className)}>
-        <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 md:hidden">
-            <img src={syncareerLogo} alt="" className="h-7 w-auto object-contain" />
-            <span className="text-sm font-semibold tracking-tight">Syncareer</span>
+    <header
+      className={cn(
+        'fixed left-0 right-0 top-0 z-30 h-14 border-b border-border bg-background',
+        'transition-[left] duration-150 ease-out motion-reduce:transition-none',
+        className,
+      )}
+    >
+      <div className="page-container flex h-full items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2 md:hidden">
+          <img src={syncareerLogo} alt="" className="h-7 w-auto object-contain" />
+          <span className="text-sm font-semibold tracking-tight">Syncareer</span>
+        </div>
+
+        {crumbs.length > 0 && (
+          <div className="hidden min-w-0 md:block">
+            <Breadcrumb aria-label="Breadcrumb">
+              <BreadcrumbList className="gap-1 text-[13px]">
+                {crumbs.map((crumb, index) => {
+                  const isLast = index === crumbs.length - 1;
+                  return (
+                    <React.Fragment key={`${crumb.label}-${index}`}>
+                      {index > 0 && <BreadcrumbSeparator className="[&>svg]:size-3.5 text-muted-foreground/60" />}
+                      <BreadcrumbItem className="max-w-[16rem]">
+                        {crumb.to && !isLast ? (
+                          <BreadcrumbLink
+                            asChild
+                            className="rounded-sm text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <Link to={crumb.to}>{crumb.label}</Link>
+                          </BreadcrumbLink>
+                        ) : isLast ? (
+                          <BreadcrumbPage className="truncate font-medium text-foreground">
+                            {crumb.label}
+                          </BreadcrumbPage>
+                        ) : (
+                          <span className="truncate text-muted-foreground">{crumb.label}</span>
+                        )}
+                      </BreadcrumbItem>
+                    </React.Fragment>
+                  );
+                })}
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-          <div className="hidden md:block" aria-hidden="true" />
-          
-          <div className="flex items-center gap-1.5">
-            <NotificationsDropdown />
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Open account menu"
-                  className="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:h-9 md:w-9"
-                >
+        )}
+        {crumbs.length === 0 && <div className="hidden md:block" aria-hidden="true" />}
+
+        <div className="flex items-center gap-1.5">
+          <NotificationsDropdown />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Open account menu"
+                className="flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-150 hover:bg-secondary active:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:h-9 md:w-9"
+              >
                 <Avatar className="h-9 w-9 cursor-pointer border transition-colors duration-150 hover:border-primary/50">
                   <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
                   <AvatarFallback className="bg-primary/10 text-primary">
                     {initials || <User className="h-5 w-5" />}
                   </AvatarFallback>
                 </Avatar>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
-                <DropdownMenuLabel className="space-y-0.5">
-                  <span className="block truncate">{profile?.full_name || 'My account'}</span>
-                  <span className="block text-[11px] font-normal text-muted-foreground">{isCounsellor ? 'Career mentor' : 'Student'}</span>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/settings?tab=profile')} className="cursor-pointer">
-                  <User className="h-4 w-4 mr-2" />
-                  Profile
-                </DropdownMenuItem>
-                {!isCounsellor && (
-                  <>
-                    <DropdownMenuItem onClick={() => navigate('/mentorship/requests')} className="cursor-pointer">
-                      <BellRing className="h-4 w-4 mr-2" />
-                      Mentor requests
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/settings?tab=subscription')} className="cursor-pointer">
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Subscription
-                    </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </DropdownMenuItem>
-                {isAdmin && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate('/admin/feedback')} className="cursor-pointer">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Admin Dashboard
-                    </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="cursor-pointer">
-                    <HelpCircle className="h-4 w-4 mr-2" />
-                    Contact Support
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="bg-popover z-50">
-                    <div className="px-3 py-2 space-y-2">
-                      <a 
-                        href="tel:+233555156128" 
-                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Phone className="h-3.5 w-3.5" />
-                        +233 555 156 128
-                      </a>
-                      <a 
-                        href="mailto:syncareer01@gmail.com" 
-                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Mail className="h-3.5 w-3.5" />
-                        syncareer01@gmail.com
-                      </a>
-                    </div>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+              <DropdownMenuLabel className="space-y-0.5">
+                <span className="block truncate">{profile?.full_name || 'My account'}</span>
+                <span className="block text-[11px] font-normal text-muted-foreground">{isCounsellor ? 'Career mentor' : 'Student'}</span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/settings?tab=profile')} className="cursor-pointer">
+                <User className="h-4 w-4 mr-2" />
+                Profile
+              </DropdownMenuItem>
+              {!isCounsellor && (
+                <>
+                  <DropdownMenuItem onClick={() => navigate('/mentorship/requests')} className="cursor-pointer">
+                    <BellRing className="h-4 w-4 mr-2" />
+                    Mentor requests
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/settings?tab=subscription')} className="cursor-pointer">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Subscription
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/admin/feedback')} className="cursor-pointer">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admin Dashboard
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="cursor-pointer">
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Contact Support
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="bg-popover z-50">
+                  <div className="px-3 py-2 space-y-2">
+                    <a
+                      href="tel:+233555156128"
+                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                      +233 555 156 128
+                    </a>
+                    <a
+                      href="mailto:syncareer01@gmail.com"
+                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Mail className="h-3.5 w-3.5" />
+                      syncareer01@gmail.com
+                    </a>
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </header>
-
-    </>
+      </div>
+    </header>
   );
 }

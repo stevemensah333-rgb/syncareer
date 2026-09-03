@@ -1,6 +1,6 @@
 import React from 'react';
 import { studentNavGroups } from '@/components/layout/AppSidebar';
-import { type BreadcrumbItem } from '@/components/layout/PageHeader';
+import { type BreadcrumbItem } from '@/components/layout/Navbar';
 import { AuthenticatedLayout } from '@/components/layout/AuthenticatedLayout';
 
 interface StudentLayoutProps {
