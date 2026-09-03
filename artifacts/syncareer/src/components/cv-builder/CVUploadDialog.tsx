@@ -47,7 +47,6 @@ export const CVUploadDialog: React.FC<CVUploadDialogProps> = ({
 
   const handleClose = (next: boolean) => {
     if (!next) {
-      // reset on close
       setSelectedName(null);
       onReset();
     }
@@ -58,10 +57,10 @@ export const CVUploadDialog: React.FC<CVUploadDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md rounded-overlay shadow-overlay">
         <DialogHeader>
-          <DialogTitle>Upload existing CV</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base font-semibold">Upload existing CV</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
             With your explicit selection, the file is sent to Syncareer's AI analysis service to extract suggested fields. Nothing is applied until you review and choose “Apply to CV”. PDF or DOCX, max 5 MB.
           </DialogDescription>
         </DialogHeader>
@@ -75,12 +74,12 @@ export const CVUploadDialog: React.FC<CVUploadDialogProps> = ({
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onClick={() => inputRef.current?.click()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              dragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'
+            className={`rounded-surface border-2 border-dashed p-8 text-center cursor-pointer transition-colors ${
+              dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 hover:bg-muted/30'
             }`}
           >
-            <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-sm font-medium mb-1">Click to upload or drag a file</p>
+            <Upload className="mx-auto mb-3 h-8 w-8 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm font-medium text-foreground mb-1">Click to upload or drag a file</p>
             <p className="text-xs text-muted-foreground">PDF, DOCX, DOC — up to 5 MB</p>
             <input
               ref={inputRef}
@@ -90,39 +89,40 @@ export const CVUploadDialog: React.FC<CVUploadDialogProps> = ({
               onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
             />
             {error && (
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4" />
+              <div className="mt-4 flex items-center justify-center gap-2 rounded-surface bg-destructive/10 p-2 text-xs font-medium text-destructive">
+                <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>{error}</span>
               </div>
             )}
           </div>
         ) : isBusy ? (
-          <div className="py-10 text-center">
-            <Loader2 className="h-10 w-10 mx-auto mb-3 animate-spin text-primary" />
-            <p className="text-sm font-medium">
+          <div className="py-10 text-center space-y-3">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+            <p className="text-sm font-medium text-foreground">
               {status === 'uploading' ? 'Reading your file…' : 'Analyzing your CV…'}
             </p>
             {selectedName && (
-              <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1.5">
-                <FileText className="h-3 w-3" />
+              <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
                 {selectedName}
               </p>
             )}
           </div>
         ) : (
           <div className="py-6 text-center space-y-4">
-            <CheckCircle2 className="h-10 w-10 mx-auto text-primary" />
+            <CheckCircle2 className="mx-auto h-8 w-8 text-success" aria-hidden="true" />
             <div>
-              <p className="text-sm font-medium">Analysis complete</p>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-sm font-semibold text-foreground">Analysis complete</p>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                 Apply the extracted info to your CV — your existing entries won't be overwritten.
               </p>
             </div>
-            <div className="flex gap-2 justify-center">
-              <Button variant="outline" onClick={() => handleClose(false)}>
+            <div className="flex justify-center gap-2">
+              <Button variant="outline" className="rounded-control" onClick={() => handleClose(false)}>
                 Cancel
               </Button>
               <Button
+                className="rounded-control"
                 onClick={() => {
                   onApply();
                   onOpenChange(false);

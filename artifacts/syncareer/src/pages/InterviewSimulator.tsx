@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,8 +7,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Phone, Clock, Zap, Target, Lock, Trash2, History, Briefcase, MapPin, ArrowRight } from 'lucide-react';
-
+import {
+  CheckCircle,
+  Clock,
+  Zap,
+  Target,
+  Trash2,
+  History,
+  Briefcase,
+  MapPin,
+  ArrowRight,
+  Mic,
+  ShieldCheck,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { InterviewErrorBoundary } from '@/components/interview/InterviewErrorBoundary';
@@ -17,12 +27,20 @@ import { VoiceInterviewMode } from '@/components/interview/VoiceInterviewMode';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import AnimatedSection from '@/components/landing/AnimatedSection';
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import type { InterviewSetupConfig } from '@/types/interview';
 import { SESSION_OPTIONS } from '@/features/interview/constants';
 import type { SessionLengthOption } from '@/features/interview/constants';
@@ -31,15 +49,8 @@ import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
 type SessionLength = SessionLengthOption['value'];
 
-const SESSION_ICONS: Record<SessionLength, typeof Zap> = {
-  quick: Zap,
-  standard: Target,
-  extended: Clock,
-};
-
 const InterviewSimulator = () => {
-  const { isPremium } = useSubscription();
-  const navigate = useNavigate();
+  const { isPremium: _isPremium } = useSubscription();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<'setup' | 'readiness' | 'interview'>('setup');
@@ -59,14 +70,14 @@ const InterviewSimulator = () => {
     jobDescription: '',
   });
 
-  // Prefill from query params (?role=&industry=&skills=&jd=) when arriving from Opportunities
+  // Prefill from query params when arriving from Opportunities or Applications
   useEffect(() => {
     const role = searchParams.get('role');
     const industry = searchParams.get('industry');
     const skills = searchParams.get('skills');
     const jd = searchParams.get('jd');
     if (!role && !industry && !skills && !jd) return;
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       jobRole: role || prev.jobRole,
       industry: industry || prev.industry,
@@ -74,7 +85,6 @@ const InterviewSimulator = () => {
     }));
   }, [searchParams]);
 
-  // Analytics: setup opened
   useEffect(() => {
     if (setupEmittedRef.current) return;
     setupEmittedRef.current = true;
@@ -86,7 +96,7 @@ const InterviewSimulator = () => {
     } catch {}
   }, [searchParams]);
 
-  const { data: interviewHistory, isLoading: _historyLoading } = useQuery({
+  const { data: interviewHistory } = useQuery({
     queryKey: ['mock_interviews_history'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -107,7 +117,8 @@ const InterviewSimulator = () => {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
-      const { data } = await supabase.from('job_applications')
+      const { data } = await supabase
+        .from('job_applications')
         .select('id, job:job_postings(title, company_name, department, description, skills)')
         .eq('applicant_id', user.id)
         .order('created_at', { ascending: false })
@@ -116,7 +127,6 @@ const InterviewSimulator = () => {
     },
   });
 
-  // Fetch active job postings for "Practice for a real job"
   const { data: liveJobs } = useQuery({
     queryKey: ['live_jobs_for_interview'],
     queryFn: async () => {
@@ -141,12 +151,12 @@ const InterviewSimulator = () => {
   };
 
   const updateConfig = (field: keyof InterviewSetupConfig, value: string) => {
-    setConfig(prev => ({ ...prev, [field]: value }));
+    setConfig((prev) => ({ ...prev, [field]: value }));
   };
 
   const startInterview = () => {
     if (!config.jobRole.trim()) {
-      toast.error('Please enter a job role');
+      toast.error('Please enter a target job role');
       return;
     }
     setReadiness('unchecked');
@@ -188,314 +198,380 @@ const InterviewSimulator = () => {
   };
 
   return (
-    <PageLayout title="Interview Simulator" description="Practise a role-specific voice interview and review your feedback." breadcrumbs={[{ label: "Home", to: "/dashboard" }, { label: "Practice", to: "/practice" }, { label: "Interview Simulator" }]}>
+    <PageLayout
+      title="Interview Simulator"
+      description="Practise role-specific voice interviews with structured signal feedback and multi-round progression."
+      breadcrumbs={[
+        { label: 'Home', to: '/dashboard' },
+        { label: 'Practice', to: '/practice' },
+        { label: 'Interview Simulator' },
+      ]}
+    >
       {step === 'setup' && (
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="max-w-2xl mx-auto space-y-6">
+        <div className="mx-auto max-w-4xl space-y-6">
+          <div className="mx-auto max-w-2xl space-y-6">
             {/* Setup Form */}
-              <AnimatedSection delay={0.08} y={20}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Set Up Your Interview</CardTitle>
-                  <CardDescription>
-                    Customize your practice session based on your target role
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Practice context</Label>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <Button type="button" variant="outline" onClick={() => { setSelectedApplicationId(null); setConfig({ jobRole: '', industry: '', difficulty: config.difficulty, interviewType: config.interviewType, resumeText: '', jobDescription: '' }); }}>Standalone practice</Button>
-                      {(applications ?? []).map((application) => {
-                        const job = Array.isArray(application.job) ? application.job[0] : application.job;
-                        if (!job?.title) return null;
-                        const organisation = job.company_name || job.department || '';
-                        return <Button key={application.id} type="button" variant="outline" className="h-auto justify-start whitespace-normal text-left" onClick={() => { setSelectedApplicationId(application.id); setConfig((previous) => ({ ...previous, jobRole: job.title, industry: organisation, jobDescription: job.description || (job.skills?.length ? `Role skills: ${job.skills.join(', ')}` : ''), resumeText: '' })); }}>{job.title}{organisation ? ` · ${organisation}` : ''}</Button>;
-                      })}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="jobRole">Target Job Role *</Label>
-                      <Input
-                        id="jobRole"
-                        value={config.jobRole}
-                        onChange={(e) => updateConfig('jobRole', e.target.value)}
-                        placeholder="e.g., Software Developer"
-                        aria-required="true"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="industry">Organisation or industry</Label>
-                      <Input
-                        id="industry"
-                        value={config.industry}
-                        onChange={(e) => updateConfig('industry', e.target.value)}
-                        placeholder="e.g., Technology"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="difficulty">Seniority Level</Label>
-                      <Select value={config.difficulty} onValueChange={(v) => updateConfig('difficulty', v)}>
-                        <SelectTrigger id="difficulty">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="beginner">Entry-level / Internship</SelectItem>
-                          <SelectItem value="intermediate">Mid-level (2-5 years)</SelectItem>
-                          <SelectItem value="advanced">Senior level</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="interviewType">Interview Type</Label>
-                      <Select value={config.interviewType} onValueChange={(v) => updateConfig('interviewType', v)}>
-                        <SelectTrigger id="interviewType">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="behavioral">Behavioral</SelectItem>
-                          <SelectItem value="technical">Technical</SelectItem>
-                          <SelectItem value="mixed">Mixed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Session Length Selector */}
-                  <div className="space-y-2">
-                    <Label id="session-length-label">Session Length</Label>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="group" aria-labelledby="session-length-label">
-                      {SESSION_OPTIONS.map((opt) => {
-                        const Icon = SESSION_ICONS[opt.value];
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setSessionLength(opt.value)}
-                            aria-pressed={sessionLength === opt.value}
-                            className={cn(
-                              "relative flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 text-center transition-all hover:border-primary/50",
-                              sessionLength === opt.value
-                                ? "border-primary bg-primary/5"
-                                : "border-border"
-                            )}
-                          >
-                            <Icon className={cn("h-5 w-5", sessionLength === opt.value ? "text-primary" : "text-muted-foreground")} />
-                            <span className="text-sm font-medium">{opt.label}</span>
-                            <span className="text-xs text-muted-foreground">{opt.description}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="resumeText">Resume / Experience Summary (Optional)</Label>
-                    <Textarea
-                      id="resumeText"
-                      value={config.resumeText}
-                      onChange={(e) => updateConfig('resumeText', e.target.value)}
-                      placeholder="Paste your resume text or key experiences here for more personalized questions..."
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="jobDescription">Job Description (Optional)</Label>
-                    <Textarea
-                      id="jobDescription"
-                      value={config.jobDescription}
-                      onChange={(e) => updateConfig('jobDescription', e.target.value)}
-                      placeholder="Paste the job description for role-specific questions..."
-                      rows={3}
-                    />
-                  </div>
-
-                  {!isPremium && (
-                    <div className="flex items-center gap-2 p-3 rounded-md bg-muted border border-border text-sm text-muted-foreground">
-                      <Lock className="h-4 w-4 flex-shrink-0 text-primary" />
-                      <span>Voice interview is a <strong className="text-foreground">Premium feature</strong>.</span>
-                      <Button size="sm" variant="outline" className="ml-auto h-7 text-xs" onClick={() => navigate('/pricing')}>
-                        Upgrade
-                      </Button>
-                    </div>
-                  )}
-
-                  <Button
-                    className="w-full rounded-full"
-                    size="lg"
-                    onClick={isPremium ? startInterview : () => navigate('/pricing')}
-                    aria-label="Start voice interview session"
-                  >
-                      {isPremium ? (
-                        <><Phone className="h-4 w-4 mr-2" aria-hidden="true" />Start Voice Interview</>
-                      ) : (
-                        <><Lock className="h-4 w-4 mr-2" aria-hidden="true" />Upgrade to Unlock</>
-                      )}
-                  </Button>
-                </CardContent>
-              </Card>
-              </AnimatedSection>
-
-              {/* Practice for a real job */}
-              {liveJobs && liveJobs.length > 0 && (
-                <AnimatedSection delay={0.12} y={20}>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-primary" />
-                      Or practice for an open position
-                    </CardTitle>
-                    <CardDescription>
-                      Prepare for a real job listing with a tailored interview
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {liveJobs.map((job) => (
-                      <button
-                        key={job.id}
-                        onClick={() => {
-                          setSelectedApplicationId(null);
-                          setConfig(prev => ({
-                            ...prev,
-                            jobRole: job.title,
-                            industry: job.company_name || job.department || '',
-                            jobDescription: job.description || '',
-                            difficulty: 'beginner',
-                          }));
-                          toast.success(`Interview setup pre-filled for "${job.title}"`);
-                        }}
-                        className="w-full flex items-center justify-between gap-3 rounded-lg border p-3 text-left hover:border-primary/30 hover:bg-muted/30 transition-colors"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm truncate">{job.title}</p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-3 w-3" /> {job.location} · {job.employment_type}
-                          </p>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                      </button>
-                    ))}
-                  </CardContent>
-                </Card>
-                </AnimatedSection>
-              )}
-
-              {/* How it works */}
-              <AnimatedSection delay={0.16} y={20}>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">How It Works</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm text-muted-foreground" aria-label="Interview process steps">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      Multi-round interview: Intro → Technical → Behavioral → Scenario → Closing
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      Adaptive difficulty — questions get harder as you perform well
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      Follow-up probes on weak answers to test depth of understanding
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      Detailed per-question feedback with improved answer examples
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      Comprehensive final report with category scores and next steps
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-              </AnimatedSection>
-
-              {/* Interview History */}
-              {(interviewHistory && interviewHistory.length > 0) && (
-                <AnimatedSection delay={0.2} y={20}>
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <History className="h-4 w-4 text-muted-foreground" />
-                      <CardTitle className="text-lg">Past Sessions</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {interviewHistory.map((interview) => {
-                      const score = interview.overall_score;
-                      const scoreColor = score === null ? 'text-muted-foreground' : score >= 75 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-destructive';
-                      const date = new Date(interview.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            <Card className="rounded-surface border border-border bg-card shadow-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Mic className="h-4 w-4 text-primary" />
+                  Set Up Your Practice Interview
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground">
+                  Customize the difficulty, round structure, and role requirements for your practice session.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Practice Context Selection */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Practice context
+                  </Label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Button
+                      type="button"
+                      variant={selectedApplicationId === null ? 'default' : 'outline'}
+                      className="rounded-control text-xs"
+                      onClick={() => {
+                        setSelectedApplicationId(null);
+                        setConfig({
+                          jobRole: '',
+                          industry: '',
+                          difficulty: config.difficulty,
+                          interviewType: config.interviewType,
+                          resumeText: '',
+                          jobDescription: '',
+                        });
+                      }}
+                    >
+                      Standalone practice
+                    </Button>
+                    {(applications ?? []).map((application) => {
+                      const job = Array.isArray(application.job) ? application.job[0] : application.job;
+                      if (!job?.title) return null;
+                      const organisation = job.company_name || job.department || '';
+                      const isSelected = selectedApplicationId === application.id;
                       return (
-                        <div key={interview.id} className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2.5 text-sm">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium truncate">{interview.job_role}</p>
-                            <p className="text-xs text-muted-foreground">{date} · {interview.difficulty}</p>
-                          </div>
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            {interview.status === 'completed' && score !== null ? (
-                              <span className={cn('font-semibold tabular-nums', scoreColor)}>{score}/100</span>
-                            ) : (
-                              <Badge variant="secondary" className="text-xs">{interview.status}</Badge>
-                            )}
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete interview?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will permanently remove the session for <strong>{interview.job_role}</strong>. This cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteInterview(interview.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </div>
+                        <Button
+                          key={application.id}
+                          type="button"
+                          variant={isSelected ? 'default' : 'outline'}
+                          className="h-auto justify-start whitespace-normal text-left rounded-control text-xs p-2.5"
+                          onClick={() => {
+                            setSelectedApplicationId(application.id);
+                            setConfig((prev) => ({
+                              ...prev,
+                              jobRole: job.title,
+                              industry: organisation,
+                              jobDescription: job.description || (job.skills?.length ? `Role skills: ${job.skills.join(', ')}` : ''),
+                              resumeText: '',
+                            }));
+                          }}
+                        >
+                          <span className="truncate">
+                            {job.title} {organisation ? `· ${organisation}` : ''}
+                          </span>
+                        </Button>
                       );
                     })}
-                  </CardContent>
-                </Card>
-                </AnimatedSection>
-              )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="jobRole" className="text-xs font-medium">Target Job Role <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="jobRole"
+                      placeholder="e.g. Associate Product Manager"
+                      value={config.jobRole}
+                      onChange={(e) => updateConfig('jobRole', e.target.value)}
+                      className="rounded-input"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="industry" className="text-xs font-medium">Industry / Organization (optional)</Label>
+                    <Input
+                      id="industry"
+                      placeholder="e.g. Fintech / Standard Bank"
+                      value={config.industry}
+                      onChange={(e) => updateConfig('industry', e.target.value)}
+                      className="rounded-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="difficulty" className="text-xs font-medium">Seniority / Difficulty</Label>
+                    <Select
+                      value={config.difficulty}
+                      onValueChange={(val: any) => updateConfig('difficulty', val)}
+                    >
+                      <SelectTrigger id="difficulty" className="rounded-input text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-overlay">
+                        <SelectItem value="beginner" className="text-xs">Entry-level / Internship</SelectItem>
+                        <SelectItem value="intermediate" className="text-xs">Mid-level (2–5 years)</SelectItem>
+                        <SelectItem value="advanced" className="text-xs">Senior level</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="interviewType" className="text-xs font-medium">Interview Type Focus</Label>
+                    <Select
+                      value={config.interviewType}
+                      onValueChange={(val: any) => updateConfig('interviewType', val)}
+                    >
+                      <SelectTrigger id="interviewType" className="rounded-input text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-overlay">
+                        <SelectItem value="mixed" className="text-xs">Comprehensive (Mixed)</SelectItem>
+                        <SelectItem value="behavioral" className="text-xs">Behavioral & Situational</SelectItem>
+                        <SelectItem value="technical" className="text-xs">Technical Depth</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Session Length Cards */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Session length & scope
+                  </Label>
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                    {SESSION_OPTIONS.map((option) => {
+                      const isSelected = sessionLength === option.value;
+                      const Icon = option.value === 'quick' ? Zap : option.value === 'standard' ? Target : Clock;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setSessionLength(option.value)}
+                          className={cn(
+                            'rounded-surface border p-3 text-left transition-colors duration-150',
+                            isSelected
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+                              : 'border-border bg-card hover:border-border/80'
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon className={cn('h-4 w-4', isSelected ? 'text-primary' : 'text-muted-foreground')} />
+                            <span className="text-xs font-semibold text-foreground">{option.label}</span>
+                          </div>
+                          <p className="mt-1 text-[11px] text-muted-foreground leading-tight">{option.description}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Optional Job Description */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="jobDescription" className="text-xs font-medium">
+                    Job Description / Requirements (optional)
+                  </Label>
+                  <Textarea
+                    id="jobDescription"
+                    placeholder="Paste job posting requirements or key skills to tailor the interview questions..."
+                    value={config.jobDescription}
+                    onChange={(e) => updateConfig('jobDescription', e.target.value)}
+                    rows={2}
+                    className="rounded-input text-xs"
+                  />
+                </div>
+
+                <Button onClick={startInterview} className="w-full rounded-control">
+                  <Mic className="mr-1.5 h-4 w-4" />
+                  Continue to microphone check
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Live Opportunities Suggestions */}
+            {(liveJobs && liveJobs.length > 0) && (
+              <Card className="rounded-surface border border-border bg-card shadow-card">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-primary" />
+                    Practice with active opportunity postings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {liveJobs.map((job) => (
+                    <button
+                      key={job.id}
+                      type="button"
+                      onClick={() => {
+                        setConfig((prev) => ({
+                          ...prev,
+                          jobRole: job.title,
+                          industry: job.company_name || job.department || '',
+                          jobDescription: job.description || (job.skills?.length ? `Role skills: ${job.skills.join(', ')}` : ''),
+                        }));
+                        toast.success(`Interview setup pre-filled for "${job.title}"`);
+                      }}
+                      className="w-full flex items-center justify-between gap-3 rounded-surface border border-border p-3 text-left transition-colors hover:border-primary/40 hover:bg-secondary/40"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-xs text-foreground truncate">{job.title}</p>
+                        <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <MapPin className="h-3 w-3" /> {job.company_name || 'Organization'} · {job.location || 'Location'}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* How It Works Structured Card */}
+            <Card className="rounded-surface border border-border bg-card shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  Practice Architecture & Methodology
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-xs text-muted-foreground" aria-label="Interview process steps">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
+                    <span><strong>Multi-round structure:</strong> Intro → Technical Depth → Behavioral Context → Scenario Problem → Closing.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
+                    <span><strong>Adaptive follow-up probes:</strong> Follow-ups test depth and concrete evidence where answers need detail.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
+                    <span><strong>6 evaluation dimensions:</strong> Strengths, missing depth, technical understanding, communication, evidence used, and next improvement.</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Past Sessions List */}
+            {interviewHistory && interviewHistory.length > 0 && (
+              <Card className="rounded-surface border border-border bg-card shadow-card">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <History className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-semibold">Past Practice Sessions</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {interviewHistory.map((interview) => {
+                    const date = new Date(interview.created_at).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    });
+                    return (
+                      <div
+                        key={interview.id}
+                        className="flex items-center justify-between gap-3 rounded-surface border border-border bg-card px-3 py-2.5 text-xs"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-foreground truncate">{interview.job_role}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">{date} · {interview.difficulty}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant="secondary" className="text-[11px] rounded-control capitalize">
+                            {interview.status}
+                          </Badge>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-control text-muted-foreground hover:text-destructive"
+                                aria-label={`Delete interview for ${interview.job_role}`}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="rounded-overlay shadow-overlay">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-base font-semibold">Delete practice session?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-xs text-muted-foreground">
+                                  This will permanently remove the practice record for <strong>{interview.job_role}</strong>.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="rounded-control text-xs">Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteInterview(interview.id)}
+                                  className="rounded-control text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       )}
 
+      {/* Step 2: Readiness Check */}
       {step === 'readiness' && (
-        <div className="mx-auto max-w-xl rounded-lg border bg-card p-6 space-y-5">
-          <div><h2 className="text-lg font-semibold">Check your microphone</h2><p className="mt-1 text-sm text-muted-foreground">Syncareer uses your microphone to transcribe answers during this AI practice interview. Camera and screen sharing are never requested. Interview responses and feedback are stored with your account by the existing interview service.</p></div>
-          <div role="status" className="rounded-md bg-muted p-3 text-sm">
-            {readiness === 'unchecked' && 'Your microphone has not been checked.'}
-            {readiness === 'checking' && 'Requesting microphone access…'}
-            {readiness === 'ready' && 'Microphone is ready. Audio output uses your browser text-to-speech support.'}
-            {readiness === 'denied' && 'Microphone permission was denied. Update browser permissions, then try again.'}
-            {readiness === 'missing' && 'No usable microphone or browser media-device support was found.'}
-            {readiness === 'failed' && 'The microphone check failed. Close other apps using the device and retry.'}
+        <div className="mx-auto max-w-xl rounded-surface border border-border bg-card p-6 shadow-card space-y-5">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Microphone & Audio Check</h2>
+            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+              Syncareer uses your microphone to capture spoken answers in real time. Video and screen sharing are never requested.
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground">Typed-answer fallback is not exposed because the current active interview UI and supported contract have not been verified for typed sessions.</p>
-          <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => setStep('setup')}>Back</Button><Button variant="outline" disabled={readiness === 'checking'} onClick={() => void checkReadiness()}>{readiness === 'checking' ? 'Checking…' : readiness === 'ready' ? 'Check again' : 'Check microphone'}</Button><Button disabled={readiness !== 'ready' || startRequested.current} onClick={beginReadyInterview}>Start interview</Button></div>
+
+          <div role="status" className="rounded-surface border border-border bg-secondary/50 p-4 text-xs space-y-2">
+            <div className="flex items-center gap-2 font-medium text-foreground">
+              <Mic className="h-4 w-4 text-primary" />
+              <span>
+                {readiness === 'unchecked' && 'Your microphone has not been checked.'}
+                {readiness === 'checking' && 'Requesting microphone access…'}
+                {readiness === 'ready' && 'Microphone is connected and active. Audio output uses browser speech synthesis.'}
+                {readiness === 'denied' && 'Microphone permission was denied. Please allow microphone access in your browser settings.'}
+                {readiness === 'missing' && 'No usable microphone was found.'}
+                {readiness === 'failed' && 'Microphone check failed. Close conflicting apps and retry.'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button variant="outline" className="rounded-control text-xs" onClick={() => setStep('setup')}>
+              Back to setup
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-control text-xs"
+              disabled={readiness === 'checking'}
+              onClick={() => void checkReadiness()}
+            >
+              {readiness === 'checking' ? 'Checking…' : readiness === 'ready' ? 'Check again' : 'Check microphone'}
+            </Button>
+            <Button
+              className="rounded-control text-xs"
+              disabled={readiness !== 'ready' || startRequested.current}
+              onClick={beginReadyInterview}
+            >
+              Start interview
+            </Button>
+          </div>
         </div>
       )}
 
+      {/* Step 3: Active Interview */}
       {step === 'interview' && (
-        <div className="max-w-3xl mx-auto">
+        <div className="mx-auto max-w-3xl">
           <InterviewErrorBoundary
             onReset={() => setStep('setup')}
             fallbackTitle="Interview session crashed"
@@ -511,7 +587,9 @@ const InterviewSimulator = () => {
               applicationId={selectedApplicationId}
               autoStart
               onRetry={() => {
-                try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' }); } catch {}
+                try {
+                  captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' });
+                } catch {}
                 startRequested.current = false;
                 setReadiness('unchecked');
                 setStep('readiness');
@@ -528,7 +606,6 @@ const InterviewSimulator = () => {
         </div>
       )}
 
-      {/* Feedback Modal */}
       <FeedbackModal
         isOpen={feedbackModal.isOpen}
         onSubmit={feedbackModal.submitFeedback}

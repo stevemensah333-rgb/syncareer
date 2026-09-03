@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { FolderKanban, Plus, Trash2 } from 'lucide-react';
+import { FolderKanban, Plus, Trash2, Sparkles, Calendar, Building2 } from 'lucide-react';
+import { ACTION_VERBS } from '@/features/cv-builder/constants';
 
-interface Project {
+export interface Project {
   id: string;
   organization: string;
   date: string;
@@ -18,14 +19,25 @@ interface Project {
 interface CVFormProjectsProps {
   projects: Project[];
   onChange: (projects: Project[]) => void;
+  onSuggestBullet?: (fieldPath: string, text: string) => void;
+  selectedFieldPath?: string | null;
 }
 
-export const CVFormProjects: React.FC<CVFormProjectsProps> = ({ projects, onChange }) => {
+export const CVFormProjects: React.FC<CVFormProjectsProps> = ({
+  projects,
+  onChange,
+  onSuggestBullet,
+  selectedFieldPath,
+}) => {
+  const [activeEntryId, setActiveEntryId] = useState<string | null>(projects[0]?.id ?? null);
+
   const addProject = () => {
+    const newId = crypto.randomUUID();
     onChange([
       ...projects,
-      { id: crypto.randomUUID(), organization: '', date: '', projectName: '', role: '', bullets: [''] },
+      { id: newId, organization: '', date: '', projectName: '', role: '', bullets: [''] },
     ]);
+    setActiveEntryId(newId);
   };
 
   const updateProject = (id: string, field: keyof Project, value: string | string[]) => {
@@ -34,6 +46,9 @@ export const CVFormProjects: React.FC<CVFormProjectsProps> = ({ projects, onChan
 
   const removeProject = (id: string) => {
     onChange(projects.filter((p) => p.id !== id));
+    if (activeEntryId === id) {
+      setActiveEntryId(projects.find(p => p.id !== id)?.id ?? null);
+    }
   };
 
   const addBullet = (id: string) => {
@@ -67,111 +82,212 @@ export const CVFormProjects: React.FC<CVFormProjectsProps> = ({ projects, onChan
     );
   };
 
+  const insertActionVerb = (projectId: string, bulletIndex: number, verb: string) => {
+    const proj = projects.find(p => p.id === projectId);
+    if (!proj) return;
+    const current = proj.bullets[bulletIndex] || '';
+    const capitalized = verb.charAt(0).toUpperCase() + verb.slice(1);
+    const updated = current.trim() ? `${capitalized} ${current}` : `${capitalized} `;
+    updateBullet(projectId, bulletIndex, updated);
+  };
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <FolderKanban className="h-5 w-5 text-primary" />
-          Projects & Research
-        </CardTitle>
-        <Button variant="outline" size="sm" onClick={addProject}>
-          <Plus className="h-4 w-4 mr-1" />
-          Add Project
+    <Card className="border-border bg-card shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <FolderKanban className="h-4 w-4 text-primary" aria-hidden="true" />
+            Projects & Research
+          </CardTitle>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Academic projects, open-source work, capstone research, and independent initiatives.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={addProject} className="shrink-0 rounded-control">
+          <Plus className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+          Add project
         </Button>
       </CardHeader>
       <CardContent className="space-y-6">
         {projects.length === 0 ? (
-          <p className="text-muted-foreground text-sm text-center py-4">
-            No projects added yet. Click "Add Project" to showcase your work.
-          </p>
+          <div className="rounded-surface border border-dashed border-border py-8 text-center">
+            <FolderKanban className="mx-auto mb-2 h-7 w-7 text-muted-foreground/50" aria-hidden="true" />
+            <p className="text-sm font-medium">No projects added yet</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Add technical projects or coursework to demonstrate hands-on application of skills.
+            </p>
+            <Button variant="outline" size="sm" onClick={addProject} className="mt-3 rounded-control">
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Add first project
+            </Button>
+          </div>
         ) : (
-          projects.map((project, index) => (
-            <div key={project.id} className="border rounded-lg p-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Project {index + 1}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeProject(project.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Organization/Company</Label>
-                  <Input
-                    placeholder="Green Hills Consortium"
-                    value={project.organization}
-                    onChange={(e) => updateProject(project.id, 'organization', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Date Range</Label>
-                  <Input
-                    placeholder="Nov 2023 – Aug 2024"
-                    value={project.date}
-                    onChange={(e) => updateProject(project.id, 'date', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Project Name</Label>
-                  <Input
-                    placeholder="Jambo"
-                    value={project.projectName}
-                    onChange={(e) => updateProject(project.id, 'projectName', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Your Role</Label>
-                  <Input
-                    placeholder="Team Member"
-                    value={project.role}
-                    onChange={(e) => updateProject(project.id, 'role', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label>Key Contributions</Label>
+          projects.map((project, index) => {
+            const isSelected = activeEntryId === project.id;
+            return (
+              <div
+                key={project.id}
+                onClick={() => setActiveEntryId(project.id)}
+                className={`rounded-surface border p-4 sm:p-5 space-y-4 transition-all duration-150 ${
+                  isSelected
+                    ? 'border-primary/50 bg-card shadow-sm ring-1 ring-primary/20'
+                    : 'border-border bg-card hover:border-border/80'
+                }`}
+              >
+                <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="grid h-6 w-6 place-items-center rounded-control bg-secondary text-xs font-semibold text-secondary-foreground">
+                      {index + 1}
+                    </span>
+                    <span className="truncate text-sm font-semibold text-foreground">
+                      {project.projectName || project.organization ? `${project.projectName || 'Project'} · ${project.organization || 'Org'}` : `Project ${index + 1}`}
+                    </span>
+                  </div>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    onClick={() => addBullet(project.id)}
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeProject(project.id);
+                    }}
+                    className="h-7 w-7 rounded-control text-muted-foreground hover:text-destructive"
+                    aria-label={`Remove project ${index + 1}`}
                   >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Bullet
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   </Button>
                 </div>
-                {project.bullets.map((bullet, bulletIndex) => (
-                  <div key={bulletIndex} className="flex gap-2">
-                    <span className="mt-2 text-muted-foreground">•</span>
-                    <Textarea
-                      placeholder="Describe your contribution..."
-                      value={bullet}
-                      onChange={(e) => updateBullet(project.id, bulletIndex, e.target.value)}
-                      className="min-h-[60px]"
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Project Name / Title</Label>
+                    <Input
+                      placeholder="e.g. Automated Crop Disease Detection System"
+                      value={project.projectName}
+                      onChange={(e) => updateProject(project.id, 'projectName', e.target.value)}
+                      className="rounded-input"
                     />
-                    {project.bullets.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeBullet(project.id, bulletIndex)}
-                        className="shrink-0"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    )}
                   </div>
-                ))}
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-1 text-xs font-medium">
+                      <Building2 className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                      Affiliation / Course / Client
+                    </Label>
+                    <Input
+                      placeholder="e.g. Computer Vision Lab / Ashesi Capstone"
+                      value={project.organization}
+                      onChange={(e) => updateProject(project.id, 'organization', e.target.value)}
+                      className="rounded-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Your Role / Contribution</Label>
+                    <Input
+                      placeholder="e.g. Lead Machine Learning Developer"
+                      value={project.role}
+                      onChange={(e) => updateProject(project.id, 'role', e.target.value)}
+                      className="rounded-input"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-1 text-xs font-medium">
+                      <Calendar className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                      Date Range
+                    </Label>
+                    <Input
+                      placeholder="e.g. Jan 2024 – May 2024"
+                      value={project.date}
+                      onChange={(e) => updateProject(project.id, 'date', e.target.value)}
+                      className="rounded-input"
+                    />
+                  </div>
+                </div>
+
+                {/* Bullets */}
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Key Technical Objectives, Tools Used & Results
+                    </Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => addBullet(project.id)}
+                      className="h-7 text-xs rounded-control"
+                    >
+                      <Plus className="mr-1 h-3 w-3" />
+                      Add bullet
+                    </Button>
+                  </div>
+
+                  {project.bullets.map((bullet, bulletIndex) => {
+                    const bulletPath = `projects.${project.id}.bullets.${bulletIndex}`;
+                    const isBulletSelected = selectedFieldPath === bulletPath;
+                    return (
+                      <div
+                        key={bulletIndex}
+                        className={`group relative rounded-surface border p-2.5 transition-colors ${
+                          isBulletSelected ? 'border-primary bg-primary/5' : 'border-border bg-card'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                          <Textarea
+                            placeholder="Describe architecture, technologies used (e.g. PyTorch, React), and measurable performance metrics..."
+                            value={bullet}
+                            onChange={(e) => updateBullet(project.id, bulletIndex, e.target.value)}
+                            className="min-h-[58px] flex-1 resize-y border-none bg-transparent p-1 text-sm shadow-none focus-visible:ring-0"
+                          />
+                          <div className="flex shrink-0 items-center gap-1">
+                            {onSuggestBullet && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onSuggestBullet(bulletPath, bullet)}
+                                className="h-7 px-2 text-xs text-primary hover:bg-primary/10 rounded-control"
+                                title="Get AI contextual rewrite"
+                              >
+                                <Sparkles className="mr-1 h-3 w-3" aria-hidden="true" />
+                                Improve
+                              </Button>
+                            )}
+                            {project.bullets.length > 1 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeBullet(project.id, bulletIndex)}
+                                className="h-7 w-7 rounded-control text-muted-foreground hover:text-destructive"
+                                aria-label={`Remove bullet ${bulletIndex + 1}`}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 pt-1 text-[11px] text-muted-foreground">
+                          <span className="font-medium text-xs">Action verbs:</span>
+                          {ACTION_VERBS.slice(6, 12).map((verb) => (
+                            <button
+                              key={verb}
+                              type="button"
+                              onClick={() => insertActionVerb(project.id, bulletIndex, verb)}
+                              className="rounded-control bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-secondary-foreground hover:bg-primary/15 hover:text-primary transition-colors"
+                            >
+                              +{verb}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </CardContent>
     </Card>
