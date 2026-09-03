@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { CVEditorWorkspace } from '@/components/cv-builder/CVEditorWorkspace';
 import { CVEvidenceShelf } from '@/components/cv-builder/CVEvidenceShelf';
 import {
@@ -246,7 +246,7 @@ export default function ApplicationCVEditor() {
     return (
       <PageLayout title="Application CV" description="Loading the application CV." headerVariant="document">
         <div aria-busy="true" aria-label="Loading application CV" className="space-y-4">
-          <div className="h-40 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none" />
+          <div className="h-40 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none rounded-surface" />
         </div>
       </PageLayout>
     );
@@ -260,7 +260,7 @@ export default function ApplicationCVEditor() {
           title="Dossier not found"
           description="This application does not exist or belongs to another account."
           action={
-            <Button variant="outline" onClick={() => navigate('/applications')}>
+            <Button variant="outline" className="rounded-control" onClick={() => navigate('/applications')}>
               Back to applications
             </Button>
           }
@@ -277,7 +277,7 @@ export default function ApplicationCVEditor() {
           title="The application could not be loaded"
           description={pageError ?? 'Retry to load this application.'}
           action={
-            <Button variant="outline" onClick={() => setReloadKey((value) => value + 1)}>
+            <Button variant="outline" className="rounded-control" onClick={() => setReloadKey((value) => value + 1)}>
               Try again
             </Button>
           }
@@ -289,17 +289,20 @@ export default function ApplicationCVEditor() {
   const backTo = `/applications/${encodeURIComponent(applicationId ?? '')}`;
 
   const contextBanner = (
-    <div className="mb-4 border border-primary/30 bg-primary/5 p-4">
+    <div className="rounded-surface border border-primary/25 bg-primary/5 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-primary">Application tailoring context</p>
-          <p className="mt-0.5 text-base font-medium text-foreground">{roleTitle}</p>
-          <p className="mt-1 max-w-xl text-xs text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Application tailoring context</p>
+          <p className="mt-0.5 text-base font-semibold text-foreground">{roleTitle}</p>
+          <p className="mt-1 max-w-xl text-xs text-muted-foreground leading-relaxed">
             This is the application&rsquo;s own CV copy. Saving changes only this copy; the base CV stays untouched.
           </p>
         </div>
-        <Button size="sm" variant="ghost" asChild>
-          <Link to={backTo}>Back to dossier</Link>
+        <Button size="sm" variant="outline" className="rounded-control text-xs" asChild>
+          <Link to={backTo}>
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+            Back to dossier
+          </Link>
         </Button>
       </div>
     </div>
@@ -308,7 +311,7 @@ export default function ApplicationCVEditor() {
   const requirementsInspector = (
     <DossierSection title="Role requirements" label="Inspector">
       {threads.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           No requirements recorded. Add or import them from the dossier to see coverage here.
         </p>
       ) : (
@@ -351,8 +354,6 @@ export default function ApplicationCVEditor() {
     </DossierSection>
   );
 
-  // ── No application CV yet: explicit creation, never a silent clone ────────
-
   if (!application.resume_id) {
     return (
       <PageLayout title="Application CV" description="Create this application's own CV copy." headerVariant="document">
@@ -375,10 +376,10 @@ export default function ApplicationCVEditor() {
                 <RecordState tone="warning" title="CV choices could not be loaded" description={resumesError.userMessage} />
               ) : (
                 <Select value={creationSourceId} onValueChange={setCreationSourceId}>
-                  <SelectTrigger aria-label="Source CV" className="max-w-sm">
+                  <SelectTrigger aria-label="Source CV" className="max-w-sm rounded-input">
                     <SelectValue placeholder="Choose a CV to copy" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-overlay">
                     {resumes.map((resume) => (
                       <SelectItem key={resume.id} value={resume.id}>
                         {resume.title || 'Untitled CV'}
@@ -400,11 +401,11 @@ export default function ApplicationCVEditor() {
               <RecordState tone="error" title="The application CV could not be created" description={creationError} />
             )}
             <div className="flex flex-wrap items-center gap-2">
-              <Button disabled={creating || !creationSourceId} onClick={() => void handleCreateCv()}>
+              <Button disabled={creating || !creationSourceId} onClick={() => void handleCreateCv()} className="rounded-control">
                 {creating && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
                 Create application CV
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" className="rounded-control" asChild>
                 <Link to={backTo}>Back to dossier</Link>
               </Button>
             </div>
@@ -414,7 +415,7 @@ export default function ApplicationCVEditor() {
                 title="Evidence records are temporarily unavailable"
                 description={evidenceError}
                 action={
-                  <Button size="sm" variant="outline" onClick={() => setReloadKey((value) => value + 1)}>
+                  <Button size="sm" variant="outline" className="rounded-control" onClick={() => setReloadKey((value) => value + 1)}>
                     Retry
                   </Button>
                 }
@@ -434,7 +435,7 @@ export default function ApplicationCVEditor() {
           title="Evidence records are temporarily unavailable"
           description={evidenceError}
           action={
-            <Button size="sm" variant="outline" onClick={() => setReloadKey((value) => value + 1)}>
+            <Button size="sm" variant="outline" className="rounded-control" onClick={() => setReloadKey((value) => value + 1)}>
               Retry
             </Button>
           }

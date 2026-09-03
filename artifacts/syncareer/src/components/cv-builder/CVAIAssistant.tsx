@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Check, Lightbulb, Loader2, RotateCcw, Send, X } from 'lucide-react';
+import { AlertTriangle, Check, Lightbulb, Loader2, RotateCcw, Send, X, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,8 @@ interface Props {
   opportunityError?: string | null;
   onSuggestion: (proposal: CVAIProposal) => boolean;
   onUndo: () => void;
+  targetFieldPath?: string;
+  onClose?: () => void;
 }
 
 interface BulletOption { path: string; value: string; label: string; }
@@ -51,6 +53,8 @@ export function CVAIAssistant({
   opportunityError = null,
   onSuggestion,
   onUndo,
+  targetFieldPath,
+  onClose,
 }: Props) {
   const bullets = useMemo<BulletOption[]>(() => {
     if (!['experience', 'projects', 'activities'].includes(activeSection)) return [];
@@ -61,12 +65,18 @@ export function CVAIAssistant({
       label: `${'company' in row ? row.company : 'projectName' in row ? row.projectName : row.organization || activeSection} · bullet ${index + 1}`,
     }))).filter((item) => item.value.trim());
   }, [activeSection, cvData]);
+
   const evidence = useMemo(() => buildCandidateEvidence(cvData), [cvData]);
   const requirements = useMemo(
     () => (opportunity?.requirements ?? []).filter((item) => !NON_CANDIDATE_REQUIREMENTS.has(item.kind)),
     [opportunity],
   );
-  const [selectedPath, setSelectedPath] = useState('');
+
+  const [selectedPath, setSelectedPath] = useState(targetFieldPath || '');
+  useEffect(() => {
+    if (targetFieldPath) setSelectedPath(targetFieldPath);
+  }, [targetFieldPath]);
+
   const selected = bullets.find((item) => item.path === selectedPath) ?? bullets[0] ?? null;
   const [requirementId, setRequirementId] = useState('');
   const requirement = requirements.find((item) => item.requirementId === requirementId) ?? requirements[0] ?? null;
@@ -160,63 +170,286 @@ export function CVAIAssistant({
     if (accepted) setState('accepted');
   };
 
-  return <div className="space-y-4">
-    <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-base">Job-specific bullet suggestion</CardTitle></CardHeader>
-      <CardContent className="space-y-4">
-        {opportunityLoading ? <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading the selected opportunity…</p>
-          : opportunityError ? <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{opportunityError}</div>
-          : !opportunity ? <div className="rounded-lg border bg-muted/40 p-3 text-sm"><p className="font-medium">Choose an opportunity before requesting AI wording.</p><p className="mt-1 text-muted-foreground">Job-specific guidance needs a real role and candidate evidence; generic CV prompts are disabled here.</p><Button asChild size="sm" variant="outline" className="mt-3"><Link to="/opportunities">Choose an opportunity</Link></Button></div>
-          : requirements.length === 0 ? <div role="status" className="rounded-lg border bg-muted/40 p-3 text-sm">No meaningful candidate requirement could be extracted from this posting. Confirm the original source before tailoring your CV.</div>
-          : !bullets.length ? <p className="text-sm text-muted-foreground">Open Experience, Projects or Activities and enter a bullet before requesting a rewrite.</p>
-          : <>
-            <div className="rounded-lg border bg-primary/5 p-3 text-sm">
-              <p className="text-xs font-medium uppercase tracking-wide text-primary">Active context</p>
-              <p className="mt-1 font-medium">{opportunity.title}{opportunity.organisation ? ` · ${opportunity.organisation}` : ''}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Only the selected requirement and evidence below will be sent.</p>
+  return (
+    <div className="space-y-4">
+      <Card className="border-border bg-card shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+            <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
+            Job-specific bullet suggestion
+          </CardTitle>
+          {onClose && (
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7 rounded-control text-muted-foreground">
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {opportunityLoading ? (
+            <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              Loading the selected opportunity…
+            </p>
+          ) : opportunityError ? (
+            <div role="alert" className="rounded-surface border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+              {opportunityError}
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="assistant-cv-bullet">Original bullet</Label>
-              <Select value={selected?.path ?? ''} onValueChange={setSelectedPath}><SelectTrigger id="assistant-cv-bullet"><SelectValue /></SelectTrigger><SelectContent>{bullets.map((bullet) => <SelectItem key={bullet.path} value={bullet.path}>{bullet.label}</SelectItem>)}</SelectContent></Select>
-              {selected && <p className="rounded-md border bg-muted/30 p-3 text-sm">{selected.value}</p>}
+          ) : !opportunity ? (
+            <div className="rounded-surface border border-border bg-muted/40 p-3 text-xs space-y-2">
+              <p className="font-medium text-foreground">Choose an opportunity before requesting AI wording.</p>
+              <p className="text-muted-foreground leading-relaxed">
+                Job-specific guidance needs a real role and candidate evidence; generic CV prompts are disabled here.
+              </p>
+              <Button asChild size="sm" variant="outline" className="mt-1 rounded-control text-xs">
+                <Link to="/opportunities">Choose an opportunity</Link>
+              </Button>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="assistant-requirement">Requirement to address</Label>
-              <Select value={requirement?.requirementId ?? ''} onValueChange={setRequirementId}><SelectTrigger id="assistant-requirement"><SelectValue /></SelectTrigger><SelectContent>{requirements.map((item) => <SelectItem key={item.requirementId} value={item.requirementId}>{item.text}</SelectItem>)}</SelectContent></Select>
-              {match && <div className="flex items-start gap-2 rounded-md border p-3 text-xs"><Badge variant="outline" className="shrink-0 capitalize">{match.status.replace('_', ' ')}</Badge><span className="text-muted-foreground">{match.explanation}</span></div>}
+          ) : requirements.length === 0 ? (
+            <div role="status" className="rounded-surface border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+              No meaningful candidate requirement could be extracted from this posting. Confirm the original source before tailoring your CV.
             </div>
-
-            <fieldset className="space-y-2">
-              <legend className="text-sm font-medium">Candidate evidence allowed for this rewrite</legend>
-              <p className="text-xs text-muted-foreground">A listed skill alone is partial evidence. Select only items that genuinely support the wording.</p>
-              <div className="max-h-56 space-y-2 overflow-y-auto rounded-md border p-2">
-                {evidence.length ? evidence.map((item) => <label key={item.evidenceId} className="flex cursor-pointer items-start gap-3 rounded-md p-2 hover:bg-muted/50">
-                  <Checkbox checked={selectedEvidenceIds.has(item.evidenceId)} onCheckedChange={() => toggleEvidence(item.evidenceId)} aria-label={`Use ${evidenceLabel(item)} as evidence`} />
-                  <span className="min-w-0 text-sm"><span className="block font-medium">{evidenceLabel(item)}</span><span className="block line-clamp-2 text-xs text-muted-foreground">{item.category} · {item.description}</span></span>
-                </label>) : <p className="p-2 text-sm text-muted-foreground">Add truthful CV experience, project, education, activity or skills evidence first.</p>}
+          ) : !bullets.length ? (
+            <p className="text-xs text-muted-foreground">
+              Open Experience, Projects or Activities and enter a bullet before requesting a rewrite.
+            </p>
+          ) : (
+            <>
+              <div className="rounded-surface border border-primary/20 bg-primary/5 p-3 text-xs">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Active context</p>
+                <p className="mt-0.5 font-medium text-foreground">{opportunity.title}{opportunity.organisation ? ` · ${opportunity.organisation}` : ''}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">Only the selected requirement and evidence below will be sent.</p>
               </div>
-            </fieldset>
 
-            <div className="space-y-2"><Label htmlFor="assistant-bullet-instruction">Additional instruction</Label><Textarea id="assistant-bullet-instruction" value={instruction} onChange={(event) => setInstruction(event.target.value)} rows={3} maxLength={2_000} /></div>
-            <Button onClick={() => void requestSuggestion()} disabled={state === 'pending' || !instruction.trim() || selectedEvidence.length === 0}><Send className="h-4 w-4" />{state === 'pending' ? 'Preparing suggestion…' : suggestion ? 'Regenerate suggestion' : 'Request suggestion'}</Button>
-            {error && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}<Button className="mt-2" size="sm" variant="outline" onClick={() => void requestSuggestion()}>Retry</Button></div>}
+              <div className="space-y-1.5">
+                <Label htmlFor="assistant-cv-bullet" className="text-xs font-medium">Original bullet</Label>
+                <Select value={selected?.path ?? ''} onValueChange={setSelectedPath}>
+                  <SelectTrigger id="assistant-cv-bullet" className="rounded-input text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-overlay">
+                    {bullets.map((bullet) => (
+                      <SelectItem key={bullet.path} value={bullet.path} className="text-xs">
+                        {bullet.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selected && (
+                  <p className="rounded-surface border border-border bg-secondary/40 p-2.5 text-xs text-foreground">
+                    {selected.value}
+                  </p>
+                )}
+              </div>
 
-            {currentSuggestion && state !== 'rejected' && <section aria-labelledby="cv-suggestion-heading" className="space-y-4 rounded-lg border bg-card p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2"><h3 id="cv-suggestion-heading" className="font-medium">Suggested for review</h3><Badge variant="secondary" className="capitalize">{currentSuggestion.confidence} confidence</Badge></div>
-              <div className="grid gap-3 sm:grid-cols-2"><div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Original</p><p className="mt-1 whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-sm">{currentSuggestion.originalText}</p></div><div><Label htmlFor="assistant-edited-proposal" className="text-xs uppercase tracking-wide text-muted-foreground">Proposed — editable</Label><Textarea id="assistant-edited-proposal" className="mt-1 min-h-28" value={editedText} onChange={(event) => setEditedText(event.target.value)} /></div></div>
-              <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Requirement addressed</p><p className="mt-1 text-sm">{requirement?.text}</p></div>
-              <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Evidence used</p><ul className="mt-1 space-y-1 text-sm">{selectedEvidence.filter((item) => currentSuggestion.evidenceIds.includes(item.evidenceId)).map((item) => <li key={item.evidenceId}>[{item.evidenceId}] {evidenceLabel(item)}</li>)}</ul></div>
-              <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Why this was suggested</p><p className="mt-1 text-sm text-muted-foreground">{currentSuggestion.rationale}</p></div>
-              {(currentSuggestion.unsupportedClaims.length > 0 || currentSuggestion.warnings.length > 0) && <div role="alert" className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm"><p className="flex items-center gap-2 font-medium"><AlertTriangle className="h-4 w-4" />Review required</p><ul className="mt-2 list-disc space-y-1 pl-5">{[...currentSuggestion.unsupportedClaims, ...currentSuggestion.warnings].map((warning) => <li key={warning}>{warning}</li>)}</ul>{!safeToAccept && <p className="mt-2 font-medium">Edit or regenerate this wording before it can be accepted.</p>}</div>}
-              <div className="flex flex-wrap gap-2"><Button size="sm" onClick={accept} disabled={!safeToAccept}><Check className="h-4 w-4" />Apply to draft</Button><Button size="sm" variant="outline" onClick={() => setState('rejected')}><X className="h-4 w-4" />Reject</Button><Button size="sm" variant="ghost" onClick={() => void requestSuggestion()} disabled={state === 'pending'}><RotateCcw className="h-4 w-4" />Regenerate</Button></div>
-            </section>}
-            {state === 'rejected' && <div role="status" className="rounded-lg border bg-muted/40 p-3 text-sm">Suggestion rejected. Your CV was not changed.<Button size="sm" variant="outline" className="mt-2" onClick={() => setState('idle')}>Review again</Button></div>}
-            {state === 'accepted' && <div role="status" className="rounded-lg border bg-muted/40 p-3 text-sm">Suggestion applied to your draft, but not saved yet.<Button size="sm" variant="outline" className="mt-2" onClick={() => { onUndo(); setState('idle'); }}><RotateCcw className="h-4 w-4" />Undo AI change</Button></div>}
-          </>}
-      </CardContent>
-    </Card>
-    <Card><CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><Lightbulb className="h-4 w-4 text-info" />Tips for {activeSection}</CardTitle></CardHeader><CardContent><ul className="space-y-2">{(tips ?? []).map((tip) => <li key={tip} className="text-sm text-muted-foreground">• {tip}</li>)}</ul></CardContent></Card>
-  </div>;
+              <div className="space-y-1.5">
+                <Label htmlFor="assistant-requirement" className="text-xs font-medium">Requirement to address</Label>
+                <Select value={requirement?.requirementId ?? ''} onValueChange={setRequirementId}>
+                  <SelectTrigger id="assistant-requirement" className="rounded-input text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-overlay">
+                    {requirements.map((item) => (
+                      <SelectItem key={item.requirementId} value={item.requirementId} className="text-xs">
+                        {item.text}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {match && (
+                  <div className="flex items-start gap-2 rounded-surface border border-border bg-card p-2.5 text-xs">
+                    <Badge variant="outline" className="shrink-0 rounded-control capitalize text-[11px]">
+                      {match.status.replace('_', ' ')}
+                    </Badge>
+                    <span className="text-muted-foreground leading-relaxed">{match.explanation}</span>
+                  </div>
+                )}
+              </div>
+
+              <fieldset className="space-y-2">
+                <legend className="text-xs font-medium text-foreground">Candidate evidence allowed for this rewrite</legend>
+                <p className="text-[11px] text-muted-foreground">
+                  Select only items that genuinely support the wording without introducing ungrounded claims.
+                </p>
+                <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-surface border border-border p-2">
+                  {evidence.length ? (
+                    evidence.map((item) => (
+                      <label key={item.evidenceId} className="flex cursor-pointer items-start gap-2.5 rounded-control p-1.5 hover:bg-secondary/60 transition-colors">
+                        <Checkbox
+                          checked={selectedEvidenceIds.has(item.evidenceId)}
+                          onCheckedChange={() => toggleEvidence(item.evidenceId)}
+                          aria-label={`Use ${evidenceLabel(item)} as evidence`}
+                          className="mt-0.5"
+                        />
+                        <span className="min-w-0 text-xs">
+                          <span className="block font-medium text-foreground">{evidenceLabel(item)}</span>
+                          <span className="block line-clamp-1 text-[11px] text-muted-foreground">{item.category} · {item.description}</span>
+                        </span>
+                      </label>
+                    ))
+                  ) : (
+                    <p className="p-2 text-xs text-muted-foreground">Add truthful CV experience, project, education, activity or skills evidence first.</p>
+                  )}
+                </div>
+              </fieldset>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="assistant-bullet-instruction" className="text-xs font-medium">Additional instruction</Label>
+                <Textarea
+                  id="assistant-bullet-instruction"
+                  value={instruction}
+                  onChange={(event) => setInstruction(event.target.value)}
+                  rows={2}
+                  maxLength={2_000}
+                  className="rounded-input text-xs"
+                />
+              </div>
+
+              <Button
+                onClick={() => void requestSuggestion()}
+                disabled={state === 'pending' || !instruction.trim() || selectedEvidence.length === 0}
+                className="w-full rounded-control"
+              >
+                {state === 'pending' ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    Preparing suggestion…
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-1.5 h-3.5 w-3.5" />
+                    {suggestion ? 'Regenerate suggestion' : 'Request suggestion'}
+                  </>
+                )}
+              </Button>
+
+              {error && (
+                <div role="alert" className="rounded-surface border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive space-y-2">
+                  <p>{error}</p>
+                  <Button size="sm" variant="outline" className="rounded-control" onClick={() => void requestSuggestion()}>
+                    Retry
+                  </Button>
+                </div>
+              )}
+
+              {currentSuggestion && state !== 'rejected' && (
+                <section aria-labelledby="cv-suggestion-heading" className="space-y-3.5 rounded-surface border border-border bg-card p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 id="cv-suggestion-heading" className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                      Suggested for review
+                    </h3>
+                    <Badge variant="secondary" className="rounded-control capitalize text-[11px]">
+                      {currentSuggestion.confidence} confidence
+                    </Badge>
+                  </div>
+                  <div className="grid gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Original</p>
+                      <p className="mt-1 whitespace-pre-wrap rounded-surface bg-secondary/50 p-2.5 text-xs text-foreground">
+                        {currentSuggestion.originalText}
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="assistant-edited-proposal" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Proposed — editable
+                      </Label>
+                      <Textarea
+                        id="assistant-edited-proposal"
+                        className="mt-1 min-h-[70px] rounded-input text-xs"
+                        value={editedText}
+                        onChange={(event) => setEditedText(event.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Requirement addressed</p>
+                    <p className="mt-0.5 text-xs text-foreground">{requirement?.text}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Evidence used</p>
+                    <ul className="mt-0.5 space-y-0.5 text-xs text-foreground">
+                      {selectedEvidence.filter((item) => currentSuggestion.evidenceIds.includes(item.evidenceId)).map((item) => (
+                        <li key={item.evidenceId}>[{item.evidenceId}] {evidenceLabel(item)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Why this was suggested</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{currentSuggestion.rationale}</p>
+                  </div>
+                  {(currentSuggestion.unsupportedClaims.length > 0 || currentSuggestion.warnings.length > 0) && (
+                    <div role="alert" className="rounded-surface border border-warning/40 bg-warning/10 p-3 text-xs text-warning-foreground space-y-1.5">
+                      <p className="flex items-center gap-1.5 font-semibold">
+                        <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />
+                        Review required
+                      </p>
+                      <ul className="list-disc space-y-0.5 pl-4 text-[11px]">
+                        {[...currentSuggestion.unsupportedClaims, ...currentSuggestion.warnings].map((warning) => (
+                          <li key={warning}>{warning}</li>
+                        ))}
+                      </ul>
+                      {!safeToAccept && <p className="font-medium">Edit or regenerate this wording before it can be accepted.</p>}
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Button size="sm" onClick={accept} disabled={!safeToAccept} className="rounded-control text-xs">
+                      <Check className="mr-1.5 h-3.5 w-3.5" />
+                      Apply to draft
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setState('rejected')} className="rounded-control text-xs">
+                      <X className="mr-1.5 h-3.5 w-3.5" />
+                      Reject
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => void requestSuggestion()} disabled={state === 'pending'} className="rounded-control text-xs">
+                      <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                      Regenerate
+                    </Button>
+                  </div>
+                </section>
+              )}
+
+              {state === 'rejected' && (
+                <div role="status" className="rounded-surface border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-2">
+                  <p>Suggestion rejected. Your CV was not changed.</p>
+                  <Button size="sm" variant="outline" className="rounded-control text-xs" onClick={() => setState('idle')}>
+                    Review again
+                  </Button>
+                </div>
+              )}
+              {state === 'accepted' && (
+                <div role="status" className="rounded-surface border border-success/30 bg-success/10 p-3 text-xs text-foreground space-y-2">
+                  <p className="font-medium text-success flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5" />
+                    Suggestion applied to your draft. Remember to save changes.
+                  </p>
+                  <Button size="sm" variant="outline" className="rounded-control text-xs" onClick={() => { onUndo(); setState('idle'); }}>
+                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                    Undo AI change
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-border bg-card shadow-none">
+        <CardHeader className="pb-2.5">
+          <CardTitle className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Lightbulb className="h-3.5 w-3.5 text-info" />
+            Tips for {activeSection}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-1.5">
+            {(tips ?? []).map((tip) => (
+              <li key={tip} className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                <span className="text-primary mt-0.5">•</span>
+                <span>{tip}</span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

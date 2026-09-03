@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target, Briefcase } from 'lucide-react';
+import { Target, Briefcase, TrendingUp } from 'lucide-react';
 import type { AnalysisResult } from '@/hooks/useCVAnalysis';
 
 interface CVSkillGapPanelProps {
@@ -13,7 +13,7 @@ export const CVSkillGapPanel: React.FC<CVSkillGapPanelProps> = ({ result }) => {
   const missing = (result.missingSkills || []).slice(0, 6);
 
   return (
-    <Card className="border-primary/30 bg-primary/5">
+    <Card className="border-border bg-card shadow-none">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Target className="h-4 w-4 text-primary" />
@@ -25,13 +25,13 @@ export const CVSkillGapPanel: React.FC<CVSkillGapPanelProps> = ({ result }) => {
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <Briefcase className="h-3 w-3 text-muted-foreground" />
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Roles you fit
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Matched target roles
               </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {roles.map(role => (
-                <Badge key={role} variant="secondary" className="text-xs">
+                <Badge key={role} variant="secondary" className="rounded-control text-xs font-medium">
                   {role}
                 </Badge>
               ))}
@@ -41,12 +41,15 @@ export const CVSkillGapPanel: React.FC<CVSkillGapPanelProps> = ({ result }) => {
 
         {missing.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              Skills to develop
-            </p>
+            <div className="flex items-center gap-1.5 mb-2">
+              <TrendingUp className="h-3 w-3 text-muted-foreground" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                High-priority skills to build
+              </p>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {missing.map(skill => (
-                <Badge key={skill} variant="outline" className="text-xs">
+                <Badge key={skill} variant="outline" className="rounded-control border-border text-xs">
                   {skill}
                 </Badge>
               ))}
@@ -56,7 +59,7 @@ export const CVSkillGapPanel: React.FC<CVSkillGapPanelProps> = ({ result }) => {
 
         {missing.length === 0 && roles.length === 0 && (
           <p className="text-xs text-muted-foreground">
-            No specific gaps detected. Keep building your portfolio and CV.
+            No specific gaps detected. Continue developing domain evidence and leadership experience.
           </p>
         )}
       </CardContent>

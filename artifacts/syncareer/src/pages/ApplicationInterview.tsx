@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Check, Loader2, Lock, Phone } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Lock, Mic, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { InterviewErrorBoundary } from '@/components/interview/InterviewErrorBoundary';
@@ -67,7 +67,7 @@ export default function ApplicationInterview() {
   const [resumeText, setResumeText] = useState('');
 
   const [threads, setThreads] = useState<ReturnType<typeof buildRequirementThreads>>([]);
-  const [evidenceCount, setEvidenceCount] = useState(0);
+  const [_evidenceCount, setEvidenceCount] = useState(0);
 
   const [step, setStep] = useState<Step>('setup');
   const [readiness, setReadiness] = useState<DeviceReadiness>('unchecked');
@@ -129,7 +129,9 @@ export default function ApplicationInterview() {
   useEffect(() => {
     if (setupEmittedRef.current) return;
     setupEmittedRef.current = true;
-    try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_SETUP_OPENED, { entry: 'application' }); } catch { /* never break */ }
+    try {
+      captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_SETUP_OPENED, { entry: 'application' });
+    } catch {}
   }, []);
 
   const journey = useMemo(() => buildJourney(statusValue), [statusValue]);
@@ -159,7 +161,7 @@ export default function ApplicationInterview() {
         failed: 'failed',
       };
       captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_DEVICE_CHECKED, { result: resultMap[next] ?? 'failed' });
-    } catch { /* never break */ }
+    } catch {}
   }, [readiness]);
 
   const handleConfirmSuggestion = async (suggestion: EvidenceSuggestion) => {
@@ -189,7 +191,7 @@ export default function ApplicationInterview() {
     return (
       <PageLayout title="Interview preparation">
         <div aria-busy="true" aria-label="Loading interview preparation" className="space-y-4">
-          <div className="h-40 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none" />
+          <div className="h-40 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none rounded-surface" />
         </div>
       </PageLayout>
     );
@@ -202,7 +204,7 @@ export default function ApplicationInterview() {
           tone="error"
           title="Dossier not found"
           description="This application does not exist or belongs to another account."
-          action={<Button variant="outline" onClick={() => navigate('/applications')}>Back to applications</Button>}
+          action={<Button variant="outline" className="rounded-control" onClick={() => navigate('/applications')}>Back to applications</Button>}
         />
       </PageLayout>
     );
@@ -215,7 +217,7 @@ export default function ApplicationInterview() {
           tone="error"
           title="The application could not be loaded"
           description={loadError}
-          action={<Button variant="outline" onClick={() => navigate(-1)}>Go back</Button>}
+          action={<Button variant="outline" className="rounded-control" onClick={() => navigate(-1)}>Go back</Button>}
         />
       </PageLayout>
     );
@@ -240,7 +242,9 @@ export default function ApplicationInterview() {
               autoStart
               onComplete={(pairs) => setSuggestions(suggestionsFromInterviewAnswers(pairs, roleTitle))}
               onRetry={() => {
-                try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' }); } catch { /* never break */ }
+                try {
+                  captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' });
+                } catch {}
                 startRequested.current = false;
                 setReadiness('unchecked');
                 setStep('readiness');
@@ -254,30 +258,33 @@ export default function ApplicationInterview() {
   }
 
   const requirementsPanel = (
-    <DossierSection index="02" label="Requirements and evidence" title="What you already have">
+    <DossierSection index="02" label="Requirements & evidence" title="What you already have">
       {threads.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No requirements recorded for this application yet.{' '}
-          <Link to={backTo} className="text-primary underline">Add them from the dossier</Link> so practice targets
-          what the role actually asks for.
+        <p className="text-xs text-muted-foreground">
+          No requirements recorded yet. Add them to the dossier to see practice prompts here.
         </p>
       ) : (
-        <>
-          <p className="mb-3 text-xs text-muted-foreground">
-            {evidenceCount} saved evidence {evidenceCount === 1 ? 'record' : 'records'} in your ledger. Answers you
-            give here can become new draft evidence after the session — only if you confirm them.
-          </p>
-          <RecordList label="Requirement coverage">
-            {threads.map((thread) => (
+        <RecordList label="Requirements and evidence for this role">
+          {threads.map((thread) => {
+            const supported = thread.evidence.filter((entry) => entry.supportStatus === 'supported');
+            const hasDraft = thread.evidence.some((entry) => entry.supportStatus === 'draft');
+            return (
               <RecordRow
                 key={thread.requirement.id}
                 title={thread.requirement.label}
                 eyebrow={thread.requirement.origin === 'posting_skill' ? 'Posting skill' : 'Manual'}
+                detail={
+                  supported.length > 0
+                    ? `${supported.length} supported piece${supported.length === 1 ? '' : 's'} of evidence attached.`
+                    : hasDraft
+                      ? 'Evidence linked, but still a draft without a verified source.'
+                      : 'No evidence linked yet — practise an answer for this.'
+                }
                 meta={
                   thread.evidence.length > 0 ? (
                     <span className="flex flex-wrap gap-1.5">
                       {thread.evidence.map((entry) => (
-                        <span key={entry.item.id} className="inline-flex items-center gap-1.5">
+                        <span key={entry.item.id} className="inline-flex items-center gap-1">
                           <EvidenceReference id={entry.item.id} />
                           <EvidenceStamp status={entry.supportStatus} />
                         </span>
@@ -285,31 +292,30 @@ export default function ApplicationInterview() {
                     </span>
                   ) : undefined
                 }
-                detail={
-                  thread.evidence.length === 0
-                    ? 'No evidence linked yet — practise an answer for this.'
-                    : undefined
-                }
               />
-            ))}
-          </RecordList>
-        </>
+            );
+          })}
+        </RecordList>
       )}
     </DossierSection>
   );
 
   return (
-    <PageLayout title="Interview preparation" description={`Application-context practice for ${roleTitle}.`}>
+    <PageLayout
+      title="Interview preparation"
+      description={`Practise voice interviews tailored to ${roleTitle}.`}
+      headerVariant="document"
+    >
       {step === 'setup' && (
-        <WorkingDocument label="Interview setup">
+        <WorkingDocument label="Interview preparation">
           <DossierHeader
-            eyebrow="Interview preparation"
+            eyebrow="Interview practice workspace"
             title={roleTitle}
             description={[organisation, statusLabel(statusValue)].filter(Boolean).join(' · ')}
             actions={
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" className="rounded-control" asChild>
                 <Link to={backTo}>
-                  <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+                  <ArrowLeft aria-hidden="true" className="mr-1.5 h-4 w-4" />
                   Back to dossier
                 </Link>
               </Button>
@@ -320,31 +326,31 @@ export default function ApplicationInterview() {
             <div className="px-4 py-6 sm:px-6">
               <DossierSection index="01" label="Session" title="Configure the practice session">
                 <div className="grid max-w-2xl gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="interview-difficulty">Seniority level</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="interview-difficulty" className="text-xs font-medium">Seniority level</Label>
                     <Select value={difficulty} onValueChange={setDifficulty}>
-                      <SelectTrigger id="interview-difficulty"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="beginner">Entry-level / Internship</SelectItem>
-                        <SelectItem value="intermediate">Mid-level (2–5 years)</SelectItem>
-                        <SelectItem value="advanced">Senior level</SelectItem>
+                      <SelectTrigger id="interview-difficulty" className="rounded-input text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-overlay">
+                        <SelectItem value="beginner" className="text-xs">Entry-level / Internship</SelectItem>
+                        <SelectItem value="intermediate" className="text-xs">Mid-level (2–5 years)</SelectItem>
+                        <SelectItem value="advanced" className="text-xs">Senior level</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="interview-type">Interview type</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="interview-type" className="text-xs font-medium">Interview type</Label>
                     <Select value={interviewType} onValueChange={setInterviewType}>
-                      <SelectTrigger id="interview-type"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="behavioral">Behavioral</SelectItem>
-                        <SelectItem value="technical">Technical</SelectItem>
-                        <SelectItem value="mixed">Mixed</SelectItem>
+                      <SelectTrigger id="interview-type" className="rounded-input text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-overlay">
+                        <SelectItem value="behavioral" className="text-xs">Behavioral</SelectItem>
+                        <SelectItem value="technical" className="text-xs">Technical</SelectItem>
+                        <SelectItem value="mixed" className="text-xs">Mixed</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="mt-4 max-w-2xl space-y-2">
-                  <Label id="interview-session-length">Session length</Label>
+                  <Label id="interview-session-length" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Session length</Label>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="group" aria-labelledby="interview-session-length">
                     {SESSION_OPTIONS.map((option) => (
                       <button
@@ -353,38 +359,39 @@ export default function ApplicationInterview() {
                         onClick={() => setSessionLength(option.value)}
                         aria-pressed={sessionLength === option.value}
                         className={cn(
-                          'flex min-h-11 flex-col items-center gap-1.5 border p-3 text-center transition-colors duration-150 motion-reduce:transition-none',
-                          sessionLength === option.value ? 'border-primary bg-secondary' : 'border-border hover:border-primary/50',
+                          'flex min-h-11 flex-col items-center gap-1 rounded-surface border p-3 text-center transition-colors duration-150 motion-reduce:transition-none',
+                          sessionLength === option.value ? 'border-primary bg-secondary ring-1 ring-primary/20' : 'border-border hover:border-primary/50 bg-card',
                         )}
                       >
-                        <span className="text-sm font-medium">{option.label}</span>
-                        <span className="text-xs text-muted-foreground">{option.description}</span>
+                        <span className="text-xs font-semibold text-foreground">{option.label}</span>
+                        <span className="text-[11px] text-muted-foreground">{option.description}</span>
                       </button>
                     ))}
                   </div>
                 </div>
-                <div className="mt-4 max-w-2xl space-y-2">
-                  <Label htmlFor="interview-resume">Experience summary (optional)</Label>
+                <div className="mt-4 max-w-2xl space-y-1.5">
+                  <Label htmlFor="interview-resume" className="text-xs font-medium">Experience summary (optional)</Label>
                   <Textarea
                     id="interview-resume"
                     value={resumeText}
                     onChange={(event) => setResumeText(event.target.value)}
-                    rows={3}
+                    rows={2}
+                    className="rounded-input text-xs"
                     placeholder="Key experiences the practice should account for. Only what you type is sent."
                   />
                 </div>
                 {!isPremium && (
-                  <div className="mt-4 flex items-center gap-2 border border-border bg-muted p-3 text-sm text-muted-foreground">
+                  <div className="mt-4 flex items-center gap-2 rounded-surface border border-border bg-muted/60 p-3 text-xs text-muted-foreground">
                     <Lock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                     <span>Voice interview is a <strong className="text-foreground">Premium feature</strong>.</span>
-                    <Button size="sm" variant="outline" className="ml-auto h-7 text-xs" onClick={() => navigate('/pricing')}>
+                    <Button size="sm" variant="outline" className="ml-auto h-7 text-xs rounded-control" onClick={() => navigate('/pricing')}>
                       Upgrade
                     </Button>
                   </div>
                 )}
                 <div className="mt-5">
                   <Button
-                    className="w-full max-w-sm"
+                    className="w-full max-w-sm rounded-control text-xs"
                     onClick={() => {
                       if (!isPremium) {
                         navigate('/pricing');
@@ -395,7 +402,7 @@ export default function ApplicationInterview() {
                     }}
                     aria-label="Start voice interview session"
                   >
-                    <Phone className="h-4 w-4 mr-2" aria-hidden="true" />
+                    <Phone className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
                     Continue to microphone check
                   </Button>
                 </div>
@@ -422,7 +429,7 @@ export default function ApplicationInterview() {
                           status={
                             confirmed ? (
                               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
-                                <Check aria-hidden="true" className="h-4 w-4" />
+                                <Check aria-hidden="true" className="h-3.5 w-3.5" />
                                 Saved as draft
                               </span>
                             ) : (
@@ -430,10 +437,11 @@ export default function ApplicationInterview() {
                                 type="button"
                                 size="sm"
                                 variant="outline"
+                                className="rounded-control text-xs"
                                 disabled={savingId === suggestion.id}
                                 onClick={() => void handleConfirmSuggestion(suggestion)}
                               >
-                                {savingId === suggestion.id && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+                                {savingId === suggestion.id && <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none mr-1" />}
                                 Save as draft evidence
                               </Button>
                             )
@@ -457,29 +465,34 @@ export default function ApplicationInterview() {
       )}
 
       {step === 'readiness' && (
-        <div className="mx-auto max-w-xl space-y-5 border bg-card p-6">
+        <div className="mx-auto max-w-xl space-y-5 rounded-surface border border-border bg-card p-6 shadow-card">
           <div>
-            <h2 className="text-lg font-semibold">Check your microphone</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h2 className="text-base font-semibold text-foreground">Check your microphone</h2>
+            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
               Syncareer uses your microphone to transcribe answers during this AI practice interview. Camera and
-              screen sharing are never requested. Interview responses and feedback are stored with your account by
-              the existing interview service.
+              screen sharing are never requested.
             </p>
           </div>
-          <div role="status" className="bg-muted p-3 text-sm">
-            {readiness === 'unchecked' && 'Your microphone has not been checked.'}
-            {readiness === 'checking' && 'Requesting microphone access…'}
-            {readiness === 'ready' && 'Microphone is ready. Audio output uses your browser text-to-speech support.'}
-            {readiness === 'denied' && 'Microphone permission was denied. Update browser permissions, then try again.'}
-            {readiness === 'missing' && 'No usable microphone or browser media-device support was found.'}
-            {readiness === 'failed' && 'The microphone check failed. Close other apps using the device and retry.'}
+          <div role="status" className="rounded-surface bg-secondary/50 p-4 text-xs">
+            <div className="flex items-center gap-2 font-medium text-foreground">
+              <Mic className="h-4 w-4 text-primary" />
+              <span>
+                {readiness === 'unchecked' && 'Your microphone has not been checked.'}
+                {readiness === 'checking' && 'Requesting microphone access…'}
+                {readiness === 'ready' && 'Microphone is ready. Audio output uses your browser text-to-speech support.'}
+                {readiness === 'denied' && 'Microphone permission was denied. Update browser permissions, then try again.'}
+                {readiness === 'missing' && 'No usable microphone or browser media-device support was found.'}
+                {readiness === 'failed' && 'The microphone check failed. Close other apps using the device and retry.'}
+              </span>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setStep('setup')}>Back</Button>
-            <Button variant="outline" disabled={readiness === 'checking'} onClick={() => void checkReadiness()}>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button variant="outline" className="rounded-control text-xs" onClick={() => setStep('setup')}>Back</Button>
+            <Button variant="outline" className="rounded-control text-xs" disabled={readiness === 'checking'} onClick={() => void checkReadiness()}>
               {readiness === 'checking' ? 'Checking…' : readiness === 'ready' ? 'Check again' : 'Check microphone'}
             </Button>
             <Button
+              className="rounded-control text-xs"
               disabled={readiness !== 'ready' || startRequested.current}
               onClick={() => {
                 if (readiness !== 'ready' || startRequested.current) return;

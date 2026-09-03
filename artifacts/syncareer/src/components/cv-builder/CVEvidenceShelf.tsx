@@ -112,7 +112,7 @@ export function CVEvidenceShelf({ items, sources, resumeLinks, resumeId, cvData,
   };
 
   return (
-    <section aria-label="Evidence shelf" className="space-y-3 border border-border bg-card">
+    <section aria-label="Evidence shelf" className="space-y-3 rounded-surface border border-border bg-card shadow-none">
       <div className="border-b border-border px-3 py-3">
         <p className="dossier-eyebrow">Evidence shelf</p>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -124,7 +124,7 @@ export function CVEvidenceShelf({ items, sources, resumeLinks, resumeId, cvData,
           <RecordState tone="warning" title="That change did not save" description={shelfMessage} className="border" />
         )}
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground p-2">
             No evidence saved yet. Create evidence from the application dossier, then attach it here.
           </p>
         ) : (
@@ -133,30 +133,29 @@ export function CVEvidenceShelf({ items, sources, resumeLinks, resumeId, cvData,
             const usages = linksByEvidence.get(item.id) ?? [];
             const usagesWithLabels = usages
               .map((link) => ({ link, entry: entries.find((candidate) => candidate.locator === link.entry_locator) }))
-              // Entries removed from the draft leave stale locators; show them
-              // as plain locators rather than dropping the history.
               .map(({ link, entry }) => ({ link, label: entry?.label ?? link.entry_locator }));
             return (
-              <div key={item.id} className="border border-border">
+              <div key={item.id} className="rounded-surface border border-border bg-card">
                 <div className="space-y-1.5 px-3 py-2.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <EvidenceReference id={item.id} />
                     <EvidenceStamp status={status} />
                   </div>
-                  <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                  <p className="line-clamp-2 text-xs leading-5 text-muted-foreground">{item.summary}</p>
+                  <p className="text-xs font-semibold text-foreground">{item.title}</p>
+                  <p className="line-clamp-2 text-xs leading-4 text-muted-foreground">{item.summary}</p>
                 </div>
                 {usagesWithLabels.length > 0 && (
                   <ul className="space-y-1 border-t border-border px-3 py-2">
                     {usagesWithLabels.map(({ link, label }) => (
                       <li key={link.id} className="flex items-center justify-between gap-2 text-xs">
-                        <span className="min-w-0 truncate text-muted-foreground">{label}</span>
+                        <span className="min-w-0 truncate text-muted-foreground text-[11px]">{label}</span>
                         <Button
                           type="button"
                           size="sm"
                           variant="ghost"
                           disabled={busy || rowBusy}
                           aria-label={`Remove usage ${label} from ${item.title}`}
+                          className="h-6 w-6 rounded-control p-0 text-muted-foreground hover:text-destructive"
                           onClick={() =>
                             void onDetach({
                               evidenceId: item.id,
@@ -165,7 +164,7 @@ export function CVEvidenceShelf({ items, sources, resumeLinks, resumeId, cvData,
                             })
                           }
                         >
-                          <Unlink aria-hidden="true" className="h-3.5 w-3.5" />
+                          <Unlink aria-hidden="true" className="h-3 w-3" />
                         </Button>
                       </li>
                     ))}
@@ -174,24 +173,24 @@ export function CVEvidenceShelf({ items, sources, resumeLinks, resumeId, cvData,
                 {pickFor === item.id ? (
                   <div className="space-y-2 border-t border-border px-3 py-2">
                     <Select value={pickedEntry} onValueChange={setPickedEntry}>
-                      <SelectTrigger aria-label={`CV entry for ${item.title}`}>
+                      <SelectTrigger aria-label={`CV entry for ${item.title}`} className="rounded-input text-xs">
                         <SelectValue placeholder="Choose a CV entry" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-overlay">
                         {entries.map((entry) => (
-                          <SelectItem key={entry.locator} value={entry.locator}>
+                          <SelectItem key={entry.locator} value={entry.locator} className="text-xs">
                             {entry.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     <div className="flex items-center gap-2">
-                      <Button type="button" size="sm" disabled={rowBusy || !pickedEntry} onClick={submitAttach}>
-                        {rowBusy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
-                        <Link2 aria-hidden="true" className="h-4 w-4" />
+                      <Button type="button" size="sm" disabled={rowBusy || !pickedEntry} onClick={submitAttach} className="rounded-control text-xs">
+                        {rowBusy && <Loader2 aria-hidden="true" className="mr-1 h-3.5 w-3.5 animate-spin motion-reduce:animate-none" />}
+                        <Link2 aria-hidden="true" className="mr-1 h-3.5 w-3.5" />
                         Attach
                       </Button>
-                      <Button type="button" size="sm" variant="ghost" onClick={() => { setPickFor(null); setPickedEntry(''); }}>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => { setPickFor(null); setPickedEntry(''); }} className="rounded-control text-xs">
                         Cancel
                       </Button>
                     </div>
@@ -203,9 +202,10 @@ export function CVEvidenceShelf({ items, sources, resumeLinks, resumeId, cvData,
                       size="sm"
                       variant="ghost"
                       disabled={busy || item.review_status === 'archived'}
+                      className="h-7 text-xs rounded-control text-muted-foreground hover:text-foreground"
                       onClick={() => { setPickFor(item.id); setPickedEntry(''); setShelfMessage(null); }}
                     >
-                      <Link2 aria-hidden="true" className="h-4 w-4" />
+                      <Link2 aria-hidden="true" className="mr-1 h-3.5 w-3.5" />
                       Attach to CV entry
                     </Button>
                   </div>

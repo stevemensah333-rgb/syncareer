@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CVEditorWorkspace } from '@/components/cv-builder/CVEditorWorkspace';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,17 +150,20 @@ const CVBuilder = () => {
   const [dismissedTargetSkills, setDismissedTargetSkills] = useState<string[]>([]);
 
   const contextBanner = (targetRole || opportunityContext) && initialCv ? (
-    <div className="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-4">
+    <div className="rounded-surface border border-primary/25 bg-primary/5 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-primary font-medium">Tailoring CV for</p>
-          <p className="text-base font-medium text-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Tailoring primary CV for</p>
+          <p className="mt-0.5 text-base font-semibold text-foreground">
             {targetRole}{targetCompany ? ` · ${targetCompany}` : ''}
           </p>
         </div>
         {safeReturnTo && (
-          <Button size="sm" variant="ghost" asChild>
-            <Link to={safeReturnTo}>Back to opportunity</Link>
+          <Button size="sm" variant="outline" className="rounded-control text-xs" asChild>
+            <Link to={safeReturnTo}>
+              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+              Back to opportunity
+            </Link>
           </Button>
         )}
       </div>
@@ -173,7 +176,33 @@ const CVBuilder = () => {
           ] as const).map((group) => {
             const items = skillGuidance.filter(({ requirement, match }) => group.statuses.includes(match.status as never) && !dismissedTargetSkills.includes(requirement.text));
             if (!items.length) return null;
-            return <section key={group.title} className="rounded-lg border bg-card/70 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.title}</p><div className="mt-2 space-y-2">{items.map(({ requirement, match }) => <div key={requirement.requirementId}>{match.status === 'supported' ? <p className="text-sm text-success">✓ {requirement.text} — supported by contextual CV/project evidence. Review before relying on it.</p> : <RequirementEvidenceActions surface="cv" requirement={requirement.text} role={targetRole} onAddEvidence={() => { toast.info(`Add a truthful experience or project example showing ${requirement.text}. The skill has not been added.`); }} onNotRelevant={() => setDismissedTargetSkills((current) => current.includes(requirement.text) ? current : [...current, requirement.text])} />}</div>)}</div></section>;
+            return (
+              <section key={group.title} className="rounded-surface border border-border bg-card p-3 space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{group.title}</p>
+                <div className="space-y-1.5">
+                  {items.map(({ requirement, match }) => (
+                    <div key={requirement.requirementId}>
+                      {match.status === 'supported' ? (
+                        <p className="text-xs text-success flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                          <span><strong>{requirement.text}</strong> — supported by your experience. Review before relying on it.</span>
+                        </p>
+                      ) : (
+                        <RequirementEvidenceActions
+                          surface="cv"
+                          requirement={requirement.text}
+                          role={targetRole}
+                          onAddEvidence={() => {
+                            toast.info(`Add a truthful experience or project example showing ${requirement.text}. The skill has not been added.`);
+                          }}
+                          onNotRelevant={() => setDismissedTargetSkills((current) => current.includes(requirement.text) ? current : [...current, requirement.text])}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
           })}
         </div>
       ) : null}
@@ -181,16 +210,20 @@ const CVBuilder = () => {
   ) : null;
 
   return (
-    <PageLayout title="CV Builder" description="Create, review, and save your primary CV." breadcrumbs={[{ label: 'Home', to: '/dashboard' }, { label: 'CV Builder' }]}>
+    <PageLayout
+      title="CV Builder"
+      description="Create, edit, and maintain your primary career CV with evidence and guided scoring."
+      breadcrumbs={[{ label: 'Home', to: '/dashboard' }, { label: 'CV Builder' }]}
+    >
       {loadFailure ? (
-        <div className="mx-auto max-w-lg rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center" role="alert">
-          <AlertCircle className="mx-auto mb-3 h-8 w-8 text-destructive" aria-hidden />
-          <h2 className="text-lg font-semibold">Your saved CV could not be opened</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{loadFailure.userMessage}</p>
-          <p className="mt-2 text-xs text-muted-foreground">
+        <div className="mx-auto max-w-lg rounded-surface border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3" role="alert">
+          <AlertCircle className="mx-auto h-8 w-8 text-destructive" aria-hidden />
+          <h2 className="text-base font-semibold text-foreground">Your saved CV could not be opened</h2>
+          <p className="text-xs text-muted-foreground leading-relaxed">{loadFailure.userMessage}</p>
+          <p className="text-xs text-muted-foreground">
             Editing is paused so an unseen cloud copy cannot be overwritten.
           </p>
-          <Button className="mt-4" variant="outline" onClick={() => void loadSavedCV()}>
+          <Button className="mt-2 rounded-control" variant="outline" onClick={() => void loadSavedCV()}>
             Try again
           </Button>
         </div>
