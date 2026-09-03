@@ -224,7 +224,8 @@ async function searchSource(
       res = await fetch(`${FIRECRAWL_V2}/search`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${gatewayAuth.lovableApiKey}`,
+          "X-Connection-Api-Key": gatewayAuth.connectionKey,
           "Content-Type": "application/json",
         },
         body,
@@ -325,7 +326,10 @@ function segmentsForRun(now: Date): DiscoverySegment[] {
   );
 }
 
-async function runAggregation(apiKey: string): Promise<void> {
+async function runAggregation(gatewayAuth: {
+  lovableApiKey: string;
+  connectionKey: string;
+}): Promise<void> {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
