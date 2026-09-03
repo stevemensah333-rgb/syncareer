@@ -2,6 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/** Product-object surface. Use for career objects, not every content block. */
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>

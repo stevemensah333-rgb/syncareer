@@ -21,19 +21,36 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: ['Inter var', 'sans-serif'],
-				serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+				serif: ['Georgia', 'serif'],
 				dossier: ['"Literata Variable"', 'Literata', 'Georgia', 'serif'],
 				mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 			},
 			colors: {
-				border: 'hsl(var(--border))',
+				border: {
+					DEFAULT: 'hsl(var(--border))',
+					subtle: 'hsl(var(--border-subtle))',
+				},
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
-				foreground: 'hsl(var(--foreground))',
+				foreground: {
+					DEFAULT: 'hsl(var(--foreground))',
+					secondary: 'hsl(var(--foreground-secondary))',
+				},
+				canvas: 'hsl(var(--canvas))',
+				surface: {
+					DEFAULT: 'hsl(var(--surface))',
+					secondary: 'hsl(var(--surface-secondary))',
+					elevated: 'hsl(var(--surface-elevated))',
+				},
+				selected: {
+					DEFAULT: 'hsl(var(--selected))',
+					foreground: 'hsl(var(--selected-foreground))',
+				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					hover: 'hsl(var(--primary-hover))',
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -42,6 +59,10 @@ export default {
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
+				},
+				error: {
+					DEFAULT: 'hsl(var(--error))',
+					foreground: 'hsl(var(--error-foreground))'
 				},
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
@@ -94,8 +115,13 @@ export default {
 				control: 'var(--radius-control)',
 				input: 'var(--radius-input)',
 				surface: 'var(--radius-surface)',
+				'surface-lg': 'var(--radius-surface-lg)',
 				overlay: 'var(--radius-overlay)',
 				document: 'var(--radius-document)',
+			},
+			transitionDuration: {
+				fast: 'var(--motion-fast)',
+				panel: 'var(--motion-panel)',
 			},
 			keyframes: {
 				'accordion-down': {
@@ -123,31 +149,21 @@ export default {
 					'100%': { opacity: '0' }
 				},
 				'slide-up': {
-					'0%': { transform: 'translateY(10px)', opacity: '0' },
+					'0%': { transform: 'translateY(8px)', opacity: '0' },
 					'100%': { transform: 'translateY(0)', opacity: '1' }
 				},
 				'slide-down': {
-					'0%': { transform: 'translateY(-10px)', opacity: '0' },
+					'0%': { transform: 'translateY(-8px)', opacity: '0' },
 					'100%': { transform: 'translateY(0)', opacity: '1' }
-				},
-				'pulse-gentle': {
-					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.8' }
-				},
-				'float': {
-					'0%, 100%': { transform: 'translateY(0)' },
-					'50%': { transform: 'translateY(-5px)' }
 				}
 			},
 			animation: {
-				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-in': 'fade-in 0.3s ease-out',
-				'fade-out': 'fade-out 0.3s ease-out',
-				'slide-up': 'slide-up 0.4s ease-out',
-				'slide-down': 'slide-down 0.4s ease-out',
-				'pulse-gentle': 'pulse-gentle 2s ease-in-out infinite',
-				'float': 'float 3s ease-in-out infinite'
+				'accordion-down': 'accordion-down 150ms ease-out',
+				'accordion-up': 'accordion-up 150ms ease-out',
+				'fade-in': 'fade-in 150ms ease-out',
+				'fade-out': 'fade-out 150ms ease-out',
+				'slide-up': 'slide-up 180ms ease-out',
+				'slide-down': 'slide-down 180ms ease-out'
 			},
 			// Minimal, restrained elevation. Content surfaces are flat and
 			// bordered; only genuinely elevated things (overlays, dragged
