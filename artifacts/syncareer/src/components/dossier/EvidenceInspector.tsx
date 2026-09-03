@@ -13,10 +13,10 @@ interface EvidenceInspectorProps {
 
 export function EvidenceInspector({ title, description, children, onClose, className }: EvidenceInspectorProps) {
   return (
-    <aside aria-label="Evidence inspector" className={cn('border border-border bg-card', className)}>
+    <aside aria-label="Evidence context" className={cn('border border-border bg-card', className)}>
       <header className="flex items-start justify-between gap-3 border-b border-border px-4 py-4">
         <div>
-          <p className="dossier-eyebrow">Evidence inspector</p>
+          <p className="dossier-eyebrow">Evidence</p>
           <h2 className="mt-1 text-sm font-semibold text-foreground">{title}</h2>
           {description && <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>}
         </div>

@@ -46,6 +46,8 @@ interface Props extends LedgerHandlers {
   resumes: Array<{ id: string; title: string | null }>;
   interviews: Array<{ id: string; label: string }>;
   busy: boolean;
+  selectedEvidenceId?: string | null;
+  onSelectEvidence?: (evidenceId: string) => void;
 }
 
 const SOURCE_TYPE_LABELS: Record<string, string> = {
@@ -61,6 +63,8 @@ export function DossierEvidenceLedger({
   resumes,
   interviews,
   busy,
+  selectedEvidenceId,
+  onSelectEvidence,
   onCreateEvidence,
   onConfirmEvidence,
   onArchiveEvidence,
@@ -166,7 +170,22 @@ export function DossierEvidenceLedger({
                 eyebrow={item.category}
                 title={item.title}
                 detail={item.summary}
-                meta={<EvidenceReference id={item.id} />}
+                meta={
+                  <div className="flex flex-wrap items-center gap-2">
+                    <EvidenceReference id={item.id} />
+                    {onSelectEvidence && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        aria-label={`Show context for ${item.title}`}
+                        onClick={() => onSelectEvidence(item.id)}
+                      >
+                        Context
+                      </Button>
+                    )}
+                  </div>
+                }
                 status={
                   <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                     <EvidenceStamp status={status} />
@@ -210,6 +229,7 @@ export function DossierEvidenceLedger({
                     )}
                   </div>
                 }
+                selected={item.id === selectedEvidenceId}
               />
             );
           })}
