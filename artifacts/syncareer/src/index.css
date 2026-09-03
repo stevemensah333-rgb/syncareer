@@ -811,6 +811,111 @@
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+
+  /* ---------------------------------------------------------------
+   * DISCOVER DASHBOARD — the student home.
+   *
+   * Discover mode reads as an approachable career environment, not a
+   * document and not a KPI wall. Distinctiveness comes from visual ZONES
+   * (a tinted focus band, quiet section bands) layered over the pale
+   * canvas, plus recognisable career objects — never from extra chrome.
+   * All motion here is entrance/feedback only and respects reduced motion.
+   * --------------------------------------------------------------- */
+
+  /* The hero focus band: a restrained tinted zone that lifts the single
+     most important decision off the canvas without becoming a card wall. */
+  .discover-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius-surface-lg);
+    background:
+      linear-gradient(180deg, hsl(var(--dossier-indigo-wash)) 0%, hsl(var(--card)) 62%);
+  }
+
+  /* Quiet structural grid, echoing the public journey backdrop, kept very
+     faint so the hero reads as part of the same product. Decorative only. */
+  .discover-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(hsl(var(--primary) / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--primary) / 0.05) 1px, transparent 1px);
+    background-size: 34px 34px;
+    mask-image: radial-gradient(120% 130% at 88% -20%, black 0%, transparent 62%);
+    -webkit-mask-image: radial-gradient(120% 130% at 88% -20%, black 0%, transparent 62%);
+    pointer-events: none;
+  }
+
+  /* A quiet zone band — used to group progression/continue sections without
+     giving each one its own white card. */
+  .discover-zone {
+    border-radius: var(--radius-surface-lg);
+    background: hsl(var(--card) / 0.5);
+    border: 1px solid hsl(var(--border) / 0.7);
+  }
+
+  /* Career-object tile: the moderate card used for opportunities, workflow
+     objects and applications. One consistent interactive treatment. */
+  .discover-object {
+    @apply relative flex flex-col border border-border bg-card transition-[transform,box-shadow,border-color] duration-150 ease-out motion-reduce:transition-none;
+    border-radius: var(--radius-surface);
+  }
+
+  a.discover-object:hover,
+  button.discover-object:hover,
+  .discover-object[data-interactive='true']:hover {
+    border-color: hsl(var(--primary) / 0.5);
+    box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.05), 0 6px 16px -8px rgba(16, 24, 40, 0.16);
+    transform: translateY(-2px);
+  }
+
+  a.discover-object:focus-visible,
+  button.discover-object:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+  }
+
+  /* Emphasised object — the one tied to the current next move. Non-colour
+     cue (left rule) so emphasis never depends on hover or hue alone. */
+  .discover-object[data-emphasis='true'] {
+    border-color: hsl(var(--primary) / 0.55);
+    box-shadow: inset 3px 0 0 0 hsl(var(--primary));
+  }
+
+  /* Progression rail connector between the three phases. */
+  .discover-phase {
+    @apply relative flex flex-col gap-2 border border-border bg-card p-4 transition-colors duration-150 motion-reduce:transition-none;
+    border-radius: var(--radius-surface);
+  }
+
+  .discover-phase[data-current='true'] {
+    border-color: hsl(var(--primary) / 0.5);
+    background: hsl(var(--dossier-indigo-wash));
+  }
+
+  /* Section entrance — a single, gentle rise used once on mount, staggered
+     by inline delay. Never loops; disabled under reduced motion. */
+  .discover-enter {
+    animation: discover-enter 320ms var(--ease-standard) both;
+  }
+
+  @keyframes discover-enter {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .discover-enter {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .discover-object:hover {
+      transform: none;
+    }
+  }
 }
 
 /* Compact view mode - reduces spacing throughout the app */

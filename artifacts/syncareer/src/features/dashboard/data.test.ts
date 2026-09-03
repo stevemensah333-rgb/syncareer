@@ -50,7 +50,7 @@ function createClient(results: Record<string, Result[]>) {
 describe('loadDashboardData live-schema contract', () => {
   it('loads owned applications and saved postings without unverified columns or relationships', async () => {
     const { client, queries } = createClient({
-      assessments: [{ data: { completed_at: '2026-08-01T10:00:00Z' }, error: null }],
+      assessments: [{ data: { completed_at: '2026-08-01T10:00:00Z', primary_interest: 'Investigative', secondary_interest: 'Conventional', tertiary_interest: null }, error: null }],
       job_applications: [{
         data: [{
           id: 'application-1',
@@ -71,6 +71,13 @@ describe('loadDashboardData live-schema contract', () => {
       }],
       saved_jobs: [{ data: [{ job_id: 'job-2', created_at: '2026-08-09T10:00:00Z' }], error: null }],
       resumes: [{ data: { personal_info: { firstName: 'Ama' } }, error: null }],
+      mock_interviews: [{
+        data: [
+          { job_role: 'Data Analyst', created_at: '2026-08-11T10:00:00Z' },
+          { job_role: 'Graduate Engineer', created_at: '2026-08-05T10:00:00Z' },
+        ],
+        error: null,
+      }],
       job_postings: [{
         data: [{
           id: 'job-2',
@@ -88,9 +95,11 @@ describe('loadDashboardData live-schema contract', () => {
 
     expect(result.errors).toEqual([]);
     expect(result.assessmentDone).toBe(true);
+    expect(result.direction).toEqual({ primary: 'Investigative', secondary: 'Conventional', tertiary: null });
     expect(result.applications[0]?.job?.title).toBe('Data Analyst');
     expect(result.savedJobs[0]?.job?.title).toBe('Graduate Engineer');
     expect(result.resume).toEqual({ personal_info: { firstName: 'Ama' } });
+    expect(result.interview).toEqual({ total: 2, lastRole: 'Data Analyst', lastAt: '2026-08-11T10:00:00Z' });
 
     expect(DASHBOARD_APPLICATION_SELECT).toContain('resume_url');
     for (const unavailableColumn of [

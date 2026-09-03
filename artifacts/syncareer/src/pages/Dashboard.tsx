@@ -1,23 +1,40 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
+
 import { StudentLayout } from '@/components/layout/StudentLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
-
-import { Greeting } from '@/components/dashboard/home/Greeting';
-import { PrimaryFocusCard } from '@/components/dashboard/home/PrimaryFocusCard';
-import { AttentionList, type AttentionItem } from '@/components/dashboard/home/AttentionList';
-import { RecentApplications, type RecentApp } from '@/components/dashboard/home/RecentApplications';
-import { NextActionsList, type NextAction } from '@/components/dashboard/home/NextActions';
-import { EmptyState } from '@/components/dashboard/home/EmptyState';
-import { ACTIVE_STATUSES, scoreResume, getDaysUntilDeadline } from '@/components/dashboard/home/utils';
-import { SavedDecisions } from '@/components/dashboard/home/SavedDecisions';
-import { applicationCompany, applicationTitle, dashboardDataState, selectPrimaryFocus, type DashboardApplication, type DashboardSavedJob } from '@/features/dashboard/continuation';
-import { loadDashboardData, type DashboardLoadError } from '@/features/dashboard/data';
-import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RecordState } from '@/components/dossier';
-import { useNavigate } from 'react-router-dom';
+
+import { loadDashboardData, type DashboardLoadError, type DashboardInterview } from '@/features/dashboard/data';
+import { loadOpportunitySpotlight } from '@/features/dashboard/spotlight';
+import { scoreResume } from '@/components/dashboard/home/utils';
+import { dashboardDataState, type DashboardApplication, type DashboardSavedJob } from '@/features/dashboard/continuation';
+import { opportunityRankingSummary } from '@/features/opportunities/ranking';
+import type { OpportunityJob } from '@/features/opportunities/opportunity';
+import {
+  buildActiveApplications,
+  buildCareerJourney,
+  buildPreparationItems,
+  firstName as toFirstName,
+  hasDirection,
+  selectNextMove,
+  timeOfDayGreeting,
+  type CareerDirection,
+  type DiscoverSnapshot,
+} from '@/features/dashboard/discover';
+import {
+  ActiveApplications,
+  CareerJourney,
+  ContinueWork,
+  DiscoverHero,
+  OpportunitySpotlight,
+} from '@/components/dashboard/discover';
+
+const EMPTY_INTERVIEW: DashboardInterview = { total: 0, lastRole: null, lastAt: null };
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -28,9 +45,13 @@ export default function Dashboard() {
   const [reloadKey, setReloadKey] = useState(0);
   const [loadErrors, setLoadErrors] = useState<DashboardLoadError[]>([]);
   const [assessmentDone, setAssessmentDone] = useState(false);
+  const [direction, setDirection] = useState<CareerDirection | null>(null);
   const [applications, setApplications] = useState<DashboardApplication[]>([]);
   const [savedJobs, setSavedJobs] = useState<DashboardSavedJob[]>([]);
   const [cvCompletion, setCvCompletion] = useState(0);
+  const [interview, setInterview] = useState<DashboardInterview>(EMPTY_INTERVIEW);
+  const [spotlight, setSpotlight] = useState<OpportunityJob[]>([]);
+  const [spotlightError, setSpotlightError] = useState(false);
 
   const major = studentDetails?.major ?? null;
   const university = studentDetails?.school ?? null;
@@ -52,191 +73,196 @@ export default function Dashboard() {
 
         setLoadErrors(bundle.errors);
         setAssessmentDone(bundle.assessmentDone);
+        setDirection(bundle.direction);
         setApplications(bundle.applications);
         setSavedJobs(bundle.savedJobs);
         setCvCompletion(bundle.resume ? scoreResume(bundle.resume) : 0);
+        setInterview(bundle.interview);
+
+        // The spotlight excludes roles already tracked or saved so the home
+        // never re-features work the student has decided on.
+        const excluded = new Set<string>([
+          ...bundle.applications.map((application) => application.job?.id).filter((id): id is string => Boolean(id)),
+          ...bundle.savedJobs.map((saved) => saved.job_id),
+        ]);
+        const featured = await loadOpportunitySpotlight(
+          supabase,
+          {
+            major: studentDetails?.major ?? null,
+            interests: [bundle.direction?.primary, bundle.direction?.secondary, bundle.direction?.tertiary].filter(
+              (value): value is string => Boolean(value),
+            ),
+            earlyCareer: profile?.user_type === 'student' || Boolean(studentDetails),
+          },
+          excluded,
+        );
+        if (cancelled) return;
+        setSpotlight(featured.jobs);
+        setSpotlightError(featured.error);
 
         if (bundle.errors.length > 0) {
-          console.warn('[Dashboard] Some data sources were unavailable', {
-            sources: bundle.errors,
-          });
+          console.warn('[Dashboard] Some data sources were unavailable', { sources: bundle.errors });
         }
       } catch {
-        // The loader settles each database request independently. Reaching this
-        // branch means the aggregation itself failed, so the application source
-        // is treated as unavailable rather than presenting a false empty state.
+        // The loader settles each request independently; reaching here means
+        // the aggregation itself failed, so the application source is treated
+        // as unavailable rather than presenting a false empty state.
         console.error('[Dashboard] Data aggregation failed');
         setLoadErrors(['applications']);
         setAssessmentDone(false);
+        setDirection(null);
         setApplications([]);
         setSavedJobs([]);
         setCvCompletion(0);
+        setInterview(EMPTY_INTERVIEW);
+        setSpotlight([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
+    // studentDetails/profile are stable per session; userId + reloadKey drive reloads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, profileLoading, reloadKey]);
 
-  // Derived: primary focus
-  const primaryFocus = useMemo(() => selectPrimaryFocus(applications, savedJobs), [applications, savedJobs]);
+  const snapshot = useMemo<DiscoverSnapshot>(
+    () => ({
+      fullName: profile?.full_name ?? null,
+      major,
+      school: university,
+      assessmentDone,
+      direction,
+      applications,
+      savedJobs,
+      cvCompletion,
+      interview,
+    }),
+    [profile?.full_name, major, university, assessmentDone, direction, applications, savedJobs, cvCompletion, interview],
+  );
 
-  // Attention: deadlines within 30 days
-  const attentionItems = useMemo<AttentionItem[]>(() => {
-    const all: AttentionItem[] = [];
-    for (const app of applications) {
-      if (app.next_action && app.next_action_due && ACTIVE_STATUSES.includes(app.status)) {
-        const days = getDaysUntilDeadline(app.next_action_due);
-        if (days !== null && days <= 30) all.push({
-          id: `action-${app.id}`,
-          title: app.next_action,
-          company: `${applicationTitle(app)}${applicationCompany(app) ? ` · ${applicationCompany(app)}` : ''}`,
-          deadline: app.next_action_due,
-          source: 'application',
-          kind: 'next-action',
-          href: `/applications?application=${encodeURIComponent(app.id)}`,
-        });
-      }
-    }
-    for (const saved of savedJobs) {
-      const dl = saved.job?.application_deadline;
-      if (!dl) continue;
-      const days = getDaysUntilDeadline(dl);
-      if (days === null || days < 0 || days > 30) continue;
-      // avoid duplicating if already tracked via application for same job id
-      if (applications.some((application) => application.job?.id === saved.job_id)) continue;
-      all.push({
-        id: `saved-${saved.job_id}`,
-        title: saved.job?.title ?? 'Saved role',
-        company: saved.job?.company_name ?? null,
-        deadline: dl,
-        source: 'saved',
-        href: `/opportunities?job=${encodeURIComponent(saved.job_id)}`,
-      });
-    }
-    all.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
-    return all.slice(0, 3);
-  }, [applications, savedJobs]);
+  const nextMove = useMemo(() => selectNextMove(snapshot), [snapshot]);
+  const journey = useMemo(() => buildCareerJourney(snapshot, nextMove), [snapshot, nextMove]);
+  const activeApps = useMemo(() => buildActiveApplications(snapshot, nextMove), [snapshot, nextMove]);
+  const prepItems = useMemo(() => buildPreparationItems(snapshot, nextMove), [snapshot, nextMove]);
 
-  const recentApps = useMemo<RecentApp[]>(() => {
-    return applications.slice(0, 4).map(a => ({
-      id: a.id,
-      status: a.status,
-      created_at: a.created_at,
-      updated_at: a.updated_at,
-      job: {
-        title: applicationTitle(a),
-        company_name: applicationCompany(a),
-        location: a.job?.location,
-      },
-    }));
-  }, [applications]);
+  const directionLine = useMemo(() => {
+    if (major?.trim()) return major.trim();
+    if (direction?.primary) return `${direction.primary} interest`;
+    return null;
+  }, [major, direction]);
 
-  const nextActions = useMemo<NextAction[]>(() => {
-    const actions: NextAction[] = [];
-    const activeApplication = primaryFocus.type === 'application' ? primaryFocus.data : null;
+  const rankingSummary = useMemo(
+    () =>
+      opportunityRankingSummary({
+        major,
+        interests: [direction?.primary, direction?.secondary, direction?.tertiary].filter(
+          (value): value is string => Boolean(value),
+        ),
+        earlyCareer: profile?.user_type === 'student' || Boolean(studentDetails),
+      }),
+    [major, direction, profile?.user_type, studentDetails],
+  );
 
-    if (activeApplication) {
-      actions.push({
-        id: 'review-cv',
-        title: cvCompletion === 0 ? 'Create a CV for this application' : 'Review your CV for this application',
-        description: `Prepare evidence for ${applicationTitle(activeApplication)} and tailor your CV to the role requirements.`,
-        href: `/cv-builder?application=${encodeURIComponent(activeApplication.id)}&targetRole=${encodeURIComponent(applicationTitle(activeApplication))}`,
-        icon: 'cv',
-      });
-    }
-
-    if (activeApplication?.status === 'interview') {
-      actions.push({
-        id: 'interview-practice',
-        title: 'Prepare for the interview stage',
-        description: `Practise for ${applicationTitle(activeApplication)} using the application context you have already recorded.`,
-        href: `/interview-simulator?application=${encodeURIComponent(activeApplication.id)}&role=${encodeURIComponent(applicationTitle(activeApplication))}`,
-        icon: 'interview',
-      });
-    }
-
-    if (!activeApplication && savedJobs.length === 0) {
-      actions.push({
-        id: 'find-opportunity',
-        title: 'Find an opportunity to work on',
-        description: 'Review current external listings, then save one or record that you applied.',
-        href: '/opportunities',
-        icon: 'opportunities',
-      });
-    }
-
-    if (!major && applications.length === 0 && savedJobs.length === 0 && !assessmentDone) {
-      actions.push({
-        id: 'assessment',
-        title: 'Still choosing a direction?',
-        description: 'Explore interest themes and broad role families. This does not measure skill or readiness.',
-        href: '/assessment',
-        icon: 'opportunities',
-      });
-    }
-    return actions.slice(0, 3);
-  }, [assessmentDone, cvCompletion, primaryFocus, major, applications.length, savedJobs.length]);
-
-  const undecidedSavedJobs = useMemo(() => {
-    const tracked = new Set(applications.map((application) => application.job?.id).filter(Boolean));
-    return savedJobs.filter((saved) => !tracked.has(saved.job_id) && (primaryFocus.type !== 'saved' || saved.job_id !== primaryFocus.data.job_id));
-  }, [applications, primaryFocus, savedJobs]);
-
-  const coreDataUnavailable = dashboardDataState(loadErrors) === 'unavailable' || (loadErrors.includes('saved opportunities') && primaryFocus.type === 'start');
+  const coreDataUnavailable = dashboardDataState(loadErrors) === 'unavailable';
+  const nonCriticalErrors = loadErrors.filter((error) => error !== 'applications');
 
   return (
     <StudentLayout title="">
-      <div className="space-y-6">
-        <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
-          <Greeting fullName={profile?.full_name ?? null} major={major} school={university} />
-          <Button variant="outline" onClick={() => navigate('/opportunities')} className="self-start gap-1.5 sm:self-auto">
-            Find an opportunity <ArrowRight className="h-4 w-4" />
-          </Button>
-        </header>
+      {loading ? (
+        <DashboardSkeleton />
+      ) : coreDataUnavailable ? (
+        <div className="space-y-6">
+          <RecordState
+            tone="error"
+            title="Your dashboard could not be loaded"
+            description="We could not load your applications and current work. Retry to try again."
+            action={
+              <Button size="sm" variant="outline" onClick={() => setReloadKey((value) => value + 1)}>
+                Retry
+              </Button>
+            }
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-8">
+          {nonCriticalErrors.length > 0 && (
+            <RecordState
+              tone="warning"
+              title="Some records are temporarily unavailable"
+              description={`Unavailable: ${nonCriticalErrors.join(', ')}. Everything that loaded is shown below.`}
+              action={
+                <Button size="sm" variant="outline" onClick={() => setReloadKey((value) => value + 1)}>
+                  Retry
+                </Button>
+              }
+            />
+          )}
 
-        {loading ? (
-          <div className="grid gap-6" aria-busy="true" aria-label="Loading application desk">
-            <div className="surface-content overflow-hidden">
-              <div className="h-36 animate-pulse border-b border-border bg-muted/60 motion-reduce:animate-none" />
-              <div className="h-12 animate-pulse border-b border-border bg-muted/40 motion-reduce:animate-none" />
-              <div className="h-44 animate-pulse bg-muted/25 motion-reduce:animate-none" />
-            </div>
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.8fr)]">
-              <div className="space-y-6">
-                <div className="h-64 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none" />
-                <div className="h-48 animate-pulse border border-border bg-muted/30 motion-reduce:animate-none" />
-              </div>
-              <div className="space-y-6">
-                <div className="h-44 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none" />
-                <div className="h-52 animate-pulse border border-border bg-muted/30 motion-reduce:animate-none" />
-              </div>
-            </div>
+          <DiscoverHero
+            greeting={timeOfDayGreeting()}
+            firstName={toFirstName(profile?.full_name)}
+            directionLine={directionLine}
+            nextMove={nextMove}
+          />
+
+          {/* Career journey sits high on desktop (right below the next move)
+              but drops to position 4 on mobile, where the required priority is
+              next action → active applications → opportunities → progression. */}
+          <div className="order-4 lg:order-none">
+            <CareerJourney phases={journey} />
           </div>
-        ) : (
-          <div className="space-y-6">
-            {loadErrors.length > 0 && (
-              <RecordState
-                tone={coreDataUnavailable ? 'error' : 'warning'}
-                title={coreDataUnavailable ? 'Your current work could not be loaded' : 'Some records are temporarily unavailable'}
-                description={coreDataUnavailable ? 'Retry to load your applications and saved opportunities.' : `Unavailable sources: ${loadErrors.join(', ')}. The records that loaded successfully are still shown.`}
-                action={<Button size="sm" variant="outline" onClick={() => setReloadKey((value) => value + 1)}>Retry</Button>}
-              />
-            )}
 
-            {!coreDataUnavailable && (primaryFocus.type === 'start' ? <EmptyState hasApplicationHistory={applications.length > 0} showAssessment={!major && !assessmentDone} /> : <PrimaryFocusCard {...primaryFocus} cvStarted={cvCompletion > 0} />)}
-
-            {!coreDataUnavailable && <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.8fr)]">
-              <div className="min-w-0 space-y-6">
-                <RecentApplications items={recentApps} />
-                <SavedDecisions items={undecidedSavedJobs} />
-              </div>
-              <aside className="space-y-6"><AttentionList items={attentionItems} /><NextActionsList actions={nextActions} /></aside>
-            </div>}
+          <div className="order-2 lg:order-none">
+            <ActiveApplications items={activeApps} totalTracked={applications.length} />
           </div>
-        )}
-      </div>
+
+          <div className="order-3 lg:order-none">
+            <OpportunitySpotlight jobs={spotlight} rankingSummary={rankingSummary} error={spotlightError} />
+          </div>
+
+          <div className="order-5 lg:order-none">
+            <ContinueWork items={prepItems} />
+          </div>
+
+          {!hasDirection(snapshot) && applications.length === 0 && (
+            <div className="order-6 lg:order-none">
+              <div className="discover-object p-5">
+                <p className="text-sm font-medium text-foreground">Still choosing a direction?</p>
+                <p className="type-secondary mt-1">
+                  A short interest check surfaces the role families worth exploring. It does not
+                  measure skill or readiness.
+                </p>
+                <div className="mt-4">
+                  <Button variant="outline" size="sm" onClick={() => navigate('/assessment')} className="gap-1.5">
+                    Take the assessment <ArrowRight aria-hidden="true" className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </StudentLayout>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8" aria-busy="true" aria-label="Loading your dashboard">
+      <div className="discover-hero h-56 animate-pulse motion-reduce:animate-none" />
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[0, 1, 2].map((index) => (
+          <div key={index} className="h-32 animate-pulse rounded-surface border border-border bg-muted/40 motion-reduce:animate-none" />
+        ))}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {[0, 1].map((index) => (
+          <div key={index} className="h-32 animate-pulse rounded-surface border border-border bg-muted/30 motion-reduce:animate-none" />
+        ))}
+      </div>
+    </div>
   );
 }
