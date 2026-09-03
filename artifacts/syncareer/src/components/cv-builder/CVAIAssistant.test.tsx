@@ -48,7 +48,7 @@ describe('job-specific CV suggestion review', () => {
     fireEvent.change(screen.getByLabelText('Proposed — editable'), { target: { value: 'Developed a concise Python data cleaner' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply to draft' }));
     expect(onSuggestion).toHaveBeenCalledWith(expect.objectContaining({ after: 'Developed a concise Python data cleaner' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Undo AI change' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Undo rewrite' }));
     expect(onUndo).toHaveBeenCalledOnce();
   });
 

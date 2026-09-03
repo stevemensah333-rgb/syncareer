@@ -359,7 +359,7 @@ const Settings = () => {
                     <div className="pt-6 border-t">
                       <h3 className="text-lg font-medium text-destructive mb-2 flex items-center gap-2">
                         <AlertTriangle className="h-5 w-5" />
-                        Danger Zone
+                        Delete account
                       </h3>
                       <p className="text-sm text-muted-foreground mb-4">
                         Permanently delete your account and all associated data. This action cannot be undone.
@@ -372,7 +372,7 @@ const Settings = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                             <AlertDialogDescription>
                               This will permanently delete your account, profile, resumes, assessments, and all other data. This action cannot be undone.
                             </AlertDialogDescription>

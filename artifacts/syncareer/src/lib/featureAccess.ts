@@ -19,7 +19,7 @@ export const FREE_LIMITS: Record<FeatureKey, { limit: number; period: 'monthly' 
   career_assessment:              { limit: 2,  period: 'total',   label: 'Career assessments' },
   job_application:                { limit: 10, period: 'active',  label: 'Active job applications' },
   analytics_realtime:             { limit: 0,  period: 'total',   label: 'Real-time analytics' },
-  ai_personalized_recommendation: { limit: 0,  period: 'total',   label: 'Personalized AI recommendations' },
+  ai_personalized_recommendation: { limit: 0,  period: 'total',   label: 'Career recommendations for your profile' },
 };
 
 const PREMIUM_FEATURES: FeatureKey[] = [
@@ -85,7 +85,7 @@ export const FEATURE_LABELS: Record<string, string> = {
   career_assessment: 'Career Assessments',
   job_application: 'Active Job Applications',
   analytics_realtime: 'Real-Time Analytics',
-  ai_personalized_recommendation: 'Personalized AI Recommendations',
+  ai_personalized_recommendation: 'Career Recommendations',
 };
 
 export const FEATURE_UPGRADE_BENEFITS: Record<string, string[]> = {
@@ -95,8 +95,8 @@ export const FEATURE_UPGRADE_BENEFITS: Record<string, string[]> = {
     'Application funnel tracking',
   ],
   ai_personalized_recommendation: [
-    'AI-ranked career matches based on your profile',
-    'RIASEC-aligned opportunity discovery',
-    'Personalized skill gap analysis',
+    'Career matches based on your profile',
+    'Opportunity suggestions using your interests',
+    'Skill gap analysis',
   ],
 };

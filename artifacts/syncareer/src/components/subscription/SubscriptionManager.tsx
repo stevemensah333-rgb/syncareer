@@ -37,8 +37,8 @@ const PREMIUM_PLAN_FEATURES = [
   'Career assessments: Unlimited retakes',
   'Job applications tracked: Unlimited',
   'Analytics: Real-time dashboard',
-  'Personalized AI career recommendations',
-  'Priority support & early feature access',
+  'Career recommendations for your profile',
+  'Priority support',
 ];
 
 export default function SubscriptionManager() {

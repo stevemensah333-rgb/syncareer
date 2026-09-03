@@ -92,7 +92,7 @@ export function getMilestoneDetails(milestoneId: string): {
     },
     'syncareer-ready': {
       label: 'Syncareer Ready',
-      description: 'You&apos;re fully prepared to land your dream role',
+      description: 'You&apos;ve completed every setup step',
       icon: '🚀',
     },
   };

@@ -469,7 +469,7 @@ export default function ApplicationInterview() {
           <div>
             <h2 className="text-base font-semibold text-foreground">Check your microphone</h2>
             <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Syncareer uses your microphone to transcribe answers during this AI practice interview. Camera and
+              Syncareer uses your microphone to transcribe answers during this practice interview. Camera and
               screen sharing are never requested.
             </p>
           </div>

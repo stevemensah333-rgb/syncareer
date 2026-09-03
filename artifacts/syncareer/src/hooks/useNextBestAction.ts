@@ -38,14 +38,14 @@ export function useNextBestAction({ hasAssessment, cvScore, interviewScore, appl
           : `Your CV is ${cvScore}% complete. Use the builder checklist to choose the next section.`,
         ctaLabel: cvScore === 0 ? 'Open CV Builder' : 'Improve CV',
         href: '/cv-builder',
-        reason: 'A strong CV unlocks better matches.',
+        reason: 'A clear, role-focused CV gets noticed first.',
       };
     }
     if (interviewScore < 70) {
       return {
         title: 'Practice an interview',
         description: interviewScore === 0
-          ? 'Run a mock interview with SynAssist and get scored feedback.'
+          ? 'Run a mock interview and get feedback on your answers.'
           : `Your last interview scored ${interviewScore}%. One more session to lift it past 70%.`,
         ctaLabel: 'Start mock interview',
         href: '/interview-simulator',
