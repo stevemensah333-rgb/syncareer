@@ -141,12 +141,3 @@ export interface LinkEvidenceUsageInput {
   cvSection: ResumeEvidenceLinkRow['cv_section'];
   entryLocator: string;
 }
-
-/**
- * Stable UI reference derived from the UUID, e.g. `EV-A13F2C`. The reference
- * is presentation-only; it is never stored and never a database key.
- */
-export function evidenceRef(id: string): string {
-  const compact = id.replace(/-/g, '').slice(0, 6);
-  return `EV-${compact.toUpperCase()}`;
-}

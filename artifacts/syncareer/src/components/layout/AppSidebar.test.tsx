@@ -48,7 +48,7 @@ describe('AppSidebar (navigation)', () => {
   it('separates the current dossier from primary navigation', () => {
     renderSidebar('/dashboard', true);
     const dossier = screen.getByRole('link', { name: 'Current dossier: Data Analyst' });
-    expect(dossier.getAttribute('href')).toBe('/applications?application=app-1');
+    expect(dossier.getAttribute('href')).toBe('/applications/app-1');
     expect(screen.getByText('Cedar · In review')).toBeTruthy();
   });
 

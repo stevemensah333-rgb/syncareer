@@ -156,7 +156,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed, currentDoss
       {currentDossier && (
         <div className="border-t border-sidebar-border p-3">
           <Link
-            to={`/applications?application=${encodeURIComponent(currentDossier.id)}`}
+            to={`/applications/${encodeURIComponent(currentDossier.id)}`}
             aria-label={`Current dossier: ${currentDossier.title}`}
             title={isCollapsed ? `Current dossier: ${currentDossier.title}` : undefined}
             className={cn(

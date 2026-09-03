@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { installSupabaseMock } from '@/test/supabaseMock';
 import ApplicationTracker from './ApplicationTracker';
 
@@ -41,12 +41,26 @@ function makeAppRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/**
+ * Renders the index with a location probe so tests can assert navigation to
+ * the canonical dossier route without mocking the router.
+ */
 function renderPage(initialEntry = '/applications') {
-  return render(
+  let pathname: string | null = null;
+  function Probe() {
+    const location = useLocation();
+    pathname = location.pathname + location.search;
+    return null;
+  }
+  render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <ApplicationTracker />
+      <Routes>
+        <Route path="*" element={<Probe />} />
+      </Routes>
     </MemoryRouter>,
   );
+  return { getPath: () => pathname };
 }
 
 beforeEach(() => {
@@ -66,10 +80,7 @@ describe('Application Tracker page', () => {
           ],
           error: null,
         },
-        resumes: { data: { id: 'cv-1', title: 'Ama CV', updated_at: new Date(NOW).toISOString() }, error: null },
-        counsellor_bookings: { data: [], error: null },
       },
-      maybeSingle: { resumes: { data: { id: 'cv-1', title: 'Ama CV', updated_at: new Date(NOW).toISOString() }, error: null } },
     });
     renderPage();
 
@@ -84,29 +95,21 @@ describe('Application Tracker page', () => {
     expect(screen.queryByText('Field Coordinator')).toBeNull();
   });
 
-  it('opens the detail sheet with journey, next step, and notes for the selected row', async () => {
+  it('navigates a row to its canonical dossier route', async () => {
     installSupabaseMock({
       tables: {
-        job_applications: {
-          data: [makeAppRow({ status: 'interview', notes: 'Prepare SQL stories' })],
-          error: null,
-        },
-        counsellor_bookings: { data: [], error: null },
+        job_applications: { data: [makeAppRow({ status: 'interview', notes: 'Prepare SQL stories' })], error: null },
       },
-      maybeSingle: { resumes: { data: { id: 'cv-1', title: 'Ama CV', updated_at: new Date(NOW).toISOString() }, error: null } },
     });
-    renderPage();
+    const page = renderPage();
 
-    const row = await screen.findByRole('button', { name: /Graduate Analyst.*Open details/ });
+    const row = await screen.findByRole('button', { name: /Graduate Analyst.*Open dossier/ });
     fireEvent.click(row);
 
-    expect(await screen.findByText('Where you are')).toBeTruthy();
-    expect(screen.getByText('Recommended next step')).toBeTruthy();
-    expect(screen.getByText('Targeted CV')).toBeTruthy();
-    expect((screen.getByLabelText('Application notes') as HTMLTextAreaElement).value).toBe('Prepare SQL stories');
+    expect(page.getPath()).toBe('/applications/app-1');
   });
 
-  it('opens the record referenced by the ?application= deep link', async () => {
+  it('redirects the legacy ?application= deep link to the dossier, preserving filters', async () => {
     installSupabaseMock({
       tables: {
         job_applications: {
@@ -116,25 +119,19 @@ describe('Application Tracker page', () => {
           ],
           error: null,
         },
-        counsellor_bookings: { data: [], error: null },
       },
-      maybeSingle: { resumes: { data: null, error: null } },
     });
-    renderPage('/applications?application=app-2');
+    const page = renderPage('/applications?application=app-2&stage=offer&q=credit');
 
-    // The sheet opens directly on the offered application.
-    expect(await screen.findByText('Where you are')).toBeTruthy();
-    expect(screen.getByText(/Offer received/)).toBeTruthy();
-    expect(screen.getAllByText(/Credit Officer/).length).toBeGreaterThan(0);
+    expect(await screen.findByText('Credit Officer')).toBeTruthy();
+    expect(page.getPath()).toBe('/applications/app-2?q=credit&stage=offer');
   });
 
   it('flags rows whose posting is gone instead of hiding them', async () => {
     installSupabaseMock({
       tables: {
         job_applications: { data: [makeAppRow({ job: null })], error: null },
-        counsellor_bookings: { data: [], error: null },
       },
-      maybeSingle: { resumes: { data: null, error: null } },
     });
     renderPage();
 
@@ -153,9 +150,7 @@ describe('Application Tracker page', () => {
     installSupabaseMock({
       tables: {
         job_applications: { data: [makeAppRow()], error: null },
-        counsellor_bookings: { data: [], error: null },
       },
-      maybeSingle: { resumes: { data: null, error: null } },
     });
     fireEvent.click(screen.getByRole('button', { name: /Try again/i }));
     expect((await screen.findAllByText('Graduate Analyst')).length).toBeGreaterThan(0);
@@ -181,9 +176,7 @@ describe('Application Tracker page', () => {
     installSupabaseMock({
       tables: {
         job_applications: { data: [], error: null },
-        counsellor_bookings: { data: [], error: null },
       },
-      maybeSingle: { resumes: { data: null, error: null } },
     });
     renderPage();
 
@@ -195,10 +188,9 @@ describe('Application Tracker page', () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
     installSupabaseMock({ tables: {
       job_applications: { data: [makeAppRow({ id: 'app-1' }), makeAppRow({ id: 'app-2', job: { ...makeAppRow().job, title: 'Second role' } })], error: null },
-      resumes: { data: [], error: null }, mock_interviews: { data: [], error: null },
     }});
     renderPage();
-    const first = await screen.findByRole('button', { name: /Graduate Analyst.*Open details/i });
+    const first = await screen.findByRole('button', { name: /Graduate Analyst.*Open dossier/i });
     fireEvent.keyDown(first, { key: 'ArrowDown' });
     await new Promise((resolve) => requestAnimationFrame(resolve));
     expect(document.activeElement?.getAttribute('data-application-id')).toBe('app-2');
