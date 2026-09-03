@@ -62,6 +62,92 @@ export type Database = {
         }
         Relationships: []
       }
+      application_evidence_links: {
+        Row: {
+          created_at: string
+          evidence_id: string
+          id: string
+          relevance_note: string | null
+          requirement_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          evidence_id: string
+          id?: string
+          relevance_note?: string | null
+          requirement_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          evidence_id?: string
+          id?: string
+          relevance_note?: string | null
+          requirement_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_evidence_links_evidence_owner_fkey"
+            columns: ["evidence_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_items"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "application_evidence_links_requirement_owner_fkey"
+            columns: ["requirement_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "application_requirements"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      application_requirements: {
+        Row: {
+          application_id: string
+          created_at: string
+          detail: string | null
+          id: string
+          label: string
+          origin: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          label: string
+          origin: string
+          sort_order: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          label?: string
+          origin?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_requirements_application_owner_fkey"
+            columns: ["application_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "job_applications"
+            referencedColumns: ["id", "applicant_id"]
+          },
+        ]
+      }
       assessment_responses: {
         Row: {
           assessment_id: string
@@ -692,6 +778,109 @@ export type Database = {
           used_at?: string | null
         }
         Relationships: []
+      }
+      evidence_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          occurred_on: string | null
+          review_status: string
+          summary: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          occurred_on?: string | null
+          review_status?: string
+          summary: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          occurred_on?: string | null
+          review_status?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      evidence_sources: {
+        Row: {
+          created_at: string
+          entry_locator: string | null
+          evidence_id: string
+          id: string
+          interview_id: string | null
+          resume_id: string | null
+          source_excerpt: string
+          source_label: string
+          source_type: string
+          source_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_locator?: string | null
+          evidence_id: string
+          id?: string
+          interview_id?: string | null
+          resume_id?: string | null
+          source_excerpt: string
+          source_label: string
+          source_type: string
+          source_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_locator?: string | null
+          evidence_id?: string
+          id?: string
+          interview_id?: string | null
+          resume_id?: string | null
+          source_excerpt?: string
+          source_label?: string
+          source_type?: string
+          source_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_sources_evidence_owner_fkey"
+            columns: ["evidence_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_items"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "evidence_sources_interview_owner_fkey"
+            columns: ["interview_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "mock_interviews"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "evidence_sources_resume_owner_fkey"
+            columns: ["resume_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
       }
       job_applications: {
         Row: {
@@ -1513,10 +1702,56 @@ export type Database = {
         }
         Relationships: []
       }
+      resume_evidence_links: {
+        Row: {
+          created_at: string
+          cv_section: string
+          entry_locator: string
+          evidence_id: string
+          id: string
+          resume_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cv_section: string
+          entry_locator: string
+          evidence_id: string
+          id?: string
+          resume_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cv_section?: string
+          entry_locator?: string
+          evidence_id?: string
+          id?: string
+          resume_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_evidence_links_evidence_owner_fkey"
+            columns: ["evidence_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_items"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "resume_evidence_links_resume_owner_fkey"
+            columns: ["resume_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       resumes: {
         Row: {
           achievements: Json
           created_at: string
+          document_scope: string
           education: Json
           experience: Json
           id: string
@@ -1525,6 +1760,7 @@ export type Database = {
           projects: Json
           references_section: string | null
           skills: Json
+          source_resume_id: string | null
           template: string
           title: string
           updated_at: string
@@ -1533,6 +1769,7 @@ export type Database = {
         Insert: {
           achievements?: Json
           created_at?: string
+          document_scope?: string
           education?: Json
           experience?: Json
           id?: string
@@ -1541,6 +1778,7 @@ export type Database = {
           projects?: Json
           references_section?: string | null
           skills?: Json
+          source_resume_id?: string | null
           template?: string
           title?: string
           updated_at?: string
@@ -1549,6 +1787,7 @@ export type Database = {
         Update: {
           achievements?: Json
           created_at?: string
+          document_scope?: string
           education?: Json
           experience?: Json
           id?: string
@@ -1557,12 +1796,21 @@ export type Database = {
           projects?: Json
           references_section?: string | null
           skills?: Json
+          source_resume_id?: string | null
           template?: string
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "resumes_source_resume_id_fkey"
+            columns: ["source_resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_jobs: {
         Row: {
@@ -2147,6 +2395,23 @@ export type Database = {
       }
     }
     Functions: {
+      add_evidence_source: {
+        Args: {
+          p_entry_locator?: string
+          p_evidence_id: string
+          p_interview_id?: string
+          p_resume_id?: string
+          p_source_excerpt: string
+          p_source_label: string
+          p_source_type: string
+          p_source_url?: string
+        }
+        Returns: Json
+      }
+      add_manual_application_requirement: {
+        Args: { p_application_id: string; p_detail?: string; p_label: string }
+        Returns: Json
+      }
       admin_mentor_verification: {
         Args: {
           p_company_name?: string
@@ -2174,6 +2439,21 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      archive_evidence_item: { Args: { p_evidence_id: string }; Returns: Json }
+      confirm_evidence_item: { Args: { p_evidence_id: string }; Returns: Json }
+      create_application_cv: {
+        Args: { p_application_id: string; p_source_resume_id: string }
+        Returns: Json
+      }
+      create_evidence_item: {
+        Args: {
+          p_category: string
+          p_occurred_on?: string
+          p_summary: string
+          p_title: string
+        }
+        Returns: Json
       }
       create_mentorship_request: {
         Args: {
@@ -2235,8 +2515,29 @@ export type Database = {
         }
         Returns: boolean
       }
+      initialize_application_requirements: {
+        Args: { p_application_id: string }
+        Returns: Json
+      }
       initialize_my_profile_from_auth_metadata: { Args: never; Returns: string }
       is_counsellor_owner: { Args: { counsellor_id: string }; Returns: boolean }
+      link_evidence_to_requirement: {
+        Args: {
+          p_evidence_id: string
+          p_relevance_note?: string
+          p_requirement_id: string
+        }
+        Returns: Json
+      }
+      link_evidence_to_resume_entry: {
+        Args: {
+          p_cv_section: string
+          p_entry_locator: string
+          p_evidence_id: string
+          p_resume_id: string
+        }
+        Returns: Json
+      }
       list_mentor_profiles: {
         Args: never
         Returns: {
@@ -2276,6 +2577,11 @@ export type Database = {
           read_ct: number
         }[]
       }
+      remove_application_requirement: {
+        Args: { p_requirement_id: string }
+        Returns: Json
+      }
+      remove_evidence_source: { Args: { p_source_id: string }; Returns: Json }
       respond_to_mentorship_request: {
         Args: { p_decision: string; p_request_id: string }
         Returns: {
@@ -2324,6 +2630,29 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      unlink_evidence_from_requirement: {
+        Args: { p_evidence_id: string; p_requirement_id: string }
+        Returns: Json
+      }
+      unlink_evidence_from_resume_entry: {
+        Args: {
+          p_cv_section: string
+          p_entry_locator: string
+          p_evidence_id: string
+          p_resume_id: string
+        }
+        Returns: Json
+      }
+      update_evidence_item: {
+        Args: {
+          p_category?: string
+          p_evidence_id: string
+          p_occurred_on?: string
+          p_summary?: string
+          p_title?: string
+        }
+        Returns: Json
       }
       update_mentorship_request_status: {
         Args: { p_action: string; p_request_id: string }
