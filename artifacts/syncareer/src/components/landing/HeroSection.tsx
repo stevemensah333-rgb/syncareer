@@ -50,7 +50,7 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
               <div className="flex items-stretch gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none lg:gap-3 lg:overflow-visible lg:pb-0">
                 {JOURNEY_STEPS.map((step, index) => (
                   <div key={step.id} className="flex items-center gap-2 snap-start lg:gap-3" role="listitem">
-                    <div className="group flex min-w-[120px] flex-col items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5 transition-all duration-150 hover:border-primary/30 hover:bg-primary/[0.04] hover:shadow-card lg:min-w-0 lg:px-4 lg:py-3">
+                    <div className="group flex min-w-[120px] flex-col items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5 transition-[border-color,background-color] duration-150 hover:border-primary/30 hover:bg-primary/[0.04] motion-reduce:transition-none lg:min-w-0 lg:px-4 lg:py-3">
                       <span className="text-xs font-semibold text-primary uppercase tracking-wider transition-colors duration-150 group-hover:text-primary-hover">{step.label}</span>
                       <span className="text-[11px] leading-tight text-muted-foreground text-center max-w-[110px]">{step.description}</span>
                     </div>

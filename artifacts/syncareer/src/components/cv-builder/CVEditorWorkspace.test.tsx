@@ -153,12 +153,10 @@ describe('CVEditorWorkspace interaction & professional workbench', () => {
     expect(screen.getByRole('heading', { level: 2, name: /work experience/i })).toBeTruthy();
     expect(screen.getByRole('heading', { level: 2, name: /education & honors/i })).toBeTruthy();
 
-    // Collapse a section
-    const expHeader = screen.getByRole('heading', { level: 2, name: /work experience/i }).closest('header');
-    if (expHeader) {
-      fireEvent.click(expHeader);
-      expect(screen.getByText('Click to expand')).toBeTruthy();
-    }
+    const sectionToggle = screen.getByRole('heading', { level: 2, name: /work experience/i }).closest('button');
+    expect(sectionToggle).toBeTruthy();
+    fireEvent.click(sectionToggle!);
+    expect(screen.getByText('Expand')).toBeTruthy();
   });
 
   it('provides contextual AI assistance trigger and supports undoing an assisted change', async () => {

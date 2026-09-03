@@ -529,7 +529,7 @@ export function CVEditorWorkspace({
 
               {/* Clear Saving -> Saved Transition */}
               <div
-                className="flex items-center gap-1.5 rounded-control border border-border bg-secondary px-2.5 py-1 text-xs transition-colors duration-150"
+                className={`flex items-center gap-1.5 rounded-control border border-border bg-secondary px-2.5 py-1 text-xs transition-colors duration-150 motion-reduce:transition-none ${saveState === 'saved' ? 'state-saved' : ''}`}
                 role="status"
                 aria-live="polite"
               >
@@ -760,25 +760,29 @@ export function CVEditorWorkspace({
                   const Icon = sec.icon;
                   return (
                     <section key={sec.key} className="rounded-surface border border-border bg-card">
-                      <header
-                        onClick={() => toggleSectionCollapse(sec.key)}
-                        className="flex items-center justify-between p-3 sm:px-4 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          {isCollapsed ? (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                          )}
-                          <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                          <h2 className="text-sm font-semibold text-foreground">{sec.label}</h2>
-                          {sec.filled && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {isCollapsed ? 'Click to expand' : 'Collapse'}
-                        </span>
+                      <header>
+                        <button
+                          type="button"
+                          onClick={() => toggleSectionCollapse(sec.key)}
+                          aria-expanded={!isCollapsed}
+                          className="flex w-full items-center justify-between p-3 sm:px-4 text-left hover:bg-secondary/40 transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            {isCollapsed ? (
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                            )}
+                            <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                            <h2 className="text-sm font-semibold text-foreground">{sec.label}</h2>
+                            {sec.filled && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {isCollapsed ? 'Expand' : 'Collapse'}
+                          </span>
+                        </button>
                       </header>
-                      {!isCollapsed && (
+                      <div className="cv-section-body" data-collapsed={isCollapsed ? 'true' : 'false'}>
                         <div className="border-t border-border-subtle p-3 sm:p-5">
                           {sec.key === 'personal' && (
                             <CVFormPersonal data={cvData.personal} onChange={updatePersonal} errors={fieldErrors} />
@@ -832,7 +836,7 @@ export function CVEditorWorkspace({
                             </div>
                           )}
                         </div>
-                      )}
+                      </div>
                     </section>
                   );
                 })}

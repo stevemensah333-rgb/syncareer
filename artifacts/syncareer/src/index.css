@@ -139,6 +139,7 @@
     --motion-slow: 180ms;
     --motion-panel: 200ms;
     --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-out: cubic-bezier(0.2, 0, 0, 1);
 
     --mode-section-gap: var(--section-gap);
     --mode-panel-radius: var(--radius-surface);
@@ -519,7 +520,7 @@
   }
 
   .landing-application-record [role='tabpanel'] {
-    animation: landing-record-panel-forward 190ms ease-out;
+    animation: landing-record-panel-forward var(--motion-slow) var(--ease-standard);
   }
 
   .landing-application-record [role='tabpanel'][data-direction='backward'] {
@@ -534,7 +535,7 @@
     border-radius: 999px;
     background: hsl(var(--primary));
     transform: scaleX(0);
-    transition: transform 180ms ease-out;
+    transition: transform var(--motion-slow) var(--ease-standard);
   }
 
   .landing-record-tab[aria-selected='true'] .landing-record-tab-indicator {
@@ -660,7 +661,7 @@
     @keyframes scroll-reveal {
       from {
         opacity: 0;
-        transform: translateY(24px);
+        transform: translateY(8px);
       }
       to {
         opacity: 1;
@@ -901,12 +902,14 @@
     border-radius: var(--radius-surface);
   }
 
-  a.discover-object:hover,
-  button.discover-object:hover,
-  .discover-object[data-interactive='true']:hover {
-    border-color: hsl(var(--primary) / 0.5);
-    box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.05), 0 6px 16px -8px rgba(16, 24, 40, 0.16);
-    transform: translateY(-2px);
+  @media (hover: hover) and (pointer: fine) {
+    a.discover-object:hover,
+    button.discover-object:hover,
+    .discover-object[data-interactive='true']:hover {
+      border-color: hsl(var(--primary) / 0.5);
+      box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.05), 0 6px 16px -8px rgba(16, 24, 40, 0.16);
+      transform: translateY(-1px);
+    }
   }
 
   a.discover-object:focus-visible,
@@ -936,7 +939,7 @@
   /* Section entrance — a single, gentle rise used once on mount, staggered
      by inline delay. Never loops; disabled under reduced motion. */
   .discover-enter {
-    animation: discover-enter 320ms var(--ease-standard) both;
+    animation: discover-enter var(--motion-slow) var(--ease-standard) both;
   }
 
   @keyframes discover-enter {
@@ -952,6 +955,70 @@
     }
     .discover-object:hover {
       transform: none;
+    }
+  }
+
+  /* ---------------------------------------------------------------
+   * MOTION INVENTORY — compositor-friendly, 120–180ms, cause/effect.
+   *
+   * Trigger → response → duration → easing → purpose → reduced-motion
+   * See artifacts/syncareer/src/components/ui/motionInventory.test.ts
+   * --------------------------------------------------------------- */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .route-enter {
+    animation: fade-in var(--motion-base) var(--ease-standard) both;
+  }
+
+  .interview-question-enter {
+    animation: interview-question-enter var(--motion-base) var(--ease-standard) both;
+  }
+
+  @keyframes interview-question-enter {
+    from { opacity: 0.55; }
+    to { opacity: 1; }
+  }
+
+  .cv-section-body {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows var(--motion-base) var(--ease-standard);
+  }
+
+  .cv-section-body[data-collapsed='true'] {
+    grid-template-rows: 0fr;
+  }
+
+  .cv-section-body > * {
+    overflow: hidden;
+  }
+
+  .state-saved {
+    animation: state-saved var(--motion-slow) var(--ease-standard) both;
+  }
+
+  @keyframes state-saved {
+    from { background-color: hsl(var(--success) / 0.12); }
+    to { background-color: transparent; }
+  }
+
+  .nav-active-mark {
+    transform-origin: center;
+    transition: opacity var(--motion-fast) var(--ease-standard),
+                transform var(--motion-fast) var(--ease-standard);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .route-enter,
+    .interview-question-enter,
+    .state-saved {
+      animation: none !important;
+    }
+    .cv-section-body {
+      transition: none;
     }
   }
 }

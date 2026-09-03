@@ -157,9 +157,16 @@ selected surfaces, not lavender `--accent`. Overlay motion is opacity and
 transform only — dialogs fade, they do not scale.
 
 Motion tokens: `--motion-fast` 120ms, `--motion-base` 150ms, `--motion-slow`
-180ms, `--motion-panel` 200ms. Tailwind: `duration-150`, `duration-fast`,
-`duration-panel`. No spring easing; `prefers-reduced-motion` collapses motion
-globally.
+180ms, `--motion-panel` 200ms, `--ease-standard` `cubic-bezier(0.2, 0, 0, 1)`.
+Tailwind: `duration-150`, `duration-fast`, `duration-panel`. No spring easing;
+`prefers-reduced-motion` collapses motion globally.
+
+Shared motion classes: `.route-enter` (page continuity), `.interview-question-enter`
+(question change), `.cv-section-body` (section expand via `grid-template-rows`),
+`.state-saved` (success flash), `.dossier-inspector-enter`, `.dossier-flash`,
+`.scroll-reveal` (CSS `animation-timeline: view()` when supported, 8px rise).
+Hover lift on Discover objects is limited to `(hover: hover) and (pointer: fine)`
+and 1px — never the only way to act. Drawers do not scale the page background.
 
 ## Dossier rule
 
