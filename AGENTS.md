@@ -4,202 +4,180 @@
 
 Syncareer helps African university students and recent graduates turn real opportunities into stronger, evidence-based applications.
 
-The primary product journey is:
-
-> saved opportunity → application workspace → tailored CV → interview preparation → application outcome → learning
+Primary journey: **saved opportunity → application workspace → tailored CV → interview preparation → outcome → learning.**
 
 Prefer depth and continuity around this journey over adding disconnected tools.
 
-## Product and repository
+## Repository and platform facts
 
-- The active frontend currently builds from `artifacts/syncareer`. Do not remove an application directory merely because its name contains `artifacts`; confirm imports, routes, build inputs, and runtime use first.
-- The backend is Supabase Auth, Postgres/PostgREST/RLS, database functions, and Supabase Edge Functions. Do not assume an Express server exists unless the repository later contains and uses one.
-- The current hosted backend was created and is managed as Lovable Cloud. Its Supabase-style project reference is not proof that the developer's personal Supabase account has Dashboard or Management API ownership.
-- Lovable intentionally remains part of the operating workflow. It provides useful Supabase integration, OAuth, AI gateway, email/webhook, analytics/SEO, deployment, and non-technical-founder conveniences where verified.
-
-## Product boundaries
-
-- The core application must remain understandable without knowledge of Lovable internals.
-- Keep business and domain logic separate from vendor integration details when a real integration seam exists.
-- Do not create abstractions solely to make every vendor theoretically replaceable.
-- Do not add speculative features, fake data, fake activity, fake testimonials, fake partners, invented outcome statistics, or unverifiable marketing claims.
-- Do not introduce generic AI chat surfaces when contextual assistance inside an existing workflow is sufficient.
-- Do not copy CareerOS, FlyRank, Supabase, Anthropic, Vercel, Linear, or any other product. Design references may inform principles, not wording, layouts, branding, or distinctive compositions.
+- The application builds from `artifacts/syncareer/` (React 19, TypeScript, Vite, Tailwind, react-router-dom). Root `src/` is Lovable's auto-sync target for generated Supabase files, not a build input. Do not delete a directory merely because its name contains `artifacts`.
+- The backend is Supabase Auth + Postgres/PostgREST/RLS + database functions + Edge Functions. There is no in-repo HTTP server.
+- The hosted backend is **Lovable Cloud**, which remains an intentional part of the workflow (Supabase integration, OAuth, AI gateway, email/webhooks, analytics, deployment). A Supabase-style project ref is not proof of personal Supabase ownership.
+- Replit is retired. Legacy Replit files may be removed only after confirming no build, runtime, deployment, or docs path uses them.
+- `docs/archive` is historical, not authoritative. `docs/` holds current architecture, design tokens, test matrix, and runbooks.
 
 ## Read before changing
 
-- Inspect the current files and call sites before recommending or making changes. Do not rely on historical docs alone.
-- Treat `docs/archive` as historical, not authoritative.
-- When code, generated types, migrations, docs, and live-platform behavior disagree, stop and identify the sources of truth. Do not guess.
-- For Supabase schema or deployed-function work, distinguish repository evidence from live-project evidence.
+- Inspect current files and call sites before recommending or making changes. Do not rely on docs alone.
+- When code, generated types, migrations, docs, and live-platform behaviour disagree, stop and identify the source of truth. Do not guess.
+- For schema or deployed-function work, distinguish repository evidence from live-project evidence. If a task is blocked by missing live evidence or credentials, report the exact blocker instead of inventing a substitute.
 
 ## Engineering priorities
 
-- Human maintainability is the highest priority. A competent engineer must be able to understand, test, debug, and extend the codebase without knowing the prompts or AI tools that created it.
+Human maintainability is the highest priority. A competent engineer must be able to read, test, debug, and extend the code without knowing which AI or prompt produced it.
+
 - Prefer simple modules, explicit business logic, obvious data flow, strong database constraints, focused tests, and clear integration boundaries.
 - Treat unnecessary complexity as a defect.
-- Do not introduce microservices, CQRS, event buses, generic repositories, dependency-injection frameworks, speculative caching, provider-neutral frameworks, or abstractions with one implementation unless a demonstrated problem requires them.
-- Do not introduce an abstraction merely to avoid a few duplicated lines.
-- Do not rewrite working domains when a targeted repair is safer.
+- Make the smallest coherent change. Do not rewrite a working domain when a targeted repair is safer, and do not combine behaviour changes with broad refactoring.
+- Do not silently swallow errors. Do not claim success based only on a passing build.
 
-## Lovable compatibility
+### No speculative or defensive slop
 
-Lovable remains intentionally part of Syncareer's operating workflow. Do not treat all Lovable-specific code as residue.
+Write the code the current requirement needs — nothing more.
 
-Before removing or restructuring a Lovable-specific artifact, classify it as:
-
-1. `ACTIVE PLATFORM DEPENDENCY`
-2. `USEFUL INTEGRATION`
-3. `HISTORICAL COMPATIBILITY`
-4. `GENERATED CODE DEBT`
-5. `UNKNOWN`
-
-- Do not remove categories 1, 2, or 5 without explicit approval.
-- Verify current usage, the capability supported, and the operational effect of removal.
-- If safety cannot be determined from repository evidence, classify the artifact as `UNKNOWN` and stop before removal.
-- Preserve useful Lovable capabilities, including existing Supabase integration, database workflow, analytics/integrations, SEO conveniences, email/webhook or AI gateway integrations, and other confirmed operational infrastructure.
-- Keep Lovable-specific concerns near real integration seams such as OAuth, AI gateway, email, webhooks, generated Supabase files, or deployment configuration.
-- Keep core Syncareer domain code understandable without knowledge of Lovable internals.
-- Do not add vendor-neutral adapters unless there is a real integration seam with meaningful application logic to isolate.
+- Do not handle edge cases that cannot occur given the actual types, schema constraints, and call sites. Let impossible states be impossible instead of guarding them.
+- Do not add fallbacks, retries, caches, timeouts, feature flags, or `try/catch` around code that cannot meaningfully fail. Errors that cannot be handled locally should surface.
+- Do not add optional chaining, null coalescing, or defensive casts to satisfy a type the data already guarantees; fix the type instead.
+- Do not add microservices, CQRS, event buses, generic repositories, DI frameworks, provider-neutral adapters, or abstractions with one implementation unless a demonstrated problem requires them. Do not abstract to avoid a few duplicated lines.
+- Do not add configuration, options objects, or extension points for hypothetical future callers.
+- Do not add UI, state, or data fetching because a library offers it or the data happens to exist.
+- Delete dead code rather than commenting it out. Comment *why* a non-obvious boundary exists, never what obvious syntax does.
+- Do not add speculative features, fake data, fake activity, fake testimonials, fake partners, invented statistics, or unverifiable marketing claims.
 
 ## Supabase and security
 
-- The existing Supabase project was created and may be managed through Lovable.
-- Do not assume the local operator can run `supabase link`.
-- Do not relink, replace, reset, migrate, seed, or modify a remote Supabase project unless explicitly authorised.
-- Never expose service-role keys or secrets in browser code, logs, documentation, commits, or generated output. Never expose or log payment secrets, Lovable API keys, webhook secrets, or user tokens either.
-- Browser `VITE_*` values may be public configuration, but do not move server secrets into them.
-- Preserve existing authentication, RLS, storage, Edge Functions, migrations, and schema integration unless the task explicitly requires a verified change.
-- Database changes require an explicit migration, rollback explanation, and verification plan. Do not apply them remotely without approval.
-- Treat browser route guards as UX only. Authorization must be enforced by RLS, database constraints/functions, or authenticated Edge Functions.
+- Never expose or log service-role keys, payment secrets, Lovable API keys, webhook secrets, or user tokens in browser code, logs, docs, commits, or output. Browser `VITE_*` values may be public configuration; server secrets must never move into them.
+- Authorization is enforced by RLS, database constraints/functions, or authenticated Edge Functions. Browser route guards are UX only.
 - Never weaken RLS, grants, trigger protections, payment verification, usage enforcement, or role checks to make a test pass.
-- Do not edit or reconstruct deployed-only Edge Functions from frontend call sites. Recover exact deployed source first.
-- Do not hand-create a database baseline from generated TypeScript types. Reconcile against the live schema first.
-- Do not run `supabase link`, `db pull`, `db push`, `migration repair`, function deployment, or other remote Supabase CLI commands against the Lovable Cloud project unless direct ownership/access is deliberately established and the exact operation is separately approved.
-- Use Lovable Cloud and its supported GitHub synchronization/export surfaces as the current hosted-backend authority. Treat migration to a developer-owned Supabase project as a separate future migration project, not routine cleanup.
-- Every billable AI or payment operation must enforce access server-side. Client checks are not security controls.
-- Payment verification must confirm provider status, amount, currency, plan, user ownership, and replay/idempotency before granting access.
+- Every billable AI or payment operation must be enforced server-side. Payment verification must confirm provider status, amount, currency, plan, user ownership, and replay/idempotency before granting access.
+- Preserve existing auth, RLS, storage, Edge Functions, migrations, and schema integration unless the task requires a verified change.
+- Database changes require an explicit migration, rollback explanation, and verification plan. Do not apply them remotely without approval.
+- Do not run `supabase link`, `db pull`, `db push`, `migration repair`, or function deployment against the Lovable Cloud project unless ownership is established and the exact operation is separately approved. Migration to a developer-owned Supabase project is a separate project, not routine cleanup.
+- Do not reconstruct deployed-only Edge Functions from frontend call sites; recover the deployed source first. Do not hand-create a database baseline from generated TypeScript types.
 
-## Retired platform artifacts
+## Lovable compatibility
 
-Replit is no longer part of the intended workflow. Legacy Replit artifacts may still be wired into the repository, so Replit-specific files, configuration, and dependencies may be removed only after confirming that no active build, runtime, deployment, or documentation path uses them.
+Lovable-specific code is not automatically residue. Before removing or restructuring it, classify it as `ACTIVE PLATFORM DEPENDENCY`, `USEFUL INTEGRATION`, `HISTORICAL COMPATIBILITY`, `GENERATED CODE DEBT`, or `UNKNOWN`. Do not remove the first two or `UNKNOWN` without explicit approval; if safety cannot be determined from repository evidence, classify as `UNKNOWN` and stop.
 
-Examples include `.replit`, `.replitignore`, `replit.md`, `.replit-artifact`, and `@replit/*`.
+Keep Lovable concerns near real integration seams (OAuth, AI gateway, email, webhooks, generated Supabase files, deployment). Core Syncareer domain code must stay understandable without knowledge of Lovable internals.
 
-Do not remove an entire application directory merely because its name contains `artifacts`. Confirm imports, routes, build inputs, and runtime use first.
+## TypeScript, dependencies, and generated code
 
-## Interface direction
+- Do not weaken compiler options, add blanket ignores, or use broad `any`/casts to obtain a green typecheck. Fix the runtime assumption, schema drift, or interface.
+- Validate genuinely untrusted data at runtime: form boundaries, Edge Function requests, external APIs, AI output, webhook payloads, stored JSON. Do not re-validate data already validated at the boundary.
+- Generated Supabase types are artifacts; establish the regeneration workflow before editing them by hand. Keep the root and app copies in sync.
+- Use the repository's authoritative package manager (Corepack pnpm, frozen lockfile). Before adding a production dependency, verify platform APIs and current dependencies do not already solve the need.
 
-The signed-in product should feel like active, credible software rather than a sparse marketing site or generic AI dashboard.
+---
 
-Use these principles:
+# Syncareer Product & Interface Doctrine
 
-- bright, calm working surfaces;
-- compact but readable information density;
-- clear hierarchy and predictable placement;
-- persistent navigation on desktop;
-- progressive disclosure;
-- contextual side panels or previews where they preserve user context;
-- visible next actions;
-- explicit loading, empty, success, warning, and error states;
-- restrained motion;
-- accessible keyboard and touch behaviour;
-- responsive layouts that do not depend on hover.
+Design policy. It sits alongside the engineering policy above and never overrides security, data-truthfulness, or maintainability rules.
 
-Visual influences may include:
+## Product definition
 
-- CareerOS for useful density, interconnected career objects, and progressive disclosure;
-- Supabase for transparent system states and functional cards;
-- Vercel for spacing and interface precision;
-- Anthropic for warmth and typography;
-- Linear for interaction consistency and keyboard-friendly workflows.
+Syncareer is a **career operating environment**, not a tool collection. Every screen belongs to one of three verbs:
 
-Do not copy their visual identities.
+- **Discover** — opportunities, companies, mentors, career exploration.
+- **Prove** — evidence, requirements, applications, CV, application readiness.
+- **Advance** — interview, assessment, skills, feedback, next actions.
 
-### Suggested visual tokens
+Changes must strengthen `discover → prove → advance`. Adding a screen without connecting career objects is a regression.
 
-Treat these as direction rather than a requirement if an established token system already exists:
+Syncareer must not read as a generic AI startup, an AI wrapper, a student CRUD dashboard, a template SaaS app, a bag of unrelated pages, or a clone of CareerOS, DataCamp, Coursera, Linear, Vercel, or Supabase.
 
-- canvas: warm near-white;
-- surface: white;
-- text: dark navy-charcoal;
-- primary: cobalt;
-- positive/progress: teal or mint;
-- attention/deadline: restrained amber;
-- guided assistance: occasional soft lavender;
-- borders: quiet neutral;
-- errors: accessible red.
+## Reference principle
 
-Use semantic design tokens rather than scattering raw colours through components.
+External products may be studied for **principles only**: CareerOS for career density, interconnected objects, and progressive disclosure; DataCamp for a deliberate token system and information hierarchy; Coursera for progression, states, and guided workflows. Never copy layouts, colours, wording, branding, or distinctive visual compositions.
 
-## Interaction rules
+## Visual identity
 
-- Hover effects must communicate interactivity or reveal useful secondary context.
-- Anything available on hover must also be reachable by keyboard and touch.
-- Essential actions must never exist only on hover.
-- Prefer approximately 120–180ms transitions.
-- Avoid excessive scaling, glowing gradients, animated AI sparkles, decorative motion, and large layout shifts.
-- Tooltips are for short explanations. Rich previews are for structured contextual information.
-- Use one consistent card-preview pattern rather than unrelated hover implementations.
+- A recognisable application canvas: subtle blue/blue-grey environmental background, white work surfaces, deep blue/teal brand identity.
+- Restrained semantic accents, strong typography, deliberate whitespace, moderate geometry, restrained borders, very limited shadows.
+- No gratuitous gradients, no glassmorphism, no animated AI decoration, no visual noise.
+- Distinctiveness comes from composition, interaction, typography, colour relationships, visual objects, progression language, and application/evidence relationships — never from unusual CSS tricks.
+- `artifacts/syncareer/src/index.css` and `tailwind.config.ts` are the single token source of truth (see `docs/DESIGN_TOKENS.md`). Consume semantic tokens; never introduce page-local palettes, type scales, or radii.
 
-## TypeScript and validation
+## Three visual modes, one product
 
-- Do not weaken TypeScript compiler options, add blanket ignores, or use broad `any` types or casts to obtain a green typecheck.
-- Fix type errors by correcting runtime assumptions, schema drift, or interfaces.
-- Validate untrusted data at runtime: form boundaries, Edge Function requests, external APIs, AI output, webhook payloads, and stored JSON where appropriate.
-- Generated Supabase types are generated artifacts. Establish their source and regeneration workflow before editing them manually.
+| Mode | Surfaces | Character |
+|---|---|---|
+| **Discover** | Dashboard, Opportunities, Mentors, exploration | spacious, visual, approachable, lighter density, recognisable career objects |
+| **Prove** | Applications, requirements, evidence, review, tailoring | dossier/workspace, precise, information-dense, evidence-first, strong context preservation |
+| **Advance** | Interview, Assessment, Skills, development workflows | progressive, interactive, focused, feedback-oriented, clear progression |
 
-## Dependencies and generated code
+All modes share typography, colour, spacing scale, control primitives, iconography, status semantics, focus states, accessibility behaviour, responsive behaviour, and motion principles — but must not be forced into identical layouts. **Distinct workspace, same product** is a core rule.
 
-- Use the repository's confirmed authoritative package manager. Until the package-manager cleanup is complete, do not delete lockfiles solely because they look redundant.
-- Before adding a production dependency, verify that the platform or native APIs and current dependencies do not already solve the need.
-- Do not manually edit generated files unless the task explicitly establishes that as the supported workflow.
-- Preserve Lovable compatibility when it has verified operational value.
+## Dossier rule
 
-## Change discipline
+The dossier is a signature pattern for Prove mode (`src/components/dossier/`, `src/features/application-dossier/`). Preserve and strengthen it, and keep it scoped: Dashboard, Opportunities, Interview, Assessment, Mentors, and Landing must not become documents. `dossierScope.test.ts` encodes this; keep it passing.
 
-Before changing code:
+Terminology stays plain: Application, Requirements, Evidence, Progress, Next step, Activity. Do not invent vocabulary where an ordinary word works.
 
-1. Inspect the relevant routes, components, data flow, tests, and existing conventions.
-2. Identify which behaviour is real, mocked, incomplete, or inaccessible.
-3. Make the smallest coherent change.
-4. Preserve working integrations.
-5. Do not silently swallow errors.
-6. Do not claim success based only on a build passing.
+## Human design rule
 
-Additionally:
+Every visible element must answer at least one of: what does this tell me? what can I do with it? what state is it communicating? what context does it preserve?
 
-- Keep each branch and commit focused on one stage or domain.
-- Do not combine behavior changes with broad refactoring.
-- Preserve unrelated user changes and platform files.
-- Do not deploy, merge, rotate secrets, mutate production data, apply remote migrations, modify production infrastructure, or remove live integrations without explicit user authorization.
-- For destructive or irreversible work, inspect exact targets and stop for approval.
-- If a task is blocked by missing live Supabase/Lovable evidence or credentials, report the exact blocker and required user action instead of inventing a substitute.
+Show explicit loading, empty, success, warning, and error states. Keep hierarchy clear, placement predictable, navigation persistent on desktop, and next actions visible. Use progressive disclosure and contextual panels/previews that preserve context.
 
-## Verification before finishing
+## AI principle
 
-- Run the existing frozen-install command.
-- Run typecheck.
-- Run relevant tests.
-- Run the full test suite when practical.
-- Run the production build.
-- Run database/RLS or Edge Function tests when those areas change.
+AI is embedded intelligence, not the brand. Prefer contextual suggestions, explanations, recommendations, evidence guidance, and feedback inside the workflow. Avoid standalone AI chat surfaces where in-workflow assistance suffices, plus AI avatars, sparkles, and repeated "AI-powered" labelling.
+
+## Interaction and motion
+
+- Motion communicates cause and effect, hierarchy, continuity, state, progress, and feedback. Transitions ~120–180ms. Respect `prefers-reduced-motion`.
+- Avoid motion that distracts, blocks interaction, shifts layout, adds cognitive noise, burns CPU, or feels like a demo.
+- Hover must only communicate interactivity or reveal secondary context; anything on hover must also be reachable by keyboard and touch. Essential actions never live on hover alone.
+- Tooltips are short explanations; rich previews carry structured context. Use one consistent card-preview pattern.
+
+## Performance
+
+Prefer CSS transforms/opacity, lightweight transitions, lazy loading, reserved image dimensions, and minimal client-side JavaScript for visual effects. Do not add large animation libraries without demonstrated need.
+
+## Accessibility
+
+Keyboard access, visible focus, semantic HTML, sufficient contrast, meaningful labels, touch-friendly targets, reduced-motion support, and screen-reader compatibility are non-negotiable.
+
+## Responsive
+
+Mobile is a deliberate layout, not a compressed desktop. At any viewport: exactly one global navigation mechanism, one contextual navigation mechanism, no unnecessary horizontal navigation, no hover-dependent functionality.
+
+## SEO and truthfulness
+
+Public pages are search-friendly; authenticated pages must not be unintentionally indexed. Maintain unique titles, useful descriptions, canonical URLs, semantic headings, Open Graph metadata, sitemap, robots rules, and structured data only where visible content supports it.
+
+Never fabricate ratings, testimonials, user counts, partner logos, employment outcomes, success percentages, ATS-performance claims, or customer numbers.
+
+---
+
+# Verification and done
+
+## Before finishing
+
+- Run the frozen install, `typecheck`, relevant tests (full suite when practical), and the production build. Run database/RLS or Edge Function tests when those areas change.
 - Inspect the final diff for accidental generated files, secrets, lockfile churn, unrelated formatting, weakened validation, and unnecessary abstractions.
-- Report changed files, exact test commands and outcomes, remaining risks, anything not verified, and any required user action.
-- Do not claim success if a required check was skipped or already failing. State whether failures are pre-existing or introduced.
+- Do not deploy, merge, rotate secrets, mutate production data, apply remote migrations, or remove live integrations without explicit authorization. For destructive work, inspect exact targets and stop for approval.
+
+Authoritative commands (repo root):
+
+```bash
+corepack pnpm install --config.verify-deps-before-run=false --frozen-lockfile
+corepack pnpm run typecheck        # must pass
+corepack pnpm run test             # vitest
+corepack pnpm run build            # production build
+corepack pnpm run schema:repo:smoke
+corepack pnpm run schema:types:check
+```
 
 ## Documentation
 
-- Update current architecture/runbook documentation when behavior or operating procedures change.
-- Do not present archived plans as current architecture.
-- Document why a non-obvious integration or security boundary exists, not what obvious code syntax does.
-- When an AI session exposes a repeated repository-specific mistake, propose a concise `AGENTS.md` update; do not grow this file with one-off task details.
+Update current architecture/runbook docs when behaviour or operating procedures change. Do not present archived plans as current architecture. When a session exposes a repeated repository-specific mistake, propose a concise `AGENTS.md` update rather than growing this file with one-off details.
 
 ## Definition of done
 
-- Requested behavior is implemented with the smallest sensible change.
-- Relevant tests exist and pass.
-- Typecheck and build status are honestly reported.
-- Security, RLS, payment, AI-cost, and platform-integration boundaries are preserved.
+- Requested behaviour implemented with the smallest sensible change, and no code beyond what it requires.
+- Relevant tests exist and pass; typecheck and build status honestly reported, stating whether failures are pre-existing or introduced.
+- Security, RLS, payment, AI-cost, and platform-integration boundaries preserved.
 - Documentation matches the resulting system.
 - The final response lists changed files, verification performed, remaining risks, and any user action still required.
