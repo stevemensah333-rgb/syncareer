@@ -45,6 +45,7 @@ const InterviewSimulator = lazy(() => import("./pages/InterviewSimulator"));
 const ApplicationTracker = lazy(() => import("./pages/ApplicationTracker"));
 const ApplicationDossier = lazy(() => import("./pages/ApplicationDossier"));
 const ApplicationCVEditor = lazy(() => import("./pages/ApplicationCVEditor"));
+const ApplicationInterview = lazy(() => import("./pages/ApplicationInterview"));
 const CVBuilder = lazy(() => import("./pages/CVBuilder"));
 const Build = lazy(() => import("./pages/Build"));
 const Practice = lazy(() => import("./pages/Practice"));
@@ -222,6 +223,9 @@ const AppContent = () => (
               } />
               <Route path="/applications/:applicationId/cv" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><ApplicationCVEditor /></RoleRoute></ProtectedRoute>
+              } />
+              <Route path="/applications/:applicationId/interview" element={
+                <ProtectedRoute><RoleRoute allowedRoles={['student']}><ApplicationInterview /></RoleRoute></ProtectedRoute>
               } />
               <Route path="/cv-builder" element={
                 <ProtectedRoute><RoleRoute allowedRoles={['student']}><CVBuilder /></RoleRoute></ProtectedRoute>

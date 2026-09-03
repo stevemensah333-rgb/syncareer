@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Phone, Clock, Zap, Target, Lock, Sparkles, Trash2, History, Briefcase, MapPin, ArrowRight } from 'lucide-react';
+import { CheckCircle, Phone, Clock, Zap, Target, Lock, Trash2, History, Briefcase, MapPin, ArrowRight } from 'lucide-react';
 
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -331,11 +331,11 @@ const InterviewSimulator = () => {
                     onClick={isPremium ? startInterview : () => navigate('/pricing')}
                     aria-label="Start voice interview session"
                   >
-                    {isPremium ? (
-                      <><Phone className="h-4 w-4 mr-2" aria-hidden="true" />Start Voice Interview</>
-                    ) : (
-                      <><Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />Upgrade to Unlock</>
-                    )}
+                      {isPremium ? (
+                        <><Phone className="h-4 w-4 mr-2" aria-hidden="true" />Start Voice Interview</>
+                      ) : (
+                        <><Lock className="h-4 w-4 mr-2" aria-hidden="true" />Upgrade to Unlock</>
+                      )}
                   </Button>
                 </CardContent>
               </Card>

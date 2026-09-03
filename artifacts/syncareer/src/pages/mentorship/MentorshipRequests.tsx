@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ExternalLink, Loader2, Mail } from 'lucide-react';
+import { ExternalLink, Mail } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RecordState, WorkingDocument } from '@/components/dossier';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { mentorshipApi } from '@/features/mentorship/api';
 import { MENTORSHIP_REQUEST_TYPES, type MentorshipRequest } from '@/features/mentorship/types';
@@ -13,6 +12,12 @@ import { toast } from 'sonner';
 import { CVPreview } from '@/components/cv-builder/CVPreview';
 import { resumeRowToCVData } from '@/features/cv-builder/persistence';
 
+/**
+ * Request inbox shared by students (their requests) and mentors (incoming).
+ * Ruled record sections; contact details and CV contents are revealed only
+ * for accepted requests through the request-context operation, exactly as
+ * before — this restyle changes presentation only.
+ */
 export default function MentorshipRequests() {
   const { profile } = useUserProfile();
   const mentor = profile?.user_type === 'career_counsellor';
@@ -26,6 +31,53 @@ export default function MentorshipRequests() {
   const groups = useMemo(() => ({ pending: requests.filter((r) => r.status === 'pending'), active: requests.filter((r) => r.status === 'accepted'), closed: requests.filter((r) => ['declined','withdrawn','completed'].includes(r.status)) }), [requests]);
   const act = async (request: MentorshipRequest, action: 'accepted' | 'declined' | 'withdraw' | 'complete') => { setBusy(request.id); try { if (action === 'accepted' || action === 'declined') await mentorshipApi.respond(request.id, action); else await mentorshipApi.updateStatus(request.id, action); await load(); toast.success('Request updated'); } catch (error) { toast.error(error instanceof Error ? error.message : 'Request could not be updated.'); } finally { setBusy(null); } };
   const reveal = async (request: MentorshipRequest) => { try { const context = await mentorshipApi.requestContext(request.id); if (typeof context.contactEmail === 'string') setContacts((current) => ({ ...current, [request.id]: context.contactEmail as string })); if (context.resume && typeof context.resume === 'object') setCvContext({ title: request.resume_title ?? 'Shared CV', data: resumeRowToCVData(context.resume as Parameters<typeof resumeRowToCVData>[0]) }); } catch { toast.error('Accepted request details could not be loaded.'); } };
-  const list = (items: MentorshipRequest[]) => items.length ? <div className="space-y-3">{items.map((request) => <Card key={request.id}><CardContent className="space-y-3 p-5"><div className="flex flex-wrap items-start justify-between gap-2"><div><h2 className="font-semibold">{MENTORSHIP_REQUEST_TYPES[request.request_type]}</h2><p className="text-sm text-muted-foreground">{mentor ? request.mentee_name : `${request.mentor_name}${request.mentor_company ? ` · ${request.mentor_company}` : ''}`}</p></div><Badge variant={request.status === 'accepted' ? 'default' : request.status === 'declined' ? 'destructive' : 'secondary'}>{request.status}</Badge></div><div><p className="font-medium">{request.goal}</p><p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{request.context}</p></div>{(request.application_title || request.resume_title) && <p className="text-xs text-muted-foreground">Context: {[request.application_title && `${request.application_title}${request.application_company ? ` at ${request.application_company}` : ''}`, request.resume_title && `CV: ${request.resume_title}`].filter(Boolean).join(' · ')}</p>}{request.supporting_url && <a className="inline-flex items-center gap-1 text-sm text-primary hover:underline" href={request.supporting_url} target="_blank" rel="noopener noreferrer">Supporting link <ExternalLink className="h-3.5 w-3.5" /></a>}{contacts[request.id] && <p className="flex items-center gap-2 rounded bg-muted p-3 text-sm"><Mail className="h-4 w-4" />{contacts[request.id]}</p>}<div className="flex flex-wrap gap-2">{mentor && request.status === 'pending' && <><Button size="sm" disabled={busy === request.id} onClick={() => act(request, 'accepted')}>Accept</Button><Button size="sm" variant="outline" disabled={busy === request.id} onClick={() => act(request, 'declined')}>Decline</Button></>}{!mentor && request.status === 'pending' && <Button size="sm" variant="outline" disabled={busy === request.id} onClick={() => act(request, 'withdraw')}>Withdraw</Button>}{request.status === 'accepted' && <><Button size="sm" variant="outline" onClick={() => reveal(request)}>Show contact{request.resume_id ? ' & CV' : ''}</Button><Button size="sm" disabled={busy === request.id} onClick={() => act(request, 'complete')}>Mark completed</Button></>}</div></CardContent></Card>)}</div> : <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No requests in this section.</CardContent></Card>;
-  return <PageLayout title={mentor ? 'Mentorship requests' : 'My mentor requests'} description={mentor ? 'Review focused requests and introduce yourself by email when you can help.' : 'Track introductions and continue accepted conversations over email.'}>{loading ? <p role="status" className="flex justify-center py-16"><Loader2 className="h-5 w-5 animate-spin" /></p> : <Tabs defaultValue="pending"><TabsList><TabsTrigger value="pending">Pending ({groups.pending.length})</TabsTrigger><TabsTrigger value="active">Accepted ({groups.active.length})</TabsTrigger><TabsTrigger value="closed">Closed ({groups.closed.length})</TabsTrigger></TabsList><TabsContent value="pending" className="mt-4">{list(groups.pending)}</TabsContent><TabsContent value="active" className="mt-4">{list(groups.active)}</TabsContent><TabsContent value="closed" className="mt-4">{list(groups.closed)}</TabsContent></Tabs>}<Dialog open={Boolean(cvContext)} onOpenChange={(open) => !open && setCvContext(null)}><DialogContent className="max-h-[calc(100dvh-2rem)] max-w-4xl overflow-y-auto"><DialogHeader><DialogTitle>{cvContext?.title}</DialogTitle><DialogDescription>Read-only CV shared after this request was accepted.</DialogDescription></DialogHeader>{cvContext && <CVPreview data={cvContext.data} />}</DialogContent></Dialog></PageLayout>;
+
+  const statusLabelClass = (status: string) =>
+    status === 'accepted'
+      ? 'border-success/50 bg-[hsl(var(--dossier-jade-wash))] text-success'
+      : status === 'declined'
+        ? 'border-destructive/40 bg-destructive/5 text-destructive'
+        : 'border-border bg-muted text-muted-foreground';
+
+  const list = (items: MentorshipRequest[]) => items.length ? (
+    <div className="divide-y divide-border border-y border-border">
+      {items.map((request) => (
+        <article key={request.id} className="space-y-3 py-5">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="dossier-eyebrow">{MENTORSHIP_REQUEST_TYPES[request.request_type]}</p>
+              <h2 className="mt-1 font-semibold">{request.goal}</h2>
+              <p className="text-sm text-muted-foreground">{mentor ? request.mentee_name : `${request.mentor_name}${request.mentor_company ? ` · ${request.mentor_company}` : ''}`}</p>
+            </div>
+            <span className={`inline-flex min-h-7 shrink-0 items-center border px-2 text-[11px] font-semibold uppercase tracking-[0.08em] ${statusLabelClass(request.status)}`}>{request.status}</span>
+          </div>
+          <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{request.context}</p>
+          {(request.application_title || request.resume_title) && <p className="text-xs text-muted-foreground">Context: {[request.application_title && `${request.application_title}${request.application_company ? ` at ${request.application_company}` : ''}`, request.resume_title && `CV: ${request.resume_title}`].filter(Boolean).join(' · ')}</p>}
+          {request.supporting_url && <a className="inline-flex items-center gap-1 text-sm text-primary hover:underline" href={request.supporting_url} target="_blank" rel="noopener noreferrer">Supporting link <ExternalLink className="h-3.5 w-3.5" /></a>}
+          {contacts[request.id] && <p className="flex items-center gap-2 bg-muted p-3 text-sm"><Mail className="h-4 w-4" />{contacts[request.id]}</p>}
+          <div className="flex flex-wrap gap-2">
+            {mentor && request.status === 'pending' && <><Button size="sm" disabled={busy === request.id} onClick={() => act(request, 'accepted')}>Accept</Button><Button size="sm" variant="outline" disabled={busy === request.id} onClick={() => act(request, 'declined')}>Decline</Button></>}
+            {!mentor && request.status === 'pending' && <Button size="sm" variant="outline" disabled={busy === request.id} onClick={() => act(request, 'withdraw')}>Withdraw</Button>}
+            {request.status === 'accepted' && <><Button size="sm" variant="outline" onClick={() => reveal(request)}>Show contact{request.resume_id ? ' & CV' : ''}</Button><Button size="sm" disabled={busy === request.id} onClick={() => act(request, 'complete')}>Mark completed</Button></>}
+          </div>
+        </article>
+      ))}
+    </div>
+  ) : <RecordState tone="empty" title="No requests in this section" description={mentor ? 'New requests appear here the moment a student sends one.' : 'Send a request from a mentor profile to see it here.'} />;
+
+  return <PageLayout title={mentor ? 'Mentorship requests' : 'My mentor requests'} description={mentor ? 'Review focused requests and introduce yourself by email when you can help.' : 'Track introductions and continue accepted conversations over email.'}>
+    {loading ? (
+      <div className="space-y-2" aria-busy="true" role="status">{[1, 2, 3].map((n) => <div key={n} className="h-20 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none" />)}</div>
+    ) : (
+      <WorkingDocument label="Mentorship requests">
+        <Tabs defaultValue="pending">
+          <TabsList><TabsTrigger value="pending">Pending ({groups.pending.length})</TabsTrigger><TabsTrigger value="active">Accepted ({groups.active.length})</TabsTrigger><TabsTrigger value="closed">Closed ({groups.closed.length})</TabsTrigger></TabsList>
+          <TabsContent value="pending" className="mt-4">{list(groups.pending)}</TabsContent>
+          <TabsContent value="active" className="mt-4">{list(groups.active)}</TabsContent>
+          <TabsContent value="closed" className="mt-4">{list(groups.closed)}</TabsContent>
+        </Tabs>
+      </WorkingDocument>
+    )}
+    <Dialog open={Boolean(cvContext)} onOpenChange={(open) => !open && setCvContext(null)}><DialogContent className="max-h-[calc(100dvh-2rem)] max-w-4xl overflow-y-auto"><DialogHeader><DialogTitle>{cvContext?.title}</DialogTitle><DialogDescription>Read-only CV shared after this request was accepted.</DialogDescription></DialogHeader>{cvContext && <CVPreview data={cvContext.data} />}</DialogContent></Dialog>
+  </PageLayout>;
 }

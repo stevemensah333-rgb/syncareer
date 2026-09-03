@@ -736,10 +736,7 @@ export default function ApplicationDossier() {
   const renderInterview = () => {
     const linked = (bundle?.interviews ?? []).filter((interview) => interview.application_id === application?.id);
     const available = (bundle?.interviews ?? []).filter((interview) => !interview.application_id);
-    const practiceHref =
-      application && facts
-        ? `/interview-simulator?application=${encodeURIComponent(application.id)}&role=${encodeURIComponent(facts.title ?? '')}`
-        : '/interview-simulator';
+    const practiceHref = application ? `/applications/${encodeURIComponent(application.id)}/interview` : '/interview-simulator';
     return (
       <DossierSection index="06" label="Interview preparation" title="Practice records">
         <div className="space-y-4">

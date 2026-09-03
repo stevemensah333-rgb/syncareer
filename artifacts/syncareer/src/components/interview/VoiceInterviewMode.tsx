@@ -30,6 +30,12 @@ interface VoiceInterviewModeProps {
   sessionLength?: 'quick' | 'standard' | 'extended';
   applicationId?: string | null;
   autoStart?: boolean;
+  /**
+   * Invoked once when the session completes, with the question/answer pairs
+   * recognised in this session. Used by the application-context page to offer
+   * reviewable evidence suggestions; the standalone simulator ignores it.
+   */
+  onComplete?: (pairs: Array<{ question: string; answer: string | null }>) => void;
   onEnd: () => void;
   onRetry?: () => void;
 }
@@ -46,6 +52,7 @@ export function VoiceInterviewMode({
   sessionLength = 'standard',
   applicationId = null,
   autoStart = false,
+  onComplete,
   onEnd,
   onRetry,
 }: VoiceInterviewModeProps) {
@@ -82,6 +89,11 @@ export function VoiceInterviewMode({
     if (!interview.isCompleted || sessionFinishedRef.current) return;
     sessionFinishedRef.current = true;
     try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_SESSION_FINISHED, { result: 'completed' }); } catch {}
+    // Hand the recognised pairs to the host page (e.g. for evidence
+    // suggestions). Nothing is saved to the evidence ledger here.
+    try { onComplete?.(evidence); } catch {}
+    // evidence is derived from messages; only re-run when completion changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [interview.isCompleted]);
 
   useEffect(() => {

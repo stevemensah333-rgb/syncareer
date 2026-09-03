@@ -60,13 +60,14 @@ import {
 import { DeadlinePill } from '@/components/opportunities/DeadlinePill';
 import { cn } from '@/lib/utils';
 
-/** Joined posting subset selected by the tracker page. */
+/** Joined posting subset selected by the tracker and dossier pages. */
 export interface TrackedJobSummary {
   title: string | null;
   location: string | null;
   employment_type: string | null;
   company_name: string | null;
   department: string | null;
+  description?: string | null;
   source: string | null;
   source_url: string | null;
   application_deadline: string | null;

@@ -1,0 +1,497 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { PageLayout } from '@/components/layout/PageLayout';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { ArrowLeft, Check, Loader2, Lock, Phone } from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { InterviewErrorBoundary } from '@/components/interview/InterviewErrorBoundary';
+import { VoiceInterviewMode } from '@/components/interview/VoiceInterviewMode';
+import { useSubscription } from '@/hooks/useSubscription';
+import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  ApplicationStageRail,
+  DossierHeader,
+  DossierSection,
+  EvidenceReference,
+  EvidenceStamp,
+  RecordList,
+  RecordRow,
+  RecordState,
+  WorkingDocument,
+} from '@/components/dossier';
+import { loadDossierApplication } from '@/features/application-dossier/dossier';
+import { listApplicationEvidenceLinks, listApplicationRequirements, listEvidenceItems, listEvidenceSources } from '@/features/evidence/api';
+import { buildRequirementThreads } from '@/features/evidence/dossierViewModel';
+import { createEvidenceItem } from '@/features/evidence/api';
+import { suggestionsFromInterviewAnswers } from '@/features/evidence/suggestions';
+import type { EvidenceSuggestion } from '@/features/evidence/suggestions';
+import type { EvidenceCategory } from '@/features/evidence/types';
+import { classifyMicrophoneError, type DeviceReadiness } from '@/features/interview/setup';
+import { SESSION_OPTIONS, type SessionLengthOption } from '@/features/interview/constants';
+import { buildJourney, statusLabel } from '@/features/application-tracker/workflow';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
+
+type SessionLength = SessionLengthOption['value'];
+type Step = 'setup' | 'readiness' | 'interview';
+
+/**
+ * Application-context interview preparation at /applications/:applicationId/interview.
+ * The setup derives role context from the dossier, shows the requirements and
+ * evidence the student already has, and offers completed answers as reviewable
+ * evidence suggestions — never saving them automatically.
+ */
+export default function ApplicationInterview() {
+  const { applicationId } = useParams<{ applicationId: string }>();
+  const navigate = useNavigate();
+  const userId = useSupabaseUserId();
+  const { isPremium } = useSubscription();
+  const queryClient = useQueryClient();
+
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [roleTitle, setRoleTitle] = useState('');
+  const [organisation, setOrganisation] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+  const [statusValue, setStatusValue] = useState('');
+  const [difficulty, setDifficulty] = useState('intermediate');
+  const [interviewType, setInterviewType] = useState('mixed');
+  const [sessionLength, setSessionLength] = useState<SessionLength>('standard');
+  const [resumeText, setResumeText] = useState('');
+
+  const [threads, setThreads] = useState<ReturnType<typeof buildRequirementThreads>>([]);
+  const [evidenceCount, setEvidenceCount] = useState(0);
+
+  const [step, setStep] = useState<Step>('setup');
+  const [readiness, setReadiness] = useState<DeviceReadiness>('unchecked');
+  const startRequested = useRef(false);
+  const [suggestions, setSuggestions] = useState<EvidenceSuggestion[]>([]);
+  const [confirmedIds, setConfirmedIds] = useState<string[]>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const setupEmittedRef = useRef(false);
+
+  useEffect(() => {
+    if (!userId || !applicationId) return;
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const { application, error } = await loadDossierApplication(supabase, applicationId, userId);
+      if (cancelled) return;
+      if (error) {
+        setLoadError(error.userMessage);
+        setLoading(false);
+        return;
+      }
+      if (!application) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      const job = application.job;
+      setRoleTitle(job?.title ?? application.job_title_snapshot ?? 'Tracked application');
+      setOrganisation(job?.company_name || job?.department || application.company_name_snapshot || '');
+      setJobDescription(job?.description ?? (job?.skills?.length ? `Role skills: ${job.skills.join(', ')}` : ''));
+      setStatusValue(application.status);
+
+      const [requirements, items, sources, links] = await Promise.all([
+        listApplicationRequirements(supabase, applicationId),
+        listEvidenceItems(supabase),
+        listEvidenceSources(supabase),
+        listApplicationEvidenceLinks(supabase),
+      ]);
+      if (cancelled) return;
+      if (requirements.ok) {
+        setThreads(
+          buildRequirementThreads(
+            requirements.data,
+            links.ok ? links.data : [],
+            items.ok ? items.data : [],
+            sources.ok ? sources.data : [],
+            [],
+          ),
+        );
+      }
+      setEvidenceCount(items.ok ? items.data.length : 0);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, applicationId]);
+
+  useEffect(() => {
+    if (setupEmittedRef.current) return;
+    setupEmittedRef.current = true;
+    try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_SETUP_OPENED, { entry: 'application' }); } catch { /* never break */ }
+  }, []);
+
+  const journey = useMemo(() => buildJourney(statusValue), [statusValue]);
+
+  const checkReadiness = useCallback(async () => {
+    if (readiness === 'checking') return;
+    setReadiness('checking');
+    let next: DeviceReadiness = 'ready';
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) throw { name: 'NotFoundError' };
+      if (!('speechSynthesis' in window)) throw new Error('Audio output unavailable');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+      next = 'ready';
+      setReadiness('ready');
+    } catch (error) {
+      next = classifyMicrophoneError(error);
+      setReadiness(next);
+    }
+    try {
+      const resultMap: Record<DeviceReadiness, 'ready' | 'missing' | 'denied' | 'failed'> = {
+        unchecked: 'failed',
+        checking: 'failed',
+        ready: 'ready',
+        denied: 'denied',
+        missing: 'missing',
+        failed: 'failed',
+      };
+      captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_DEVICE_CHECKED, { result: resultMap[next] ?? 'failed' });
+    } catch { /* never break */ }
+  }, [readiness]);
+
+  const handleConfirmSuggestion = async (suggestion: EvidenceSuggestion) => {
+    setSavingId(suggestion.id);
+    const result = await createEvidenceItem(supabase, {
+      category: suggestion.category as EvidenceCategory,
+      title: suggestion.title,
+      summary: suggestion.summary,
+    });
+    setSavingId(null);
+    if (!result.ok) {
+      toast.error(result.userMessage);
+      return;
+    }
+    setConfirmedIds((current) => [...current, suggestion.id]);
+    toast.success('Saved to your evidence ledger as a draft. Confirm it from the dossier.');
+  };
+
+  const handleSessionEnd = () => {
+    startRequested.current = false;
+    setStep('setup');
+    queryClient.invalidateQueries({ queryKey: ['mock_interviews_history'] });
+    toast.success('Interview session closed.');
+  };
+
+  if (loading) {
+    return (
+      <PageLayout title="Interview preparation">
+        <div aria-busy="true" aria-label="Loading interview preparation" className="space-y-4">
+          <div className="h-40 animate-pulse border border-border bg-muted/40 motion-reduce:animate-none" />
+        </div>
+      </PageLayout>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <PageLayout title="Interview preparation">
+        <RecordState
+          tone="error"
+          title="Dossier not found"
+          description="This application does not exist or belongs to another account."
+          action={<Button variant="outline" onClick={() => navigate('/applications')}>Back to applications</Button>}
+        />
+      </PageLayout>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <PageLayout title="Interview preparation">
+        <RecordState
+          tone="error"
+          title="The application could not be loaded"
+          description={loadError}
+          action={<Button variant="outline" onClick={() => navigate(-1)}>Go back</Button>}
+        />
+      </PageLayout>
+    );
+  }
+
+  const backTo = `/applications/${encodeURIComponent(applicationId ?? '')}`;
+
+  if (step === 'interview') {
+    return (
+      <PageLayout title="Interview preparation">
+        <div className="max-w-3xl mx-auto">
+          <InterviewErrorBoundary onReset={() => setStep('setup')} fallbackTitle="Interview session crashed">
+            <VoiceInterviewMode
+              jobRole={roleTitle}
+              industry={organisation}
+              difficulty={difficulty}
+              interviewType={interviewType}
+              resumeText={resumeText}
+              jobDescription={jobDescription}
+              sessionLength={sessionLength}
+              applicationId={applicationId ?? null}
+              autoStart
+              onComplete={(pairs) => setSuggestions(suggestionsFromInterviewAnswers(pairs, roleTitle))}
+              onRetry={() => {
+                try { captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' }); } catch { /* never break */ }
+                startRequested.current = false;
+                setReadiness('unchecked');
+                setStep('readiness');
+              }}
+              onEnd={handleSessionEnd}
+            />
+          </InterviewErrorBoundary>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  const requirementsPanel = (
+    <DossierSection index="02" label="Requirements and evidence" title="What you already have">
+      {threads.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No requirements recorded for this application yet.{' '}
+          <Link to={backTo} className="text-primary underline">Add them from the dossier</Link> so practice targets
+          what the role actually asks for.
+        </p>
+      ) : (
+        <>
+          <p className="mb-3 text-xs text-muted-foreground">
+            {evidenceCount} saved evidence {evidenceCount === 1 ? 'record' : 'records'} in your ledger. Answers you
+            give here can become new draft evidence after the session — only if you confirm them.
+          </p>
+          <RecordList label="Requirement coverage">
+            {threads.map((thread) => (
+              <RecordRow
+                key={thread.requirement.id}
+                title={thread.requirement.label}
+                eyebrow={thread.requirement.origin === 'posting_skill' ? 'Posting skill' : 'Manual'}
+                meta={
+                  thread.evidence.length > 0 ? (
+                    <span className="flex flex-wrap gap-1.5">
+                      {thread.evidence.map((entry) => (
+                        <span key={entry.item.id} className="inline-flex items-center gap-1.5">
+                          <EvidenceReference id={entry.item.id} />
+                          <EvidenceStamp status={entry.supportStatus} />
+                        </span>
+                      ))}
+                    </span>
+                  ) : undefined
+                }
+                detail={
+                  thread.evidence.length === 0
+                    ? 'No evidence linked yet — practise an answer for this.'
+                    : undefined
+                }
+              />
+            ))}
+          </RecordList>
+        </>
+      )}
+    </DossierSection>
+  );
+
+  return (
+    <PageLayout title="Interview preparation" description={`Application-context practice for ${roleTitle}.`}>
+      {step === 'setup' && (
+        <WorkingDocument label="Interview setup">
+          <DossierHeader
+            eyebrow="Interview preparation"
+            title={roleTitle}
+            description={[organisation, statusLabel(statusValue)].filter(Boolean).join(' · ')}
+            actions={
+              <Button variant="ghost" size="sm" asChild>
+                <Link to={backTo}>
+                  <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+                  Back to dossier
+                </Link>
+              </Button>
+            }
+          />
+          <ApplicationStageRail stages={journey.steps.map((step2) => ({ id: step2.stage, label: step2.label, state: step2.state }))} label="Application stages" />
+          <div className="divide-y divide-border">
+            <div className="px-4 py-6 sm:px-6">
+              <DossierSection index="01" label="Session" title="Configure the practice session">
+                <div className="grid max-w-2xl gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="interview-difficulty">Seniority level</Label>
+                    <Select value={difficulty} onValueChange={setDifficulty}>
+                      <SelectTrigger id="interview-difficulty"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Entry-level / Internship</SelectItem>
+                        <SelectItem value="intermediate">Mid-level (2–5 years)</SelectItem>
+                        <SelectItem value="advanced">Senior level</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="interview-type">Interview type</Label>
+                    <Select value={interviewType} onValueChange={setInterviewType}>
+                      <SelectTrigger id="interview-type"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="behavioral">Behavioral</SelectItem>
+                        <SelectItem value="technical">Technical</SelectItem>
+                        <SelectItem value="mixed">Mixed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="mt-4 max-w-2xl space-y-2">
+                  <Label id="interview-session-length">Session length</Label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="group" aria-labelledby="interview-session-length">
+                    {SESSION_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setSessionLength(option.value)}
+                        aria-pressed={sessionLength === option.value}
+                        className={cn(
+                          'flex min-h-11 flex-col items-center gap-1.5 border p-3 text-center transition-colors duration-150 motion-reduce:transition-none',
+                          sessionLength === option.value ? 'border-primary bg-secondary' : 'border-border hover:border-primary/50',
+                        )}
+                      >
+                        <span className="text-sm font-medium">{option.label}</span>
+                        <span className="text-xs text-muted-foreground">{option.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-4 max-w-2xl space-y-2">
+                  <Label htmlFor="interview-resume">Experience summary (optional)</Label>
+                  <Textarea
+                    id="interview-resume"
+                    value={resumeText}
+                    onChange={(event) => setResumeText(event.target.value)}
+                    rows={3}
+                    placeholder="Key experiences the practice should account for. Only what you type is sent."
+                  />
+                </div>
+                {!isPremium && (
+                  <div className="mt-4 flex items-center gap-2 border border-border bg-muted p-3 text-sm text-muted-foreground">
+                    <Lock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    <span>Voice interview is a <strong className="text-foreground">Premium feature</strong>.</span>
+                    <Button size="sm" variant="outline" className="ml-auto h-7 text-xs" onClick={() => navigate('/pricing')}>
+                      Upgrade
+                    </Button>
+                  </div>
+                )}
+                <div className="mt-5">
+                  <Button
+                    className="w-full max-w-sm"
+                    onClick={() => {
+                      if (!isPremium) {
+                        navigate('/pricing');
+                        return;
+                      }
+                      setReadiness('unchecked');
+                      setStep('readiness');
+                    }}
+                    aria-label="Start voice interview session"
+                  >
+                    <Phone className="h-4 w-4 mr-2" aria-hidden="true" />
+                    Continue to microphone check
+                  </Button>
+                </div>
+              </DossierSection>
+            </div>
+            <div className="px-4 py-6 sm:px-6">{requirementsPanel}</div>
+            {suggestions.length > 0 && (
+              <div className="px-4 py-6 sm:px-6">
+                <DossierSection
+                  index="03"
+                  label="From your last session"
+                  title="Completed answers as evidence candidates"
+                  description="Recognised question/answer pairs from your most recent session. Review and confirm — nothing is saved automatically."
+                >
+                  <RecordList label="Evidence candidates">
+                    {suggestions.map((suggestion) => {
+                      const confirmed = confirmedIds.includes(suggestion.id);
+                      return (
+                        <RecordRow
+                          key={suggestion.id}
+                          eyebrow={suggestion.category}
+                          title={suggestion.title}
+                          detail={suggestion.summary}
+                          status={
+                            confirmed ? (
+                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
+                                <Check aria-hidden="true" className="h-4 w-4" />
+                                Saved as draft
+                              </span>
+                            ) : (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={savingId === suggestion.id}
+                                onClick={() => void handleConfirmSuggestion(suggestion)}
+                              >
+                                {savingId === suggestion.id && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+                                Save as draft evidence
+                              </Button>
+                            )
+                          }
+                        />
+                      );
+                    })}
+                  </RecordList>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Drafts appear in your evidence ledger on the{' '}
+                    <Link to={backTo} className="text-primary underline">
+                      application dossier
+                    </Link>
+                    . Confirm them only when they are accurate.
+                  </p>
+                </DossierSection>
+              </div>
+            )}
+          </div>
+        </WorkingDocument>
+      )}
+
+      {step === 'readiness' && (
+        <div className="mx-auto max-w-xl space-y-5 border bg-card p-6">
+          <div>
+            <h2 className="text-lg font-semibold">Check your microphone</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Syncareer uses your microphone to transcribe answers during this AI practice interview. Camera and
+              screen sharing are never requested. Interview responses and feedback are stored with your account by
+              the existing interview service.
+            </p>
+          </div>
+          <div role="status" className="bg-muted p-3 text-sm">
+            {readiness === 'unchecked' && 'Your microphone has not been checked.'}
+            {readiness === 'checking' && 'Requesting microphone access…'}
+            {readiness === 'ready' && 'Microphone is ready. Audio output uses your browser text-to-speech support.'}
+            {readiness === 'denied' && 'Microphone permission was denied. Update browser permissions, then try again.'}
+            {readiness === 'missing' && 'No usable microphone or browser media-device support was found.'}
+            {readiness === 'failed' && 'The microphone check failed. Close other apps using the device and retry.'}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setStep('setup')}>Back</Button>
+            <Button variant="outline" disabled={readiness === 'checking'} onClick={() => void checkReadiness()}>
+              {readiness === 'checking' ? 'Checking…' : readiness === 'ready' ? 'Check again' : 'Check microphone'}
+            </Button>
+            <Button
+              disabled={readiness !== 'ready' || startRequested.current}
+              onClick={() => {
+                if (readiness !== 'ready' || startRequested.current) return;
+                startRequested.current = true;
+                setStep('interview');
+              }}
+            >
+              Start interview
+            </Button>
+          </div>
+        </div>
+      )}
+    </PageLayout>
+  );
+}
