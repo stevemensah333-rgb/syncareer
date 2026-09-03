@@ -477,7 +477,7 @@ Deno.serve((req) => {
 
   // Scraping outlives the 150s request timeout, so it runs as a background
   // task and the cron caller gets an immediate acknowledgement.
-  const work = runAggregation(FIRECRAWL_API_KEY).catch((e) =>
+  const work = runAggregation(gatewayAuth).catch((e) =>
     console.error("aggregation failed", e),
   );
   const runtime = (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime;
