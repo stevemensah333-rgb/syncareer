@@ -472,7 +472,7 @@ export function VoiceInterviewMode({
           {/* STEP 1: QUESTION STAGE */}
           <section
             aria-labelledby="question-heading"
-            className="rounded-surface border border-border bg-card p-5 sm:p-7 shadow-card space-y-4 transition-all duration-150 motion-reduce:transition-none"
+            className="rounded-surface border border-border bg-card p-5 sm:p-7 shadow-card space-y-4"
           >
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle pb-3">
               <div className="flex items-center gap-2">
@@ -498,7 +498,10 @@ export function VoiceInterviewMode({
               <p id="question-heading" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                 Active Interview Prompt:
               </p>
-              <h3 className="text-lg font-semibold leading-relaxed text-foreground sm:text-xl">
+              <h3
+                key={interview.currentQuestion || 'pending'}
+                className="interview-question-enter text-lg font-semibold leading-relaxed text-foreground sm:text-xl"
+              >
                 {interview.currentQuestion || 'Preparing your first interview question…'}
               </h3>
             </div>
@@ -538,7 +541,7 @@ export function VoiceInterviewMode({
                     </>
                   ) : isProcessing ? (
                     <>
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin text-primary" />
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin text-primary motion-reduce:animate-none" />
                       <span>Processing answer…</span>
                     </>
                   ) : isPaused ? (

@@ -85,7 +85,7 @@ export function AuthenticatedLayout({
           description={description}
           variant={headerVariant}
         />
-        <div className="workspace-content page-container page-block">
+        <div className="workspace-content route-enter page-container page-block">
           {children}
         </div>
       </main>

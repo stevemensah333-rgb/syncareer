@@ -416,7 +416,7 @@ export function CVAIAssistant({
                 </div>
               )}
               {state === 'accepted' && (
-                <div role="status" className="rounded-surface border border-success/30 bg-success/10 p-3 text-xs text-foreground space-y-2">
+                <div role="status" className="state-saved rounded-surface border border-success/30 bg-success/10 p-3 text-xs text-foreground space-y-2">
                   <p className="font-medium text-success flex items-center gap-1.5">
                     <Check className="h-3.5 w-3.5" />
                     Suggestion applied to your draft. Remember to save changes.

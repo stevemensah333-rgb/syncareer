@@ -74,9 +74,13 @@ export function MobileBottomNavView({ userType }: { userType?: string | null }) 
                 isActive ? 'text-primary' : 'text-muted-foreground',
               )}
             >
-              {isActive && (
-                <span aria-hidden="true" className="absolute inset-x-3 top-0 h-0.5 bg-primary" />
-              )}
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'absolute inset-x-3 top-0 h-0.5 origin-center bg-primary nav-active-mark',
+                  isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-50',
+                )}
+              />
               <tab.icon aria-hidden="true" className="size-5" />
               <span className="max-w-full truncate text-[10px] font-medium leading-tight">{tab.title}</span>
             </Link>
