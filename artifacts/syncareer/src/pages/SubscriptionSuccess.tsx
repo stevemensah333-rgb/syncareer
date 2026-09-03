@@ -2,9 +2,13 @@ import { CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { MessageScreen } from '@/components/layout/MessageScreen';
+import { useNoIndex } from '@/hooks/useNoIndex';
 
 export default function SubscriptionSuccessPage() {
   const navigate = useNavigate();
+
+  // Post-payment confirmation is not indexable content.
+  useNoIndex();
 
   return (
     <MessageScreen

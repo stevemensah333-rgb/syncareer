@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
 import { MessageScreen } from "@/components/layout/MessageScreen";
 import { buttonVariants } from "@/components/ui/button";
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function SignedOut() {
+  // Signed-out confirmation is a transient state, not indexable content.
+  useNoIndex();
+
   return (
     <MessageScreen
       eyebrow="Signed out"

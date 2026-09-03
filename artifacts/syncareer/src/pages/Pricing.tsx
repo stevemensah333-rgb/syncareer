@@ -21,8 +21,15 @@ export default function PricingPage() {
       ogTitle: 'Syncareer Pricing — Free & Premium Plans',
       ogDescription: 'Free forever tier plus a Premium plan with unlimited assessments, interviews, and contextual assistance.',
       ogUrl: 'https://syncareer.me/pricing',
+      ogImage: 'https://syncareer.me/og-image.png',
+      ogImageWidth: 1200,
+      ogImageHeight: 630,
+      ogImageAlt: 'Syncareer — Turn a real opportunity into a stronger application.',
       canonical: 'https://syncareer.me/pricing',
       twitterCard: 'summary_large_image',
+      twitterTitle: 'Syncareer Pricing — Free & Premium Plans',
+      twitterDescription: 'Free forever tier plus a Premium plan with unlimited assessments, interviews, and contextual assistance.',
+      twitterImage: 'https://syncareer.me/og-image.png',
     });
   }, []);
 

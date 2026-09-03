@@ -2,11 +2,15 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { MessageScreen } from "@/components/layout/MessageScreen";
 import { buttonVariants } from "@/components/ui/button";
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const NotFound = () => {
   const location = useLocation();
+
+  // Unknown URLs are not content and must not be indexed.
+  useNoIndex();
 
   useEffect(() => {
     console.error(

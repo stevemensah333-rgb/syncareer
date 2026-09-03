@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
+import { setMetaTags } from '@/lib/seo';
+import { useNoIndex } from '@/hooks/useNoIndex';
 
 interface AuthShellProps {
   title: string;
@@ -8,6 +10,14 @@ interface AuthShellProps {
 }
 
 export default function AuthShell({ title, subtitle, children }: AuthShellProps) {
+  // Sign-in, sign-up and reset-password are account utility pages, not
+  // indexable content. Titles are owned by DocumentTitleManager; here we only
+  // supply a per-page description and the noindex directive.
+  useNoIndex();
+  useEffect(() => {
+    setMetaTags({ description: subtitle });
+  }, [subtitle]);
+
   return (
     <main
       id="main-content"
