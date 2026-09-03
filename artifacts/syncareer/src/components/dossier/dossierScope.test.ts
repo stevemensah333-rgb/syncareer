@@ -29,14 +29,21 @@ describe('Syncareer design system scope', () => {
       '--radius-control',
       '--radius-input',
       '--radius-surface',
+      '--radius-surface-lg',
       '--radius-overlay',
       '--radius-document',
       '--page-max-width',
+      '--canvas',
+      '--border-subtle',
+      '--primary-hover',
+      '--selected',
+      '--motion-base',
+      '--motion-panel',
     ]) {
       expect(globalStylesheet.split(token).length - 1).toBeGreaterThanOrEqual(1);
     }
 
-    for (const primitive of ['.type-page-title', '.type-secondary', '.surface-content', '.surface-canvas']) {
+    for (const primitive of ['.type-page-title', '.type-secondary', '.type-supporting', '.surface-content', '.surface-canvas', '.surface-elevated']) {
       expect(globalStylesheet).toContain(primitive);
     }
   });

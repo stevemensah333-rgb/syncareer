@@ -39,11 +39,21 @@ or radii.
 | `--info` | lavender contextual guidance | `258 62% 50%` |
 | `--accent` | soft lavender contextual fill | `252 55% 96%` |
 | `--border` / `--input` | quiet cool neutral borders | `218 22% 89%` / `218 22% 84%` |
+| `--border-subtle` | quieter divider / nested surface edge | `218 20% 93%` |
 | `--ring` | cobalt keyboard-focus ring | `221 83% 53%` |
+| `--primary-hover` | primary action pressed/hover | `221 78% 46%` |
+| `--selected` | selected row/object fill | `221 55% 95%` |
+| `--error` | alias of `--destructive` | `0 72% 51%` |
+
+Named aliases for the same palette (not a second theme): `--canvas`,
+`--surface`, `--surface-secondary`, `--surface-elevated`, `--text`,
+`--text-secondary`, `--text-muted`, `--foreground-secondary`. Tailwind maps
+`bg-canvas`, `bg-surface`, `bg-surface-elevated`, `border-border-subtle`,
+`bg-primary-hover`, `bg-selected`, `bg-error`.
 
 `--info` is exposed as the Tailwind `info` color for badges/alerts; `--accent`
-is a pale contextual lavender surface. Generic navigation and row hovers use
-muted/sidebar surfaces rather than lavender.
+is a pale contextual lavender surface. Generic navigation, menus, and row
+hovers use muted/selected surfaces rather than lavender.
 
 ## Typography scale
 
@@ -67,13 +77,15 @@ Uppercase micro-labels are limited to `.eyebrow` (and its alias
 | `--radius-control` | buttons, tabs, menu items | `0.375rem` |
 | `--radius-input` | inputs, selects, textareas | `0.375rem` |
 | `--radius-surface` | cards, panels, popovers | `0.5rem` |
+| `--radius-surface-lg` | large Discover objects | `0.75rem` |
 | `--radius-overlay` | dialogs, sheets, drawers | `0.625rem` |
 | `--radius-document` | dossier / document surfaces | `2px` |
 | `--radius-pill` | badges, avatars, progress only | `9999px` |
 
 Exposed to Tailwind as `rounded-control`, `rounded-input`, `rounded-surface`,
-`rounded-overlay`, `rounded-document`. Prefer these over ad-hoc `rounded-2xl`
-etc.
+`rounded-surface-lg`, `rounded-overlay`, `rounded-document`. Prefer these over
+ad-hoc `rounded-2xl` etc. Do not use pill radii on buttons, inputs, cards, or
+panels.
 
 ## Surfaces & elevation
 
@@ -94,6 +106,36 @@ removed. Colour gradients are not used for surfaces.
 authenticated shell, and any full-width public surface, use these rather than
 repeating `mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8`.
 
+Numeric scale: `--space-1` (4px) through `--space-16` (64px), plus
+`--control-height` (40px), `--control-height-sm` (36px), `--control-height-lg`
+(44px), and `--touch-min` (44px).
+
+Layout primitives (structural, not a second visual theme):
+
+| Class | Use |
+|---|---|
+| `.page-container` | public and shared page width |
+| `.workspace-container` | authenticated workspace width (`--workspace-max-width`) |
+| `.layout-section` | vertical section stack using `--mode-section-gap` |
+| `.layout-toolbar` | compact action/filter row |
+| `.layout-side-panel` | supporting column |
+| `.layout-content-panel` | primary working column |
+| `.layout-contextual-panel` | preview / guidance column (panel-length motion) |
+| `.mode-object` | object radius from the active mode |
+
+## Discover / Prove / Advance
+
+Opt-in wrappers retune density and geometry — they do not re-theme colour.
+
+| Class | Geometry | Density |
+|---|---|---|
+| `.mode-discover` | `--radius-surface-lg` objects | spacious (`--space-6` sections) |
+| `.mode-prove` | `--radius-document` objects | dense (`--space-4` sections) |
+| `.mode-advance` | `--radius-surface` objects, 56rem workspace | focused (`--space-5` sections) |
+
+Do not wrap every screen in the same mode. Prove keeps the dossier pattern;
+Discover and Advance must not become documents.
+
 ## Iconography
 
 `lucide-react` is the single icon system. Use Tailwind `size-*`:
@@ -103,10 +145,21 @@ should not re-specify it. Decorative icons carry `aria-hidden="true"`.
 
 ## States
 
-`.interactive` supplies the shared hover/focus vocabulary to bespoke clickable
-rows and tiles. `.is-selected` marks selection with a left rule *plus* a tint
-(never colour alone), and `.is-disabled` / `.is-loading` / `.is-error` cover the
-remaining states. Radix/shadcn controls already implement these natively.
+`.interactive` supplies the shared hover / active / focus vocabulary to bespoke
+clickable rows and tiles. State classes: `.is-selected` (left rule +
+`--selected` tint), `.is-pressed`, `.is-disabled`, `.is-loading`, `.is-error`,
+`.is-success`. Radix/shadcn controls already implement these natively.
+
+Icon-only actions use `Button size="icon"` or `IconButton`. Shared controls
+(Button, Input, Select, Checkbox, Radio, Switch, Tabs, Badge, Tooltip,
+Dropdown, Dialog, Sheet, Toast, Progress, Skeleton) hover and focus on muted /
+selected surfaces, not lavender `--accent`. Overlay motion is opacity and
+transform only — dialogs fade, they do not scale.
+
+Motion tokens: `--motion-fast` 120ms, `--motion-base` 150ms, `--motion-slow`
+180ms, `--motion-panel` 200ms. Tailwind: `duration-150`, `duration-fast`,
+`duration-panel`. No spring easing; `prefers-reduced-motion` collapses motion
+globally.
 
 ## Dossier rule
 
