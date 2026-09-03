@@ -47,8 +47,8 @@ export function EvidenceThread({
   return (
     <section
       className={cn(
-        'grid gap-4 border-y border-border py-4 md:grid-cols-[minmax(150px,0.65fr)_minmax(0,1.35fr)]',
-        selected && 'bg-muted/30',
+        'grid gap-4 border-y border-l-2 py-4 transition-colors duration-150 motion-reduce:transition-none md:grid-cols-[minmax(150px,0.65fr)_minmax(0,1.35fr)]',
+        selected ? 'border-l-primary bg-muted/30' : 'border-l-transparent',
         className,
       )}
       aria-label={`Evidence for ${requirement}`}

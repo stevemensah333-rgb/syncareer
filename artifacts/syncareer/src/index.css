@@ -780,6 +780,44 @@
     background: hsl(var(--primary));
   }
 
+  /* Inspector entrance: a short rise-and-fade that explains "the context
+     panel just changed", never decoration for its own sake. */
+  .dossier-inspector-enter {
+    animation: dossier-inspector-enter 160ms ease-out both;
+  }
+
+  @keyframes dossier-inspector-enter {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* One-tick emphasis for an evidence row that was just attached. */
+  .dossier-flash {
+    animation: dossier-flash 900ms ease-out both;
+  }
+
+  @keyframes dossier-flash {
+    from {
+      background-color: hsl(var(--primary) / 0.12);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dossier-inspector-enter,
+    .dossier-flash {
+      animation: none;
+    }
+  }
+
   .workspace-panel {
     @apply border border-border bg-card;
     border-radius: var(--radius-document);
