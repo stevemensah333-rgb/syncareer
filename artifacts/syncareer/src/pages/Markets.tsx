@@ -240,7 +240,13 @@ const Opportunities = () => {
       });
       setSavedIds(new Set(savedRes.error ? [] : (savedRes.data ?? []).map((s) => s.job_id)));
       setApplicationsByJob(
-        new Map((appsRes.error ? [] : (appsRes.data ?? [])).map((a) => [a.job_id, { id: a.id, status: a.status }])),
+        new Map(
+          (appsRes.error ? [] : (appsRes.data ?? []))
+            // job_id is nullable since postings can be removed; those applications
+            // have no card on this page to mark as applied.
+            .filter((a): a is typeof a & { job_id: string } => typeof a.job_id === 'string')
+            .map((a) => [a.job_id, { id: a.id, status: a.status }]),
+        ),
       );
       if (savedRes.error || appsRes.error) {
         setPartialWarning('Opportunities loaded, but saved or applied state could not be refreshed. Retry before changing those records.');
