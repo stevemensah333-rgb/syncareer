@@ -21,8 +21,8 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
       <div className="relative mx-auto w-full max-w-[1440px] px-4 pb-12 pt-10 sm:px-6 md:py-14 lg:px-8 lg:pb-24 lg:pt-16">
         <div className="grid gap-9 lg:grid-cols-12 lg:items-start lg:gap-8 xl:gap-12">
           <div className="relative z-10 min-w-0 max-w-xl lg:col-span-5 lg:pt-12">
-            <p className="eyebrow text-primary">For African students and recent graduates</p>
-            <h1 id="landing-hero-title" className="mt-4 text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-5xl lg:text-[3.6rem]">
+            <p className="type-label text-primary">For African students and recent graduates</p>
+            <h1 id="landing-hero-title" className="type-display mt-4 text-balance lg:text-[3.6rem]">
               Know what your application needs—and what to do next.
             </h1>
             <p className="mt-5 max-w-lg text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
@@ -46,8 +46,7 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
             </p>
           </div>
           <div id="hero-interactive-demo" className="relative min-w-0 w-full lg:col-span-7 lg:translate-y-6 xl:-mr-8">
-            <div className="absolute -inset-5 -z-10 bg-primary/[0.07] blur-3xl" aria-hidden="true" />
-            <ApplicationRecord idPrefix="hero-record" className="rounded-none sm:rounded-lg" />
+            <ApplicationRecord idPrefix="hero-record" className="rounded-none sm:rounded-surface" />
           </div>
         </div>
       </div>

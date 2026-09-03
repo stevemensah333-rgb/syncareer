@@ -127,7 +127,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ isGuest = false })
                 )}
               >
                 {step.completed ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                  <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
                 ) : (
                   <Circle className={cn("h-5 w-5 shrink-0", isNext ? "text-primary" : "text-muted-foreground")} />
                 )}
@@ -147,7 +147,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ isGuest = false })
                   </Button>
                 )}
                 {step.completed && (
-                  <span className="text-xs text-green-600 font-medium shrink-0">Done</span>
+                  <span className="text-xs text-success font-medium shrink-0">Done</span>
                 )}
               </div>
             );

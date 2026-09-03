@@ -9,7 +9,7 @@ export function SavedDecisions({ items }: { items: DashboardSavedJob[] }) {
   if (available.length === 0) return null;
 
   return (
-    <section className="dossier-document" aria-labelledby="saved-decisions-title">
+    <section className="surface-content" aria-labelledby="saved-decisions-title">
       <header className="border-b border-border px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <h2 id="saved-decisions-title" className="flex items-center gap-2 text-sm font-semibold"><Bookmark className="h-4 w-4 text-primary" />Saved opportunities to decide on</h2>

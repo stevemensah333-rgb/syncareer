@@ -103,7 +103,7 @@ export default function ApplicationTracker() {
     requestAnimationFrame(() => rowRefs.current.get(application.id)?.focus());
   };
 
-  return <PageLayout title="Applications" description="Keep each role, CV, preparation and next action in one workspace.">
+  return <PageLayout title="Applications" description="Keep each role, CV, preparation and next action in one workspace." headerVariant="document">
     <div className="-mx-4 -mb-6 border-y bg-card sm:mx-0 sm:rounded-lg sm:border">
       <div className="flex min-h-[70vh] flex-col">
         <div className="space-y-3 border-b p-3">

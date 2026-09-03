@@ -26,10 +26,6 @@ export default {
 				mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
 			},
 			colors: {
-				'landing-cream': 'hsl(var(--landing-cream))',
-				'landing-cream-deep': 'hsl(var(--landing-cream-deep))',
-				'landing-amber': 'hsl(var(--landing-amber))',
-				'landing-ink': 'hsl(var(--landing-ink))',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -93,7 +89,13 @@ export default {
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'calc(var(--radius) - 4px)',
+				// Named geometry tokens — prefer these over ad-hoc radii.
+				control: 'var(--radius-control)',
+				input: 'var(--radius-input)',
+				surface: 'var(--radius-surface)',
+				overlay: 'var(--radius-overlay)',
+				document: 'var(--radius-document)',
 			},
 			keyframes: {
 				'accordion-down': {
@@ -147,15 +149,12 @@ export default {
 				'pulse-gentle': 'pulse-gentle 2s ease-in-out infinite',
 				'float': 'float 3s ease-in-out infinite'
 			},
-			backdropFilter: {
-				'none': 'none',
-				'blur': 'blur(20px)'
-			},
+			// Minimal, restrained elevation. Content surfaces are flat and
+			// bordered; only genuinely elevated things (overlays, dragged
+			// items) get a shadow.
 			boxShadow: {
 				'card': '0 1px 2px 0 rgba(16, 24, 40, 0.05), 0 1px 3px 0 rgba(16, 24, 40, 0.06)',
-				'card-hover': '0 8px 20px -4px rgba(16, 24, 40, 0.14), 0 2px 6px -2px rgba(16, 24, 40, 0.08)',
-				'neomorphic': '10px 10px 20px #d1d1d1, -10px -10px 20px #ffffff',
-				'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.1)'
+				'overlay': '0 8px 20px -4px rgba(16, 24, 40, 0.14), 0 2px 6px -2px rgba(16, 24, 40, 0.08)'
 			}
 		}
 	},

@@ -71,7 +71,7 @@ function Fact({ label, value, tone }: { label: string; value: string; tone?: 'wa
             : 'border-l-border bg-muted/30'
       }`}
     >
-      <p className="dossier-eyebrow">{label}</p>
+      <p className="type-label">{label}</p>
       <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
     </div>
   );

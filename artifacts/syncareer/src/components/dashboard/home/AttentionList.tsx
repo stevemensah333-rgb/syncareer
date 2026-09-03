@@ -36,7 +36,7 @@ export function AttentionList({ items }: { items: AttentionItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <section className="dossier-document" aria-labelledby="attention-title">
+    <section className="surface-content" aria-labelledby="attention-title">
       <header className="border-b border-border px-4 py-4">
         <div className="flex items-center justify-between gap-3">
           <h2 id="attention-title" className="flex items-center gap-2 text-sm font-semibold">

@@ -152,7 +152,7 @@ const UsersDashboard = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <Crown className="h-8 w-8 text-yellow-500" />
+                <Crown className="h-8 w-8 text-warning" />
                 <div>
                   <p className="text-2xl font-bold">{stats.premium}</p>
                   <p className="text-xs text-muted-foreground">Premium</p>

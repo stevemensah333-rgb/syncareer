@@ -539,11 +539,11 @@ const Opportunities = () => {
   return (
     <PageLayout title="Opportunities" description="Review current external listings, inspect their source, and carry the right role into an application dossier.">
       {/* Search + filter bar */}
-      <section className="dossier-document mb-4" aria-label="Opportunity search and filters">
+      <section className="surface-content mb-4" aria-label="Opportunity search and filters">
         <div className="border-b border-border px-4 py-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="dossier-eyebrow">Opportunity index</p>
+              <p className="type-label">Opportunity index</p>
               <p className="mt-1 text-sm font-semibold text-foreground">Search and narrow the working list</p>
             </div>
             <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{filtered.length} {filtered.length === 1 ? 'record' : 'records'}</span>

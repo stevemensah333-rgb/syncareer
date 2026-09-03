@@ -19,8 +19,8 @@ export function Greeting({ fullName, major, school }: GreetingProps) {
 
   return (
     <div className="min-w-0">
-      <p className="dossier-eyebrow">{firstName ? `${time}, ${firstName}` : time}</p>
-      <h1 className="dossier-title mt-1 text-[26px] leading-8 text-foreground sm:text-[32px] sm:leading-9">
+      <p className="type-label">{firstName ? `${time}, ${firstName}` : time}</p>
+      <h1 className="type-page-title mt-1">
         Application Desk
       </h1>
       {major && (

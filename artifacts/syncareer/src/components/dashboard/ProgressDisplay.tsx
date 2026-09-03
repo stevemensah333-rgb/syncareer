@@ -119,15 +119,15 @@ export const ProgressDisplay: React.FC<ProgressDisplayProps> = ({
 
       {/* Next action */}
       {nextAction && (
-        <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+        <Card className="border-warning/30 bg-warning/5">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-warning" aria-hidden="true" />
               <div className="flex-1">
-                <p className="font-medium text-sm text-amber-900 dark:text-amber-100">
+                <p className="text-sm font-medium text-foreground">
                   {nextAction.action}
                 </p>
-                <p className="text-xs text-amber-800/70 dark:text-amber-200/70 mt-1">
+                <p className="type-meta mt-1">
                   {nextAction.description}
                 </p>
               </div>

@@ -8,14 +8,16 @@ interface CounsellorLayoutProps {
   title: string;
   description?: string;
   breadcrumbs?: BreadcrumbItem[];
+  headerVariant?: 'document' | 'operational';
 }
 
-export function CounsellorLayout({ children, title, description, breadcrumbs }: CounsellorLayoutProps) {
+export function CounsellorLayout({ children, title, description, breadcrumbs, headerVariant }: CounsellorLayoutProps) {
   return (
     <AuthenticatedLayout
       title={title}
       description={description}
       breadcrumbs={breadcrumbs}
+      headerVariant={headerVariant}
       navigation={counsellorNavGroups}
       role="mentor"
     >

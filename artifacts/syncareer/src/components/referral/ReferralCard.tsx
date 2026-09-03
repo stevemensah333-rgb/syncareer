@@ -65,7 +65,7 @@ export const ReferralCard: React.FC = () => {
         <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
           <code className="flex-1 text-sm truncate font-mono">{referralCode}</code>
           <Button variant="ghost" size="icon" onClick={handleCopy} className="shrink-0 h-8 w-8">
-            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+            {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
           </Button>
         </div>
 

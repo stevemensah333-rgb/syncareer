@@ -14,6 +14,9 @@ interface AuthenticatedLayoutProps {
   breadcrumbs?: BreadcrumbItem[];
   navigation: NavGroup[];
   role: 'student' | 'mentor';
+  /** Opt a page into dossier/document title typography. Reserved for
+   *  application, evidence and application-CV surfaces. */
+  headerVariant?: 'document' | 'operational';
 }
 
 /** Shared authenticated workspace shell. Role-specific layouts supply only
@@ -26,6 +29,7 @@ export function AuthenticatedLayout({
   breadcrumbs,
   navigation,
   role,
+  headerVariant = 'operational',
 }: AuthenticatedLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const isMobile = useIsMobile();
@@ -75,9 +79,9 @@ export function AuthenticatedLayout({
           title={title}
           description={description}
           breadcrumbs={breadcrumbs}
-          variant={role === 'mentor' ? 'operational' : 'document'}
+          variant={headerVariant}
         />
-        <div className="workspace-content mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+        <div className="workspace-content page-container page-block">
           {children}
         </div>
       </main>

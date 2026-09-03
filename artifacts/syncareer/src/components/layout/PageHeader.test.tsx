@@ -15,12 +15,15 @@ describe('PageHeader', () => {
     expect(screen.getByRole('heading', { name: 'Opportunities', level: 1 })).toBeTruthy();
     expect(screen.getByText('Browse ranked roles')).toBeTruthy();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 1 }).className).toContain('font-dossier');
+    // Operational product typography is the default; the dossier/document
+    // face is opt-in and reserved for application/evidence surfaces.
+    expect(screen.getByRole('heading', { level: 1 }).className).toContain('font-sans');
+    expect(screen.getByRole('heading', { level: 1 }).className).not.toContain('font-dossier');
   });
 
-  it('uses operational typography when requested', () => {
-    render(<PageHeader title="Mentor requests" variant="operational" />);
-    expect(screen.getByRole('heading', { name: 'Mentor requests' }).className).toContain('font-sans');
+  it('uses document typography only when explicitly requested', () => {
+    render(<PageHeader title="Application CV" variant="document" />);
+    expect(screen.getByRole('heading', { name: 'Application CV' }).className).toContain('font-dossier');
   });
 
   it('renders a breadcrumb trail with the current page marked', () => {

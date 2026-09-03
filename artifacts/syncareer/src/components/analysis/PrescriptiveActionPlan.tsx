@@ -47,7 +47,7 @@ export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) =>
       <CardContent className="p-6 md:p-8 space-y-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-2">Your action plan</p>
+            <p className="type-label mb-2 text-primary">Your action plan</p>
             <h2 className="text-xl font-semibold leading-tight tracking-tight text-foreground md:text-2xl">
               You're {readiness}% ready for {major} roles
             </h2>
@@ -58,9 +58,9 @@ export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) =>
           <Badge
             variant="outline"
             className={
-              readiness >= 80 ? 'border-green-500 text-green-600' :
+              readiness >= 80 ? 'border-success text-success' :
               readiness >= 50 ? 'border-primary text-primary' :
-              'border-amber-500 text-amber-600'
+              'border-warning text-warning'
             }
           >
             {have.length} of {top5.length} skills
@@ -71,13 +71,13 @@ export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) =>
           {/* Have */}
           <div className="rounded-lg border bg-background/60 p-4">
             <div className="flex items-center gap-2 mb-3">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
               <p className="text-sm font-semibold">Skills you have</p>
             </div>
             {have.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {have.map(s => (
-                  <Badge key={s.skill} className="bg-green-100 text-green-700 hover:bg-green-100 border-0 text-xs">
+                  <Badge key={s.skill} variant="soft-success" className="text-xs">
                     {s.skill}
                   </Badge>
                 ))}
@@ -92,13 +92,13 @@ export const PrescriptiveActionPlan: React.FC<Props> = ({ topSkills, major }) =>
           {/* Missing */}
           <div className="rounded-lg border bg-background/60 p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Target className="h-4 w-4 text-amber-600" />
+              <Target className="h-4 w-4 text-warning" aria-hidden="true" />
               <p className="text-sm font-semibold">Skills to close</p>
             </div>
             {missing.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {missing.map(s => (
-                  <Badge key={s.skill} variant="outline" className="border-amber-500/40 text-amber-700 text-xs">
+                  <Badge key={s.skill} variant="soft-warning" className="text-xs">
                     {s.skill}
                   </Badge>
                 ))}

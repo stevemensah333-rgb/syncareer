@@ -12,6 +12,18 @@ calm, bright, recognisable surface system.
 - **Shell components:** `artifacts/syncareer/src/components/layout/`.
 - **Shared primitives:** `artifacts/syncareer/src/components/ui/`.
 
+## One system, three layers
+
+`src/index.css` is organised as:
+
+1. **Global semantic tokens** (`:root` / `.dark`) — colour, geometry, spacing.
+2. **Shared primitives** — `.type-*`, `.surface-*`, `.page-*`, state classes.
+3. **Product patterns** — dossier styling, scoped and opt-in.
+
+Landing, authentication, onboarding, and the authenticated workspace all
+consume the *same* layer 1 and 2. No page defines its own palette, type scale,
+or radii.
+
 ## Semantic palette (light)
 
 | Token | Role | Hue |
@@ -32,6 +44,88 @@ calm, bright, recognisable surface system.
 `--info` is exposed as the Tailwind `info` color for badges/alerts; `--accent`
 is a pale contextual lavender surface. Generic navigation and row hovers use
 muted/sidebar surfaces rather than lavender.
+
+## Typography scale
+
+| Class | Use |
+|---|---|
+| `.type-display` | hero / marketing headline |
+| `.type-page-title` | page `h1` |
+| `.type-section-title` | section `h2`/`h3` |
+| `.type-body` | default reading text |
+| `.type-secondary` | supporting text |
+| `.type-meta` | metadata, timestamps, counts |
+| `.type-label` | form labels and quiet eyebrows (sentence case) |
+
+Uppercase micro-labels are limited to `.eyebrow` (and its alias
+`.dossier-eyebrow`), which is reserved for document/dossier surfaces.
+
+## Geometry
+
+| Token | Applies to | Value |
+|---|---|---|
+| `--radius-control` | buttons, tabs, menu items | `0.375rem` |
+| `--radius-input` | inputs, selects, textareas | `0.375rem` |
+| `--radius-surface` | cards, panels, popovers | `0.5rem` |
+| `--radius-overlay` | dialogs, sheets, drawers | `0.625rem` |
+| `--radius-document` | dossier / document surfaces | `2px` |
+| `--radius-pill` | badges, avatars, progress only | `9999px` |
+
+Exposed to Tailwind as `rounded-control`, `rounded-input`, `rounded-surface`,
+`rounded-overlay`, `rounded-document`. Prefer these over ad-hoc `rounded-2xl`
+etc.
+
+## Surfaces & elevation
+
+Three levels only:
+
+- `.surface-canvas` — the flat page/workspace background.
+- `.surface-content` — the default bordered content surface, **no shadow**.
+- `.surface-raised` — genuine elevation.
+
+`boxShadow` is reduced to `shadow-card` (hairline) and `shadow-overlay`
+(overlays). Glassmorphism, neomorphic, and blur ornament utilities were
+removed. Colour gradients are not used for surfaces.
+
+## Spacing
+
+`--page-max-width` (1440px) with `--page-gutter{,-sm,-lg}` and
+`--page-block{,-lg}`, applied through `.page-container` / `.page-block`. The
+authenticated shell, and any full-width public surface, use these rather than
+repeating `mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8`.
+
+## Iconography
+
+`lucide-react` is the single icon system. Use Tailwind `size-*`:
+`size-3.5` dense/badges, `size-4` default, `size-5` section headers, `size-6`
+empty-state illustrations. Buttons/badges force their own icon size, so callers
+should not re-specify it. Decorative icons carry `aria-hidden="true"`.
+
+## States
+
+`.interactive` supplies the shared hover/focus vocabulary to bespoke clickable
+rows and tiles. `.is-selected` marks selection with a left rule *plus* a tint
+(never colour alone), and `.is-disabled` / `.is-loading` / `.is-error` cover the
+remaining states. Radix/shadcn controls already implement these natively.
+
+## Dossier rule
+
+The dossier is a **product pattern, not the brand**. It no longer re-themes the
+authenticated shell — `.workspace-shell` inherits the single global palette.
+What remains dossier-specific is *pattern*, not palette: 2px document geometry,
+the Literata document title face (`.dossier-title`), rule-line sections, and the
+evidence washes (`--dossier-*-wash`, derived from the global palette).
+
+Apply it to: applications, requirements, evidence, application review, and
+application-specific CV tailoring.
+
+Do **not** apply it to: landing, dashboard, assessment, interview practice,
+opportunities, mentors. `PageHeader` therefore defaults to
+`variant="operational"`; document typography is opt-in via
+`headerVariant="document"` on `PageLayout` / `StudentLayout` /
+`CounsellorLayout`.
+
+`src/components/dossier/dossierScope.test.ts` locks this boundary in.
 
 ## Application shell
 
@@ -54,8 +148,8 @@ muted/sidebar surfaces rather than lavender.
 - **Content:** `max-w-[1440px]` gutter container with responsive
   `px-4 sm:px-6 lg:px-8` padding and compact `py-5 lg:py-6` rhythm.
 - **Canvas:** `.workspace-shell` is a flat cool near-white canvas with crisp
-  white working surfaces. `.app-canvas` remains available to public/editorial
-  surfaces and is not used by the authenticated shell.
+  white working surfaces. `.app-canvas` is now a legacy alias of
+  `.surface-canvas` — there is one canvas treatment across the product.
 - **Surfaces:** shared cards use a quiet border and no default shadow. Dialogs,
   sheets, popovers, and toasts retain shadows because they represent elevation.
   `workspace-panel` and `workspace-row` provide explicit dense panel/list
@@ -79,9 +173,10 @@ muted/sidebar surfaces rather than lavender.
 
 ## Authentication and onboarding shells
 
-Authentication routes use the same `app-canvas`, sans-serif type, semantic
-colours, 8–12px radii, quiet borders, and 150ms interaction rhythm as the
-application. Onboarding uses a flat `--background` workspace canvas, the same
+Authentication routes use the same canvas, sans-serif type, semantic colours,
+shared radii tokens, quiet borders, and 150ms interaction rhythm as the
+application. `AuthShell` and `OnboardingShell` use `.type-page-title` and
+`.surface-content` rather than document styling. Onboarding uses a flat `--background` workspace canvas, the same
 compact Syncareer identity treatment, standard bordered cards, and the shared
 form controls. Both intentionally avoid the landing-page cream/amber palette,
 decorative serif or italic headings, blurred ornaments, pill-shaped marketing
