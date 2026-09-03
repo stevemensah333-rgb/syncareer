@@ -21,13 +21,21 @@ const REGION_LABELS: Record<string, string> = {
   global:        "global market",
 };
 
+// Gateway-backed Firecrawl connection: FIRECRAWL_API_KEY is a Lovable
+// connection key, so calls go through the connector gateway, not
+// api.firecrawl.dev directly.
 async function firecrawlSearch(query: string, limit = 5) {
   const key = Deno.env.get("FIRECRAWL_API_KEY");
-  if (!key) return [];
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!key || !lovableKey) return [];
   try {
-    const res = await fetch("https://api.firecrawl.dev/v2/search", {
+    const res = await fetch("https://connector-gateway.lovable.dev/firecrawl/v2/search", {
       method: "POST",
-      headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: {
+        "Authorization": `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": key,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ query, limit }),
     });
     if (!res.ok) return [];

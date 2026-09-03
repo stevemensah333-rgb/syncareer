@@ -1,7 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const FIRECRAWL_V2 = "https://api.firecrawl.dev/v2";
+// The linked Firecrawl connection is gateway-backed: FIRECRAWL_API_KEY is a
+// Lovable connection key, so calls must go through the connector gateway with
+// LOVABLE_API_KEY, never to api.firecrawl.dev directly.
+const FIRECRAWL_V2 = "https://connector-gateway.lovable.dev/firecrawl/v2";
 
 interface ScrapedJob {
   title: string;
@@ -194,7 +197,7 @@ const MAX_CONCURRENT_SEARCHES = 3;
 const MAX_RATE_LIMIT_RETRIES = 3;
 
 async function searchSource(
-  apiKey: string,
+  gatewayAuth: { lovableApiKey: string; connectionKey: string },
   source: { id: string; site: string },
   plan: DiscoveryPlan,
 ): Promise<ScrapedJob[]> {
@@ -221,7 +224,8 @@ async function searchSource(
       res = await fetch(`${FIRECRAWL_V2}/search`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${gatewayAuth.lovableApiKey}`,
+          "X-Connection-Api-Key": gatewayAuth.connectionKey,
           "Content-Type": "application/json",
         },
         body,
@@ -322,7 +326,10 @@ function segmentsForRun(now: Date): DiscoverySegment[] {
   );
 }
 
-async function runAggregation(apiKey: string): Promise<void> {
+async function runAggregation(gatewayAuth: {
+  lovableApiKey: string;
+  connectionKey: string;
+}): Promise<void> {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -344,7 +351,7 @@ async function runAggregation(apiKey: string): Promise<void> {
   }
 
   const results = await pool(pairs, MAX_CONCURRENT_SEARCHES, ({ plan, site }) =>
-    searchSource(apiKey, site, plan),
+    searchSource(gatewayAuth, site, plan),
   );
   const all = results.flat();
 
@@ -450,8 +457,9 @@ Deno.serve((req) => {
   }
 
   const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
-  if (!FIRECRAWL_API_KEY) {
-    console.error("FIRECRAWL_API_KEY not configured");
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!FIRECRAWL_API_KEY || !LOVABLE_API_KEY) {
+    console.error("FIRECRAWL_API_KEY or LOVABLE_API_KEY not configured");
     return new Response(
       JSON.stringify({ success: false, error: "Aggregation not configured" }),
       {
@@ -460,12 +468,16 @@ Deno.serve((req) => {
       },
     );
   }
+  const gatewayAuth = {
+    lovableApiKey: LOVABLE_API_KEY,
+    connectionKey: FIRECRAWL_API_KEY,
+  };
 
   const segments = segmentsForRun(new Date()).map((s) => s.id);
 
   // Scraping outlives the 150s request timeout, so it runs as a background
   // task and the cron caller gets an immediate acknowledgement.
-  const work = runAggregation(FIRECRAWL_API_KEY).catch((e) =>
+  const work = runAggregation(gatewayAuth).catch((e) =>
     console.error("aggregation failed", e),
   );
   const runtime = (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime;
