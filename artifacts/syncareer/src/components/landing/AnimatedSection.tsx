@@ -26,12 +26,29 @@ function usePrefersReducedMotion(): boolean {
   return reduce;
 }
 
+function useSupportsScrollDrivenAnimations(): boolean {
+  const [supports, setSupports] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (
+      typeof CSS !== "undefined" &&
+      typeof CSS.supports === "function" &&
+      CSS.supports("animation-timeline", "view()")
+    ) {
+      setSupports(true);
+    }
+  }, []);
+
+  return supports;
+}
+
 /**
  * Reusable scroll-reveal wrapper: a soft 150ms fade + rise that runs once
- * when the section scrolls into view. Implemented with an IntersectionObserver
- * and a CSS transition so the animation costs no JavaScript library weight —
- * framer-motion (~370 kB) was previously pulled into every page that wrapped
- * a section in this component.
+ * when the section scrolls into view.
+ *
+ * Uses CSS scroll-driven animations (`animation-timeline: view()`) where the
+ * browser supports them, falling back to IntersectionObserver + CSS transitions
+ * for broader compatibility.
  *
  * Respects prefers-reduced-motion (becomes a plain instant reveal). Falls
  * back to immediately visible when IntersectionObserver is unavailable.
@@ -43,11 +60,12 @@ export default function AnimatedSection({
   y = 8,
 }: AnimatedSectionProps) {
   const reduce = usePrefersReducedMotion();
+  const supportsScrollDriven = useSupportsScrollDrivenAnimations();
   const sectionRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (visible) return;
+    if (visible || supportsScrollDriven) return;
     const element = sectionRef.current;
     if (!element) return;
     if (typeof IntersectionObserver === "undefined") {
@@ -70,8 +88,25 @@ export default function AnimatedSection({
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [visible]);
+  }, [visible, supportsScrollDriven]);
 
+  // If CSS scroll-driven animations are supported, use them — no JS state
+  // needed; the browser handles the animation timeline natively.
+  if (supportsScrollDriven && !reduce) {
+    return (
+      <div
+        ref={sectionRef}
+        className={`scroll-reveal ${className}`}
+        style={{
+          animationDelay: delay ? `${delay}s` : undefined,
+        }}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  // Fallback: IntersectionObserver + CSS transition
   const clampedDelay = reduce ? 0 : Math.min(delay, 0.08);
   const transition = reduce
     ? "none"

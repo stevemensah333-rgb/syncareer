@@ -58,11 +58,17 @@ export default function LandingFooter() {
                   {group.links.map((link) => (
                     <li key={link.label}>
                       {link.external ? (
-                        <a href={link.href} className="text-muted-foreground transition-colors duration-150 hover:text-foreground">
+                        <a
+                          href={link.href}
+                          className="text-muted-foreground transition-colors duration-150 hover:text-foreground"
+                        >
                           {link.label}
                         </a>
                       ) : (
-                        <Link to={link.href} className="text-muted-foreground transition-colors duration-150 hover:text-foreground">
+                        <Link
+                          to={link.href}
+                          className="text-muted-foreground transition-colors duration-150 hover:text-foreground"
+                        >
                           {link.label}
                         </Link>
                       )}
