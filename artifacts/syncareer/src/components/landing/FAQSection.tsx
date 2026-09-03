@@ -28,8 +28,9 @@ export default function FAQSection() {
   return (
     <section id="faqs" className="scroll-mt-24 border-b" aria-labelledby="faq-title">
       <div className="mx-auto grid w-full max-w-[1280px] gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20 lg:px-8 lg:py-24">
-        <div>
-          <h2 id="faq-title" className="text-balance text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-4xl">
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <p className="brand-eyebrow">Before you start</p>
+          <h2 id="faq-title" className="mt-4 text-balance text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-4xl">
             Questions worth answering before you start.
           </h2>
           <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">

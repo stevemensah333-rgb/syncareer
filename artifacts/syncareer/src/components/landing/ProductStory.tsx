@@ -31,21 +31,21 @@ export default function ProductStory() {
   return (
     <>
       <section id="workflow" className="scroll-mt-24 border-b bg-card" aria-labelledby="workflow-title">
-        <div className="mx-auto w-full max-w-[1280px] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-primary">One role, six connected steps</p>
-              <h2 id="workflow-title" className="mt-2 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">From finding the role to tracking the result.</h2>
+        <div className="mx-auto w-full max-w-[1280px] px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="brand-eyebrow">One role, six connected steps</p>
+              <h2 id="workflow-title" className="mt-4 text-balance text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">From finding the role to tracking the result.</h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-muted-foreground">Select any step to inspect it in the application workspace above.</p>
           </div>
-          <ol className="mt-8 grid border-y sm:grid-cols-2 lg:grid-cols-6">
+          <ol className="mt-10 grid overflow-hidden rounded-surface border sm:grid-cols-2 lg:grid-cols-6">
             {APPLICATION_STAGES.map((stage, index) => (
-              <li key={stage.id} className="relative border-b p-4 last:border-b-0 sm:border-r sm:[&:nth-child(2n)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2n)]:border-r lg:last:border-r-0">
-                <button type="button" onClick={() => openHeroStage(stage.id)} className="group block min-h-24 w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4">
-                  <span className="text-xs font-semibold text-primary">0{index + 1}</span>
-                  <span className="mt-2 block text-sm font-semibold group-hover:text-primary">{stage.label}</span>
-                  <span className="mt-1 block text-xs leading-5 text-muted-foreground">{journeyCopy[stage.id]}</span>
+              <li key={stage.id} className="relative border-b last:border-b-0 sm:border-r sm:[&:nth-child(2n)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2n)]:border-r lg:last:border-r-0">
+                <button type="button" onClick={() => openHeroStage(stage.id)} className="group interactive block min-h-28 w-full p-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+                  <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-primary/10 px-1.5 text-xs font-semibold text-primary">0{index + 1}</span>
+                  <span className="mt-3 block text-sm font-semibold transition-colors group-hover:text-primary">{stage.label}</span>
+                  <span className="mt-1.5 block text-xs leading-5 text-muted-foreground">{journeyCopy[stage.id]}</span>
                 </button>
               </li>
             ))}
@@ -54,14 +54,14 @@ export default function ProductStory() {
       </section>
 
       <section id="product" className="scroll-mt-24 border-b bg-secondary/35" aria-labelledby="transformation-title">
-        <div className="mx-auto w-full max-w-[1280px] px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="mx-auto w-full max-w-[1280px] px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
           <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
-            <div>
-              <p className="text-sm font-semibold text-primary">Graduate Data Analyst · illustrative example</p>
-              <h2 id="transformation-title" className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">See how one piece of evidence improves the whole application.</h2>
+            <div className="lg:sticky lg:top-24 lg:self-start">
+              <p className="brand-eyebrow">Graduate Data Analyst · illustrative example</p>
+              <h2 id="transformation-title" className="mt-4 text-balance text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">See how one piece of evidence improves the whole application.</h2>
               <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">The requirement stays connected to your evidence, CV wording, interview practice and next action. Nothing new is invented along the way.</p>
             </div>
-            <div className="border-y bg-card lg:border-x">
+            <div className="overflow-hidden rounded-surface border bg-card">
               <TransformationRow label="From the listing" title="Build and communicate data insights using SQL" />
               <TransformationRow label="Evidence provided by you" title="Created a reporting dashboard for a coursework project" tone="success" />
               <div className="grid sm:grid-cols-2">
@@ -78,13 +78,15 @@ export default function ProductStory() {
       </section>
 
       <section className="border-b bg-card" aria-labelledby="trust-title">
-        <div className="mx-auto w-full max-w-[1280px] px-4 py-12 sm:px-6 lg:px-8">
-          <h2 id="trust-title" className="text-xl font-semibold tracking-[-0.025em]">Helpful guidance, with clear boundaries.</h2>
-          <div className="mt-6 grid gap-px overflow-hidden border bg-border sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto w-full max-w-[1280px] px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+          <p className="brand-eyebrow">What Syncareer will and won’t do</p>
+          <h2 id="trust-title" className="mt-4 text-balance text-2xl font-semibold tracking-[-0.025em] sm:text-3xl">Helpful guidance, with clear boundaries.</h2>
+          <div className="mt-8 grid gap-px overflow-hidden rounded-surface border bg-border sm:grid-cols-2 lg:grid-cols-4">
             {trust.map(({ icon: Icon, title, text }) => (
-              <div key={title} className="bg-card p-4">
-                <div className="flex items-center gap-2 text-sm font-semibold"><Icon className="h-4 w-4 text-primary" aria-hidden="true" />{title}</div>
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">{text}</p>
+              <div key={title} className="bg-card p-5">
+                <span className="grid h-9 w-9 place-items-center rounded-md bg-primary/10 text-primary"><Icon className="h-4 w-4" aria-hidden="true" /></span>
+                <div className="mt-4 text-sm font-semibold">{title}</div>
+                <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{text}</p>
               </div>
             ))}
           </div>
