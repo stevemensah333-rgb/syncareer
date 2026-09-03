@@ -10,6 +10,7 @@ import {
   Mail,
   Mic2,
   Search,
+  SlidersHorizontal,
   User,
 } from 'lucide-react';
 import { MemoryRouter } from 'react-router-dom';
@@ -17,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { AppSidebar, counsellorNavGroups, studentNavGroups } from '@/components/layout/AppSidebar';
 import { MobileBottomNavView } from '@/components/layout/MobileBottomNav';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import {
   ApplicationStageRail,
   DossierActionBar,
@@ -34,8 +37,14 @@ import {
   type DossierStage,
 } from '@/components/dossier';
 import { cn } from '@/lib/utils';
+import { OpportunityCard } from '@/components/opportunities/OpportunityCard';
 import { OpportunityDetail } from '@/components/opportunities/OpportunityDetail';
 import type { MatchedOpportunityJob } from '@/features/opportunities/opportunity';
+import { buildFitExplanation } from '@/features/opportunities/fit';
+import {
+  rankAndDeduplicateOpportunities,
+  type OpportunityProfileSignals,
+} from '@/features/opportunities/ranking';
 
 type ReviewScreen = 'home' | 'dossier' | 'cv' | 'opportunities' | 'shell';
 
@@ -307,31 +316,167 @@ function HomeFixture({ onOpenDossier, state }: { onOpenDossier: () => void; stat
   );
 }
 
+const fixtureOpportunities: MatchedOpportunityJob[] = [
+  {
+    ...fixtureOpportunity,
+    id: 'opportunity-01',
+    skills: ['SQL', 'Data reporting', 'Written communication'],
+    source: 'company careers',
+    source_url: 'https://example.com/careers/graduate-data-analyst',
+  },
+  {
+    id: 'opportunity-02',
+    title: 'Research Operations Associate',
+    department: null,
+    location: 'Remote — Africa',
+    employment_type: 'remote',
+    salary_min: null,
+    salary_max: null,
+    salary_currency: null,
+    description: 'Coordinate study support across research teams and keep evidence files organised.',
+    requirements: 'Record keeping, attention to detail, and clear written communication.',
+    skills: ['Data reporting', 'Record keeping', 'Written communication'],
+    created_at: '2026-08-26T09:00:00.000Z',
+    employer_id: null,
+    source: 'jobberman',
+    source_url: 'https://example.com/jobs/research-operations',
+    is_external: true,
+    application_deadline: '2026-09-20T23:59:59.000Z',
+    company_name: 'Morrow Labs',
+    company_domain: null,
+    experience_level: 'entry',
+    external_id: 'morrow-002',
+    status: 'active',
+    updated_at: '2026-09-01T12:00:00.000Z',
+  },
+  {
+    id: 'opportunity-03',
+    title: 'Junior Product Analyst',
+    department: null,
+    location: 'Kumasi, Ghana',
+    employment_type: 'full-time',
+    salary_min: null,
+    salary_max: null,
+    salary_currency: null,
+    description: 'Turn product usage signals into recommendations for the roadmap team.',
+    requirements: 'Structured thinking, SQL, and familiarity with product analytics tools.',
+    skills: ['SQL', 'Product analytics', 'Excel'],
+    created_at: '2026-08-22T09:00:00.000Z',
+    employer_id: null,
+    source: 'jobberman',
+    source_url: 'https://example.com/jobs/junior-product-analyst',
+    is_external: true,
+    application_deadline: '2026-09-16T23:59:59.000Z',
+    company_name: 'Northstar Systems',
+    company_domain: null,
+    experience_level: 'entry',
+    external_id: 'northstar-003',
+    status: 'active',
+    updated_at: '2026-08-31T12:00:00.000Z',
+  },
+];
+
+const fixtureProfile: OpportunityProfileSignals = {
+  major: 'Data Science',
+  skills: ['SQL', 'Data reporting', 'Python'],
+  interests: ['Data'],
+  earlyCareer: true,
+};
+
 function OpportunityFixture({ detailOnly }: { detailOnly: boolean }) {
-  const detail = <OpportunityDetail job={fixtureOpportunity} saved application={null} savingBookmark={false} tracking={false} onToggleSave={() => undefined} onTrack={() => undefined} />;
-  if (detailOnly) return <section style={{ width: 'calc(100vw - 2rem)' }} className="min-w-0 max-w-full overflow-hidden border border-border bg-card">{detail}</section>;
+  const [selectedId, setSelectedId] = useState(fixtureOpportunities[0]!.id);
+  const ranked = rankAndDeduplicateOpportunities(fixtureOpportunities, fixtureProfile);
+  const fits = new Map(
+    ranked.map((result) => [result.job.id, buildFitExplanation(result.job, result, fixtureProfile)]),
+  );
+  const selected = ranked.find((result) => result.job.id === selectedId) ?? ranked[0]!;
+
+  const detail = (
+    <OpportunityDetail
+      job={selected.job}
+      fit={fits.get(selected.job.id) ?? null}
+      saved={selected.job.id === 'opportunity-01'}
+      application={selected.job.id === 'opportunity-03' ? { id: 'app-1', status: 'applied' } : null}
+      savingBookmark={false}
+      tracking={false}
+      onToggleSave={() => undefined}
+      onTrack={() => undefined}
+    />
+  );
+
+  if (detailOnly) {
+    return <section style={{ width: 'calc(100vw - 2rem)' }} className="min-w-0 max-w-full overflow-hidden border border-border bg-card">{detail}</section>;
+  }
 
   return (
-    <div className="space-y-4">
-      <header className="border-b border-border pb-5"><p className="dossier-eyebrow">Opportunity records</p><h1 className="dossier-title mt-1 text-[32px] leading-9">Opportunities</h1><p className="mt-2 text-sm text-muted-foreground">Review current external listings, inspect their source, and carry the right role into an application dossier.</p></header>
-      <section className="dossier-document" aria-label="Opportunity search and filters">
-        <div className="border-b border-border px-4 py-4"><p className="dossier-eyebrow">Opportunity index</p><div className="relative mt-3"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><input aria-label="Search opportunities" className="h-10 w-full border border-input bg-background pl-9 pr-3 text-sm" placeholder="Search titles, organisations, or skills" /></div></div>
-        <div className="flex flex-wrap gap-2 px-4 py-3"><Button type="button" variant="outline" size="sm">All types</Button><Button type="button" variant="outline" size="sm">Any experience</Button><Button type="button" variant="outline" size="sm">Any deadline</Button><span className="ml-auto font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">3 records</span></div>
+    <div className="space-y-5">
+      <header>
+        <h1 className="type-page-title">Opportunities</h1>
+        <p className="type-secondary mt-1 max-w-2xl">
+          Explore open roles, see why they fit your path, and decide what to do next.
+        </p>
+      </header>
+
+      <section className="discover-hero p-5 sm:p-6" aria-labelledby="fixture-search-title">
+        <h2 id="fixture-search-title" className="type-section-title">What are you looking for?</h2>
+        <p className="type-secondary mt-1 max-w-2xl">
+          Search by role, skill, organisation or place. Results update as you type, and the feed is
+          ordered using your major, recorded skills and career interests.
+        </p>
+        <form role="search" aria-label="Search the opportunity feed" className="mt-4 flex flex-col gap-2.5 sm:flex-row" onSubmit={(event) => event.preventDefault()}>
+          <div className="relative flex-1">
+            <Search aria-hidden="true" className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input aria-label="Search opportunities" placeholder="Role, skill, organisation, or place" className="h-11 pl-9" />
+          </div>
+          <Button type="button" variant="outline" className="h-11 shrink-0 gap-2">
+            <SlidersHorizontal aria-hidden="true" className="size-4" />
+            Filters
+          </Button>
+        </form>
+        <p className="type-meta mt-2.5" aria-live="polite">3 open opportunities · Ordered using Data Science and 3 skills, with early-career roles prioritised</p>
+        <p className="type-meta mt-2.5">
+          Add your major and skills to see why each role fits.{' '}
+          <span className="font-medium text-primary underline-offset-2">Update your CV</span>
+        </p>
       </section>
-      <div className="grid min-h-[650px] overflow-hidden border border-border bg-card lg:grid-cols-[minmax(340px,420px)_1fr]">
-        <section className="divide-y divide-border border-border lg:border-r" aria-label="Opportunity records">
-          <FixtureOpportunityRow selected title="Graduate Data Analyst" company="Cedar Analytics" detail="Accra · Full-time" />
-          <FixtureOpportunityRow title="Research Operations Associate" company="Morrow Labs" detail="Remote · Contract" />
-          <FixtureOpportunityRow title="Junior Product Analyst" company="Northstar Systems" detail="Kumasi · Full-time" />
+
+      <div className="grid min-h-[640px] overflow-hidden border border-border bg-card lg:grid-cols-[minmax(340px,420px)_1fr]">
+        <section className="min-w-0 border-border lg:border-r" aria-label="Opportunity results">
+          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+            <Tabs defaultValue="all">
+              <TabsList>
+                <TabsTrigger value="all">Latest</TabsTrigger>
+                <TabsTrigger value="saved">Saved (1)</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <p className="type-meta">Ordered using Data Science and 3 skills</p>
+          </div>
+          <div className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-1">
+            {ranked.map((result) => (
+              <OpportunityCard
+                key={result.job.id}
+                job={result.job}
+                fit={fits.get(result.job.id) ?? null}
+                saved={result.job.id === 'opportunity-01'}
+                saving={false}
+                bookmarkDisabled={false}
+                tracking={false}
+                application={result.job.id === 'opportunity-03' ? { id: 'app-1', status: 'applied' } : null}
+                selected={selected.job.id === result.job.id}
+                onOpen={() => setSelectedId(result.job.id)}
+                onRowKeyDown={() => undefined}
+                onToggleSave={() => undefined}
+                onTrack={() => undefined}
+              />
+            ))}
+          </div>
         </section>
-        <section className="hidden overflow-y-auto lg:block" aria-label="Selected opportunity">{detail}</section>
+        <section className="hidden overflow-hidden lg:block" aria-label="Selected opportunity">
+          <div className="h-full overflow-y-auto">{detail}</div>
+        </section>
       </div>
     </div>
   );
-}
-
-function FixtureOpportunityRow({ title, company, detail, selected = false }: { title: string; company: string; detail: string; selected?: boolean }) {
-  return <button type="button" aria-current={selected || undefined} className={cn('min-h-[132px] w-full border-l-2 p-4 text-left', selected ? 'border-primary bg-secondary' : 'border-transparent')}><p className="dossier-eyebrow">{company}</p><p className="mt-2 text-sm font-semibold">{title}</p><p className="mt-2 text-xs text-muted-foreground">{detail}</p><span className="mt-3 inline-flex border border-border bg-card px-2 py-1 font-mono text-[10px] uppercase">Source retained</span></button>;
 }
 
 function DossierFixture({ onOpenCv }: { onOpenCv: () => void }) {

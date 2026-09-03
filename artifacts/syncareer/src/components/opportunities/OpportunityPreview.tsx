@@ -15,11 +15,17 @@ import {
   type MatchedOpportunityJob,
 } from '@/features/opportunities/opportunity';
 import { statusLabel, type ApplicationRef } from '@/features/application-tracker/workflow';
+import type { FitExplanation } from '@/features/opportunities/fit';
+import {
+  PreviewCallout,
+} from '@/components/ui/contextual-preview';
 
 interface OpportunityPreviewProps {
   job: MatchedOpportunityJob;
   saved: boolean;
   application: ApplicationRef | null;
+  /** Real-evidence fit explanation, when one exists for this profile. */
+  fit?: FitExplanation | null;
   /** The row trigger (button). Kept as a single focusable element. */
   children: ReactNode;
 }
@@ -37,7 +43,7 @@ interface OpportunityPreviewProps {
  *   stays inside the viewport and opens over the detail pane side rather
  *   than covering the list's controls.
  */
-export function OpportunityPreview({ job, saved, application, children }: OpportunityPreviewProps) {
+export function OpportunityPreview({ job, saved, application, fit, children }: OpportunityPreviewProps) {
   const organisation = getOrganisation(job);
   const deadline = getDeadlineState(job.application_deadline);
   const level = experienceLevelLabel(job.experience_level);
@@ -55,11 +61,22 @@ export function OpportunityPreview({ job, saved, application, children }: Opport
 
   return (
     <ContextualPreview content={
-      <PreviewContent>
-        <div className="space-y-0.5">
+        <PreviewContent>
+          <div className="space-y-0.5">
             <p className="text-sm font-semibold leading-tight">{job.title}</p>
             {organisation && <p className="text-xs text-muted-foreground">{organisation}</p>}
           </div>
+
+          {fit && (
+            <PreviewCallout label={fit.label}>
+              <span className="block">{fit.reasons.map((reason) => reason.text).join(' · ')}</span>
+              {fit.gaps.length > 0 && (
+                <span className="mt-1 block text-muted-foreground">
+                  Not recorded: {fit.gaps.map((gap) => gap.skill).join(', ')}
+                </span>
+              )}
+            </PreviewCallout>
+          )}
 
           <div className="space-y-1.5">
             <PreviewLine icon={<MapPin className="h-3.5 w-3.5" />}>

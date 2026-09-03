@@ -3,18 +3,64 @@ import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-libra
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { installSupabaseMock } from '@/test/supabaseMock';
 import Markets from './Markets';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 
 vi.mock('@/components/layout/PageLayout', () => ({
   PageLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('@/contexts/UserProfileContext', () => ({
-  useUserProfile: () => ({
+  useUserProfile: vi.fn(() => ({
     studentDetails: { major: 'Computer Science' },
     loading: false,
     profile: { user_type: 'student' },
     refreshProfile: async () => {},
-  }),
+  })),
 }));
+
+type ProfileContext = ReturnType<typeof useUserProfile>;
+
+const defaultProfile = (): ProfileContext => ({
+  studentDetails: {
+    year_of_admission: 2022,
+    expected_completion: 2026,
+    major: 'Computer Science',
+    school: 'Test University',
+    degree_type: 'BSc',
+  },
+  loading: false,
+  profile: {
+    id: 'user-1',
+    username: 'tester',
+    full_name: 'Test Student',
+    avatar_url: null,
+    bio: null,
+    onboarding_completed: true,
+    user_type: 'student',
+  },
+  refreshProfile: async () => {},
+});
+
+function setProfileSignals(present: boolean) {
+  // beforeEach re-installs the default implementation for later tests.
+  vi.mocked(useUserProfile).mockImplementation(() =>
+    present
+      ? defaultProfile()
+      : {
+          studentDetails: null,
+          loading: false,
+          profile: {
+            id: 'user-1',
+            username: null,
+            full_name: null,
+            avatar_url: null,
+            bio: null,
+            onboarding_completed: true,
+            user_type: 'student',
+          },
+          refreshProfile: async () => {},
+        },
+  );
+}
 
 let counter = 0;
 function makeJob(overrides: Record<string, unknown> = {}) {
@@ -65,6 +111,7 @@ function renderPage(initialEntry = '/opportunities') {
 beforeEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.mocked(useUserProfile).mockImplementation(defaultProfile);
 });
 
 describe('Opportunities page', () => {
@@ -85,8 +132,8 @@ describe('Opportunities page', () => {
 
     expect((await screen.findAllByText('Graduate Analyst')).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Junior Developer').length).toBeGreaterThan(0);
-    // tracked + saved state exposed on the rows
-    expect(screen.getByText(/Tracked · Interview/)).toBeTruthy();
+    // tracked + saved state exposed on the cards
+    expect(screen.getAllByText(/Tracking · Interview/).length).toBeGreaterThan(0);
     expect(screen.getByText('Saved')).toBeTruthy();
   });
 
@@ -100,7 +147,7 @@ describe('Opportunities page', () => {
     const row = await screen.findByRole('button', { name: /Graduate Analyst.*Open details/i });
     fireEvent.click(row);
 
-    expect(await screen.findByText('Source details')).toBeTruthy();
+    expect(await screen.findByText('About this listing')).toBeTruthy();
     expect(screen.getByText(/not independently verified/i)).toBeTruthy();
     expect(screen.getByText(/Apply on Jobberman/i)).toBeTruthy();
   });
@@ -124,7 +171,7 @@ describe('Opportunities page', () => {
     const trackButton = await screen.findByRole('button', { name: /I applied — start tracking/i });
     fireEvent.click(trackButton);
 
-    expect(await screen.findByText(/Tracked · Applied/)).toBeTruthy();
+    expect((await screen.findAllByText(/Tracking · Applied/)).length).toBeGreaterThan(0);
     expect(insertSpy).toHaveBeenCalledWith(
       expect.objectContaining({ job_id: j1.id, applicant_id: 'user-1', status: 'pending' }),
     );
@@ -141,8 +188,9 @@ describe('Opportunities page', () => {
     });
     renderPage();
 
-    const sourceLink = await screen.findByRole('link', { name: /Apply on Linkedin/i });
-    expect(sourceLink.getAttribute('href')).toBe(job.source_url);
+    const sourceLink = (await screen.findAllByRole('link', { name: /Apply on linkedin/i }))
+      .find((link) => link.getAttribute('href') === job.source_url);
+    expect(sourceLink).toBeTruthy();
     expect(insertSpy).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: /I applied/i }));
     await waitFor(() => expect(insertSpy).toHaveBeenCalledTimes(1));
@@ -160,6 +208,9 @@ describe('Opportunities page', () => {
     expect(screen.getAllByText('Junior Engineer').length).toBeGreaterThan(0);
 
     fireEvent.change(screen.getByRole('textbox', { name: /Search opportunities/i }), { target: { value: '' } });
+
+    // Filters live behind one progressive disclosure: the Filters sheet.
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
     fireEvent.pointerDown(screen.getByRole('combobox', { name: /Filter by deadline/i }), {
       button: 0,
       ctrlKey: false,
@@ -213,6 +264,7 @@ describe('Opportunities page', () => {
     installSupabaseMock({ tables: { job_postings: { data: [first, second], error: null } } });
     renderPage();
     const firstRow = await screen.findByRole('button', { name: /First role.*Open details/i });
+    firstRow.focus();
     fireEvent.keyDown(firstRow, { key: 'ArrowDown' });
     await waitFor(() => expect(document.activeElement?.getAttribute('data-opportunity-id')).toBe(second.id));
   });
@@ -238,9 +290,45 @@ describe('Opportunities page', () => {
     renderPage();
     await screen.findAllByText('Partial listing');
     expect(screen.getAllByText('Organisation not specified').length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Deadline not provided|No deadline listed/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Deadline not listed|Deadline not provided|No deadline listed/).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Ingestion freshness unknown').length).toBeGreaterThan(0);
-    expect(screen.queryByText(/Competitive|match/i)).toBeNull();
+    // No fabricated signals, no match percentages, no "recommended" claims.
+    expect(screen.queryByText(/Competitive|recommended|% match|\d{2}%/i)).toBeNull();
+  });
+
+  it('explains fit from real recorded skills and surfaces a real gap — without a score', async () => {
+    const job = makeJob({
+      title: 'Software Engineer',
+      skills: ['Python', 'FastAPI', 'Cloud deployment'],
+      description: 'Build a backend service with FastAPI.',
+    });
+    installSupabaseMock({
+      tables: {
+        job_postings: { data: [job], error: null },
+        user_skills: { data: [{ skill_name: 'Python' }, { skill_name: 'FastAPI' }], error: null },
+      },
+    });
+    renderPage();
+
+    await screen.findAllByText('Software Engineer');
+    expect(screen.getAllByText('Strong fit').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Recorded skills · Python, FastAPI/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Not recorded:/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Cloud deployment/).length).toBeGreaterThan(0);
+    // The explanation wins; a percentage must never appear.
+    expect(screen.queryByText(/\d{2}%/)).toBeNull();
+  });
+
+  it('does not invent fit when the student has no personalization signals', async () => {
+    const job = makeJob({ title: 'Graduate Analyst', skills: ['Excel'] });
+    setProfileSignals(false);
+    installSupabaseMock({ tables: { job_postings: { data: [job], error: null } } });
+    renderPage();
+
+    await screen.findAllByText('Graduate Analyst');
+    // A real invitation to add signals, never a fabricated "best match".
+    expect(screen.getByText(/Add your major and skills to see why each role fits/)).toBeTruthy();
+    expect(screen.queryByText(/Strong fit|Good fit|Worth a look/)).toBeNull();
   });
 
   it('keeps the feed usable when saved state fails to load', async () => {

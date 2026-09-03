@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { generateStructuredData, setMetaTags } from './seo';
+import { generateStructuredData, setMetaTags, setRobotsMeta } from './seo';
 
 afterEach(() => {
   document.head.innerHTML = '';
@@ -35,6 +35,19 @@ describe('SEO utilities', () => {
     );
     expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(
       'https://syncareer.me',
+    );
+  });
+
+  it('lets authenticated pages opt out of indexing and restores the default on unmount', () => {
+    setRobotsMeta('noindex, nofollow');
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
+      'noindex, nofollow',
+    );
+
+    // Navigating away restores the shell default so public routes stay indexable.
+    setRobotsMeta('index, follow');
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
+      'index, follow',
     );
   });
 });
