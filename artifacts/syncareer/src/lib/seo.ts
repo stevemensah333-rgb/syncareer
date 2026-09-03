@@ -76,6 +76,16 @@ function updateMetaTag(type: 'name' | 'property', name: string, content: string)
 }
 
 /**
+ * Singleton `<meta name="robots">` manager for authenticated/personalised
+ * routes. The SPA shell's default is `index, follow`; protected pages with
+ * private data (e.g. Opportunities) opt out while mounted and restore the
+ * default on unmount so public routes keep their global behaviour.
+ */
+export function setRobotsMeta(content: string) {
+  updateMetaTag('name', 'robots', content);
+}
+
+/**
  * Generate JSON-LD structured data for rich snippets
  */
 export function generateStructuredData(type: string, data: Record<string, unknown>) {

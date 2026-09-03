@@ -26,6 +26,7 @@ import {
   PROVENANCE_NOTE,
   type MatchedOpportunityJob,
 } from '@/features/opportunities/opportunity';
+import type { FitExplanation } from '@/features/opportunities/fit';
 import { statusLabel, type ApplicationRef } from '@/features/application-tracker/workflow';
 import { CompanyLogo } from './CompanyLogo';
 import { DeadlinePill } from './DeadlinePill';
@@ -37,6 +38,8 @@ import { RecordState } from '@/components/dossier';
 
 interface OpportunityDetailProps {
   job: MatchedOpportunityJob;
+  /** Real-evidence fit explanation, when one exists for this profile. */
+  fit: FitExplanation | null;
   saved: boolean;
   /** Tracked application for this job, when one exists. */
   application: ApplicationRef | null;
@@ -58,24 +61,43 @@ function formatSalary(min: number | null, max: number | null, currency: string |
 function FactRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="space-y-0.5 border-l-2 border-border pl-3">
-      <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="text-sm">{value}</dd>
+      <dt className="type-label">{label}</dt>
+      <dd className="text-sm text-foreground">{value}</dd>
     </div>
   );
 }
 
+function DetailSection({
+  title,
+  children,
+  id,
+}: {
+  title: string;
+  children: React.ReactNode;
+  id: string;
+}) {
+  return (
+    <section className="border-t border-border pt-5" aria-labelledby={id}>
+      <h3 id={id} className="type-section-title">
+        {title}
+      </h3>
+      <div className="mt-3">{children}</div>
+    </section>
+  );
+}
+
 /**
- * Complete opportunity detail. Everything surfaced by the hover preview is
- * present here together with the description, requirements, provenance, and
- * the opportunity → application actions.
+ * Complete opportunity detail as a Discover-mode object.
  *
- * Honesty rules enforced here:
- * - no salary line is shown unless salary data exists (no "Competitive");
+ * Explicitly NOT a document/dossier: operational typography, spaced sections,
+ * and the same fit explanation shown on the card. Honesty rules held here:
+ * - no salary line without salary data (no "Competitive");
  * - provenance explicitly says the listing is not independently verified;
  * - an expired deadline is shown as passed, not hidden.
  */
 export function OpportunityDetail({
   job,
+  fit,
   saved,
   application,
   savingBookmark,
@@ -113,34 +135,36 @@ export function OpportunityDetail({
           Back to opportunities
         </Button>
       ) : null}
+
       {/* Header: role, organisation, key facts */}
-      <header className="flex items-start gap-4 border-b border-border pb-6">
+      <header className="flex items-start gap-4">
         <CompanyLogo job={job} size={56} />
         <div className="flex-1 min-w-0">
-          <p className="dossier-eyebrow text-primary">Opportunity record</p>
-          <h2 className="dossier-title mt-1 text-xl leading-7 sm:text-2xl sm:leading-8">{job.title}</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h2 className="text-xl font-semibold leading-7 tracking-[-0.015em] text-foreground sm:text-2xl sm:leading-8">
+            {job.title}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             {organisation ?? 'Organisation not specified'}
             {posted ? ` · Added to Syncareer ${posted}` : ''}
           </p>
-          <div className="flex items-center gap-3 mt-3 text-sm text-muted-foreground flex-wrap">
-            <span className="flex items-center gap-1">
-              <MapPin className="h-4 w-4" />
-              {job.location}
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <span className="inline-flex min-w-0 items-center gap-1">
+              <MapPin aria-hidden="true" className="size-4 shrink-0" />
+              <span className="truncate">{job.location}</span>
               {workMode ? ` · ${workMode}` : ''}
             </span>
-            <span className="flex items-center gap-1 capitalize">
-              <Briefcase className="h-4 w-4" />
+            <span className="capitalize">
+              <Briefcase aria-hidden="true" className="mr-1 inline size-4" />
               {job.employment_type}
             </span>
             {salary && (
-              <span className="flex items-center gap-1">
-                <DollarSign className="h-4 w-4" />
+              <span>
+                <DollarSign aria-hidden="true" className="mr-1 inline size-4" />
                 {salary}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <DeadlinePill state={deadline} variant="detail" />
             {deadline.kind === 'none' && (
               <span className="text-xs text-muted-foreground">
@@ -148,10 +172,11 @@ export function OpportunityDetail({
               </span>
             )}
             {application && (
-              <span className="border border-border bg-muted px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.06em] text-foreground">
-                In tracker · {statusLabel(application.status)}
+              <span className="rounded-control border border-border bg-secondary px-2 py-1 text-[11px] font-medium text-foreground-secondary">
+                Tracking · {statusLabel(application.status)}
               </span>
             )}
+            {level && <span className="text-xs text-muted-foreground">{level}</span>}
           </div>
         </div>
         <Button
@@ -163,16 +188,16 @@ export function OpportunityDetail({
           aria-pressed={saved}
         >
           {savingBookmark ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Loader2 aria-hidden="true" className="size-5 animate-spin" />
           ) : saved ? (
-            <BookmarkCheck className="h-5 w-5 text-primary" />
+            <BookmarkCheck aria-hidden="true" className="size-5 text-primary" />
           ) : (
-            <Bookmark className="h-5 w-5" />
+            <Bookmark aria-hidden="true" className="size-5" />
           )}
         </Button>
       </header>
 
-      {/* Expired deadline honesty banner */}
+      {/* Expired / stale honesty banners */}
       {deadline.kind === 'passed' && (
         <RecordState tone="error" title="The listed deadline has passed" description="The application may no longer be open. Check the original posting before spending time on an application." />
       )}
@@ -180,11 +205,35 @@ export function OpportunityDetail({
         <RecordState tone="warning" title="This source record may be stale" description={`${freshness.label}. Confirm that the role is still open on the original source.`} />
       )}
 
-      {/* Primary actions */}
+      {/* Fit — evidence-based explanation, never a decorated score */}
+      {fit && (
+        <div className="rounded-surface-lg border border-accent/70 bg-accent p-4">
+          <p className="text-sm font-semibold text-accent-foreground">{fit.label}</p>
+          <p className="mt-1 text-xs text-muted-foreground">because</p>
+          <ul className="mt-1.5 space-y-1">
+            {fit.reasons.map((reason) => (
+              <li key={reason.source} className="text-sm text-foreground">
+                {reason.text}
+              </li>
+            ))}
+          </ul>
+          {fit.gaps.length > 0 && (
+            <div className="mt-3 border-t border-accent/60 pt-2.5">
+              <p className="text-xs font-medium text-foreground-secondary">Check before applying</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                {fit.gaps.map((gap) => gap.skill).join(', ')} — listed by the source but not in
+                your recorded skills. Confirm with the listing before you invest time.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Primary action */}
       {cta === 'open-tracker' && application ? (
         <Button className="w-full gap-2" asChild>
           <Link to={`/applications?application=${encodeURIComponent(application.id)}`}>
-            <Briefcase className="h-4 w-4" />
+            <Briefcase aria-hidden="true" className="size-4" />
             Open in tracker · {statusLabel(application.status)}
           </Link>
         </Button>
@@ -192,12 +241,16 @@ export function OpportunityDetail({
         <div className="space-y-2">
           <Button className="w-full gap-2" asChild>
             <a href={job.source_url ?? undefined} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink aria-hidden="true" className="size-4" />
               Apply on {provenance.sourceLabel}
             </a>
           </Button>
           <Button variant="outline" className="w-full gap-2" onClick={onTrack} disabled={tracking}>
-            {tracking ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            {tracking ? (
+              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+            ) : (
+              <CheckCircle2 aria-hidden="true" className="size-4" />
+            )}
             {tracking ? 'Starting tracking…' : 'I applied — start tracking'}
           </Button>
           <p className="text-xs text-muted-foreground">
@@ -209,22 +262,26 @@ export function OpportunityDetail({
         <RecordState tone="warning" title="Original source unavailable" description={`Syncareer cannot send you to the application page. Try finding the role directly on ${provenance.sourceLabel}.`} />
       ) : (
         <Button className="w-full gap-2" onClick={onTrack} disabled={tracking}>
-          {tracking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Briefcase className="h-4 w-4" />}
+          {tracking ? (
+            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+          ) : (
+            <Briefcase aria-hidden="true" className="size-4" />
+          )}
           {tracking ? 'Submitting…' : 'Apply with Syncareer'}
         </Button>
       )}
 
       {/* Connected practice + CV entry points */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Button variant="outline" className="gap-2" asChild>
           <Link to={interviewHref}>
-            <MessageSquare className="h-4 w-4" />
+            <MessageSquare aria-hidden="true" className="size-4" />
             Practice interview
           </Link>
         </Button>
         <Button variant="outline" className="gap-2" asChild>
           <Link to={cvHref}>
-            <FileText className="h-4 w-4" />
+            <FileText aria-hidden="true" className="size-4" />
             Tailor my CV
           </Link>
         </Button>
@@ -241,81 +298,73 @@ export function OpportunityDetail({
         />
       </div>
 
-      {/* Eligibility facts — no inferred match score */}
-      <section className="border-t border-border pt-5" aria-labelledby="role-facts-title">
-        <div className="space-y-4">
-          <div><p className="dossier-eyebrow">01 / Brief</p><h3 id="role-facts-title" className="dossier-title mt-1 text-lg leading-6">Role facts</h3></div>
-          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FactRow label="Level" value={level ?? 'Not provided'} />
-            <FactRow label="Type" value={job.employment_type || 'Not provided'} />
-          </dl>
-          {job.skills && job.skills.length > 0 ? (
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1.5">Skills listed by the source</p>
-              <div className="space-y-2">
-                {job.skills.map((skill) => <RequirementEvidenceActions
+      {/* Role facts */}
+      <DetailSection title="Role facts" id="role-facts-title">
+        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <FactRow label="Level" value={level ?? 'Not provided'} />
+          <FactRow label="Type" value={job.employment_type || 'Not provided'} />
+        </dl>
+        {job.skills && job.skills.length > 0 ? (
+          <div className="mt-4">
+            <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+              Skills listed by the source
+            </p>
+            <div className="space-y-2">
+              {job.skills.map((skill) => (
+                <RequirementEvidenceActions
                   key={skill}
                   requirement={skill}
                   role={job.title}
                   evidenceHref={buildEvidenceHref({ requirement: skill, role: job.title, company: organisation ?? undefined, returnTo: opportunityReturnTo })}
-                />)}
-              </div>
+                />
+              ))}
             </div>
-          ) : <p className="text-sm text-muted-foreground">No skills were provided by the source.</p>}
-        </div>
-      </section>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">No skills were provided by the source.</p>
+        )}
+      </DetailSection>
+
+      {/* About the role */}
+      <DetailSection title="About the role" id="opportunity-description-title">
+        <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{job.description}</p>
+      </DetailSection>
+      {job.requirements && (
+        <DetailSection title="Requirements" id="opportunity-requirements-title">
+          <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{job.requirements}</p>
+        </DetailSection>
+      )}
 
       {/* Provenance — never claims verification */}
-      <section className="border-t border-border pt-5" aria-labelledby="source-details-title">
-        <div className="space-y-3">
-          <p className="dossier-eyebrow">02 / Provenance</p>
-          <h3 id="source-details-title" className="dossier-title flex items-center gap-1.5 text-lg leading-6">
-            <ShieldQuestion className="h-4 w-4 text-muted-foreground" />
-            Source details
-          </h3>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-            <FactRow label="Source" value={provenance.sourceLabel} />
-            <FactRow
-              label="Original posting"
-              value={
-                provenance.sourceUrl ? (
-                  <a
-                    href={provenance.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary underline-offset-2 hover:underline inline-flex items-center gap-1"
-                  >
-                    Open link
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                ) : (
-                  'Not available'
-                )
-              }
-            />
-            <FactRow label="Published by source" value="Not provided" />
-            <FactRow label="Added to Syncareer" value={posted ?? 'Unknown'} />
-            <FactRow label="Ingestion freshness" value={freshness.label} />
-          </dl>
-          <p className="text-xs text-muted-foreground leading-relaxed">{PROVENANCE_NOTE}</p>
-        </div>
-      </section>
-
-      {/* Description & requirements */}
-      <section className="border-t border-border pt-5" aria-labelledby="opportunity-description-title">
-        <p className="dossier-eyebrow">03 / Source text</p>
-        <h3 id="opportunity-description-title" className="dossier-title mb-2 mt-1 text-lg leading-6">Description</h3>
-        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.description}</p>
-      </section>
-      {job.requirements ? (
-        <section className="border-t border-border pt-5" aria-labelledby="opportunity-requirements-title">
-          <p className="dossier-eyebrow">04 / Requirements</p>
-          <h3 id="opportunity-requirements-title" className="dossier-title mb-2 mt-1 text-lg leading-6">Requirements</h3>
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{job.requirements}</p>
-        </section>
-      ) : (
-        <p className="text-sm text-muted-foreground">No requirements were listed for this posting.</p>
-      )}
+      <DetailSection title="About this listing" id="source-details-title">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+          <FactRow label="Source" value={provenance.sourceLabel} />
+          <FactRow
+            label="Original posting"
+            value={
+              provenance.sourceUrl ? (
+                <a
+                  href={provenance.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline"
+                >
+                  Open link
+                  <ExternalLink aria-hidden="true" className="size-3.5" />
+                </a>
+              ) : (
+                'Not available'
+              )
+            }
+          />
+          <FactRow label="Added to Syncareer" value={posted ?? 'Unknown'} />
+          <FactRow label="Ingestion freshness" value={freshness.label} />
+        </dl>
+        <p className="mt-3 flex items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
+          <ShieldQuestion aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+          {PROVENANCE_NOTE}
+        </p>
+      </DetailSection>
     </div>
   );
 }

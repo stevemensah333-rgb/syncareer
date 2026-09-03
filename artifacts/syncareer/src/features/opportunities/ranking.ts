@@ -120,6 +120,12 @@ export interface RankedOpportunity {
   score: number;
   majorAligned: boolean;
   matchedSkillCount: number;
+  /** Actual recorded skill names that appeared in the posting. */
+  matchedSkills: string[];
+  /** Actual recorded interest names that appeared in the posting. */
+  matchedInterests: string[];
+  /** True when the posting is early-career friendly (or early-career is the only signal). */
+  earlyCareerFriendly: boolean;
 }
 
 const EARLY_CAREER_TERMS = ['intern', 'internship', 'graduate', 'entry level', 'junior', 'trainee', 'assistant', 'associate'];
@@ -127,13 +133,6 @@ const SENIOR_TERMS = ['senior', 'staff', 'principal', 'lead', 'director', 'head 
 
 function normalizeText(value: string | null | undefined): string {
   return (value ?? '').trim().toLocaleLowerCase();
-}
-
-function normalizedTerms(values: Array<string | null | undefined>): string[] {
-  return Array.from(new Set(values
-    .flatMap((value) => normalizeText(value).split(/[,/|;]+/))
-    .map((value) => value.trim())
-    .filter((value) => value.length >= 3)));
 }
 
 /** Returns maintained role-family language for a major, plus the literal major when present. */
@@ -183,12 +182,18 @@ function ingestionRecencyScore(createdAt: string | null): number {
 export function scoreOpportunity(job: OpportunityJob, profile: OpportunityProfileSignals): RankedOpportunity {
   const { title, body } = jobText(job);
   const majorTerms = getMajorTerms(profile.major);
-  const skills = normalizedTerms(profile.skills ?? []);
-  const interests = normalizedTerms(profile.interests ?? []);
+  const skills = (profile.skills ?? [])
+    .map((value) => value.trim())
+    .filter((value) => value.length >= 3);
+  const interests = (profile.interests ?? [])
+    .map((value) => value.trim())
+    .filter((value) => value.length >= 3);
 
   let score = ingestionRecencyScore(job.created_at);
   let majorAligned = false;
   let matchedSkillCount = 0;
+  const matchedSkills: string[] = [];
+  const matchedInterests: string[] = [];
 
   for (const term of majorTerms) {
     if (includesTerm(title, term)) {
@@ -201,28 +206,52 @@ export function scoreOpportunity(job: OpportunityJob, profile: OpportunityProfil
   }
 
   for (const skill of skills) {
-    if (includesTerm(title, skill)) {
+    const term = skill.toLocaleLowerCase();
+    if (includesTerm(title, term)) {
       score += 10;
       matchedSkillCount += 1;
-    } else if (includesTerm(body, skill)) {
+      matchedSkills.push(skill);
+    } else if (includesTerm(body, term)) {
       score += 5;
       matchedSkillCount += 1;
+      matchedSkills.push(skill);
     }
   }
 
   for (const interest of interests) {
-    if (includesTerm(title, interest)) score += 8;
-    else if (includesTerm(body, interest)) score += 3;
+    const term = interest.toLocaleLowerCase();
+    if (includesTerm(title, term)) {
+      score += 8;
+      matchedInterests.push(interest);
+    } else if (includesTerm(body, term)) {
+      score += 3;
+      matchedInterests.push(interest);
+    }
   }
 
+  let earlyCareerFriendly = false;
   if (profile.earlyCareer) {
-    if (EARLY_CAREER_TERMS.some((term) => includesTerm(`${title} ${body}`, term))) score += 12;
+    if (EARLY_CAREER_TERMS.some((term) => includesTerm(`${title} ${body}`, term))) {
+      score += 12;
+      earlyCareerFriendly = true;
+    }
     if (SENIOR_TERMS.some((term) => includesTerm(title, term))) score -= 80;
     if (job.experience_level?.toLowerCase() === 'senior') score -= 80;
-    if (job.experience_level?.toLowerCase() === 'entry') score += 12;
+    if (job.experience_level?.toLowerCase() === 'entry') {
+      score += 12;
+      earlyCareerFriendly = true;
+    }
   }
 
-  return { job, score, majorAligned, matchedSkillCount };
+  return {
+    job,
+    score,
+    majorAligned,
+    matchedSkillCount,
+    matchedSkills,
+    matchedInterests,
+    earlyCareerFriendly,
+  };
 }
 
 function canonicalUrl(value: string | null): string | null {
