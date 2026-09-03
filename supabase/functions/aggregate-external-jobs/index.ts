@@ -1,7 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const FIRECRAWL_V2 = "https://api.firecrawl.dev/v2";
+// The linked Firecrawl connection is gateway-backed: FIRECRAWL_API_KEY is a
+// Lovable connection key, so calls must go through the connector gateway with
+// LOVABLE_API_KEY, never to api.firecrawl.dev directly.
+const FIRECRAWL_V2 = "https://connector-gateway.lovable.dev/firecrawl/v2";
 
 interface ScrapedJob {
   title: string;
@@ -194,7 +197,7 @@ const MAX_CONCURRENT_SEARCHES = 3;
 const MAX_RATE_LIMIT_RETRIES = 3;
 
 async function searchSource(
-  apiKey: string,
+  gatewayAuth: { lovableApiKey: string; connectionKey: string },
   source: { id: string; site: string },
   plan: DiscoveryPlan,
 ): Promise<ScrapedJob[]> {
