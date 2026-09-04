@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -555,7 +555,7 @@ const Opportunities = () => {
                 key={suggestion}
                 type="button"
                 onClick={() => setSearch(suggestion)}
-                className="rounded-control border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+                className="min-h-6 rounded-control border border-border bg-card px-2 py-1 text-[11px] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
               >
                 {suggestion}
               </button>
@@ -675,13 +675,13 @@ const Opportunities = () => {
         ) : (
           <>
             {/* STEP 2–4 — Relevant opportunities → why they fit → what to do */}
-            <div className="surface-content grid min-h-[520px] lg:h-[calc(100vh-340px)] lg:grid-cols-[minmax(340px,420px)_1fr] lg:overflow-hidden">
+            <div className="surface-content grid min-h-[520px] grid-cols-1 lg:h-[calc(100vh-340px)] lg:grid-cols-[minmax(340px,420px)_1fr] lg:overflow-hidden">
               <section
-                className="flex min-h-0 flex-col border-border lg:border-r"
+                className="flex min-h-0 min-w-0 flex-col border-border lg:border-r"
                 aria-label="Opportunity results"
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
-                  <Tabs value={tab} onValueChange={(value) => setTab(value as 'all' | 'saved')}>
+                <Tabs value={tab} onValueChange={(value) => setTab(value as 'all' | 'saved')}>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
                     <TabsList>
                       <TabsTrigger value="all">Latest</TabsTrigger>
                       <TabsTrigger value="saved" className="gap-1.5">
@@ -689,83 +689,90 @@ const Opportunities = () => {
                         Saved ({savedIds.size})
                       </TabsTrigger>
                     </TabsList>
-                  </Tabs>
-                  {rankingSummary && tab === 'all' && (
-                    <p role="status" className="type-meta min-w-0 truncate">
-                      {rankingSummary}
-                      {deduplicatedCount > 0
-                        ? ` ${deduplicatedCount} duplicate ${deduplicatedCount === 1 ? 'listing was' : 'listings were'} hidden.`
-                        : ''}
-                    </p>
-                  )}
-                </div>
+                    {rankingSummary && tab === 'all' && (
+                      <p role="status" className="type-meta min-w-0 truncate">
+                        {rankingSummary}
+                        {deduplicatedCount > 0
+                          ? ` ${deduplicatedCount} duplicate ${deduplicatedCount === 1 ? 'listing was' : 'listings were'} hidden.`
+                          : ''}
+                      </p>
+                    )}
+                  </div>
 
-                <div
-                  ref={listRef}
-                  className="grid content-start gap-3 p-3 sm:grid-cols-2 lg:flex-1 lg:grid-cols-1 lg:overflow-y-auto"
-                  aria-label="Latest opportunities"
-                  onScroll={(event) =>
-                    sessionStorage.setItem(SCROLL_STORAGE_KEY, String(event.currentTarget.scrollTop))
-                  }
-                >
-                  {filtered.length === 0 ? (
-                    <div className="p-4 sm:col-span-2 lg:col-span-1">
-                      <RecordState
-                        tone="empty"
-                        title={emptyState().title}
-                        description={emptyState().body}
-                        action={
-                          search.trim() || activeFilterCount > 0 ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSearch('');
-                                resetFilters();
-                              }}
-                              className="gap-1"
-                            >
-                              <X aria-hidden="true" className="size-3.5" />
-                              Clear search and filters
-                            </Button>
-                          ) : undefined
+                  {/* The tabs own the results list: each value renders the same
+                      list (already filtered by `tab`) inside its panel so the
+                      tab triggers reference real tabpanel ids. */}
+                  {(['all', 'saved'] as const).map((value) => (
+                    <TabsContent key={value} value={value} className="flex min-h-0 flex-col lg:flex-1">
+                      <div
+                        ref={listRef}
+                        className="grid flex-1 content-start gap-3 p-3 sm:grid-cols-2 lg:grid-cols-1 lg:overflow-y-auto"
+                        aria-label={value === 'saved' ? 'Saved opportunities' : 'Latest opportunities'}
+                        onScroll={(event) =>
+                          sessionStorage.setItem(SCROLL_STORAGE_KEY, String(event.currentTarget.scrollTop))
                         }
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      {visibleRanked.map((result) => (
-                        <OpportunityCard
-                          key={result.job.id}
-                          job={result.job}
-                          fit={fitByJob.get(result.job.id) ?? null}
-                          saved={savedIds.has(result.job.id)}
-                          saving={savingIds.has(result.job.id)}
-                          bookmarkDisabled={Boolean(partialWarning)}
-                          tracking={trackingIds.has(result.job.id)}
-                          application={applicationsByJob.get(result.job.id) ?? null}
-                          selected={selected?.job.id === result.job.id}
-                          onOpen={() => handleSelect(result.job.id)}
-                          onRowKeyDown={handleRowKeyDown}
-                          onToggleSave={() => toggleSave(result.job.id)}
-                          onTrack={() => trackApplication(result.job)}
-                        />
-                      ))}
-                      {remainingCount > 0 && (
-                        <div className="p-1 sm:col-span-2 lg:col-span-1">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_ROWS)}
-                          >
-                            Load {Math.min(INITIAL_VISIBLE_ROWS, remainingCount)} more opportunities ({remainingCount} remaining)
-                          </Button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
+                      >
+                        {filtered.length === 0 ? (
+                          <div className="p-4 sm:col-span-2 lg:col-span-1">
+                            <RecordState
+                              tone="empty"
+                              title={emptyState().title}
+                              description={emptyState().body}
+                              action={
+                                search.trim() || activeFilterCount > 0 ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSearch('');
+                                      resetFilters();
+                                    }}
+                                    className="gap-1"
+                                  >
+                                    <X aria-hidden="true" className="size-3.5" />
+                                    Clear search and filters
+                                  </Button>
+                                ) : undefined
+                              }
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            {visibleRanked.map((result) => (
+                              <OpportunityCard
+                                key={result.job.id}
+                                job={result.job}
+                                fit={fitByJob.get(result.job.id) ?? null}
+                                saved={savedIds.has(result.job.id)}
+                                saving={savingIds.has(result.job.id)}
+                                bookmarkDisabled={Boolean(partialWarning)}
+                                tracking={trackingIds.has(result.job.id)}
+                                application={applicationsByJob.get(result.job.id) ?? null}
+                                selected={selected?.job.id === result.job.id}
+                                onOpen={() => handleSelect(result.job.id)}
+                                onRowKeyDown={handleRowKeyDown}
+                                onToggleSave={() => toggleSave(result.job.id)}
+                                onTrack={() => trackApplication(result.job)}
+                              />
+                            ))}
+                            {remainingCount > 0 && (
+                              <div className="p-1 sm:col-span-2 lg:col-span-1">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full"
+                                  onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE_ROWS)}
+                                >
+                                  Load {Math.min(INITIAL_VISIBLE_ROWS, remainingCount)} more opportunities ({remainingCount} remaining)
+                                </Button>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </TabsContent>
+                  ))}
+                </Tabs>
               </section>
 
               {/* Desktop contextual panel */}

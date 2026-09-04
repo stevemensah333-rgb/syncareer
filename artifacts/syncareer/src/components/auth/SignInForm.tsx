@@ -68,7 +68,7 @@ export default function SignInForm() {
         <div>
           <div className="mb-1.5 flex items-baseline justify-between">
             <span />
-            <Link to="/sign-in/forgot-password" className="text-sm font-medium text-primary hover:underline">Forgot password?</Link>
+            <Link to="/sign-in/forgot-password" className="inline-flex min-h-6 items-center text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm">Forgot password?</Link>
           </div>
           <PasswordField id="sign-in-password" label="Password" value={password} onChange={setPassword} autoComplete="current-password" />
         </div>

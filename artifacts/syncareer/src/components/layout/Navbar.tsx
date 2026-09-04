@@ -156,7 +156,7 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
               >
                 <Avatar className="h-9 w-9 cursor-pointer border transition-colors duration-150 hover:border-primary/50">
                   <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
-                  <AvatarFallback className="bg-primary/10 text-primary">
+                  <AvatarFallback className="bg-primary/10 text-selected-foreground">
                     {initials || <User className="h-5 w-5" />}
                   </AvatarFallback>
                 </Avatar>

@@ -60,7 +60,9 @@ export function DossierIndexNav({
 
       <div className="border-b border-border px-3 py-4">
         <p className="dossier-eyebrow">Application</p>
-        <h2 className="dossier-title mt-1 break-words text-lg leading-6 text-foreground">{applicationTitle}</h2>
+        {/* Not a heading: the document's own h1 carries the application title;
+            an h2 here would precede it in DOM order and break heading order. */}
+        <p className="dossier-title mt-1 break-words text-lg leading-6 text-foreground">{applicationTitle}</p>
         {description && <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>}
         <p className="mt-3 inline-flex min-h-7 items-center border px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">
           {statusLabel}

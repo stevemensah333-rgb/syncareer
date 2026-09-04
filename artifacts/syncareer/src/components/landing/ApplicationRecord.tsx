@@ -79,7 +79,7 @@ export default function ApplicationRecord({
           <p className="mt-1 text-sm text-muted-foreground">Example organisation · Accra · Entry level</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+          <span className="inline-flex items-center gap-1.5 border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-selected-foreground">
             <Bookmark className="h-3.5 w-3.5" aria-hidden="true" /> Saved
           </span>
         </div>
@@ -90,7 +90,10 @@ export default function ApplicationRecord({
           id={`${idPrefix}-workflow`}
           role="tablist"
           aria-label="Illustrative application record stages"
-          className="flex snap-x overflow-x-auto border-b bg-background px-2 py-2"
+          // Focusable so keyboard users can scroll the stage strip on narrow
+          // viewports (tab scroll happens natively once the region has focus).
+          tabIndex={0}
+          className="flex snap-x overflow-x-auto border-b bg-background px-2 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
           {APPLICATION_STAGES.map((stage, index) => (
             <button
@@ -120,7 +123,7 @@ export default function ApplicationRecord({
               }}
               className={`landing-record-tab relative min-h-10 shrink-0 snap-start px-3 py-2 text-left text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:px-3.5 ${active === stage.id ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
             >
-              <span className="mr-1.5 text-[10px] opacity-70">0{index + 1}</span>{stage.label}
+              <span className="mr-1.5 text-[10px]" aria-hidden="true">0{index + 1}</span>{stage.label}
               <span className="landing-record-tab-indicator" aria-hidden="true" />
             </button>
           ))}
