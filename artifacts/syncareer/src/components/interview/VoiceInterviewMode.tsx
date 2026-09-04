@@ -10,10 +10,8 @@ import {
   Play,
   RefreshCw,
   RotateCcw,
-  Sparkles,
   Volume2,
   Award,
-  TrendingUp,
   ShieldCheck,
   Layers,
   FileCheck,
@@ -35,7 +33,6 @@ import { cn } from '@/lib/utils';
 import { useVoiceInterview } from '@/hooks/useVoiceInterview';
 import { INTERVIEW_PHASE_LABELS } from '@/features/interview/lifecycle';
 import { deterministicAnswerChecks, pairQuestionAnswers, retryOutline } from '@/features/interview/sessionReport';
-import { parseFinalReport } from '@/features/interview/reportParser';
 import { ContextualAssistantDrawer } from '@/components/assistant/ContextualAssistantDrawer';
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
@@ -63,6 +60,18 @@ const excerpt = (text: string | null, length = 180) =>
   text ? `${text.slice(0, length)}${text.length > length ? '…' : ''}` : 'Transcript unavailable.';
 
 const STAGES = ['Intro', 'Technical', 'Behavioral', 'Scenario', 'Closing'] as const;
+const TECHNICAL_STOPWORDS = new Set([
+  'about', 'after', 'before', 'build', 'built', 'candidate', 'career', 'could', 'describe', 'during', 'explain',
+  'experience', 'interview', 'question', 'response', 'project', 'projects', 'their', 'there', 'these', 'those',
+  'using', 'where', 'which', 'while', 'would', 'your', 'with', 'from', 'have', 'into', 'this', 'that', 'role',
+]);
+
+function technicalKeywordsFrom(text: string): string[] {
+  return Array.from(new Set(
+    (text.toLowerCase().match(/[a-z][a-z0-9+#.-]{2,}/g) ?? [])
+      .filter((term) => term.length >= 4 && !TECHNICAL_STOPWORDS.has(term)),
+  )).slice(0, 18);
+}
 
 export function VoiceInterviewMode({
   jobRole,
@@ -151,10 +160,6 @@ export function VoiceInterviewMode({
   const statusLabel = INTERVIEW_PHASE_LABELS[interview.phase];
   const progressPercent = interview.progress.total > 0 ? (interview.progress.answered / interview.progress.total) * 100 : 0;
   
-  const modelMessage = interview.isCompleted
-    ? interview.messages.findLast((message) => message.role === 'assistant' && /interview complete/i.test(message.content))
-    : null;
-  const modelReport = modelMessage ? parseFinalReport(modelMessage.content) : null;
   
   const assessed = evidence.map((pair) => ({ pair, checks: deterministicAnswerChecks(pair) }));
   const ranked = [...assessed].sort(
@@ -164,6 +169,76 @@ export function VoiceInterviewMode({
   );
   const strongest = ranked.filter(({ pair }) => pair.answer).slice(0, 2);
   const improvements = [...ranked].reverse().slice(0, 2);
+  const answeredPairs = assessed.filter(({ pair }) => Boolean(pair.answer?.trim()));
+  const communicationPresentCount = answeredPairs.filter(({ checks }) => checks.clarity === 'present').length;
+  const evidencePresentCount = answeredPairs.filter(({ checks }) => checks.evidence === 'present').length;
+  const technicalKeywords = technicalKeywordsFrom(`${jobRole} ${jobDescription ?? ''}`);
+  const technicalExamples = answeredPairs.filter(({ pair }) => {
+    const combined = `${pair.question} ${pair.answer ?? ''}`.toLowerCase();
+    return technicalKeywords.some((keyword) => combined.includes(keyword));
+  });
+
+  const communicationSummary = answeredPairs.length === 0
+    ? 'No submitted response is available yet, so communication has not been summarised.'
+    : communicationPresentCount === answeredPairs.length
+      ? `Your answers were generally easy to follow, with complete spoken responses in ${communicationPresentCount} of ${answeredPairs.length} submitted answer${answeredPairs.length === 1 ? '' : 's'}.`
+      : `Clarity varied across the session. ${communicationPresentCount} of ${answeredPairs.length} submitted answers showed a complete spoken structure; the rest would benefit from a clearer beginning, middle and result.`;
+
+  const technicalSummary = answeredPairs.length === 0
+    ? 'No submitted response is available yet, so technical understanding has not been summarised.'
+    : technicalExamples.length > 0
+      ? `Technical understanding was visible when you named concrete tools, systems or methods such as ${technicalKeywords.slice(0, 3).join(', ') || 'role-specific tools'}.`
+      : interviewType === 'behavioral'
+        ? 'This session focused on behavioral practice, so no separate technical judgement is shown from the transcript alone.'
+        : 'Technical understanding was not yet explicit in the recorded transcript. Name the tool, method, system or decision you used when it matters to the role.';
+
+  const evidenceSummary = answeredPairs.length === 0
+    ? 'No submitted response is available yet, so evidence use has not been summarised.'
+    : evidencePresentCount > 0
+      ? `${evidencePresentCount} of ${answeredPairs.length} submitted answers included visible outcome or result language. Keep naming actions, metrics and consequences where they are truthful.`
+      : 'The transcript did not yet show a clear result, metric or concrete outcome. Add a measurable consequence or verified outcome where possible.';
+
+  const nextImprovementPair = improvements.find(({ pair }) => Boolean(pair.answer?.trim()))?.pair ?? strongest.at(-1)?.pair ?? null;
+  const nextImprovementSummary = nextImprovementPair
+    ? `Re-answer “${excerpt(nextImprovementPair.question, 78)}” with a sharper task, the actions you personally took, and the result you can support.`
+    : 'Complete one full answer, then review it using the STAR blueprint below.';
+
+  const supportedDimensions = [
+    {
+      title: 'Strengths',
+      tone: 'success' as const,
+      detail: strongest.length
+        ? `Your clearest moments came from answers with visible context, action and outcome. Example: “${excerpt(strongest[0]?.pair.answer ?? null, 120)}”`
+        : 'There is not enough transcript evidence to identify a clear strength yet.',
+    },
+    {
+      title: 'Missing depth',
+      tone: 'warning' as const,
+      detail: improvements.length
+        ? `The thinnest answer thread was “${excerpt(improvements[0]?.pair.question ?? null, 80)}”. Add more specifics, direct actions and results.`
+        : 'No answer evidence is available to identify missing depth yet.',
+    },
+    {
+      title: 'Communication',
+      tone: 'neutral' as const,
+      detail: communicationSummary,
+    },
+    {
+      title: 'Technical understanding',
+      tone: 'neutral' as const,
+      detail: technicalSummary,
+    },
+    {
+      title: 'Evidence used',
+      tone: evidencePresentCount > 0 ? 'success' as const : 'warning' as const,
+      detail: evidenceSummary,
+    },
+    {
+      title: 'Next improvement',
+      tone: 'warning' as const,
+      detail: nextImprovementSummary,
+    },
+  ];
 
   const finish = () => {
     if (!sessionFinishedRef.current) {
@@ -209,16 +284,15 @@ export function VoiceInterviewMode({
             </div>
           </header>
 
-          {/* Dimension 1: Assessment Rubric & Evidence Breakdown */}
-          <section className="rounded-surface border border-border bg-card p-5 sm:p-6 shadow-card" aria-labelledby="rubric-title">
+          <section className="rounded-surface border border-border bg-card p-5 sm:p-6 shadow-card" aria-labelledby="review-title">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle pb-3">
               <div>
-                <h2 id="rubric-title" className="text-base font-semibold text-foreground flex items-center gap-2">
+                <h2 id="review-title" className="text-base font-semibold text-foreground flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-primary" />
-                  Assessment Rubric & Signal Verification
+                  Question and response review
                 </h2>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Deterministic checks flag visible signals for relevance, specificity, evidence, and clarity. They are qualitative text checks, not semantic grading or a hiring probability.
+                  Each answered prompt is shown with the recorded response and visible transcript signals. These checks surface evidence in the text; they are not semantic grading or a hiring probability.
                 </p>
               </div>
             </div>
@@ -262,65 +336,41 @@ export function VoiceInterviewMode({
             </div>
           </section>
 
-          {/* Dimension 2 & 3: Strengths and Missing Depth */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <section className="rounded-surface border border-border bg-card p-5 sm:p-6 shadow-card space-y-3">
-              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Award className="h-4 w-4 text-success" />
-                Strongest Moments
+          <section className="rounded-surface border border-border bg-card p-5 sm:p-6 shadow-card space-y-4" aria-labelledby="feedback-title">
+            <div className="border-b border-border-subtle pb-3">
+              <h2 id="feedback-title" className="text-base font-semibold text-foreground flex items-center gap-2">
+                <Award className="h-4 w-4 text-primary" />
+                Feedback
               </h2>
-              <p className="text-xs text-muted-foreground">
-                Answers with clear situation context, actionable contributions, and measurable evidence.
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Feedback is limited to the supported interview dimensions below and grounded in your recorded session only.
               </p>
-              {strongest.length ? (
-                <ul className="space-y-3 pt-1">
-                  {strongest.map(({ pair }, index) => (
-                    <li key={index} className="rounded-surface border border-border bg-secondary/30 p-3 space-y-1.5 text-xs">
-                      <span className="font-semibold text-foreground block">{excerpt(pair.question, 90)}</span>
-                      <blockquote className="border-l-2 border-success pl-2.5 text-muted-foreground italic leading-relaxed">
-                        &ldquo;{excerpt(pair.answer, 160)}&rdquo;
-                      </blockquote>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-xs text-muted-foreground">There is not enough transcript evidence to identify a strongest moment.</p>
-              )}
-            </section>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {supportedDimensions.map((item) => (
+                <article
+                  key={item.title}
+                  className={cn(
+                    'rounded-surface border p-4 text-xs shadow-sm transition-colors duration-150',
+                    item.tone === 'success' && 'border-success/25 bg-success/5',
+                    item.tone === 'warning' && 'border-warning/30 bg-warning/10',
+                    item.tone === 'neutral' && 'border-border bg-secondary/20',
+                  )}
+                >
+                  <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
+                  <p className="mt-1.5 leading-relaxed text-muted-foreground">{item.detail}</p>
+                </article>
+              ))}
+            </div>
+          </section>
 
-            <section className="rounded-surface border border-border bg-card p-5 sm:p-6 shadow-card space-y-3">
-              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-warning" />
-                Missing Depth & High-Priority Improvements
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                Target areas where adding metrics, specific actions, or technical keywords will strengthen your answer.
-              </p>
-              {improvements.length ? (
-                <ul className="space-y-3 pt-1">
-                  {improvements.map(({ pair }, index) => (
-                    <li key={index} className="rounded-surface border border-border bg-secondary/30 p-3 space-y-1.5 text-xs">
-                      <span className="font-semibold text-foreground block">Focus area: {excerpt(pair.question, 90)}</span>
-                      <p className="text-muted-foreground leading-relaxed">
-                        Evidence reviewed: {excerpt(pair.answer, 140)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-xs text-muted-foreground">No answer evidence is available to prioritise improvements.</p>
-              )}
-            </section>
-          </div>
-
-          {/* Dimension 4: Structured STAR Retry Blueprint */}
-          <section className="rounded-surface border border-border bg-card p-5 sm:p-6 shadow-card space-y-3">
-            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <section className="rounded-surface border border-border bg-card p-5 sm:p-6 shadow-card space-y-3" aria-labelledby="next-challenge-title">
+            <h2 id="next-challenge-title" className="text-sm font-semibold text-foreground flex items-center gap-2">
               <FileCheck className="h-4 w-4 text-primary" />
-              Structured STAR Retry Blueprint
+              Next challenge
             </h2>
             <p className="text-xs text-muted-foreground">
-              Structure future answers using the STAR method based on your truthful experience:
+              Use this plan for your next attempt. It keeps the practice loop calm, specific and grounded in truthful experience.
             </p>
             <ol className="grid gap-2 sm:grid-cols-2 pt-1 text-xs">
               {retryOutline().map((step, index) => (
@@ -333,34 +383,6 @@ export function VoiceInterviewMode({
               ))}
             </ol>
           </section>
-
-          {/* Model Generated Notes if Available */}
-          {modelReport && (
-            <section className="rounded-surface border border-info/40 bg-accent/40 p-5 sm:p-6 space-y-3">
-              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-info" />
-                Summary
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                Generated qualitative synthesis; review it against your verified transcript above.
-              </p>
-              <p className="text-xs text-foreground leading-relaxed font-medium bg-card/60 p-3 rounded-surface border border-border">
-                {modelReport.assessment || modelReport.overallVerdict}
-              </p>
-              {modelReport.strengths.length > 0 && (
-                <div className="text-xs space-y-1">
-                  <span className="font-semibold text-foreground">Identified Strengths:</span>
-                  <p className="text-muted-foreground">{modelReport.strengths.join('; ')}</p>
-                </div>
-              )}
-              {modelReport.weaknesses.length > 0 && (
-                <div className="text-xs space-y-1">
-                  <span className="font-semibold text-foreground">Areas for Growth:</span>
-                  <p className="text-muted-foreground">{modelReport.weaknesses.join('; ')}</p>
-                </div>
-              )}
-            </section>
-          )}
 
           {/* Contextual Assistant & Actions */}
           <section className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
@@ -414,6 +436,22 @@ export function VoiceInterviewMode({
   const isSpeaking = interview.isSpeaking;
   const isProcessing = interview.phase === 'processing';
   const isPaused = interview.phase === 'paused';
+  const latestAnsweredPair = [...evidence].reverse().find((pair) => Boolean(pair.answer?.trim())) ?? null;
+  const latestChecks = latestAnsweredPair ? deterministicAnswerChecks(latestAnsweredPair) : null;
+  const liveFeedbackSummary = interview.progress.answered === 0
+    ? 'Feedback will appear after your first submitted response is captured.'
+    : latestAnsweredPair && latestChecks
+      ? [
+          latestChecks.clarity === 'present' ? 'response captured clearly' : 'clarity can be stronger',
+          latestChecks.evidence === 'present' ? 'evidence detected' : 'add a result or concrete evidence',
+          latestChecks.specificity === 'present' ? 'specific detail present' : 'add more specifics',
+        ].join(' · ')
+      : 'Your latest response is being prepared for review.';
+  const nextChallengeLabel = interview.progress.answered >= interview.progress.total
+    ? 'Final review ready'
+    : interview.progress.isFollowUp
+      ? 'Next challenge will probe the same topic more deeply.'
+      : `Next challenge: ${STAGES[Math.min(currentRoundIndex + 1, STAGES.length - 1)] || 'Practice'} round`;
 
   return (
     <main className="fixed inset-0 z-[100] overflow-y-auto bg-background" aria-labelledby="session-title">
@@ -615,6 +653,90 @@ export function VoiceInterviewMode({
               </div>
             )}
           </section>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <section
+              aria-labelledby="feedback-heading"
+              className="rounded-surface border border-border bg-card p-5 shadow-card space-y-3"
+            >
+              <div className="flex items-center justify-between gap-2 border-b border-border-subtle pb-3">
+                <div>
+                  <p id="feedback-heading" className="type-label text-foreground">Feedback</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    The workbench only surfaces supported dimensions from the recorded transcript.
+                  </p>
+                </div>
+                <span className="rounded-control border border-border bg-secondary/30 px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
+                  {interview.progress.answered === 0 ? 'Waiting for submission' : 'Updated after each answer'}
+                </span>
+              </div>
+              <div
+                key={`${interview.progress.answered}-${interview.phase}`}
+                className="interview-feedback-enter space-y-3"
+              >
+                <div className="rounded-surface border border-border bg-secondary/20 p-3 text-xs text-muted-foreground">
+                  {liveFeedbackSummary}
+                </div>
+                <dl className="grid gap-2 sm:grid-cols-2">
+                  {[
+                    {
+                      label: 'Communication',
+                      value: latestChecks?.clarity === 'present' ? 'Clear' : interview.progress.answered > 0 ? 'Needs more structure' : 'Pending',
+                    },
+                    {
+                      label: 'Evidence used',
+                      value: latestChecks?.evidence === 'present' ? 'Visible' : interview.progress.answered > 0 ? 'Add a result' : 'Pending',
+                    },
+                    {
+                      label: 'Technical understanding',
+                      value: latestAnsweredPair && technicalKeywords.some((keyword) => `${latestAnsweredPair.question} ${latestAnsweredPair.answer ?? ''}`.toLowerCase().includes(keyword)) ? 'Referenced' : interview.progress.answered > 0 ? 'Can be more explicit' : 'Pending',
+                    },
+                    {
+                      label: 'Missing depth',
+                      value: latestChecks?.specificity === 'present' ? 'Covered' : interview.progress.answered > 0 ? 'Add more specifics' : 'Pending',
+                    },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-control border border-border bg-background p-3">
+                      <dt className="type-label text-muted-foreground">{item.label}</dt>
+                      <dd className="mt-1 text-xs font-semibold text-foreground">{item.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </section>
+
+            <section
+              aria-labelledby="next-heading"
+              className="rounded-surface border border-border bg-card p-5 shadow-card space-y-3"
+            >
+              <div className="border-b border-border-subtle pb-3">
+                <p id="next-heading" className="type-label text-foreground">Next challenge</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Stay in the flow. The next prompt advances automatically when your current response is processed.
+                </p>
+              </div>
+              <div key={`${interview.progress.answered}-${interview.progress.isFollowUp}`} className="interview-next-enter space-y-3">
+                <div className="rounded-surface border border-primary/20 bg-primary/5 p-3 text-xs text-foreground">
+                  <p className="font-medium">{nextChallengeLabel}</p>
+                  <p className="mt-1 text-muted-foreground">
+                    {interview.progress.answered === 0
+                      ? 'Answer the first question in a calm STAR structure so the system has enough evidence for feedback.'
+                      : 'Keep your next answer concise, specific and truthful. Name the task, your action, and the outcome you can support.'}
+                  </p>
+                </div>
+                <ol className="space-y-2 text-xs text-muted-foreground">
+                  {retryOutline().slice(0, 3).map((step, index) => (
+                    <li key={step} className="flex items-start gap-2 rounded-control border border-border bg-secondary/20 p-2.5">
+                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-control bg-secondary text-[11px] font-semibold text-secondary-foreground">
+                        {index + 1}
+                      </span>
+                      <span className="leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </section>
+          </div>
         </div>
 
         {/* Real-time Session Transcript Log (Collapsible) */}

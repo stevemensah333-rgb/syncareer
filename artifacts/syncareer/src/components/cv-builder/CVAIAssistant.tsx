@@ -3,7 +3,6 @@ import { AlertTriangle, Check, Lightbulb, RotateCcw, Send, X, Sparkles } from 'l
 import { Spinner } from '@/components/ui/spinner';
 
 import { Link } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -174,8 +173,8 @@ export function CVAIAssistant({
 
   return (
     <div className="space-y-4">
-      <Card className="border-border bg-card shadow-none">
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
+      <Card className="surface-content shadow-card">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border px-4 pb-4 pt-4">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold">
             <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
             Job-specific bullet suggestion
@@ -186,7 +185,7 @@ export function CVAIAssistant({
             </Button>
           )}
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-4 pb-4 pt-4">
           {opportunityLoading ? (
             <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground">
               <Spinner className="size-4 text-primary" />
@@ -259,9 +258,9 @@ export function CVAIAssistant({
                 </Select>
                 {match && (
                   <div className="flex items-start gap-2 rounded-surface border border-border bg-card p-2.5 text-xs">
-                    <Badge variant="outline" className="shrink-0 rounded-control capitalize text-[11px]">
+                    <span className="shrink-0 rounded-control border border-border bg-secondary/30 px-2 py-0.5 text-[11px] font-medium capitalize text-foreground">
                       {match.status.replace('_', ' ')}
-                    </Badge>
+                    </span>
                     <span className="text-muted-foreground leading-relaxed">{match.explanation}</span>
                   </div>
                 )}
@@ -339,9 +338,9 @@ export function CVAIAssistant({
                     <h3 id="cv-suggestion-heading" className="type-label text-foreground">
                       Suggested for review
                     </h3>
-                    <Badge variant="secondary" className="rounded-control capitalize text-[11px]">
+                    <span className="rounded-control border border-border bg-secondary/30 px-2 py-0.5 text-[11px] font-medium capitalize text-foreground">
                       {currentSuggestion.confidence} confidence
-                    </Badge>
+                    </span>
                   </div>
                   <div className="grid gap-3">
                     <div>
@@ -434,14 +433,14 @@ export function CVAIAssistant({
         </CardContent>
       </Card>
 
-      <Card className="border-border bg-card shadow-none">
-        <CardHeader className="pb-2.5">
+      <Card className="surface-content shadow-card">
+        <CardHeader className="border-b border-border px-4 pb-3 pt-4">
           <CardTitle className="flex items-center gap-2 type-label">
             <Lightbulb className="h-3.5 w-3.5 text-info" />
             Tips for {activeSection}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 pb-4 pt-3">
           <ul className="space-y-1.5">
             {(tips ?? []).map((tip) => (
               <li key={tip} className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">

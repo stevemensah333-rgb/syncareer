@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { InterviewErrorBoundary } from '@/components/interview/InterviewErrorBoundary';
 import { VoiceInterviewMode } from '@/components/interview/VoiceInterviewMode';
+import { ProductJourneyRail } from '@/components/journey/ProductJourneyRail';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { useSearchParams } from 'react-router-dom';
@@ -195,6 +196,33 @@ const InterviewSimulator = () => {
     setStep('interview');
   };
 
+  const journeyRail = (
+    <ProductJourneyRail
+      steps={[
+        {
+          id: 'application',
+          label: 'Application',
+          description: 'Pick a tracked role or active posting as the source context.',
+          to: '/applications',
+          state: selectedApplicationId ? 'complete' : 'available',
+        },
+        {
+          id: 'cv',
+          label: 'CV',
+          description: 'Review your CV wording before practice if you need another edit pass.',
+          to: '/cv-builder',
+          state: 'available',
+        },
+        {
+          id: 'interview',
+          label: 'Interview',
+          description: 'Advance mode keeps question, response, feedback and progression separate.',
+          state: 'current',
+        },
+      ]}
+    />
+  );
+
   return (
     <PageLayout
       title="Interview Simulator"
@@ -205,8 +233,10 @@ const InterviewSimulator = () => {
         { label: 'Interview Simulator' },
       ]}
     >
-      {step === 'setup' && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="mode-advance space-y-5">
+        {journeyRail}
+        {step === 'setup' && (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Main Setup Work Surface */}
           <div className="space-y-6 lg:col-span-7">
             {/* Setup Form */}
@@ -538,89 +568,90 @@ const InterviewSimulator = () => {
         </div>
       )}
 
-      {/* Step 2: Readiness Check */}
-      {step === 'readiness' && (
-        <div className="mx-auto max-w-xl rounded-surface border border-border bg-card p-6 shadow-card space-y-5">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Microphone & Audio Check</h2>
-            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Syncareer uses your microphone to capture spoken answers in real time. Video and screen sharing are never requested.
-            </p>
-          </div>
+        {/* Step 2: Readiness Check */}
+        {step === 'readiness' && (
+          <div className="mx-auto max-w-xl rounded-surface border border-border bg-card p-6 shadow-card space-y-5">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Microphone & Audio Check</h2>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                Syncareer uses your microphone to capture spoken answers in real time. Video and screen sharing are never requested.
+              </p>
+            </div>
 
-          <div role="status" className="rounded-surface border border-border bg-secondary/50 p-4 text-xs space-y-2">
-            <div className="flex items-center gap-2 font-medium text-foreground">
-              <Mic className="h-4 w-4 text-primary" />
-              <span>
-                {readiness === 'unchecked' && 'Your microphone has not been checked.'}
-                {readiness === 'checking' && 'Requesting microphone access…'}
-                {readiness === 'ready' && 'Microphone is connected and active. Audio output uses browser speech synthesis.'}
-                {readiness === 'denied' && 'Microphone permission was denied. Please allow microphone access in your browser settings.'}
-                {readiness === 'missing' && 'No usable microphone was found.'}
-                {readiness === 'failed' && 'Microphone check failed. Close conflicting apps and retry.'}
-              </span>
+            <div role="status" className="rounded-surface border border-border bg-secondary/50 p-4 text-xs space-y-2">
+              <div className="flex items-center gap-2 font-medium text-foreground">
+                <Mic className="h-4 w-4 text-primary" />
+                <span>
+                  {readiness === 'unchecked' && 'Your microphone has not been checked.'}
+                  {readiness === 'checking' && 'Requesting microphone access…'}
+                  {readiness === 'ready' && 'Microphone is connected and active. Audio output uses browser speech synthesis.'}
+                  {readiness === 'denied' && 'Microphone permission was denied. Please allow microphone access in your browser settings.'}
+                  {readiness === 'missing' && 'No usable microphone was found.'}
+                  {readiness === 'failed' && 'Microphone check failed. Close conflicting apps and retry.'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button variant="outline" className="rounded-control text-xs" onClick={() => setStep('setup')}>
+                Back to setup
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-control text-xs"
+                disabled={readiness === 'checking'}
+                onClick={() => void checkReadiness()}
+              >
+                {readiness === 'checking' ? 'Checking…' : readiness === 'ready' ? 'Check again' : 'Check microphone'}
+              </Button>
+              <Button
+                className="rounded-control text-xs"
+                disabled={readiness !== 'ready' || startRequested.current}
+                onClick={beginReadyInterview}
+              >
+                Start interview
+              </Button>
             </div>
           </div>
+        )}
 
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Button variant="outline" className="rounded-control text-xs" onClick={() => setStep('setup')}>
-              Back to setup
-            </Button>
-            <Button
-              variant="outline"
-              className="rounded-control text-xs"
-              disabled={readiness === 'checking'}
-              onClick={() => void checkReadiness()}
+        {/* Step 3: Active Interview */}
+        {step === 'interview' && (
+          <div className="mx-auto max-w-3xl">
+            <InterviewErrorBoundary
+              onReset={() => setStep('setup')}
+              fallbackTitle="Interview session crashed"
             >
-              {readiness === 'checking' ? 'Checking…' : readiness === 'ready' ? 'Check again' : 'Check microphone'}
-            </Button>
-            <Button
-              className="rounded-control text-xs"
-              disabled={readiness !== 'ready' || startRequested.current}
-              onClick={beginReadyInterview}
-            >
-              Start interview
-            </Button>
+              <VoiceInterviewMode
+                jobRole={config.jobRole}
+                industry={config.industry}
+                difficulty={config.difficulty}
+                interviewType={config.interviewType}
+                resumeText={config.resumeText}
+                jobDescription={config.jobDescription}
+                sessionLength={sessionLength}
+                applicationId={selectedApplicationId}
+                autoStart
+                onRetry={() => {
+                  try {
+                    captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' });
+                  } catch {}
+                  startRequested.current = false;
+                  setReadiness('unchecked');
+                  setStep('readiness');
+                }}
+                onEnd={() => {
+                  startRequested.current = false;
+                  setStep('setup');
+                  queryClient.invalidateQueries({ queryKey: ['mock_interviews_history'] });
+                  feedbackModal.triggerFeedback();
+                  toast.success('Interview session closed.');
+                }}
+              />
+            </InterviewErrorBoundary>
           </div>
-        </div>
-      )}
-
-      {/* Step 3: Active Interview */}
-      {step === 'interview' && (
-        <div className="mx-auto max-w-3xl">
-          <InterviewErrorBoundary
-            onReset={() => setStep('setup')}
-            fallbackTitle="Interview session crashed"
-          >
-            <VoiceInterviewMode
-              jobRole={config.jobRole}
-              industry={config.industry}
-              difficulty={config.difficulty}
-              interviewType={config.interviewType}
-              resumeText={config.resumeText}
-              jobDescription={config.jobDescription}
-              sessionLength={sessionLength}
-              applicationId={selectedApplicationId}
-              autoStart
-              onRetry={() => {
-                try {
-                  captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' });
-                } catch {}
-                startRequested.current = false;
-                setReadiness('unchecked');
-                setStep('readiness');
-              }}
-              onEnd={() => {
-                startRequested.current = false;
-                setStep('setup');
-                queryClient.invalidateQueries({ queryKey: ['mock_interviews_history'] });
-                feedbackModal.triggerFeedback();
-                toast.success('Interview session closed.');
-              }}
-            />
-          </InterviewErrorBoundary>
-        </div>
-      )}
+        )}
+      </div>
 
       <FeedbackModal
         isOpen={feedbackModal.isOpen}

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Wrench, Plus, X } from 'lucide-react';
 import { SUGGESTED_SKILLS } from '@/features/cv-builder/constants';
@@ -40,14 +39,14 @@ export const CVFormSkills: React.FC<CVFormSkillsProps> = ({ skills, onChange }) 
   };
 
   return (
-    <Card className="border-border bg-card shadow-none">
-      <CardHeader className="pb-3">
+    <Card className="border-0 bg-transparent shadow-none">
+      <CardHeader className="gap-0 px-0 pb-4 pt-0">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
           <Wrench className="h-4 w-4 text-primary" aria-hidden="true" />
           Skills & Proficiencies
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-5 px-0 pb-0 pt-0">
         <div className="flex flex-col gap-2 sm:flex-row">
           <Label htmlFor="cv-skill-input" className="sr-only">Add a skill</Label>
           <Input
@@ -69,10 +68,9 @@ export const CVFormSkills: React.FC<CVFormSkillsProps> = ({ skills, onChange }) 
             <p className="type-label">Your listed skills ({skills.length}):</p>
             <div className="flex flex-wrap gap-2">
               {skills.map((skill) => (
-                <Badge
+                <div
                   key={skill}
-                  variant="secondary"
-                  className="flex items-center gap-1.5 rounded-control border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-foreground"
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-border bg-secondary/30 px-2.5 py-1 text-xs font-medium text-foreground"
                 >
                   <span>{skill}</span>
                   <button
@@ -83,7 +81,7 @@ export const CVFormSkills: React.FC<CVFormSkillsProps> = ({ skills, onChange }) 
                   >
                     <X aria-hidden="true" className="h-3 w-3" />
                   </button>
-                </Badge>
+                </div>
               ))}
             </div>
           </div>

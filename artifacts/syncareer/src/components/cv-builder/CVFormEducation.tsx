@@ -52,14 +52,14 @@ export const CVFormEducation: React.FC<CVFormEducationProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card className="border-border bg-card shadow-none">
-        <CardHeader className="pb-3">
+      <Card className="border-0 bg-transparent shadow-none">
+        <CardHeader className="gap-0 px-0 pb-4 pt-0">
           <CardTitle className="flex items-center gap-2 text-base font-semibold">
             <GraduationCap className="h-4 w-4 text-primary" aria-hidden="true" />
             University Education
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-0 pb-0 pt-0">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="university" className="text-xs font-medium">University / Institution</Label>
@@ -128,8 +128,8 @@ export const CVFormEducation: React.FC<CVFormEducationProps> = ({
         </CardContent>
       </Card>
 
-      <Card className="border-border bg-card shadow-none">
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
+      <Card className="border-0 bg-transparent shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between gap-0 px-0 pb-4 pt-0">
           <CardTitle className="flex items-center gap-2 text-base font-semibold">
             <Award className="h-4 w-4 text-primary" aria-hidden="true" />
             Academic Achievements & Honors
@@ -139,7 +139,7 @@ export const CVFormEducation: React.FC<CVFormEducationProps> = ({
             Add honor
           </Button>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-0 pb-0 pt-0">
           {achievements.length === 0 ? (
             <div className="rounded-surface border border-dashed border-border py-6 text-center">
               <Award className="mx-auto mb-2 h-6 w-6 text-muted-foreground/60" aria-hidden="true" />
@@ -149,7 +149,7 @@ export const CVFormEducation: React.FC<CVFormEducationProps> = ({
             </div>
           ) : (
             achievements.map((achievement, index) => (
-              <div key={achievement.id} className="rounded-surface border border-border bg-card p-4 space-y-3 transition-colors duration-150 hover:border-border/80">
+              <div key={achievement.id} className="rounded-control border border-border bg-secondary/20 p-4 space-y-3 transition-colors duration-150 hover:border-primary/30">
                 <div className="flex items-center justify-between">
                   <span className="type-label">
                     Honor / Award {index + 1}

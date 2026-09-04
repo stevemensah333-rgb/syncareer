@@ -1160,9 +1160,25 @@
     animation: interview-question-enter var(--motion-base) var(--ease-standard) both;
   }
 
+  .interview-feedback-enter,
+  .interview-next-enter {
+    animation: interview-panel-enter var(--motion-fast) var(--ease-standard) both;
+  }
+
   @keyframes interview-question-enter {
     from { opacity: 0.55; }
     to { opacity: 1; }
+  }
+
+  @keyframes interview-panel-enter {
+    from {
+      opacity: 0.72;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .cv-section-body {
@@ -1197,6 +1213,8 @@
   @media (prefers-reduced-motion: reduce) {
     .route-enter,
     .interview-question-enter,
+    .interview-feedback-enter,
+    .interview-next-enter,
     .state-saved {
       animation: none !important;
     }

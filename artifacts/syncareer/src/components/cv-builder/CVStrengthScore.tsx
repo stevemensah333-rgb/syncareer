@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Circle, Info, Target, TrendingUp } from 'lucide-react';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
@@ -25,14 +24,14 @@ export const CVStrengthScore: React.FC<CVStrengthScoreProps> = ({ result }) => {
   }, [totalScore]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <Card className="border-border bg-card shadow-none">
-      <CardHeader className="pb-3">
+    <Card className="surface-content shadow-card">
+      <CardHeader className="gap-0 border-b border-border px-4 pb-4 pt-4">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
           <Target className="h-4 w-4 text-primary" aria-hidden="true" />
           CV progress
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-5 px-4 pb-4 pt-4">
         <section className="space-y-3" aria-labelledby="cv-completion-heading">
           <div className="flex items-baseline justify-between gap-3">
             <div>
@@ -95,9 +94,9 @@ export const CVStrengthScore: React.FC<CVStrengthScoreProps> = ({ result }) => {
               <span className="text-xs text-muted-foreground">/100</span>
             </div>
           </div>
-          <Badge variant="secondary" className={`${config.color} rounded-control font-medium`}>
+          <div className={`inline-flex w-fit items-center rounded-control border border-border bg-secondary/40 px-2.5 py-1 text-xs font-medium ${config.color}`}>
             {totalScore === 0 ? 'Not assessed yet' : label}
-          </Badge>
+          </div>
           <div className="space-y-2">
             {Object.entries(breakdown).map(([key, category]) => (
               <div key={key} className="flex items-center justify-between text-xs">

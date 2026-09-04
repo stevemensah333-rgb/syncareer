@@ -92,8 +92,8 @@ export const CVFormProjects: React.FC<CVFormProjectsProps> = ({
   };
 
   return (
-    <Card className="border-border bg-card shadow-none">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
+    <Card className="border-0 bg-transparent shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 px-0 pb-4 pt-0">
         <div>
           <CardTitle className="flex items-center gap-2 text-base font-semibold">
             <FolderKanban className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -108,7 +108,7 @@ export const CVFormProjects: React.FC<CVFormProjectsProps> = ({
           Add project
         </Button>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-0 pb-0 pt-0">
         {projects.length === 0 ? (
           <div className="rounded-surface border border-dashed border-border py-8 text-center">
             <FolderKanban className="mx-auto mb-2 h-7 w-7 text-muted-foreground/50" aria-hidden="true" />
@@ -128,10 +128,10 @@ export const CVFormProjects: React.FC<CVFormProjectsProps> = ({
               <div
                 key={project.id}
                 onClick={() => setActiveEntryId(project.id)}
-                className={`rounded-surface border p-4 sm:p-5 space-y-4 transition-all duration-150 ${
+                className={`rounded-control border p-4 sm:p-5 space-y-4 transition-all duration-150 ${
                   isSelected
-                    ? 'border-primary/50 bg-card shadow-sm ring-1 ring-primary/20'
-                    : 'border-border bg-card hover:border-border/80'
+                    ? 'border-primary/40 bg-selected/70 shadow-none'
+                    : 'border-border bg-transparent hover:border-primary/20'
                 }`}
               >
                 <div className="flex items-center justify-between border-b border-border-subtle pb-3">
@@ -228,8 +228,8 @@ export const CVFormProjects: React.FC<CVFormProjectsProps> = ({
                     return (
                       <div
                         key={bulletIndex}
-                        className={`group relative rounded-surface border p-2.5 transition-colors ${
-                          isBulletSelected ? 'border-primary bg-primary/5' : 'border-border bg-card'
+                        className={`group relative rounded-control border p-2.5 transition-colors ${
+                          isBulletSelected ? 'border-primary bg-primary/5' : 'border-border bg-secondary/20'
                         }`}
                       >
                         <div className="flex items-start gap-2">
@@ -275,7 +275,7 @@ export const CVFormProjects: React.FC<CVFormProjectsProps> = ({
                               key={verb}
                               type="button"
                               onClick={() => insertActionVerb(project.id, bulletIndex, verb)}
-                              className="rounded-control bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-secondary-foreground hover:bg-primary/15 hover:text-primary transition-colors"
+                              className="rounded-control border border-border bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-secondary-foreground transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
                             >
                               +{verb}
                             </button>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CVEditorWorkspace } from '@/components/cv-builder/CVEditorWorkspace';
+import { ProductJourneyRail } from '@/components/journey/ProductJourneyRail';
 import { supabase } from '@/integrations/supabase/client';
 import type { CVData } from '@/features/cv-builder/types';
 import {
@@ -215,30 +216,60 @@ const CVBuilder = () => {
       description="Create, edit, and maintain your primary career CV with evidence and a clear completion checklist."
       breadcrumbs={[{ label: 'Home', to: '/dashboard' }, { label: 'CV Builder' }]}
     >
-      {loadFailure ? (
-        <div className="mx-auto max-w-lg rounded-surface border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3" role="alert">
-          <AlertCircle className="mx-auto h-8 w-8 text-destructive" aria-hidden />
-          <h2 className="text-base font-semibold text-foreground">Your saved CV could not be opened</h2>
-          <p className="text-xs text-muted-foreground leading-relaxed">{loadFailure.userMessage}</p>
-          <p className="text-xs text-muted-foreground">
-            Editing is paused so an unseen cloud copy cannot be overwritten.
-          </p>
-          <Button className="mt-2 rounded-control" variant="outline" onClick={() => void loadSavedCV()}>
-            Try again
-          </Button>
-        </div>
-      ) : (
-        <CVEditorWorkspace
-          loading={isLoadingCV}
-          initialCv={initialCv}
-          save={handleSave}
-          contextBanner={contextBanner}
-          assistantOpportunity={opportunityContext}
-          assistantOpportunityLoading={opportunityContextLoading}
-          assistantOpportunityError={opportunityContextError}
-          postSaveAction={safeReturnTo ? { label: 'Back to opportunity', to: safeReturnTo } : undefined}
+      <div className="space-y-5">
+        <ProductJourneyRail
+          steps={[
+            {
+              id: 'application',
+              label: 'Application',
+              description: 'Track live roles and keep context for tailoring.',
+              to: '/applications',
+              state: 'available',
+            },
+            {
+              id: 'cv',
+              label: 'CV',
+              description: 'Refine your reusable base CV on the main editing surface.',
+              state: 'current',
+            },
+            {
+              id: 'interview',
+              label: 'Interview',
+              description: 'Practise answers when the wording is ready.',
+              to: '/interview-simulator',
+              state: 'available',
+            },
+          ]}
         />
-      )}
+
+        {loadFailure ? (
+          <div className="mx-auto max-w-lg rounded-surface border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3" role="alert">
+            <AlertCircle className="mx-auto h-8 w-8 text-destructive" aria-hidden />
+            <h2 className="text-base font-semibold text-foreground">Your saved CV could not be opened</h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">{loadFailure.userMessage}</p>
+            <p className="text-xs text-muted-foreground">
+              Editing is paused so an unseen cloud copy cannot be overwritten.
+            </p>
+            <Button className="mt-2 rounded-control" variant="outline" onClick={() => void loadSavedCV()}>
+              Try again
+            </Button>
+          </div>
+        ) : (
+          <CVEditorWorkspace
+            loading={isLoadingCV}
+            initialCv={initialCv}
+            save={handleSave}
+            contextBanner={contextBanner}
+            assistantOpportunity={opportunityContext}
+            assistantOpportunityLoading={opportunityContextLoading}
+            assistantOpportunityError={opportunityContextError}
+            postSaveAction={safeReturnTo ? { label: 'Back to opportunity', to: safeReturnTo } : undefined}
+            saveScopeLabel="base CV"
+            footerNote="Keep this as your reusable career baseline, then tailor copies for specific applications when needed."
+            footerAction={{ label: 'Go to interview practice', to: '/interview-simulator' }}
+          />
+        )}
+      </div>
     </PageLayout>
   );
 };

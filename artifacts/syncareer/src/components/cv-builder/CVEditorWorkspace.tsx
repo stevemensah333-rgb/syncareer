@@ -61,9 +61,18 @@ import {
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
 type SaveState = 'saved' | 'unsaved' | 'saving' | 'failed';
+type WorkspaceNotice = {
+  tone: 'info' | 'success';
+  title: string;
+  description: string;
+};
 
 function cvSnapshot(cv: CVData): string {
   return JSON.stringify(cv);
+}
+
+function formatSavedTime(date: Date): string {
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 export interface CVEditorWorkspaceProps {
@@ -94,6 +103,12 @@ export interface CVEditorWorkspaceProps {
    * editing never rewrites recommendation state.
    */
   refreshIntelligence?: boolean;
+  /** Human label for the owned draft receiving saves, e.g. base CV or application CV. */
+  saveScopeLabel?: string;
+  /** Workspace footer note shown beneath the editor sheet. */
+  footerNote?: string;
+  /** Optional journey continuation link surfaced beside the footer note. */
+  footerAction?: { label: string; to: string };
   onEdit?: () => void;
 }
 
@@ -117,6 +132,9 @@ export function CVEditorWorkspace({
   assistantOpportunityError = null,
   postSaveAction,
   refreshIntelligence = true,
+  saveScopeLabel = 'primary CV',
+  footerNote = 'Ready to apply? Use this CV as your career baseline or tailor copies for specific roles in Opportunities.',
+  footerAction = { label: 'Find matching opportunities', to: '/opportunities' },
 }: CVEditorWorkspaceProps) {
   const navigate = useNavigate();
   const [cvData, setCVData] = useState<CVData>(initialCv ?? initialCVData);
@@ -139,6 +157,8 @@ export function CVEditorWorkspace({
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>('unsaved');
   const [fieldErrors, setFieldErrors] = useState<CvValidationErrors>({});
+  const [lastSavedLabel, setLastSavedLabel] = useState<string | null>(null);
+  const [workspaceNotice, setWorkspaceNotice] = useState<WorkspaceNotice | null>(null);
   
   const previewRef = useRef<HTMLDivElement>(null);
   const cvDataRef = useRef(cvData);
@@ -164,6 +184,7 @@ export function CVEditorWorkspace({
       cvDataRef.current = initialCv;
       lastPersistedSnapshotRef.current = cvSnapshot(initialCv);
       setSaveState('saved');
+      setLastSavedLabel(null);
       setFieldErrors({});
       setUndoCVData(null);
     }
@@ -192,6 +213,12 @@ export function CVEditorWorkspace({
     if (!showPreview) return;
     try { captureProductEvent(ANALYTICS_EVENTS.CV_PREVIEWED, {}); } catch { /* never break */ }
   }, [showPreview]);
+
+  useEffect(() => {
+    if (!workspaceNotice) return;
+    const timer = window.setTimeout(() => setWorkspaceNotice(null), 3200);
+    return () => window.clearTimeout(timer);
+  }, [workspaceNotice]);
 
   // Warn before the browser discards a meaningful failed/unsaved draft.
   useEffect(() => {
@@ -279,6 +306,11 @@ export function CVEditorWorkspace({
     setShowAIAssistance(true);
     const section = fieldPath.split('.')[0] as SectionKey;
     if (section) setActiveTab(section);
+    setWorkspaceNotice({
+      tone: 'info',
+      title: 'Context ready',
+      description: 'Wording help is focused on the selected bullet and keeps the suggestion grounded in that section.',
+    });
   };
 
   const handleDownloadPDF = async () => {
@@ -340,6 +372,11 @@ export function CVEditorWorkspace({
           if (firstField) focusInvalidPersonalField(firstField);
         }
         setSaveState('failed');
+        setWorkspaceNotice({
+          tone: 'info',
+          title: 'Save failed',
+          description: 'Your draft is still on screen. Review the message and retry when ready.',
+        });
         const toastConfig = cvSaveToast(result, { onRetry: () => void handleSaveCV() });
         if (toastConfig.type === 'error') {
           toast.error(toastConfig.message, { action: toastConfig.action });
@@ -349,7 +386,13 @@ export function CVEditorWorkspace({
 
       lastPersistedSnapshotRef.current = cvSnapshot(cvData);
       setSaveState('saved');
+      setLastSavedLabel(formatSavedTime(new Date()));
       setUndoCVData(null);
+      setWorkspaceNotice({
+        tone: 'success',
+        title: 'Saved',
+        description: `Your ${saveScopeLabel} is up to date.`,
+      });
       const toastConfig = cvSaveToast(result);
       toast.success(toastConfig.message, postSaveAction ? {
         action: { label: postSaveAction.label, onClick: () => navigate(postSaveAction.to) }
@@ -376,6 +419,11 @@ export function CVEditorWorkspace({
       const failure = classifySaveError(unexpected);
       logCvPersistenceFailure('save', failure);
       setSaveState('failed');
+      setWorkspaceNotice({
+        tone: 'info',
+        title: 'Save failed',
+        description: 'Your draft was not lost. Retry once the connection is stable.',
+      });
       const toastConfig = cvSaveToast(failure, { onRetry: () => void handleSaveCV() });
       toast.error(toastConfig.message, { action: toastConfig.action });
     } finally {
@@ -423,6 +471,11 @@ export function CVEditorWorkspace({
 
     setUndoCVData(beforeSnapshot);
     markChanged();
+    setWorkspaceNotice({
+      tone: 'success',
+      title: 'AI change applied',
+      description: 'The selected wording update is now in your draft. Save when you want to keep it.',
+    });
     toast.success('Assisted wording applied to your draft. Save changes when you are ready.');
     return true;
   };
@@ -433,15 +486,21 @@ export function CVEditorWorkspace({
     cvDataRef.current = undoCVData;
     setUndoCVData(null);
     markChanged();
+    setWorkspaceNotice({
+      tone: 'info',
+      title: 'Previous wording restored',
+      description: 'The last assisted rewrite was undone. Your draft remains editable.',
+    });
     toast.info('Reverted to previous draft state.');
   };
 
-  const sectionsList: Array<{ key: SectionKey; label: string; icon: React.ComponentType<{ className?: string }>; filled: boolean; count?: number }> = useMemo(() => [
+  const sectionsList: Array<{ key: SectionKey; label: string; icon: React.ComponentType<{ className?: string }>; filled: boolean; count?: number; note: string }> = useMemo(() => [
     {
       key: 'personal',
       label: 'Personal details',
       icon: User,
       filled: Object.values(cvData.personal).some(isMeaningfulText),
+      note: 'Name, contact and profile links',
     },
     {
       key: 'education',
@@ -449,6 +508,7 @@ export function CVEditorWorkspace({
       icon: GraduationCap,
       filled: Object.values(cvData.education).some(isMeaningfulText) || cvData.achievements.some(isAchievementMeaningful),
       count: (cvData.education.university ? 1 : 0) + cvData.achievements.length,
+      note: 'University record, GPA and awards',
     },
     {
       key: 'experience',
@@ -456,6 +516,7 @@ export function CVEditorWorkspace({
       icon: Briefcase,
       filled: cvData.experience.some(isExperienceMeaningful),
       count: cvData.experience.length,
+      note: 'Roles, impact and measurable outcomes',
     },
     {
       key: 'projects',
@@ -463,6 +524,7 @@ export function CVEditorWorkspace({
       icon: FolderKanban,
       filled: cvData.projects.some(isProjectMeaningful),
       count: cvData.projects.length,
+      note: 'Projects, research and technical delivery',
     },
     {
       key: 'activities',
@@ -470,6 +532,7 @@ export function CVEditorWorkspace({
       icon: Users,
       filled: cvData.activities.some(isActivityMeaningful),
       count: cvData.activities.length,
+      note: 'Leadership, volunteering and teamwork',
     },
     {
       key: 'skills',
@@ -477,14 +540,26 @@ export function CVEditorWorkspace({
       icon: Wrench,
       filled: getMeaningfulSkills(cvData).length > 0,
       count: getMeaningfulSkills(cvData).length,
+      note: 'Technical, analytical and collaboration skills',
     },
     {
       key: 'references',
       label: 'References',
       icon: BookOpen,
       filled: Boolean(cvData.references && cvData.references.trim()),
+      note: 'Standard references statement',
     },
   ], [cvData]);
+
+  const activeSection = sectionsList.find((section) => section.key === activeTab) ?? sectionsList[0];
+  const completedSections = sectionsList.filter((section) => section.filled).length;
+
+  const openSection = (section: SectionKey) => {
+    setActiveTab(section);
+    if (collapsedSections[section]) {
+      setCollapsedSections((previous) => ({ ...previous, [section]: false }));
+    }
+  };
 
   // Only the load itself gates the editor. A user with no saved CV yet gets the
   // blank editor, not a permanent skeleton.
@@ -513,123 +588,127 @@ export function CVEditorWorkspace({
 
   return (
     <>
-      <div className={`grid grid-cols-1 gap-6 ${leftShelf ? 'xl:grid-cols-[minmax(260px,0.85fr)_minmax(0,2fr)_minmax(280px,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(280px,1fr)]' : 'lg:grid-cols-3'}`}>
+      <div className={`grid grid-cols-1 gap-6 ${leftShelf ? 'xl:grid-cols-[minmax(260px,0.85fr)_minmax(0,2fr)_minmax(300px,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(300px,1fr)]' : 'lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]'}`}>
         {leftShelf && <aside className="min-w-0">{leftShelf}</aside>}
 
-        {/* Main Work Surface Column. With no left shelf the grid is 3 equal
-            columns, so this must span two of them — otherwise the editor
-            renders at one-third width and the last column sits empty. */}
-        <div className={`min-w-0 space-y-4 ${leftShelf ? '' : 'lg:col-span-2'}`}>
-          {/* Column heading: keeps the section cards' h3 titles in a valid
-              order below the page h1 without adding visible chrome. */}
+        <div className="min-w-0 space-y-4">
           <h2 className="sr-only">CV sections</h2>
           {contextBanner}
 
-          {/* Consistent Top Toolbar */}
-          <div className="sticky top-14 z-20 flex flex-wrap items-center justify-between gap-3 rounded-surface border border-border bg-card/95 p-3 sm:px-4 backdrop-blur-sm shadow-card">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
-                <span className="type-label hidden sm:inline">
-                  CV Editor
-                </span>
+          <div className="sticky top-14 z-20 rounded-surface border border-border bg-card/95 shadow-card backdrop-blur-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3 px-3 py-3 sm:px-4">
+              <div className="min-w-0 space-y-2">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <span className="type-label">CV Editor</span>
+                </div>
+                <div
+                  className={`inline-flex items-center gap-1.5 rounded-control border border-border bg-secondary px-2.5 py-1 text-xs transition-colors duration-150 motion-reduce:transition-none ${saveState === 'saved' ? 'state-saved' : ''}`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {saveState === 'saving' ? (
+                    <>
+                      <Spinner className="size-3.5 text-primary" />
+                      <span className="font-medium text-foreground">Saving…</span>
+                    </>
+                  ) : saveState === 'saved' ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-success" />
+                      <span className="font-medium text-success">Saved</span>
+                      {lastSavedLabel && <span className="text-muted-foreground">at {lastSavedLabel}</span>}
+                    </>
+                  ) : saveState === 'failed' ? (
+                    <>
+                      <AlertCircle className="h-3.5 w-3.5 text-destructive" />
+                      <span className="font-medium text-destructive">Save failed</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="h-2 w-2 rounded-full bg-warning" />
+                      <span className="text-muted-foreground">Unsaved edits</span>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Clear Saving -> Saved Transition */}
-              <div
-                className={`flex items-center gap-1.5 rounded-control border border-border bg-secondary px-2.5 py-1 text-xs transition-colors duration-150 motion-reduce:transition-none ${saveState === 'saved' ? 'state-saved' : ''}`}
-                role="status"
-                aria-live="polite"
-              >
-                {saveState === 'saving' ? (
-                  <>
-                    <Spinner className="size-3.5 text-primary" />
-                    <span className="font-medium text-foreground">Saving…</span>
-                  </>
-                ) : saveState === 'saved' ? (
-                  <>
-                    <Check className="h-3.5 w-3.5 text-success" />
-                    <span className="font-medium text-success">Saved</span>
-                  </>
-                ) : saveState === 'failed' ? (
-                  <>
-                    <AlertCircle className="h-3.5 w-3.5 text-destructive" />
-                    <span className="font-medium text-destructive">Save failed</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="h-2 w-2 rounded-full bg-warning" />
-                    <span className="text-muted-foreground">Unsaved edits</span>
-                  </>
+              <div className="flex flex-wrap items-center gap-2">
+                {undoCVData && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={applyUndo}
+                    className="rounded-control text-xs"
+                    title="Undo the last suggested rewrite"
+                  >
+                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                    Undo rewrite
+                  </Button>
                 )}
-              </div>
-            </div>
 
-            {/* Action buttons with consistent tokens */}
-            <div className="flex flex-wrap items-center gap-2">
-              {undoCVData && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={applyUndo}
+                  onClick={() => setUploadOpen(true)}
                   className="rounded-control text-xs"
-                  title="Undo the last suggested rewrite"
                 >
-                  <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-                  Undo rewrite
+                  <Upload className="mr-1.5 h-3.5 w-3.5" />
+                  Upload CV
                 </Button>
-              )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setUploadOpen(true)}
-                className="rounded-control text-xs"
-              >
-                <Upload className="mr-1.5 h-3.5 w-3.5" />
-                Upload CV
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="rounded-control text-xs"
+                >
+                  <Eye className="mr-1.5 h-3.5 w-3.5" />
+                  Preview
+                </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-                className="rounded-control text-xs"
-              >
-                <Eye className="mr-1.5 h-3.5 w-3.5" />
-                Preview
-              </Button>
+                <Button
+                  size="sm"
+                  onClick={() => void handleSaveCV()}
+                  disabled={saveState === 'saving' || saveState === 'saved'}
+                  className="rounded-control text-xs"
+                >
+                  {saveState === 'saving' ? (
+                    <Spinner className="mr-1.5 size-3.5" />
+                  ) : saveState === 'saved' ? (
+                    <Check className="mr-1.5 h-3.5 w-3.5 text-success-foreground" />
+                  ) : (
+                    <Save className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : 'Save changes'}
+                </Button>
 
-              <Button
-                size="sm"
-                onClick={() => void handleSaveCV()}
-                disabled={saveState === 'saving' || saveState === 'saved'}
-                className="rounded-control text-xs"
-              >
-                {saveState === 'saving' ? (
-                  <Spinner className="mr-1.5 size-3.5" />
-                ) : saveState === 'saved' ? (
-                  <Check className="mr-1.5 h-3.5 w-3.5 text-success-foreground" />
-                ) : (
-                  <Save className="mr-1.5 h-3.5 w-3.5" />
-                )}
-                {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : 'Save changes'}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadPDF}
-                disabled={isGeneratingPDF || strengthResult.completion.percentage === 0}
-                className="rounded-control text-xs"
-              >
-                <Download className="mr-1.5 h-3.5 w-3.5" />
-                {isGeneratingPDF ? 'Generating…' : 'PDF'}
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadPDF}
+                  disabled={isGeneratingPDF || strengthResult.completion.percentage === 0}
+                  className="rounded-control text-xs"
+                >
+                  <Download className="mr-1.5 h-3.5 w-3.5" />
+                  {isGeneratingPDF ? 'Generating…' : 'PDF'}
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Validation Errors Notice */}
+          {workspaceNotice && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={`rounded-surface border px-4 py-3 text-xs ${workspaceNotice.tone === 'success' ? 'border-success/25 bg-success/10' : 'border-primary/20 bg-primary/5'}`}
+            >
+              <p className={`font-semibold ${workspaceNotice.tone === 'success' ? 'text-success' : 'text-primary'}`}>
+                {workspaceNotice.title}
+              </p>
+              <p className="mt-1 text-muted-foreground">{workspaceNotice.description}</p>
+            </div>
+          )}
+
           {Object.keys(fieldErrors).length > 0 && (
             <div role="alert" className="rounded-surface border border-destructive/30 bg-destructive/5 p-4 text-xs space-y-2">
               <p className="font-semibold text-destructive flex items-center gap-1.5">
@@ -652,295 +731,315 @@ export function CVEditorWorkspace({
             </div>
           )}
 
-          {/* Section Outline / Quick Navigation */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-1">
-            <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="CV sections">
-              {sectionsList.map((sec) => {
-                const isCurrent = activeTab === sec.key;
-                const Icon = sec.icon;
-                return (
-                  <button
-                    key={sec.key}
-                    role="tab"
-                    aria-selected={isCurrent}
-                    onClick={() => {
-                      setActiveTab(sec.key);
-                      if (collapsedSections[sec.key]) {
-                        setCollapsedSections(prev => ({ ...prev, [sec.key]: false }));
-                      }
-                    }}
-                    className={`flex items-center gap-1.5 rounded-control px-3 py-1.5 text-xs font-medium transition-colors duration-150 shrink-0 ${
-                      isCurrent
-                        ? 'border border-primary bg-primary text-primary-foreground shadow-sm'
-                        : 'border border-border bg-card text-foreground hover:bg-secondary'
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    <span>{sec.label}</span>
-                    {sec.filled && <CheckCircle2 className={`h-3 w-3 ${isCurrent ? 'text-primary-foreground' : 'text-success'}`} />}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center gap-1 shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode(prev => prev === 'focused' ? 'document' : 'focused')}
-                className="h-7 text-xs rounded-control text-muted-foreground"
-                title={viewMode === 'focused' ? 'Switch to continuous document view' : 'Switch to focused section view'}
-              >
-                <Layers className="mr-1 h-3.5 w-3.5" />
-                {viewMode === 'focused' ? 'All sections' : 'Single section'}
-              </Button>
-            </div>
-          </div>
-
-          {/* White Document Editing Surface */}
-          <div className="rounded-surface border border-border bg-card p-4 sm:p-6 shadow-card space-y-6">
-            {viewMode === 'focused' ? (
-              <div>
-                {activeTab === 'personal' && (
-                  <CVFormPersonal data={cvData.personal} onChange={updatePersonal} errors={fieldErrors} />
-                )}
-                {activeTab === 'education' && (
-                  <CVFormEducation
-                    education={cvData.education}
-                    achievements={cvData.achievements}
-                    onEducationChange={updateEducation}
-                    onAchievementsChange={updateAchievements}
-                  />
-                )}
-                {activeTab === 'experience' && (
-                  <CVFormExperience
-                    experience={cvData.experience}
-                    onChange={updateExperience}
-                    onSuggestBullet={handleSuggestForBullet}
-                    selectedFieldPath={targetAIBulletPath}
-                  />
-                )}
-                {activeTab === 'projects' && (
-                  <CVFormProjects
-                    projects={cvData.projects}
-                    onChange={updateProjects}
-                    onSuggestBullet={handleSuggestForBullet}
-                    selectedFieldPath={targetAIBulletPath}
-                  />
-                )}
-                {activeTab === 'activities' && (
-                  <CVFormActivities
-                    activities={cvData.activities}
-                    onChange={updateActivities}
-                    onSuggestBullet={handleSuggestForBullet}
-                    selectedFieldPath={targetAIBulletPath}
-                  />
-                )}
-                {activeTab === 'skills' && (
-                  <CVFormSkills skills={cvData.skills} onChange={updateSkills} />
-                )}
-                {activeTab === 'references' && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />
-                      <h3 className="text-base font-semibold">References Section</h3>
-                    </div>
-                    <Label htmlFor="references-text" className="text-xs font-medium">Standard reference statement</Label>
-                    <Textarea
-                      id="references-text"
-                      value={cvData.references}
-                      onChange={(e) => updateReferences(e.target.value)}
-                      placeholder="Available upon request"
-                      className="rounded-input text-sm"
-                      rows={3}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Standard international practice is to state &ldquo;Available upon request&rdquo; unless the application specifically asks for referee contact details.
-                    </p>
-                  </div>
-                )}
+          <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
+            <nav className="surface-content h-fit overflow-hidden" aria-label="CV sections">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <div>
+                  <p className="type-label text-primary">Document outline</p>
+                  <p className="text-sm font-semibold text-foreground">{completedSections} of {sectionsList.length} sections complete</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode(prev => prev === 'focused' ? 'document' : 'focused')}
+                  className="h-8 rounded-control text-xs text-muted-foreground"
+                  title={viewMode === 'focused' ? 'Switch to continuous document view' : 'Switch to focused section view'}
+                >
+                  <Layers className="mr-1 h-3.5 w-3.5" />
+                  {viewMode === 'focused' ? 'All sections' : 'Single section'}
+                </Button>
               </div>
-            ) : (
-              /* Continuous Document View with Section Expansion / Collapse */
-              <div className="space-y-6">
-                {sectionsList.map((sec) => {
-                  const isCollapsed = collapsedSections[sec.key];
+              <div role="tablist" aria-label="CV sections" className="divide-y divide-border">
+                {sectionsList.map((sec, index) => {
+                  const isCurrent = activeTab === sec.key;
                   const Icon = sec.icon;
                   return (
-                    <section key={sec.key} className="rounded-surface border border-border bg-card">
-                      <header>
-                        <button
-                          type="button"
-                          onClick={() => toggleSectionCollapse(sec.key)}
-                          aria-expanded={!isCollapsed}
-                          className="flex w-full items-center justify-between p-3 sm:px-4 text-left hover:bg-secondary/40 transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            {isCollapsed ? (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                            )}
-                            <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                            <h2 className="text-sm font-semibold text-foreground">{sec.label}</h2>
-                            {sec.filled && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {isCollapsed ? 'Expand' : 'Collapse'}
+                    <button
+                      key={sec.key}
+                      role="tab"
+                      aria-selected={isCurrent}
+                      onClick={() => openSection(sec.key)}
+                      className={`interactive flex w-full items-start justify-between gap-3 px-4 py-3 text-left ${isCurrent ? 'is-selected bg-selected' : 'bg-card'}`}
+                    >
+                      <span className="flex min-w-0 items-start gap-3">
+                        <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-control border border-border bg-secondary text-[11px] font-semibold text-secondary-foreground">
+                          {index + 1}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                            <Icon className="h-3.5 w-3.5 text-primary" />
+                            {sec.label}
                           </span>
-                        </button>
-                      </header>
-                      <div className="cv-section-body" data-collapsed={isCollapsed ? 'true' : 'false'}>
-                        <div className="border-t border-border-subtle p-3 sm:p-5">
-                          {sec.key === 'personal' && (
-                            <CVFormPersonal data={cvData.personal} onChange={updatePersonal} errors={fieldErrors} />
-                          )}
-                          {sec.key === 'education' && (
-                            <CVFormEducation
-                              education={cvData.education}
-                              achievements={cvData.achievements}
-                              onEducationChange={updateEducation}
-                              onAchievementsChange={updateAchievements}
-                            />
-                          )}
-                          {sec.key === 'experience' && (
-                            <CVFormExperience
-                              experience={cvData.experience}
-                              onChange={updateExperience}
-                              onSuggestBullet={handleSuggestForBullet}
-                              selectedFieldPath={targetAIBulletPath}
-                            />
-                          )}
-                          {sec.key === 'projects' && (
-                            <CVFormProjects
-                              projects={cvData.projects}
-                              onChange={updateProjects}
-                              onSuggestBullet={handleSuggestForBullet}
-                              selectedFieldPath={targetAIBulletPath}
-                            />
-                          )}
-                          {sec.key === 'activities' && (
-                            <CVFormActivities
-                              activities={cvData.activities}
-                              onChange={updateActivities}
-                              onSuggestBullet={handleSuggestForBullet}
-                              selectedFieldPath={targetAIBulletPath}
-                            />
-                          )}
-                          {sec.key === 'skills' && (
-                            <CVFormSkills skills={cvData.skills} onChange={updateSkills} />
-                          )}
-                          {sec.key === 'references' && (
-                            <div className="space-y-2">
-                              <Label htmlFor="references-text-doc" className="text-xs font-medium">References Statement</Label>
-                              <Textarea
-                                id="references-text-doc"
-                                value={cvData.references}
-                                onChange={(e) => updateReferences(e.target.value)}
-                                placeholder="Available upon request"
-                                className="rounded-input text-sm"
-                                rows={2}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </section>
+                          <span className="mt-0.5 block text-[11px] leading-5 text-muted-foreground">{sec.note}</span>
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right">
+                        {typeof sec.count === 'number' && (
+                          <span className="block text-xs font-medium tabular-nums text-foreground">{sec.count}</span>
+                        )}
+                        <span className={`mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium ${sec.filled ? 'text-success' : 'text-muted-foreground'}`}>
+                          {sec.filled && <CheckCircle2 className="h-3.5 w-3.5" />}
+                          {sec.filled ? 'Complete' : 'Open'}
+                        </span>
+                      </span>
+                    </button>
                   );
                 })}
               </div>
-            )}
+            </nav>
 
-            {/* Intentional Editor Workspace Footer & Completion Area */}
-            <div className="rounded-surface border border-border bg-card p-4 sm:p-5 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <FileText className="h-4 w-4" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">
-                      Draft Progress: {sectionsList.filter((s) => s.filled).length} of {sectionsList.length} sections complete
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {saveState === 'saved'
-                        ? 'All changes saved to your primary CV'
-                        : saveState === 'unsaved'
-                        ? 'Unsaved changes in draft'
-                        : saveState === 'saving'
-                        ? 'Saving changes…'
-                        : 'Save draft to preserve your work'}
-                    </p>
-                  </div>
+            <div className="overflow-hidden rounded-surface border border-border bg-white shadow-card">
+              <div className="border-b border-border bg-card px-4 py-4 sm:px-6">
+                <p className="type-label text-primary">{viewMode === 'focused' ? 'Focused section' : 'Continuous document'}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <h3 className="text-xl font-semibold tracking-tight text-foreground">{activeSection?.label ?? 'CV section'}</h3>
+                  {activeSection?.filled && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Ready for review
+                    </span>
+                  )}
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowPreview(true)}
-                    className="rounded-control text-xs"
-                  >
-                    <Eye className="mr-1.5 h-3.5 w-3.5" />
-                    View PDF document
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={saveState === 'saved' || saveState === 'saving'}
-                    onClick={() => handleSaveCV()}
-                    className="rounded-control text-xs gap-1.5"
-                  >
-                    {saveState === 'saving' ? (
-                      <>
-                        <Spinner className="size-3.5" />
-                        Saving…
-                      </>
-                    ) : saveState === 'saved' ? (
-                      <>
-                        <Check className="h-3.5 w-3.5" />
-                        Saved
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-3.5 w-3.5" />
-                        Save draft
-                      </>
-                    )}
-                  </Button>
-                </div>
+                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{viewMode === 'focused' ? activeSection?.note : 'Expand the sections you need and work down the document in order.'}</p>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                <p>
-                  Ready to apply? Use this primary CV as your career baseline or tailor copies for specific roles in Opportunities.
-                </p>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="h-auto p-0 text-xs text-primary font-medium"
-                  onClick={() => navigate('/opportunities')}
-                >
-                  Find matching opportunities →
-                </Button>
+              <div className="p-4 sm:p-6">
+                {viewMode === 'focused' ? (
+                  <div>
+                    {activeTab === 'personal' && (
+                      <CVFormPersonal data={cvData.personal} onChange={updatePersonal} errors={fieldErrors} />
+                    )}
+                    {activeTab === 'education' && (
+                      <CVFormEducation
+                        education={cvData.education}
+                        achievements={cvData.achievements}
+                        onEducationChange={updateEducation}
+                        onAchievementsChange={updateAchievements}
+                      />
+                    )}
+                    {activeTab === 'experience' && (
+                      <CVFormExperience
+                        experience={cvData.experience}
+                        onChange={updateExperience}
+                        onSuggestBullet={handleSuggestForBullet}
+                        selectedFieldPath={targetAIBulletPath}
+                      />
+                    )}
+                    {activeTab === 'projects' && (
+                      <CVFormProjects
+                        projects={cvData.projects}
+                        onChange={updateProjects}
+                        onSuggestBullet={handleSuggestForBullet}
+                        selectedFieldPath={targetAIBulletPath}
+                      />
+                    )}
+                    {activeTab === 'activities' && (
+                      <CVFormActivities
+                        activities={cvData.activities}
+                        onChange={updateActivities}
+                        onSuggestBullet={handleSuggestForBullet}
+                        selectedFieldPath={targetAIBulletPath}
+                      />
+                    )}
+                    {activeTab === 'skills' && (
+                      <CVFormSkills skills={cvData.skills} onChange={updateSkills} />
+                    )}
+                    {activeTab === 'references' && (
+                      <section className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />
+                          <h3 className="text-base font-semibold">References Section</h3>
+                        </div>
+                        <Label htmlFor="references-text" className="text-xs font-medium">Standard reference statement</Label>
+                        <Textarea
+                          id="references-text"
+                          value={cvData.references}
+                          onChange={(e) => updateReferences(e.target.value)}
+                          placeholder="Available upon request"
+                          className="rounded-input text-sm"
+                          rows={3}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Standard international practice is to state &ldquo;Available upon request&rdquo; unless the application specifically asks for referee contact details.
+                        </p>
+                      </section>
+                    )}
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {sectionsList.map((sec) => {
+                      const isCollapsed = collapsedSections[sec.key];
+                      const Icon = sec.icon;
+                      return (
+                        <section key={sec.key} className="py-1 first:pt-0 last:pb-0">
+                          <header>
+                            <button
+                              type="button"
+                              onClick={() => toggleSectionCollapse(sec.key)}
+                              aria-expanded={!isCollapsed}
+                              className="flex w-full items-center justify-between px-1 py-3 text-left transition-colors duration-150 hover:bg-secondary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                {isCollapsed ? (
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                )}
+                                <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                                <h2 className="text-sm font-semibold text-foreground">{sec.label}</h2>
+                                {sec.filled && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
+                              </div>
+                              <span className="text-xs text-muted-foreground">{isCollapsed ? 'Expand' : 'Collapse'}</span>
+                            </button>
+                          </header>
+                          <div className="cv-section-body" data-collapsed={isCollapsed ? 'true' : 'false'}>
+                            <div className="border-t border-border-subtle pt-4">
+                              {sec.key === 'personal' && (
+                                <CVFormPersonal data={cvData.personal} onChange={updatePersonal} errors={fieldErrors} />
+                              )}
+                              {sec.key === 'education' && (
+                                <CVFormEducation
+                                  education={cvData.education}
+                                  achievements={cvData.achievements}
+                                  onEducationChange={updateEducation}
+                                  onAchievementsChange={updateAchievements}
+                                />
+                              )}
+                              {sec.key === 'experience' && (
+                                <CVFormExperience
+                                  experience={cvData.experience}
+                                  onChange={updateExperience}
+                                  onSuggestBullet={handleSuggestForBullet}
+                                  selectedFieldPath={targetAIBulletPath}
+                                />
+                              )}
+                              {sec.key === 'projects' && (
+                                <CVFormProjects
+                                  projects={cvData.projects}
+                                  onChange={updateProjects}
+                                  onSuggestBullet={handleSuggestForBullet}
+                                  selectedFieldPath={targetAIBulletPath}
+                                />
+                              )}
+                              {sec.key === 'activities' && (
+                                <CVFormActivities
+                                  activities={cvData.activities}
+                                  onChange={updateActivities}
+                                  onSuggestBullet={handleSuggestForBullet}
+                                  selectedFieldPath={targetAIBulletPath}
+                                />
+                              )}
+                              {sec.key === 'skills' && (
+                                <CVFormSkills skills={cvData.skills} onChange={updateSkills} />
+                              )}
+                              {sec.key === 'references' && (
+                                <div className="space-y-2">
+                                  <Label htmlFor="references-text-doc" className="text-xs font-medium">References Statement</Label>
+                                  <Textarea
+                                    id="references-text-doc"
+                                    value={cvData.references}
+                                    onChange={(e) => updateReferences(e.target.value)}
+                                    placeholder="Available upon request"
+                                    className="rounded-input text-sm"
+                                    rows={2}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </section>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-border bg-card px-4 py-4 sm:px-6">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-control bg-primary/10 text-primary">
+                      <FileText className="h-4 w-4" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">
+                        Draft progress: {completedSections} of {sectionsList.length} sections complete
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {saveState === 'saved'
+                          ? `All changes saved to your ${saveScopeLabel}`
+                          : saveState === 'unsaved'
+                            ? 'Unsaved changes in draft'
+                            : saveState === 'saving'
+                              ? 'Saving changes…'
+                              : 'Save draft to preserve your work'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowPreview(true)}
+                      className="rounded-control text-xs"
+                    >
+                      <Eye className="mr-1.5 h-3.5 w-3.5" />
+                      View PDF document
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={saveState === 'saved' || saveState === 'saving'}
+                      onClick={() => handleSaveCV()}
+                      className="rounded-control text-xs gap-1.5"
+                    >
+                      {saveState === 'saving' ? (
+                        <>
+                          <Spinner className="size-3.5" />
+                          Saving…
+                        </>
+                      ) : saveState === 'saved' ? (
+                        <>
+                          <Check className="h-3.5 w-3.5" />
+                          Saved
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-3.5 w-3.5" />
+                          Save draft
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-3 text-xs text-muted-foreground">
+                  <p>{footerNote}</p>
+                  {footerAction && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs font-medium text-primary"
+                      onClick={() => navigate(footerAction.to)}
+                    >
+                      {footerAction.label} →
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Sidebar: Progress, Guidance & Contextual AI Panel */}
         <div className="space-y-4 lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
           <h2 className="sr-only">CV progress and guidance</h2>
           <CVStrengthScore result={strengthResult} />
           {sidebarExtras}
 
-          {/* Contextual AI Assistant Drawer / Card */}
-          <div className="rounded-surface border border-border bg-card p-4 space-y-3">
+          <div className="rounded-surface border border-border bg-card p-4 space-y-3 shadow-card">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-                <h3 className="type-label">
-                  Wording help
-                </h3>
+                <h3 className="type-label">Wording help</h3>
               </div>
               <Button
                 variant="ghost"
@@ -951,7 +1050,7 @@ export function CVEditorWorkspace({
                 {showAIAssistance ? 'Hide' : 'Open'}
               </Button>
             </div>
-            
+
             <p className="text-xs text-muted-foreground leading-relaxed">
               {assistantOpportunity
                 ? `Grounded in requirement context for ${assistantOpportunity.title}.`

@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { InterviewErrorBoundary } from '@/components/interview/InterviewErrorBoundary';
 import { VoiceInterviewMode } from '@/components/interview/VoiceInterviewMode';
+import { ProductJourneyRail } from '@/components/journey/ProductJourneyRail';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 import { useQueryClient } from '@tanstack/react-query';
@@ -224,34 +225,64 @@ export default function ApplicationInterview() {
   }
 
   const backTo = `/applications/${encodeURIComponent(applicationId ?? '')}`;
+  const cvRoute = `/applications/${encodeURIComponent(applicationId ?? '')}/cv`;
+  const journeyRail = (
+    <ProductJourneyRail
+      steps={[
+        {
+          id: 'application',
+          label: 'Application',
+          description: 'Return to the application record and linked evidence.',
+          to: backTo,
+          state: 'complete',
+        },
+        {
+          id: 'cv',
+          label: 'CV',
+          description: 'Tailor or review the application-specific CV before practice.',
+          to: cvRoute,
+          state: 'complete',
+        },
+        {
+          id: 'interview',
+          label: 'Interview',
+          description: 'Advance mode uses the same application context for preparation and practice.',
+          state: 'current',
+        },
+      ]}
+    />
+  );
 
   if (step === 'interview') {
     return (
       <PageLayout title="Interview preparation">
-        <div className="max-w-3xl mx-auto">
-          <InterviewErrorBoundary onReset={() => setStep('setup')} fallbackTitle="Interview session crashed">
-            <VoiceInterviewMode
-              jobRole={roleTitle}
-              industry={organisation}
-              difficulty={difficulty}
-              interviewType={interviewType}
-              resumeText={resumeText}
-              jobDescription={jobDescription}
-              sessionLength={sessionLength}
-              applicationId={applicationId ?? null}
-              autoStart
-              onComplete={(pairs) => setSuggestions(suggestionsFromInterviewAnswers(pairs, roleTitle))}
-              onRetry={() => {
-                try {
-                  captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' });
-                } catch {}
-                startRequested.current = false;
-                setReadiness('unchecked');
-                setStep('readiness');
-              }}
-              onEnd={handleSessionEnd}
-            />
-          </InterviewErrorBoundary>
+        <div className="mode-advance space-y-5">
+          {journeyRail}
+          <div className="mx-auto max-w-3xl">
+            <InterviewErrorBoundary onReset={() => setStep('setup')} fallbackTitle="Interview session crashed">
+              <VoiceInterviewMode
+                jobRole={roleTitle}
+                industry={organisation}
+                difficulty={difficulty}
+                interviewType={interviewType}
+                resumeText={resumeText}
+                jobDescription={jobDescription}
+                sessionLength={sessionLength}
+                applicationId={applicationId ?? null}
+                autoStart
+                onComplete={(pairs) => setSuggestions(suggestionsFromInterviewAnswers(pairs, roleTitle))}
+                onRetry={() => {
+                  try {
+                    captureProductEvent(ANALYTICS_EVENTS.INTERVIEW_RETRIED, { from: 'session' });
+                  } catch {}
+                  startRequested.current = false;
+                  setReadiness('unchecked');
+                  setStep('readiness');
+                }}
+                onEnd={handleSessionEnd}
+              />
+            </InterviewErrorBoundary>
+          </div>
         </div>
       </PageLayout>
     );
@@ -306,8 +337,10 @@ export default function ApplicationInterview() {
       description={`Practise voice interviews tailored to ${roleTitle}.`}
       headerVariant="document"
     >
-      {step === 'setup' && (
-        <WorkingDocument label="Interview preparation">
+      <div className="mode-advance space-y-5">
+        {journeyRail}
+        {step === 'setup' && (
+          <WorkingDocument label="Interview preparation">
           <DossierHeader
             eyebrow="Interview practice workspace"
             title={roleTitle}
@@ -451,47 +484,48 @@ export default function ApplicationInterview() {
         </WorkingDocument>
       )}
 
-      {step === 'readiness' && (
-        <div className="mx-auto max-w-xl space-y-5 rounded-surface border border-border bg-card p-6 shadow-card">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Check your microphone</h2>
-            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Syncareer uses your microphone to transcribe answers during this practice interview. Camera and
-              screen sharing are never requested.
-            </p>
-          </div>
-          <div role="status" className="rounded-surface bg-secondary/50 p-4 text-xs">
-            <div className="flex items-center gap-2 font-medium text-foreground">
-              <Mic className="h-4 w-4 text-primary" />
-              <span>
-                {readiness === 'unchecked' && 'Your microphone has not been checked.'}
-                {readiness === 'checking' && 'Requesting microphone access…'}
-                {readiness === 'ready' && 'Microphone is ready. Audio output uses your browser text-to-speech support.'}
-                {readiness === 'denied' && 'Microphone permission was denied. Update browser permissions, then try again.'}
-                {readiness === 'missing' && 'No usable microphone or browser media-device support was found.'}
-                {readiness === 'failed' && 'The microphone check failed. Close other apps using the device and retry.'}
-              </span>
+        {step === 'readiness' && (
+          <div className="mx-auto max-w-xl space-y-5 rounded-surface border border-border bg-card p-6 shadow-card">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Check your microphone</h2>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                Syncareer uses your microphone to transcribe answers during this practice interview. Camera and
+                screen sharing are never requested.
+              </p>
+            </div>
+            <div role="status" className="rounded-surface bg-secondary/50 p-4 text-xs">
+              <div className="flex items-center gap-2 font-medium text-foreground">
+                <Mic className="h-4 w-4 text-primary" />
+                <span>
+                  {readiness === 'unchecked' && 'Your microphone has not been checked.'}
+                  {readiness === 'checking' && 'Requesting microphone access…'}
+                  {readiness === 'ready' && 'Microphone is ready. Audio output uses your browser text-to-speech support.'}
+                  {readiness === 'denied' && 'Microphone permission was denied. Update browser permissions, then try again.'}
+                  {readiness === 'missing' && 'No usable microphone or browser media-device support was found.'}
+                  {readiness === 'failed' && 'The microphone check failed. Close other apps using the device and retry.'}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button variant="outline" className="rounded-control text-xs" onClick={() => setStep('setup')}>Back</Button>
+              <Button variant="outline" className="rounded-control text-xs" disabled={readiness === 'checking'} onClick={() => void checkReadiness()}>
+                {readiness === 'checking' ? 'Checking…' : readiness === 'ready' ? 'Check again' : 'Check microphone'}
+              </Button>
+              <Button
+                className="rounded-control text-xs"
+                disabled={readiness !== 'ready' || startRequested.current}
+                onClick={() => {
+                  if (readiness !== 'ready' || startRequested.current) return;
+                  startRequested.current = true;
+                  setStep('interview');
+                }}
+              >
+                Start interview
+              </Button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Button variant="outline" className="rounded-control text-xs" onClick={() => setStep('setup')}>Back</Button>
-            <Button variant="outline" className="rounded-control text-xs" disabled={readiness === 'checking'} onClick={() => void checkReadiness()}>
-              {readiness === 'checking' ? 'Checking…' : readiness === 'ready' ? 'Check again' : 'Check microphone'}
-            </Button>
-            <Button
-              className="rounded-control text-xs"
-              disabled={readiness !== 'ready' || startRequested.current}
-              onClick={() => {
-                if (readiness !== 'ready' || startRequested.current) return;
-                startRequested.current = true;
-                setStep('interview');
-              }}
-            >
-              Start interview
-            </Button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </PageLayout>
   );
 }

@@ -8,6 +8,7 @@ import { Spinner } from '@/components/ui/spinner';
 
 import { CVEditorWorkspace } from '@/components/cv-builder/CVEditorWorkspace';
 import { CVEvidenceShelf } from '@/components/cv-builder/CVEvidenceShelf';
+import { ProductJourneyRail } from '@/components/journey/ProductJourneyRail';
 import {
   EvidenceReference,
   DossierSection,
@@ -310,6 +311,33 @@ export default function ApplicationCVEditor() {
     </div>
   );
 
+  const journeyRail = (
+    <ProductJourneyRail
+      steps={[
+        {
+          id: 'application',
+          label: 'Application',
+          description: 'Return to the application record and supporting evidence.',
+          to: backTo,
+          state: 'complete',
+        },
+        {
+          id: 'cv',
+          label: 'CV',
+          description: 'Tailor the application-specific CV copy for this role.',
+          state: 'current',
+        },
+        {
+          id: 'interview',
+          label: 'Interview',
+          description: 'Move into role-specific interview practice for the same application.',
+          to: `/applications/${encodeURIComponent(applicationId ?? '')}/interview`,
+          state: 'available',
+        },
+      ]}
+    />
+  );
+
   const requirementsInspector = (
     <DossierSection title="Role requirements" label="Inspector">
       {threads.length === 0 ? (
@@ -359,15 +387,17 @@ export default function ApplicationCVEditor() {
   if (!application.resume_id) {
     return (
       <PageLayout title="Application CV" description="Create this application's own CV copy." headerVariant="document">
-        <WorkingDocument label="Application CV creation">
-          <div className="space-y-5 p-4 sm:p-6">
-            {cvMissing && (
-              <RecordState
-                tone="warning"
-                title="The linked application CV is unavailable"
-                description="The saved copy this application pointed to can no longer be loaded. Create a new application CV from a base CV below."
-              />
-            )}
+        <div className="space-y-5">
+          {journeyRail}
+          <WorkingDocument label="Application CV creation">
+            <div className="space-y-5 p-4 sm:p-6">
+              {cvMissing && (
+                <RecordState
+                  tone="warning"
+                  title="The linked application CV is unavailable"
+                  description="The saved copy this application pointed to can no longer be loaded. Create a new application CV from a base CV below."
+                />
+              )}
             <div className="space-y-2">
               <p className="dossier-eyebrow">Source CV</p>
               <p className="max-w-xl text-sm text-muted-foreground">
@@ -411,73 +441,80 @@ export default function ApplicationCVEditor() {
                 <Link to={backTo}>Back to dossier</Link>
               </Button>
             </div>
-            {evidenceError && (
-              <RecordState
-                tone="warning"
-                title="Evidence records are temporarily unavailable"
-                description={evidenceError}
-                action={
-                  <Button size="sm" variant="outline" className="rounded-control" onClick={() => setReloadKey((value) => value + 1)}>
-                    Retry
-                  </Button>
-                }
-              />
-            )}
-          </div>
-        </WorkingDocument>
+              {evidenceError && (
+                <RecordState
+                  tone="warning"
+                  title="Evidence records are temporarily unavailable"
+                  description={evidenceError}
+                  action={
+                    <Button size="sm" variant="outline" className="rounded-control" onClick={() => setReloadKey((value) => value + 1)}>
+                      Retry
+                    </Button>
+                  }
+                />
+              )}
+            </div>
+          </WorkingDocument>
+        </div>
       </PageLayout>
     );
   }
 
   return (
     <PageLayout title="Application CV" description={`Tailored CV for ${roleTitle}.`} headerVariant="document">
-      {evidenceError && (
-        <RecordState
-          tone="warning"
-          title="Evidence records are temporarily unavailable"
-          description={evidenceError}
-          action={
-            <Button size="sm" variant="outline" className="rounded-control" onClick={() => setReloadKey((value) => value + 1)}>
-              Retry
-            </Button>
-          }
-          className="mb-4"
-        />
-      )}
-      {shelfMessage && (
-        <RecordState tone="warning" title="That change did not save" description={shelfMessage} className="mb-4" />
-      )}
-      <CVEditorWorkspace
-        loading={false}
-        initialCv={initialCv ?? initialCVData}
-        save={handleSave}
-        contextBanner={contextBanner}
-        leftShelf={
-          <CVEvidenceShelf
-            items={evidenceItems}
-            sources={evidenceSources}
-            resumeLinks={resumeLinks}
-            resumeId={application.resume_id}
-            cvData={initialCv ?? initialCVData}
-            busy={shelfBusy}
-            onAttach={async (input) => {
-              const failure = await handleAttach(input);
-              if (failure) setShelfMessage(failure);
-              return failure;
-            }}
-            onDetach={handleDetach}
+      <div className="space-y-5">
+        {journeyRail}
+        {evidenceError && (
+          <RecordState
+            tone="warning"
+            title="Evidence records are temporarily unavailable"
+            description={evidenceError}
+            action={
+              <Button size="sm" variant="outline" className="rounded-control" onClick={() => setReloadKey((value) => value + 1)}>
+                Retry
+              </Button>
+            }
+            className="mb-4"
           />
-        }
-        sidebarExtras={requirementsInspector}
-        assistantOpportunity={assistantOpportunity}
-        assistantOpportunityError={
-          application.job
-            ? null
-            : 'The original posting is unavailable, so grounded assistance is disabled for this application.'
-        }
-        postSaveAction={{ label: 'Back to application', to: backTo }}
-        refreshIntelligence={false}
-      />
+        )}
+        {shelfMessage && (
+          <RecordState tone="warning" title="That change did not save" description={shelfMessage} className="mb-4" />
+        )}
+        <CVEditorWorkspace
+          loading={false}
+          initialCv={initialCv ?? initialCVData}
+          save={handleSave}
+          contextBanner={contextBanner}
+          leftShelf={
+            <CVEvidenceShelf
+              items={evidenceItems}
+              sources={evidenceSources}
+              resumeLinks={resumeLinks}
+              resumeId={application.resume_id}
+              cvData={initialCv ?? initialCVData}
+              busy={shelfBusy}
+              onAttach={async (input) => {
+                const failure = await handleAttach(input);
+                if (failure) setShelfMessage(failure);
+                return failure;
+              }}
+              onDetach={handleDetach}
+            />
+          }
+          sidebarExtras={requirementsInspector}
+          assistantOpportunity={assistantOpportunity}
+          assistantOpportunityError={
+            application.job
+              ? null
+              : 'The original posting is unavailable, so grounded assistance is disabled for this application.'
+          }
+          postSaveAction={{ label: 'Back to application', to: backTo }}
+          refreshIntelligence={false}
+          saveScopeLabel="application CV"
+          footerNote="This copy belongs only to this application. When the wording is ready, continue into interview practice for the same role."
+          footerAction={{ label: 'Continue to interview practice', to: `/applications/${encodeURIComponent(applicationId ?? '')}/interview` }}
+        />
+      </div>
     </PageLayout>
   );
 }
