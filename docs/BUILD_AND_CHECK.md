@@ -37,7 +37,8 @@ corepack pnpm --config.verify-deps-before-run=false --dir artifacts/syncareer ex
 corepack pnpm run test
 ```
 - **Status:** **PASS** (256 tests pass across 36 test files as of 2026-08-11). The suite covers deterministic
-  domain logic (RIASEC scoring, separate CV completion/quality, CV persistence, feature access, progress, subscription gating),
+  domain logic (RIASEC scoring, separate CV completion/quality, CV persistence, progress), free-product regression coverage
+  (profile menu offers Feedback and no plan/subscription/billing items; feature access is independent of subscription state),
   auth/onboarding validation + the Lovable Google OAuth session-handoff boundary, and
   email sign-up/sign-in contracts. See [`docs/TEST_MATRIX.md`](./TEST_MATRIX.md) for what each
   layer protects. Database/RLS and edge-function contract layers are runnable scripts that

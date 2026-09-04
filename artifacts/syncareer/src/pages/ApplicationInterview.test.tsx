@@ -12,9 +12,6 @@ vi.mock('@/components/layout/PageLayout', () => ({
 vi.mock('@/hooks/useSupabaseUserId', () => ({
   useSupabaseUserId: () => '9f0a9a1e-0000-4000-8000-0000000000aa',
 }));
-vi.mock('@/hooks/useSubscription', () => ({
-  useSubscription: () => ({ isPremium: true }),
-}));
 
 const NOW = Date.now();
 const USER = '9f0a9a1e-0000-4000-8000-0000000000aa';
@@ -110,7 +107,11 @@ describe('Application interview page', () => {
     expect(screen.getByText('What you already have')).toBeTruthy();
     expect(screen.getByText('SQL')).toBeTruthy();
     expect(screen.getByText('No evidence linked yet — practise an answer for this.')).toBeTruthy();
+    // Voice practice is free: no premium gate, upgrade link, or pricing CTA.
     expect(screen.getByRole('button', { name: 'Start voice interview session' })).toBeTruthy();
+    expect(screen.queryByText(/premium feature/i)).toBeNull();
+    expect(screen.queryByRole('link', { name: /upgrade/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /pricing/i })).toBeNull();
   });
 
   it('shows a not-found state for a missing or foreign application', async () => {

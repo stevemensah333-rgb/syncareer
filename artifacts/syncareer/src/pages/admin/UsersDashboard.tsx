@@ -4,10 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Users, Crown, UserCheck, RefreshCw, Shield, ShieldOff } from 'lucide-react';
+import { Search, Users, UserCheck, Shield, RefreshCw, ShieldOff, GraduationCap } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import AnimatedSection from '@/components/landing/AnimatedSection';
@@ -20,19 +19,12 @@ interface UserRow {
   email: string;
   created_at: string;
   is_admin: boolean;
-  subscription: {
-    tier: string;
-    status: string;
-    current_period_end: string | null;
-    updated_at: string;
-  } | null;
 }
 
 const UsersDashboard = () => {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [togglingRoleId, setTogglingRoleId] = useState<string | null>(null);
 
   const fetchUsers = async () => {
@@ -49,40 +41,6 @@ const UsersDashboard = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
-
-  const handleTogglePremium = async (user: UserRow) => {
-    const currentTier = user.subscription?.tier ?? 'free';
-    const newTier = currentTier === 'premium' ? 'free' : 'premium';
-    setTogglingId(user.id);
-
-    const { data, error } = await supabase.functions.invoke('admin-users', {
-      body: {
-        action: 'set_tier',
-        user_id: user.id,
-        tier: newTier,
-      },
-    });
-
-    if (error || data?.error) {
-      toast.error('Failed to update subscription.');
-    } else {
-      toast.success(
-        newTier === 'premium'
-          ? `${user.full_name || user.email} granted Premium access.`
-          : `${user.full_name || user.email} reverted to Free tier.`
-      );
-      // Optimistically update local state
-      setUsers(prev =>
-        prev.map(u =>
-          u.id === user.id
-            ? { ...u, subscription: data.subscription }
-            : u
-        )
-      );
-    }
-
-    setTogglingId(null);
-  };
 
   const handleToggleAdmin = async (user: UserRow) => {
     const newAction = user.is_admin ? 'revoke' : 'grant';
@@ -127,9 +85,10 @@ const UsersDashboard = () => {
 
   const stats = useMemo(() => {
     const total = users.length;
-    const premium = users.filter(u => u.subscription?.tier === 'premium').length;
     const students = users.filter(u => u.user_type === 'student').length;
-    return { total, premium, students, free: total - premium };
+    const mentors = users.filter(u => u.user_type === 'career_counsellor').length;
+    const admins = users.filter(u => u.is_admin).length;
+    return { total, students, mentors, admins };
   }, [users]);
 
   return (
@@ -152,10 +111,10 @@ const UsersDashboard = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <Crown className="h-8 w-8 text-warning" />
+                <GraduationCap className="h-8 w-8 text-accent-foreground" />
                 <div>
-                  <p className="text-2xl font-bold">{stats.premium}</p>
-                  <p className="text-xs text-muted-foreground">Premium</p>
+                  <p className="text-2xl font-bold">{stats.students}</p>
+                  <p className="text-xs text-muted-foreground">Students</p>
                 </div>
               </div>
             </CardContent>
@@ -165,8 +124,8 @@ const UsersDashboard = () => {
               <div className="flex items-center gap-3">
                 <UserCheck className="h-8 w-8 text-muted-foreground" />
                 <div>
-                  <p className="text-2xl font-bold">{stats.free}</p>
-                  <p className="text-xs text-muted-foreground">Free Tier</p>
+                  <p className="text-2xl font-bold">{stats.mentors}</p>
+                  <p className="text-xs text-muted-foreground">Career Mentors</p>
                 </div>
               </div>
             </CardContent>
@@ -174,10 +133,10 @@ const UsersDashboard = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <Users className="h-8 w-8 text-accent-foreground" />
+                <Shield className="h-8 w-8 text-warning" />
                 <div>
-                  <p className="text-2xl font-bold">{stats.students}</p>
-                  <p className="text-xs text-muted-foreground">Students</p>
+                  <p className="text-2xl font-bold">{stats.admins}</p>
+                  <p className="text-xs text-muted-foreground">Admins</p>
                 </div>
               </div>
             </CardContent>
@@ -224,23 +183,18 @@ const UsersDashboard = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Joined</TableHead>
-                    <TableHead>Tier</TableHead>
-                    <TableHead>Period End</TableHead>
-                    <TableHead className="text-center">Premium Access</TableHead>
                     <TableHead className="text-center">Admin</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
                         {loading ? 'Loading users...' : 'No users found.'}
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredUsers.map(user => {
-                      const isPremium = user.subscription?.tier === 'premium';
-                      const isToggling = togglingId === user.id;
                       const isTogglingRole = togglingRoleId === user.id;
 
                       return (
@@ -274,38 +228,6 @@ const UsersDashboard = () => {
                                 ? format(new Date(user.created_at), 'MMM d, yyyy')
                                 : '—'}
                             </span>
-                          </TableCell>
-                          <TableCell>
-                            {isPremium ? (
-                              <Badge className="bg-primary/10 text-primary border-primary/30 text-xs gap-1">
-                                <Crown className="h-3 w-3" />
-                                Premium
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-xs text-muted-foreground">
-                                Free
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-xs text-muted-foreground">
-                              {user.subscription?.current_period_end
-                                ? format(new Date(user.subscription.current_period_end), 'MMM d, yyyy')
-                                : '—'}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <Switch
-                                checked={isPremium}
-                                disabled={isToggling}
-                                onCheckedChange={() => handleTogglePremium(user)}
-                                aria-label={`Toggle premium for ${user.full_name || user.email}`}
-                              />
-                              {isToggling && (
-                                <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                              )}
-                            </div>
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex items-center justify-center gap-2">

@@ -27,8 +27,13 @@ counsellors.
 - **Counsellor marketplace** — vetted counsellors with availability, booking,
   sessions, client messaging, and reviews.
 - **Admin tools** — feedback review, user management, credential review.
-- **Supporting systems** — subscriptions & payments (Paystack), referrals,
-  notifications, and multilingual (i18n) UI.
+- **Supporting systems** — optional voluntary one-time support ("Support
+  Syncareer", hidden until a support URL is configured), notifications, and
+  multilingual (i18n) UI.
+
+Syncareer is **free to use**: no subscription tiers, premium gating, or
+recurring user billing. The optional support entry point never unlocks
+product functionality.
 
 ## Current product modules and routes
 
@@ -36,7 +41,7 @@ The frontend router (`artifacts/syncareer/src/App.tsx`) defines the modules:
 
 | Module | Primary routes |
 |---|---|
-| Marketing / landing / pricing | `/`, `/pricing`, `/terms`, `/privacy` |
+| Marketing / landing | `/`, `/terms`, `/privacy` |
 | Auth & onboarding | `/sign-in`, `/sign-up`, `/reset-password`, `/onboarding` |
 | Student core | `/dashboard`, `/assessment`, `/cv-builder`, `/analysis` |
 | Interview / AI | `/interview-simulator`, `/ai-coach` |
@@ -56,7 +61,7 @@ AGENTS.md                      Engineering policy (read first)
 docs/                          Current runbooks (see "Documentation index")
   ARCHITECTURE.md              Architecture & data flow
   EDGE_FUNCTIONS.md            Edge-function inventory & deployment
-  PAYMENT_AND_SUBSCRIPTIONS.md Payment & subscription trust flow
+  FREE_SERVICE_AND_SUPPORT.md    Free service & optional support
   LOVABLE_INTEGRATION.md       Lovable boundaries & artifact classifications
   PLATFORM_ARTIFACT_INVENTORY.md  Replit/Lovable/Clerk/PWA artifact classifications
   INCIDENT_RECOVERY.md         Incident & recovery basics
@@ -141,12 +146,13 @@ configuration that the Lovable/Replit publish artifact reads at build time (see
 | `VITE_SUPABASE_URL` | Supabase project URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable (anon) key |
 | `VITE_SUPABASE_PROJECT_ID` | Project id (used to build edge-function URLs) |
-| `VITE_PAYSTACK_PUBLIC_KEY` | Paystack public key (payments) |
+| `VITE_SUPPORT_URL` | Optional one-time support destination (empty hides "Support Syncareer") |
 | `VITE_POSTHOG_API_KEY` | PostHog analytics (optional) |
 
-Edge functions additionally require server secrets (`SUPABASE_URL`,
-`SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY`, `PAYSTACK_SECRET_KEY`, etc.).
-Configure those in Lovable Cloud — never commit them. See
+Edge functions additionally use server secrets (`SUPABASE_URL`,
+`SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY`, ...). The legacy deployed-only
+`verify-paystack-payment` function still reads `PAYSTACK_SECRET_KEY`; nothing
+in-repo requires it. Configure secrets in Lovable Cloud — never commit them. See
 `docs/BACKEND_PLATFORM_INVENTORY.md` §6 for the full secret-name matrix.
 
 ## Authoritative commands (run from repo root)
@@ -199,7 +205,7 @@ project from a personal Supabase account. Recovery paths:
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture & data flow (incl. trust boundaries)
 - [`docs/EDGE_FUNCTIONS.md`](docs/EDGE_FUNCTIONS.md) — edge-function inventory & deployment
-- [`docs/PAYMENT_AND_SUBSCRIPTIONS.md`](docs/PAYMENT_AND_SUBSCRIPTIONS.md) — payment/subscription trust flow
+- [`docs/FREE_SERVICE_AND_SUPPORT.md`](docs/FREE_SERVICE_AND_SUPPORT.md) — free product model & optional support
 - [`docs/LOVABLE_INTEGRATION.md`](docs/LOVABLE_INTEGRATION.md) — Lovable boundaries & classifications
 - [`docs/PLATFORM_ARTIFACT_INVENTORY.md`](docs/PLATFORM_ARTIFACT_INVENTORY.md) — every Replit/Lovable/Clerk/PWA artifact, classified
 - [`docs/INCIDENT_RECOVERY.md`](docs/INCIDENT_RECOVERY.md) — incident/recovery basics

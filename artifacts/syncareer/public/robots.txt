@@ -1,5 +1,5 @@
 # Syncareer robots.txt
-# Public marketing, pricing, assessment and legal pages are indexable.
+# Public marketing, assessment and legal pages are indexable.
 # Authenticated workspaces and personal surfaces must not be indexed.
 
 User-agent: *
@@ -33,7 +33,6 @@ Disallow: /settings
 Disallow: /admin
 
 # Transactional / utility pages
-Disallow: /subscription-success
 Disallow: /signed-out
 Disallow: /unsubscribe
 

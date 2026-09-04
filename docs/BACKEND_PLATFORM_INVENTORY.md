@@ -27,7 +27,7 @@
 | **`admin-feedback`** | `FeedbackDashboard.tsx` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Admin Only | **BLOCKED (Requires Live Pull)** |
 | **`admin-users`** | `UsersDashboard.tsx` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (Auth Admin API) | Admin Only | **BLOCKED (Requires Live Pull)** |
 | **`analyze-portfolio`** | `useCVAnalysis.ts` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `LOVABLE_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
-| **`check-feature-access`** | `featureAccess.ts`, `useSubscription.ts` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
+| **`check-feature-access`** | `career-guidance` server quota calls; **no client caller remains** (uniform per-user AI cost quota) | **Missing** | Deployed | `true` (Expected) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Server-to-server | **BLOCKED (Requires Live Pull)** |
 | **`compute-university-insights`** | `UniversityInsightsCard.tsx` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
 | **`compute-user-intelligence`** | `useAssessment.ts`, `useOutcomeTracking.ts`, `CVBuilder.tsx` | **Missing** | Deployed | `true` (Expected) | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
 | **`cv-ai-assistant`** | No current repository caller; historical CV assistant deployment | **Missing** | Deployed status recorded historically; live use unknown | `true` (Expected) | `LOVABLE_API_KEY` (AI Gateway) | Authenticated User | **UNKNOWN (Requires Live Pull / Usage Review)** |
@@ -35,7 +35,7 @@
 | **`interview-tts`** | `useVoiceInterview.ts` (raw fetch audio blob) | **Missing** | Deployed | `true` (Expected) | `OPENAI_API_KEY` / `ELEVENLABS_API_KEY` / `LOVABLE_API_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
 | **`mock-interview`** | `useVoiceInterview.ts` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `LOVABLE_API_KEY` (AI Gateway) | Authenticated User | **BLOCKED (Requires Live Pull)** |
 | **`send-notification`** | `notifications.ts` (`functions.invoke`) | **Missing** | Deployed | `true` (Expected) | `RESEND_API_KEY` / `LOVABLE_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
-| **`verify-paystack-payment`** | `PaystackButton.tsx` (raw fetch) | **Missing** | Deployed | `true` (Expected) | `PAYSTACK_SECRET_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Authenticated User | **BLOCKED (Requires Live Pull)** |
+| **`verify-paystack-payment`** | **Legacy** subscription verifier; no repository caller remains | **Missing** | Deployed | `true` (Expected) | `PAYSTACK_SECRET_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Server / webhook | **BLOCKED (Requires Live Pull)** |
 | **`scrape-jobs`** | Legacy cron (`daily-job-scrape` @ 6 AM UTC) | **Missing** | Legacy Deployed | `true` (Expected) | Firecrawl / Scraper API | Service Role / Cron | **Legacy (To be unscheduled)** |
 | **`generate-module-quiz`** | Historical Learn module | **Missing** | Legacy / Orphaned | `true` | `LOVABLE_API_KEY` | Historical | **Orphaned (Learn table dropped)** |
 | **`suggest-courses`** | Historical Learn module | **Missing** | Legacy / Orphaned | `true` | `LOVABLE_API_KEY` | Historical | **Orphaned (Learn table dropped)** |
@@ -61,10 +61,10 @@
    - **Payload:** `{ portfolioId, items: [...] }`.
 
 4. **`check-feature-access`**
-   - **Files:** `artifacts/syncareer/src/lib/featureAccess.ts`, `artifacts/syncareer/src/hooks/useSubscription.ts`
-   - **Operations:** Checks quota limits for free tier vs premium tier (e.g. `ai_coach_session`, `mock_interview`, `cv_export`, `career_assessment`, `job_application`), optionally increments `usage_logs`.
+   - **Caller:** tracked `career-guidance` (server-side). No client caller remains after the free-product change (2026-09-04).
+   - **Operations:** Enforces the uniform per-user AI quota used as an AI cost control (e.g. `ai_coach_session`), optionally increments `usage_logs`. It is not a subscription entitlement: limits apply equally to every user.
    - **Payload:** `{ feature_key: string, increment: boolean }`.
-   - **Response Shape:** `{ allowed: boolean, used: number, limit: number, message?: string, is_premium: boolean }`.
+   - **Response Shape:** `{ allowed: boolean, used: number, limit: number, message?: string, is_premium: boolean }` (legacy `is_premium` field ignored by current code).
 
 5. **`compute-university-insights`**
    - **File:** `artifacts/syncareer/src/components/dashboard/UniversityInsightsCard.tsx`
@@ -105,10 +105,9 @@
     - **Payload:** `{ userId: string, title: string, message: string, type?: string, link?: string }`.
 
 12. **`verify-paystack-payment`**
-    - **File:** `artifacts/syncareer/src/components/payment/PaystackButton.tsx`
-    - **Operations:** Verifies Paystack transaction reference against Paystack API, creates/updates active subscription in `subscriptions` table.
-    - **Payload:** `{ reference: string, plan: 'monthly' | 'yearly' }`.
-    - **Response Shape:** `{ status: 'success' | 'error', message?: string }`.
+    - **File:** none (former `PaystackButton.tsx` removed 2026-09-04).
+    - **Operations:** **Legacy.** Verified Paystack transaction references and created/updated subscription rows during the former paid-plan era. Retained deployed-only; no repository caller remains. Do not reconstruct; decommission requires an owner-approved change against the live project.
+    - **Payload (historical):** `{ reference: string, plan: 'monthly' | 'yearly' }`.
 
 ---
 
@@ -158,7 +157,7 @@
 | **`LOVABLE_API_KEY`** | `career-guidance`, `alumni-outcomes`, `market-intelligence`, `preview-transactional-email`, `handle-email-suppression`, `process-email-queue`, `cv-ai-assistant`, `mock-interview`, `analyze-portfolio` | Lovable AI Gateway LLM inference & email webhook authentication |
 | **`LOVABLE_SEND_URL`** *(Optional)* | `process-email-queue` | Custom email sending endpoint override |
 | **`FIRECRAWL_API_KEY`** | `aggregate-external-jobs`, `alumni-outcomes`, `scrape-jobs` | Web crawling for external job aggregation & alumni data |
-| **`PAYSTACK_SECRET_KEY`** | `verify-paystack-payment` | Payment verification with Paystack API |
+| **`PAYSTACK_SECRET_KEY`** | `verify-paystack-payment` | Legacy payment verification (function retained deployed-only) |
 | **`RESEND_API_KEY`** *(Optional)* | `send-notification` | Direct email delivery if configured alongside Lovable email |
 | **`OPENAI_API_KEY` / `ELEVENLABS_API_KEY`** | `interview-tts` | Text-to-speech audio synthesis for Voice Interview Mode |
 

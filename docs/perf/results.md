@@ -1,5 +1,7 @@
 # Performance optimization results
 
+> **Historical note:** This is a historical performance record of the former subscription-hook work (pre-2026-09-04). The subscription layer it measures (`useSubscription` / `subscriptionService`) has since been removed with the free-product change — see ../FREE_SERVICE_AND_SUPPORT.md.
+
 Branch: `arena/019feba0-syncareer`.
 
 ## Bundle (production `vite build`, reported chunk sizes / kB)

@@ -1,8 +1,20 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
 import { Navbar } from './Navbar';
 import { studentNavGroups } from './AppSidebar';
+
+// The support entry point is optional configuration, never a default. The
+// seam itself (env read) is covered by lib/support.test.ts; here we control it
+// through a mock to assert the menu behaviour in both states.
+const supportMocks = vi.hoisted(() => ({
+  enabled: false,
+  url: 'https://support.example.com/one-time',
+  isSupportEnabled: vi.fn(() => supportMocks.enabled),
+  supportUrl: vi.fn(() => supportMocks.url),
+}));
+
+vi.mock('@/lib/support', () => supportMocks);
 
 let userType = 'student';
 
@@ -28,6 +40,10 @@ function openAccountMenu() {
     pointerType: 'mouse',
   });
 }
+
+beforeEach(() => {
+  supportMocks.enabled = false;
+});
 
 describe('Navbar', () => {
   it('derives the current context from the navigation model', () => {
@@ -84,11 +100,10 @@ describe('Navbar', () => {
     openAccountMenu();
     expect(screen.getByText('Ama Student')).toBeTruthy();
     expect(screen.getByText('Mentor requests')).toBeTruthy();
-    expect(screen.getByText('Subscription')).toBeTruthy();
     expect(screen.getByText('Settings')).toBeTruthy();
   });
 
-  it('labels the operational mentor account without student billing links', () => {
+  it('labels the operational mentor account without student links', () => {
     userType = 'career_counsellor';
     render(
       <MemoryRouter initialEntries={['/mentorship/requests']}>
@@ -97,8 +112,52 @@ describe('Navbar', () => {
     );
     openAccountMenu();
     expect(screen.getByText('Career mentor')).toBeTruthy();
-    expect(screen.queryByText('Subscription')).toBeNull();
     expect(screen.queryByText('Mentor requests')).toBeNull();
     expect(screen.getByText('Settings')).toBeTruthy();
+  });
+
+  it('offers Feedback instead of any plan, subscription, or billing item', () => {
+    userType = 'student';
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Navbar navigation={studentNavGroups} />
+      </MemoryRouter>,
+    );
+    openAccountMenu();
+    expect(screen.getByText('Feedback')).toBeTruthy();
+    expect(screen.queryByText('Subscription')).toBeNull();
+    expect(screen.queryByText('Upgrade')).toBeNull();
+    expect(screen.queryByText('Billing')).toBeNull();
+    expect(screen.queryByText(/premium/i)).toBeNull();
+    expect(screen.queryByText(/current plan/i)).toBeNull();
+    // Feature access must not depend on a plan: the account menu carries no
+    // plan status, badge, or renewal information.
+    expect(screen.queryByText(/renew/i)).toBeNull();
+  });
+
+  it('shows the optional support item only when a support URL is configured', () => {
+    userType = 'student';
+    const { unmount } = render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Navbar navigation={studentNavGroups} />
+      </MemoryRouter>,
+    );
+    openAccountMenu();
+    expect(screen.queryByText('Support Syncareer')).toBeNull();
+    unmount();
+
+    supportMocks.enabled = true;
+    supportMocks.url = 'https://support.example.com/one-time';
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Navbar navigation={studentNavGroups} />
+      </MemoryRouter>,
+    );
+    openAccountMenu();
+    const supportLabel = screen.getByText('Support Syncareer');
+    const supportLink = supportLabel.closest('a');
+    expect(supportLink).not.toBeNull();
+    expect(supportLink?.getAttribute('href')).toBe('https://support.example.com/one-time');
+    expect(screen.getByText(/Syncareer is free either way/i)).toBeTruthy();
   });
 });

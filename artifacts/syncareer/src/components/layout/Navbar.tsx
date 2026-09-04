@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BellRing, CreditCard, HelpCircle, LogOut, Mail, Phone, Settings, Shield, User } from 'lucide-react';
+import { BellRing, HeartHandshake, HelpCircle, LogOut, Mail, MessageSquareHeart, Phone, Settings, Shield, User } from 'lucide-react';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
 
 import { cn } from '@/lib/utils';
@@ -32,6 +32,8 @@ import {
 import { toast } from 'sonner';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 import { findNavContext, type NavGroup } from './AppSidebar';
+import { GeneralFeedbackDialog } from '@/components/feedback/GeneralFeedbackDialog';
+import { isSupportEnabled, supportUrl } from '@/lib/support';
 
 export interface BreadcrumbItem {
   label: string;
@@ -60,6 +62,7 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
 
   const isCounsellor = profile?.user_type === 'career_counsellor';
   const [isAdmin, setIsAdmin] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useEffect(() => {
     if (!supabaseUserId) return;
@@ -97,6 +100,7 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
     : []);
 
   return (
+    <>
     <header
       className={cn(
         'fixed left-0 right-0 top-0 z-30 h-14 border-b border-border bg-background',
@@ -173,17 +177,15 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
                 Profile
               </DropdownMenuItem>
               {!isCounsellor && (
-                <>
-                  <DropdownMenuItem onClick={() => navigate('/mentorship/requests')} className="cursor-pointer">
-                    <BellRing className="h-4 w-4 mr-2" />
-                    Mentor requests
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/settings?tab=subscription')} className="cursor-pointer">
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Subscription
-                  </DropdownMenuItem>
-                </>
+                <DropdownMenuItem onClick={() => navigate('/mentorship/requests')} className="cursor-pointer">
+                  <BellRing className="h-4 w-4 mr-2" />
+                  Mentor requests
+                </DropdownMenuItem>
               )}
+              <DropdownMenuItem onClick={() => setFeedbackOpen(true)} className="cursor-pointer">
+                <MessageSquareHeart className="h-4 w-4 mr-2" />
+                Feedback
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
@@ -222,6 +224,24 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
                   </div>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+              {isSupportEnabled() && (
+                <DropdownMenuItem asChild>
+                  <a
+                    href={supportUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cursor-pointer"
+                  >
+                    <HeartHandshake className="h-4 w-4 mr-2" />
+                    <span>
+                      <span className="block">Support Syncareer</span>
+                      <span className="block text-[11px] font-normal text-muted-foreground">
+                        Optional one-time support — Syncareer is free either way
+                      </span>
+                    </span>
+                  </a>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
                 <LogOut className="h-4 w-4 mr-2" />
@@ -232,5 +252,7 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
         </div>
       </div>
     </header>
+    <GeneralFeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+    </>
   );
 }

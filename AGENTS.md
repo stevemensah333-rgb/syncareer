@@ -8,6 +8,12 @@ Primary journey: **saved opportunity → application workspace → tailored CV �
 
 Prefer depth and continuity around this journey over adding disconnected tools.
 
+## Product model
+
+Syncareer is free to use. The product does not use subscription tiers, premium feature gating, or recurring user billing. Optional voluntary one-time support may be offered separately and does not unlock product functionality.
+
+Support payments must never be used as a mechanism for feature access.
+
 ## Repository and platform facts
 
 - The application builds from `artifacts/syncareer/` (React 19, TypeScript, Vite, Tailwind, react-router-dom). Root `src/` is Lovable's auto-sync target for generated Supabase files, not a build input. Do not delete a directory merely because its name contains `artifacts`.

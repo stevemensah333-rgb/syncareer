@@ -21,7 +21,7 @@ import { ANALYTICS_EVENTS, captureProductEvent } from "@/services/analytics";
 
 const SITE_URL = "https://syncareer.me";
 const SEO_DESCRIPTION =
-  "Syncareer helps African graduates turn real opportunities into stronger, evidence-based applications with role-specific CV guidance, interview practice, and application tracking.";
+  "Syncareer gives students and recent graduates free career support and application intelligence: turn real opportunities into stronger, evidence-based applications with CV guidance, interview practice, and tracking. No paid tier — every feature is available to every user.";
 
 export default function Landing() {
   const navigate = useNavigate();

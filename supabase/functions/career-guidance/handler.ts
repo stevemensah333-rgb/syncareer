@@ -1,6 +1,9 @@
 // Version-2 request handler. Pure with respect to I/O: authentication, quota,
 // idempotency and gateway access are injected so the whole flow is testable
 // without network access or production credentials.
+//
+// The quota is a uniform per-user AI cost control (service protection), never a
+// premium entitlement: it applies equally to every user.
 
 import {
   LIMITS,

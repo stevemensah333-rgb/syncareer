@@ -11,7 +11,7 @@
 - Action: keep production capture disabled per prompt. Owner must set key in Lovable publish env **and** enable explicit consent UI before enabling `VITE_ANALYTICS_CAPTURE_ENABLED=true`.
 
 ### Consent required?
-- Target users: African university students and recent graduates (Ghana primary per `Pricing` GH₵). Ghana Data Protection Act requires notice and consent for non-essential tracking. Any EU users (study abroad, diaspora) trigger GDPR/ePrivacy opt-in.
+- Target users: African university students and recent graduates (Ghana is the primary market). Ghana Data Protection Act requires notice and consent for non-essential tracking. Any EU users (study abroad, diaspora) trigger GDPR/ePrivacy opt-in.
 - Current posture: opt-in only (`syncareer.analytics_consent` must be `granted`). Also respects `navigator.doNotTrack === '1'`. Assessment has a second key `syncareer.assessment_analytics_consent`.
 - PrivacyPolicy §6 mentions analytics cookies where consented — consistent.
 - Implementation: `getAnalyticsConsent`, `canCaptureAnalytics`, `setAnalyticsConsent` with queue clearing + `opt_out_capturing` + `reset` on denial. Assessment lifecycle also checks its own consent before calling `captureProductEvent`, which re-checks global consent.

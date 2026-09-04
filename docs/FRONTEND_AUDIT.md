@@ -3,6 +3,15 @@
 **Date:** 2026-08-10
 **Stage:** Audit only; no product behavior changed
 **Frontend source of truth:** `artifacts/syncareer/`
+
+> **Superseded note (2026-09-04):** rows in this audit that describe
+> Pricing/Subscription/Paystack/premium behaviour describe the removed
+> monetization model. The product is now free: no plans, no premium gates, no
+> subscription UI. `PaystackButton`, `Pricing.tsx`, `SubscriptionSuccess.tsx`,
+> `SubscriptionManager`, `subscriptionService`, `useSubscription`,
+> `featureAccess`, and `ReferralCard` were removed; `/pricing` and
+> `/subscription-success` redirect to `/`. See
+> [`FREE_SERVICE_AND_SUPPORT.md`](./FREE_SERVICE_AND_SUPPORT.md).
 **Evidence boundary:** This is a repository audit. Live Lovable Cloud/Supabase rows, deployed-only Edge Function source, invocation counts, jobs, PostHog dashboards, and provider spend were not available in this checkout. Findings that depend on those sources are explicitly marked unknown.
 
 > Point-in-time note (2026-08-11): the CV `firstName`/`fullName` scoring mismatch,

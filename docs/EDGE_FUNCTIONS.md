@@ -30,9 +30,11 @@ The app calls these via `supabase.functions.invoke` or direct fetch, but their
 source is **not** tracked here (documented in
 [`BACKEND_PLATFORM_INVENTORY.md`](./BACKEND_PLATFORM_INVENTORY.md)):
 
-- `verify-paystack-payment` — payment verification (see
-  [`PAYMENT_AND_SUBSCRIPTIONS.md`](./PAYMENT_AND_SUBSCRIPTIONS.md)).
-- `check-feature-access` — server-side feature-usage gating.
+- `verify-paystack-payment` — **legacy** subscription verification; retained
+  deployed-only (no client caller remains) — see
+  [`FREE_SERVICE_AND_SUPPORT.md`](./FREE_SERVICE_AND_SUPPORT.md).
+- `check-feature-access` — server-side **uniform per-user AI quota** (cost
+  control), not a subscription entitlement.
 - `delete-account` — owner-only account deletion.
 - `mock-interview`, `interview-tts` — AI interview + text-to-speech.
 - `analyze-portfolio` — CV upload parsing. A deployed `cv-ai-assistant` artifact is documented in the platform inventory, but no current repository caller remains; job-specific bullet guidance uses tracked `career-guidance`.
@@ -60,7 +62,7 @@ Never commit values. Configure via Lovable Cloud secrets UI.
 - `SUPABASE_ANON_KEY` — `mcp`.
 - `LOVABLE_API_KEY` — AI gateway / email.
 - `FIRECRAWL_API_KEY` — job aggregation / alumni research.
-- `PAYSTACK_SECRET_KEY` — `verify-paystack-payment`.
+- `PAYSTACK_SECRET_KEY` — `verify-paystack-payment` (legacy; still configured while the function is deployed).
 - Optional: `LOVABLE_SEND_URL`, `RESEND_API_KEY`, `OPENAI_API_KEY` / `ELEVENLABS_API_KEY`.
 
 Full matrix: [`BACKEND_PLATFORM_INVENTORY.md`](./BACKEND_PLATFORM_INVENTORY.md) §6.

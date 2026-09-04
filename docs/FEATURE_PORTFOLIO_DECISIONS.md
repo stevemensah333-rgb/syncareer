@@ -2,6 +2,13 @@
 
 **Date:** 2026-08-10
 **Status:** Decision stage complete — **no code, configuration, or data was removed or modified**.
+
+> **Superseded note (2026-09-04):** the product model decision changed: Syncareer
+> is free to use, with no subscription tier or premium gating (see
+> `AGENTS.md` / [`FREE_SERVICE_AND_SUPPORT.md`](./FREE_SERVICE_AND_SUPPORT.md)).
+> Sections 3.9 (Subscriptions) and 3.10 (Referrals) and the FD decisions that
+> depended on a paid tier are historical records of the former model; the
+> subscription-era client code referenced there has been removed.
 **Scope:** Classify each Syncareer product feature as `CORE`, `SUPPORTING`, `SIMPLIFY`, `PAUSE`, `REMOVE CANDIDATE`, `LEGACY/DEAD`, or `UNKNOWN`; define the recommended product boundary; list the founder decisions required before any removal happens.
 
 This stage follows `AGENTS.md`: evidence first, no removals without evidence and explicit approval, missing routes are never treated as proof that live data is disposable, and no replacement AI features are proposed. Companion runbooks: [`BACKEND_PLATFORM_INVENTORY.md`](./BACKEND_PLATFORM_INVENTORY.md), [`SCHEMA_RECONCILIATION.md`](./SCHEMA_RECONCILIATION.md), [`TEST_MATRIX.md`](./TEST_MATRIX.md).
@@ -35,7 +42,7 @@ The purpose of this stage is to decide from usage and operational evidence. One 
 
 ## 2. Product boundary recommendation (the short answer)
 
-> **Syncareer's product is: a career-launch loop for African students — Discover (assessment) → Build (CV) → Practice (interview) → Apply (jobs + tracking) — funded by a Paystack premium tier that pays for the AI-metered features inside that loop.**
+> **Former model (pre-2026-09-04):** a career-launch loop for African students — Discover (assessment) → Build (CV) → Practice (interview) → Apply (jobs + tracking) — funded by a Paystack premium tier that paid for the AI-metered features inside that loop. Since 2026-09-04 the product is free for everyone; the only metering left is the uniform per-user AI cost-control quota (see [`FREE_SERVICE_AND_SUPPORT.md`](./FREE_SERVICE_AND_SUPPORT.md)).
 
 Everything outside that loop is either infrastructure that supports it (notifications, referrals, admin tooling), a strategic bet requiring a founder decision (counsellor marketplace, i18n), an unmeasured experiment (MCP server), or already-dead surface (learning, portfolio schemas) whose remaining artifacts are queued for evidence-checked removal.
 
@@ -46,8 +53,10 @@ CORE LOOP (protect, measure)            SUPPORTING (keep while the loop needs it
   Career assessment                       Notifications (booking/system messages)
   CV builder (+ deterministic scoring)    Referrals (dashboard card)
   Interview simulator                     Admin dashboards (counselling + feedback ops)
-  Job discovery + application tracker     Subscriptions/payments plumbing IS core-boundary:
-  Subscriptions (Paystack premium)          it funds the loop's AI cost
+  Job discovery + application tracker
+
+(former model, historical): Subscriptions/payments plumbing was core-boundary only
+because the Paystack premium tier funded the loop's AI cost.
 
 DECISION-NEEDED (founder call + evidence)   ALREADY DEAD — removal candidates (evidence-checked)
   Counsellor marketplace (scale vs pause)   Learning schema + 3 orphaned edge functions
@@ -92,7 +101,7 @@ Format per feature: identity & ownership → data → usage/burden/cost/security
 - **Routes/ownership:** `/interview-simulator` — `pages/InterviewSimulator.tsx` (525 lines), `components/interview/{VoiceInterviewMode,InterviewErrorBoundary}.tsx`, `hooks/useVoiceInterview.ts`, `features/interview/*`.
 - **Data:** `mock_interviews`.
 - **Usage/burden/cost:** Events defined (`interview_started/completed/question_answered`), none emitted. **Highest per-session external cost in the product**: LLM turns via `mock-interview` + audio via `interview-tts` (`OPENAI_API_KEY`/`ELEVENLABS_API_KEY`/Lovable gateway — provider split unknown, deployed-only source).
-- **Security/privacy:** Voice answers are personal data processed by third-party AI; server-side enforcement of the interview paywall is unverifiable in-repo (client gates on `isPremium`; the functions are expected to enforce but are deployed-only).
+- **Security/privacy:** Voice answers are personal data processed by third-party AI. The interview had no server-side paywall; the former premium gate was a client-side `isPremium` check (see §3.9) that has since been removed (2026-09-04) — recording never required a paid plan, and nothing does today. Cost exposure is controlled by server-side rate limits in the deployed-only functions, whose exact source is not in-repo.
 - **Tests:** `interviewContract.test.ts` (retry/backoff + phase contract; LLM prose intentionally excluded, Layer 4.4).
 - **Platform deps:** Two deployed-only functions with three possible AI providers — the thickest deployed-only seam in the app.
 - **Centrality/AI:** "Practice" pillar of the loop; voice AI is the feature's substance, so AI is justified — but cost-per-session must be measured against conversion.
@@ -135,12 +144,12 @@ Format per feature: identity & ownership → data → usage/burden/cost/security
 
 - **Routes/ownership:** `/ai-coach` — `pages/AICoach.tsx` (241 lines), `components/ai-coach/*` (5 components), tracked function `career-guidance` (SSE streaming via Lovable AI gateway, Gemini 2.5 Flash), `hooks/useUserContext.ts` (profile-context assembly).
 - **Data:** none persisted by the app (`career_guidance_sessions` exists in latest generated types but has **no writer anywhere** in app or tracked functions — verify deadness via count §6, currently zero-evidence retention risk only).
-- **Usage/burden/cost:** No chat-specific events. Cost: LLM tokens per message; free tier 5 sessions/month enforced via `check-feature-access` (the **only** feature with live server-side increment calls from the client).
+- **Usage/burden/cost:** No chat-specific events. Cost: LLM tokens per message; a **uniform per-user quota of 5 sessions/month** (an AI cost control applying to every user, not a subscription entitlement) is enforced server-side by the deployed `check-feature-access` function.
 - **Security/privacy:** Chat content contains career/personal data sent to the AI gateway. Streaming CORS is open (`*`) but JWT-gated. Rate limiting beyond monthly quota is unverifiable.
 - **Tests:** `useAICoachAccess.test.ts` (quota boundary, Layer 4.2 partial).
 - **Platform deps:** Lovable AI gateway — direct `LOVABLE_API_KEY` consumer.
 - **Centrality/AI:** Generic career chat is **commodity** (every LLM chat does it); its only differentiation is the Syncareer profile context injection, which is well-implemented. Feature overlaps the CV assistant, market intelligence, and interview feedback.
-- **Classification: SUPPORTING.** It rounds out the loop and is the only metered AI feature wired end-to-end. SIMPLIFY option (merge entry points with CV assistant, cap free tier harder) is evidence-gated on usage/cost data and FD-1; no replacement AI may be added.
+- **Classification: SUPPORTING.** It rounds out the loop and is the only metered AI feature wired end-to-end. SIMPLIFY option (merge entry points with CV assistant, tighten the uniform per-user AI quota) is evidence-gated on usage/cost data and FD-1; no replacement AI may be added.
 
 ### 3.7 Market intelligence / alumni outcomes — **SUPPORTING** (PAUSE option flagged)
 
@@ -167,7 +176,7 @@ Format per feature: identity & ownership → data → usage/burden/cost/security
 - **Routes/ownership:** `/pricing`, `/subscription-success`, Settings subscription tab — `pages/Pricing.tsx`, `components/payment/PaystackButton.tsx`, `components/subscription/SubscriptionManager.tsx`, `services/subscriptionService.ts`, `lib/featureAccess.ts`, `hooks/useSubscription.ts`. Plans: **GH₵30/month, GH₵300/year**, Paystack, GHS.
 - **Data:** `subscriptions`, `payments`, `usage_logs`.
 - **Usage/burden/cost:** Subscription events defined, none emitted → **conversion cannot be measured today**. Cost: Paystack transaction fees only.
-- **Security/privacy:** Server-grants-premium trust model documented in `PAYMENT_AND_SUBSCRIPTIONS.md`; RLS blocks client self-grant (payments insert restricted to `status='pending'`); `verify-paystack-payment` and `check-feature-access` are deployed-only (verification steps unverifiable in-repo).
+- **Security/privacy:** Server-grants-premium trust model documented in `FREE_SERVICE_AND_SUPPORT.md`; RLS blocks client self-grant (payments insert restricted to `status='pending'`); `verify-paystack-payment` and `check-feature-access` are deployed-only (verification steps unverifiable in-repo).
 - **Tests:** `subscriptionService.test.ts`, `featureAccess.test.ts` (Layers 1.3/1.6 — the revenue failure policy).
 - **Enforcement asymmetry (evidence):** `FREE_LIMITS` defines 7 feature keys, but the client performs **server-side checks only for `ai_coach_session`** (`AICoach.tsx`); the interview page hard-gates voice behind `isPremium`; `cv_export`, `career_assessment`, `job_application` limits are **display-only** via `SubscriptionManager` (no enforcement call sites found in `CVBuilder`, `Assessment`, `Markets`, `ApplicationTracker`). Whether the deployed functions enforce the rest is unverifiable in-repo.
 - **Classification: CORE.** Simplification work (align FREE_LIMITS with actual enforcement) is a hardening task, not a removal; requires the deployed-only function sources (recovery runbook).
@@ -324,7 +333,7 @@ Out-of-list but discovered this stage (code-level, zero-data-impact removal cand
 | **FD-5** | **MCP consumers:** confirm whether any external agent/integration is meant to exist (partners, demo scripts, your own tooling). | Final input to RC-3 alongside invocation logs. |
 | **FD-6** | **Hub IA:** after page-view data exists, choose between flattening the Build/Practice/Apply hubs or making them real dashboards. | Resolves 3.14 SIMPLIFY. |
 | **FD-7** | **Support/intel channel:** designate where user feedback & bug reports aggregate (the product collects `user_feedback` via FeedbackModal used in Assessment/CV/Interview; is `/admin/feedback` actually being checked?). | Converts "support burden unknown" into an input for the next review; otherwise classifications stay evidence-starved. |
-| **FD-8** | **Paystack key in publish env:** tracked `.env` lacks `VITE_PAYSTACK_PUBLIC_KEY`; confirm Lovable injects it at build time, else checkout silently can't initialize. | Revenue path sanity — not a removal, a verification. |
+| **FD-8** | **Paystack key in publish env** — **SUPERSEDED (2026-09-04):** the Paystack subscription checkout was removed with the paid-plan model; no `VITE_PAYSTACK_PUBLIC_KEY` client usage remains. | N/A — resolution became the free-product change. |
 
 ### Open unknowns table (status at end of this stage)
 

@@ -50,9 +50,11 @@ There is **no Express/Node API server**. All server-side work is Supabase.
 2. `profiles.id` equals `auth.uid()`; RLS policies scope every `public` table
    read/write to the caller.
 3. Client reads/writes through `supabase.from(...)`. RLS and triggers enforce
-   ownership, role immutability, and payment restrictions.
-4. AI / payment / email operations call edge functions (JWT-verified) which use
+   ownership, role immutability, and (legacy) payment write restrictions.
+4. AI / email operations call edge functions (JWT-verified) which use
    `service_role` only for legitimate system operations, then return typed JSON.
+   AI generation is protected by a uniform per-user server quota (cost control),
+   not by any subscription state.
 
 ### Onboarding flow
 
@@ -165,9 +167,12 @@ ApplicationTracker.tsx (job_applications ⋈ job_postings, applicant-owned)
   migrations for verification evidence, per-application CV targeting, and a
   status CHECK constraint are reported in [`SCHEMA_RECONCILIATION.md`](./SCHEMA_RECONCILIATION.md) §13.
 
-### Payment / subscription flow
+### Product model & optional support
 
-See [`PAYMENT_AND_SUBSCRIPTIONS.md`](./PAYMENT_AND_SUBSCRIPTIONS.md).
+Syncareer is free to use; there is no subscription or premium tier.
+See [`FREE_SERVICE_AND_SUPPORT.md`](./FREE_SERVICE_AND_SUPPORT.md).
+Legacy subscription-era tables and deployed functions are retained unmodified;
+the application no longer reads subscription state for feature access.
 
 ### Evidence dossier domain
 
@@ -236,10 +241,11 @@ The signed-in student experience is centred on applications:
   resumes, job_postings/saved_jobs/job_applications, counsellor_details /
   counsellor_availability / counsellor_bookings / counsellor_sessions /
   counsellor_reviews / counsellor_messages / counsellor_credentials,
-  payments, subscriptions, usage_logs, notifications, referrals, email
-  infrastructure tables.
+  payments, subscriptions, usage_logs (legacy subscription-era relations,
+  retained unmodified — see [`FREE_SERVICE_AND_SUPPORT.md`](./FREE_SERVICE_AND_SUPPORT.md)),
+  notifications, referrals, email infrastructure tables.
 - Critical enforcement lives in triggers + SECURITY DEFINER functions:
-  - `enforce_counsellor_session_updates` (payment fields + client-only-cancel).
+  - `enforce_counsellor_session_updates` (legacy payment fields + client-only-cancel).
   - `enforce_counsellor_booking_updates` (immutable user_id/counsellor_id).
   - `prevent_client_payment_escalation` (historical; replaced by the above).
   - `get_profile_user_type`, `has_role`, `is_counsellor_owner`,
@@ -261,13 +267,14 @@ The signed-in student experience is centred on applications:
             ▼
 ┌─ Supabase Auth ────────────────────────────────────────────────┐
 │  auth.users  ·  profiles.id = auth.uid()  ·  RLS on public     │
-│  tables enforce ownership / role / payment rules.              │
+│  tables enforce ownership / role / (legacy) payment rules.    │
 └───────┬───────────────────────────────────┬────────────────────┘
         │ public via RLS                    │ edge functions
         ▼                                   ▼
 ┌─ Public tables ────────────┐   ┌─ Edge functions (verify_jwt) ─┐
 │  user rows (owner only)    │   │  service_role / AI gateway /   │
-│  counsellor read scope     │   │  Paystack / email / webhooks   │
+│  counsellor read scope     │   │  email / webhooks / legacy      │
+│                            │   │  Paystack verification          │
 └────────────────────────────┘   └────────────────────────────────┘
 ```
 
@@ -275,9 +282,12 @@ The signed-in student experience is centred on applications:
 - **Counsellors** additionally see their own counsellor domain rows and public
   client-facing data; they cannot read other users' private data.
 - **Service role** (edge functions) may perform system/admin operations
-  (payment webhook, email queue, admin tools). It is never exposed to the client.
-- **Payment/usage gates are enforced server-side** (edge function + RLS); a
-  browser-only check is not a security control.
+  (email queue, admin tools; legacy payment verification webhook remains for
+  the retained subscription-era infrastructure). It is never exposed to the client.
+- **AI cost control is enforced server-side** (uniform per-user quota through
+  edge functions); a browser-only check is not a security control. Legacy
+  subscription-era payment write restrictions remain RLS-enforced while the
+  tables exist.
 
 ## Service worker (decommission)
 
@@ -291,5 +301,5 @@ There is no `vite-plugin-pwa`, no `offline.html`, and no offline-banner UI.
 - [`EDGE_FUNCTIONS.md`](./EDGE_FUNCTIONS.md) — function inventory & deployment.
 - [`SCHEMA_RECONCILIATION.md`](./SCHEMA_RECONCILIATION.md) — schema & types.
 - [`LOVABLE_INTEGRATION.md`](./LOVABLE_INTEGRATION.md) — platform boundaries.
-- [`PAYMENT_AND_SUBSCRIPTIONS.md`](./PAYMENT_AND_SUBSCRIPTIONS.md) — payments.
+- [`FREE_SERVICE_AND_SUPPORT.md`](./FREE_SERVICE_AND_SUPPORT.md) — free product model & optional support.
 - [`INCIDENT_RECOVERY.md`](./INCIDENT_RECOVERY.md) — recovery.

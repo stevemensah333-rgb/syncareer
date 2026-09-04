@@ -18,7 +18,7 @@ or code understanding.
 | Test matrix | [`../TEST_MATRIX.md`](../TEST_MATRIX.md) |
 | Schema / migrations / types | [`../SCHEMA_RECONCILIATION.md`](../SCHEMA_RECONCILIATION.md) |
 | Edge functions & deployment | [`../EDGE_FUNCTIONS.md`](../EDGE_FUNCTIONS.md), [`../BACKEND_PLATFORM_INVENTORY.md`](../BACKEND_PLATFORM_INVENTORY.md) |
-| Payments / subscriptions | [`../PAYMENT_AND_SUBSCRIPTIONS.md`](../PAYMENT_AND_SUBSCRIPTIONS.md) |
+| Free service & optional support | [`../FREE_SERVICE_AND_SUPPORT.md`](../FREE_SERVICE_AND_SUPPORT.md) |
 | Lovable boundaries | [`../LOVABLE_INTEGRATION.md`](../LOVABLE_INTEGRATION.md) |
 | Incident / recovery | [`../INCIDENT_RECOVERY.md`](../INCIDENT_RECOVERY.md) |
 

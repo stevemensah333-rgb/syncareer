@@ -26,7 +26,8 @@ function serviceClient() {
   return createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 }
 
-/** Calls the deployed check-feature-access function; its quota model is authoritative. */
+/** Calls the deployed check-feature-access function; its quota model is authoritative.
+ * The quota is a uniform per-user AI cost control, independent of any paid tier. */
 async function featureAccess(token: string, increment: boolean): Promise<QuotaState> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/check-feature-access`, {
     method: "POST",

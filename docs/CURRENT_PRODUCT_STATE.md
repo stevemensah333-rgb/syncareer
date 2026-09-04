@@ -3,6 +3,13 @@
 Baseline date: 2026-08-11  
 Repository state inspected: `main` at `f0856c39a9203b04512dd8e14d4f44e210272ade`
 
+> **Superseded note (2026-09-04):** this baseline predates the free-product
+> change. Sections describing `/pricing`, `/subscription-success`, the
+> subscription hook/service, premium gates, or Paystack flows are **historical
+> snapshots** of the removed monetization model. The current product model is
+> documented in [`FREE_SERVICE_AND_SUPPORT.md`](./FREE_SERVICE_AND_SUPPORT.md)
+> and `AGENTS.md`; `/pricing` and `/subscription-success` now redirect to `/`.
+
 ## Scope and evidence rules
 
 This is a read-only baseline of the current frontend built from `artifacts/syncareer`. It describes code and tests at the commit above; it does not treat archived plans, screenshots, generated database types, or a successful build as proof of runtime behavior.

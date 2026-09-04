@@ -1,5 +1,7 @@
 # Performance stage 2 results (2026-08-11)
 
+> **Historical note:** Performance record of the former subscription-era app (pre-2026-09-04). Monetization modules it mentions (`Pricing`, `SubscriptionSuccess`, the subscription hook/service) were removed with the free-product change — see ../FREE_SERVICE_AND_SUPPORT.md.
+
 Branch: `arena/019ff13c-syncareer-8ec74d70` (from `main` @ `4906269`).
 Follows `docs/perf/baseline.md` (pre-optimization) and `docs/perf/results.md` (stage 1).
 
