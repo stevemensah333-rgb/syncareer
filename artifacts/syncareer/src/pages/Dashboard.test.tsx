@@ -45,7 +45,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('Dashboard Home integration', () => {
+describe('Career command center (Dashboard Home)', () => {
   it('renders owned backend application and CV data without a load error', async () => {
     installResults({
       assessments: { data: { completed_at: '2026-08-01T10:00:00Z' }, error: null },
@@ -122,10 +122,38 @@ describe('Dashboard Home integration', () => {
       </MemoryRouter>,
     );
 
-    // The hero names the single next move (interview stage) with a why + CTA.
-    expect(await screen.findByText('Your next move')).toBeTruthy();
-    expect(screen.getByText('Why this matters')).toBeTruthy();
+    // Primary question is immediately readable.
+    expect(await screen.findByText('What should I do next?')).toBeTruthy();
+    expect(screen.getByText('Why it matters')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Practise interview/ })).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 2, name: /Your career journey/ })).toBeTruthy();
+
+    // Command center sections in mobile priority order.
+    expect(screen.getByRole('heading', { level: 2, name: /^Continue$/ })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: /^Opportunities$/ })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: /Career signal/ })).toBeTruthy();
+
+    // No KPI-style readiness score invented on the home.
+    expect(screen.queryByText(/readiness/i)).toBeNull();
+    expect(screen.queryByText(/Career Operating Signals/i)).toBeNull();
+  });
+
+  it('surfaces real career direction in the hero when available', async () => {
+    installResults({
+      assessments: { data: { completed_at: '2026-08-01T10:00:00Z', primary_interest: 'Investigative' }, error: null },
+      job_applications: { data: [], error: null },
+      saved_jobs: { data: [], error: null },
+      resumes: { data: null, error: null },
+      mock_interviews: { data: [], error: null },
+      job_postings: { data: [], error: null },
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('Computer Science · University of Ghana')).toBeTruthy();
+    expect(screen.getByText('What should I do next?')).toBeTruthy();
   });
 });

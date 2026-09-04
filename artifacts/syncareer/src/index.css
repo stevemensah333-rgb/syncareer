@@ -891,51 +891,81 @@
   }
 
   /* ---------------------------------------------------------------
-   * DISCOVER DASHBOARD — the student home.
+   * CAREER COMMAND CENTER — the student home.
    *
-   * Discover mode reads as an approachable career environment, not a
-   * document and not a KPI wall. Distinctiveness comes from visual ZONES
-   * (a tinted focus band, quiet section bands) layered over the pale
-   * canvas, plus recognisable career objects — never from extra chrome.
-   * All motion here is entrance/feedback only and respects reduced motion.
+   * A composed career operating surface, not a KPI wall. Distinctiveness
+   * comes from a strong next-move band, intentional section rhythm, and a
+   * visually unique Career Signal rail — never from invented scores.
+   * Motion is entrance/feedback only and respects reduced motion.
    * --------------------------------------------------------------- */
 
-  /* The hero focus band: a restrained tinted zone that lifts the single
-     most important decision off the canvas without becoming a card wall. */
+  .command-center {
+    /* Vertical composition without fake min-heights: denser sections on
+       mobile, deliberate breathing room on large viewports. */
+    --command-section-gap: var(--space-8);
+  }
+
+  @media (min-width: 1024px) {
+    .command-center {
+      --command-section-gap: var(--space-10);
+    }
+  }
+
+  /* The next-move band: lifts the single most important decision off the
+     canvas. Structural grid is decorative only. */
   .discover-hero {
     position: relative;
     overflow: hidden;
     border: 1px solid hsl(var(--border));
     border-radius: var(--radius-surface-lg);
     background:
-      linear-gradient(180deg, hsl(var(--dossier-indigo-wash)) 0%, hsl(var(--card)) 62%);
+      linear-gradient(165deg, hsl(var(--dossier-indigo-wash)) 0%, hsl(var(--card)) 58%, hsl(var(--card)) 100%);
   }
 
-  /* Quiet structural grid, echoing the public journey backdrop, kept very
-     faint so the hero reads as part of the same product. Decorative only. */
   .discover-hero::before {
     content: '';
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(hsl(var(--primary) / 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--primary) / 0.05) 1px, transparent 1px);
-    background-size: 34px 34px;
-    mask-image: radial-gradient(120% 130% at 88% -20%, black 0%, transparent 62%);
-    -webkit-mask-image: radial-gradient(120% 130% at 88% -20%, black 0%, transparent 62%);
+      linear-gradient(hsl(var(--primary) / 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--primary) / 0.055) 1px, transparent 1px);
+    background-size: 36px 36px;
+    mask-image: radial-gradient(110% 120% at 92% -15%, black 0%, transparent 58%);
+    -webkit-mask-image: radial-gradient(110% 120% at 92% -15%, black 0%, transparent 58%);
     pointer-events: none;
   }
 
-  /* A quiet zone band — used to group progression/continue sections without
-     giving each one its own white card. */
-  .discover-zone {
-    border-radius: var(--radius-surface-lg);
-    background: hsl(var(--card) / 0.5);
-    border: 1px solid hsl(var(--border) / 0.7);
+  /* Primary CTA emphasis — subtle lift on fine pointers only. */
+  .command-cta {
+    transition: transform var(--motion-fast) var(--ease-standard),
+                box-shadow var(--motion-fast) var(--ease-standard);
   }
 
-  /* Career-object tile: the moderate card used for opportunities, workflow
-     objects and applications. One consistent interactive treatment. */
+  @media (hover: hover) and (pointer: fine) {
+    .command-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px -6px hsl(var(--primary) / 0.45);
+    }
+  }
+
+  /* Contextual reveal for the "why it matters" callout. */
+  .command-why-reveal {
+    animation: command-why-reveal var(--motion-slow) var(--ease-standard) both;
+    animation-delay: 60ms;
+  }
+
+  @keyframes command-why-reveal {
+    from { opacity: 0; transform: translateX(-4px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Quiet zone marker for grouped continue content (no extra card shell). */
+  .discover-zone,
+  .command-zone {
+    min-width: 0;
+  }
+
+  /* Career-object tile. */
   .discover-object {
     @apply relative flex flex-col border border-border bg-card transition-[transform,box-shadow,border-color] duration-150 ease-standard motion-reduce:transition-none;
     border-radius: var(--radius-surface);
@@ -957,14 +987,121 @@
     box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
   }
 
-  /* Emphasised object — the one tied to the current next move. Non-colour
-     cue (left rule) so emphasis never depends on hover or hue alone. */
+  /* Next-action emphasis — non-colour cue (left rule) + soft tint. */
   .discover-object[data-emphasis='true'] {
     border-color: hsl(var(--primary) / 0.55);
+    background: linear-gradient(90deg, hsl(var(--selected)) 0%, hsl(var(--card)) 28%);
     box-shadow: inset 3px 0 0 0 hsl(var(--primary));
   }
 
-  /* Progression rail connector between the three phases. */
+  /* ── Career Signal — distinctive Discover · Prove · Advance rail ── */
+
+  .career-signal-rail {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius-surface-lg);
+    background:
+      linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--dossier-indigo-wash) / 0.55) 100%);
+    overflow: hidden;
+  }
+
+  .career-signal-phase {
+    @apply relative flex h-full flex-col gap-1 p-4 sm:p-5 transition-colors duration-150 ease-standard motion-reduce:transition-none;
+    min-height: 10.5rem;
+  }
+
+  .career-signal-phase + .career-signal-phase,
+  .career-signal-rail ol > li + li .career-signal-phase {
+    border-top: 1px solid hsl(var(--border) / 0.85);
+  }
+
+  @media (min-width: 640px) {
+    .career-signal-phase + .career-signal-phase,
+    .career-signal-rail ol > li + li .career-signal-phase {
+      border-top: 0;
+      border-left: 1px solid hsl(var(--border) / 0.85);
+    }
+  }
+
+  .career-signal-phase[data-current='true'] {
+    background: hsl(var(--dossier-indigo-wash));
+  }
+
+  .career-signal-phase[data-current='true']::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: hsl(var(--primary));
+  }
+
+  @media (min-width: 640px) {
+    .career-signal-phase[data-current='true']::before {
+      inset-inline-start: 0;
+      top: auto;
+      bottom: 0;
+      width: 100%;
+      height: 3px;
+    }
+  }
+
+  .career-signal-node {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    border: 1.5px solid hsl(var(--border));
+    background: hsl(var(--card));
+    flex-shrink: 0;
+  }
+
+  .career-signal-node[data-status='in-progress'],
+  .career-signal-node[data-status='active'] {
+    border-color: hsl(var(--primary) / 0.55);
+  }
+
+  .career-signal-node[data-status='active'] {
+    background: hsl(var(--primary) / 0.12);
+  }
+
+  .career-signal-node[data-current='true'] {
+    border-color: hsl(var(--primary));
+    background: hsl(var(--primary));
+  }
+
+  .career-signal-node-inner {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: transparent;
+  }
+
+  .career-signal-node[data-status='in-progress'] .career-signal-node-inner,
+  .career-signal-node[data-status='active'] .career-signal-node-inner {
+    background: hsl(var(--primary));
+  }
+
+  .career-signal-node[data-current='true'] .career-signal-node-inner {
+    background: hsl(var(--primary-foreground));
+  }
+
+  /* Horizontal connector between phase nodes on sm+. */
+  .career-signal-connector {
+    position: absolute;
+    top: 1.9rem;
+    right: -1px;
+    width: calc(50% - 0.75rem);
+    height: 1px;
+    background: hsl(var(--border));
+    z-index: 1;
+    pointer-events: none;
+    transform: translateX(100%);
+  }
+
+  /* Legacy phase class kept for any residual fixtures. */
   .discover-phase {
     @apply relative flex flex-col gap-2 border border-border bg-card p-4 transition-colors duration-150 ease-standard motion-reduce:transition-none;
     border-radius: var(--radius-surface);
@@ -975,24 +1112,25 @@
     background: hsl(var(--dossier-indigo-wash));
   }
 
-  /* Section entrance — a single, gentle rise used once on mount, staggered
-     by inline delay. Never loops; disabled under reduced motion. */
+  /* Section entrance — gentle rise once on mount, staggered by delay. */
   .discover-enter {
     animation: discover-enter var(--motion-slow) var(--ease-standard) both;
   }
 
   @keyframes discover-enter {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .discover-enter {
+    .discover-enter,
+    .command-why-reveal {
       animation: none !important;
       opacity: 1 !important;
       transform: none !important;
     }
-    .discover-object:hover {
+    .discover-object:hover,
+    .command-cta:hover {
       transform: none;
     }
   }

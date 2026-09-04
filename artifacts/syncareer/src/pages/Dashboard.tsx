@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
@@ -27,16 +27,21 @@ import {
   type DiscoverSnapshot,
 } from '@/features/dashboard/discover';
 import {
-  ActiveApplications,
   CareerJourney,
   ContinueWork,
-  DashboardLowerContext,
   DiscoverHero,
   OpportunitySpotlight,
 } from '@/components/dashboard/discover';
 
 const EMPTY_INTERVIEW: DashboardInterview = { total: 0, lastRole: null, lastAt: null };
 
+/**
+ * Career command center — the student home.
+ *
+ * Composition answers one primary question: "What should I do next?"
+ * Mobile priority: next action → continue (applications) → opportunities → career signal.
+ * No invented KPIs or readiness scores.
+ */
 export default function Dashboard() {
   const navigate = useNavigate();
   const { profile, studentDetails, loading: profileLoading } = useUserProfile();
@@ -80,7 +85,7 @@ export default function Dashboard() {
         setCvCompletion(bundle.resume ? scoreResume(bundle.resume) : 0);
         setInterview(bundle.interview);
 
-        // The spotlight excludes roles already tracked or saved so the home
+        // Spotlight excludes roles already tracked or saved so the home
         // never re-features work the student has decided on.
         const excluded = new Set<string>([
           ...bundle.applications.map((application) => application.job?.id).filter((id): id is string => Boolean(id)),
@@ -105,9 +110,6 @@ export default function Dashboard() {
           console.warn('[Dashboard] Some data sources were unavailable', { sources: bundle.errors });
         }
       } catch {
-        // The loader settles each request independently; reaching here means
-        // the aggregation itself failed, so the application source is treated
-        // as unavailable rather than presenting a false empty state.
         console.error('[Dashboard] Data aggregation failed');
         setLoadErrors(['applications']);
         setAssessmentDone(false);
@@ -150,10 +152,12 @@ export default function Dashboard() {
   const prepItems = useMemo(() => buildPreparationItems(snapshot, nextMove), [snapshot, nextMove]);
 
   const directionLine = useMemo(() => {
-    if (major?.trim()) return major.trim();
+    if (major?.trim()) {
+      return university?.trim() ? `${major.trim()} · ${university.trim()}` : major.trim();
+    }
     if (direction?.primary) return `${direction.primary} interest`;
     return null;
-  }, [major, direction]);
+  }, [major, university, direction]);
 
   const rankingSummary = useMemo(
     () =>
@@ -166,6 +170,25 @@ export default function Dashboard() {
       }),
     [major, direction, profile?.user_type, studentDetails],
   );
+
+  const savedJobIds = useMemo(
+    () => new Set(savedJobs.map((saved) => saved.job_id)),
+    [savedJobs],
+  );
+
+  const handleSavedChange = useCallback((jobId: string, saved: boolean) => {
+    setSavedJobs((current) => {
+      if (saved) {
+        if (current.some((row) => row.job_id === jobId)) return current;
+        return [{ job_id: jobId, created_at: new Date().toISOString(), job: null }, ...current];
+      }
+      return current.filter((row) => row.job_id !== jobId);
+    });
+    if (saved) {
+      // Once saved, drop it from the spotlight so it doesn't keep featuring.
+      setSpotlight((jobs) => jobs.filter((job) => job.id !== jobId));
+    }
+  }, []);
 
   const coreDataUnavailable = dashboardDataState(loadErrors) === 'unavailable';
   const nonCriticalErrors = loadErrors.filter((error) => error !== 'applications');
@@ -188,7 +211,7 @@ export default function Dashboard() {
           />
         </div>
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="command-center flex flex-col gap-8 lg:gap-10">
           {nonCriticalErrors.length > 0 && (
             <RecordState
               tone="warning"
@@ -202,34 +225,44 @@ export default function Dashboard() {
             />
           )}
 
-          <DiscoverHero
-            greeting={timeOfDayGreeting()}
-            firstName={toFirstName(profile?.full_name)}
-            directionLine={directionLine}
-            nextMove={nextMove}
-          />
+          {/* 1. Next action — always first */}
+          <div className="order-1">
+            <DiscoverHero
+              greeting={timeOfDayGreeting()}
+              firstName={toFirstName(profile?.full_name)}
+              directionLine={directionLine}
+              nextMove={nextMove}
+            />
+          </div>
 
-          {/* Career journey sits high on desktop (right below the next move)
-              but drops to position 4 on mobile, where the required priority is
-              next action → active applications → opportunities → progression. */}
-          <div className="order-4 lg:order-none">
+          {/* 2. Continue — applications + CV / interview / assessment */}
+          <div className="order-2">
+            <ContinueWork
+              applications={activeApps}
+              totalTracked={applications.length}
+              items={prepItems}
+            />
+          </div>
+
+          {/* 3. Opportunities — small set of meaningful objects */}
+          <div className="order-3">
+            <OpportunitySpotlight
+              jobs={spotlight}
+              rankingSummary={rankingSummary}
+              error={spotlightError}
+              savedJobIds={savedJobIds}
+              userId={userId}
+              onSavedChange={handleSavedChange}
+            />
+          </div>
+
+          {/* 4. Career signal — Discover · Prove · Advance (last on mobile) */}
+          <div className="order-4">
             <CareerJourney phases={journey} />
           </div>
 
-          <div className="order-2 lg:order-none">
-            <ActiveApplications items={activeApps} totalTracked={applications.length} />
-          </div>
-
-          <div className="order-3 lg:order-none">
-            <OpportunitySpotlight jobs={spotlight} rankingSummary={rankingSummary} error={spotlightError} />
-          </div>
-
-          <div className="order-5 lg:order-none">
-            <ContinueWork items={prepItems} />
-          </div>
-
           {!hasDirection(snapshot) && applications.length === 0 && (
-            <div className="order-6 lg:order-none">
+            <div className="order-5">
               <div className="discover-object p-5">
                 <p className="text-sm font-medium text-foreground">Still choosing a direction?</p>
                 <p className="type-secondary mt-1">
@@ -244,10 +277,6 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-
-          <div className="order-7 lg:order-none">
-            <DashboardLowerContext snapshot={snapshot} />
-          </div>
         </div>
       )}
     </StudentLayout>
@@ -256,18 +285,25 @@ export default function Dashboard() {
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-8" aria-busy="true" aria-label="Loading your dashboard">
-      <div className="discover-hero h-56 animate-pulse motion-reduce:animate-none" />
-      <div className="grid gap-3 sm:grid-cols-3">
-        {[0, 1, 2].map((index) => (
-          <div key={index} className="h-32 animate-pulse rounded-surface border border-border bg-muted/40 motion-reduce:animate-none" />
-        ))}
-      </div>
+    <div className="space-y-8" aria-busy="true" aria-label="Loading your career command center">
+      <div className="discover-hero h-52 animate-pulse motion-reduce:animate-none sm:h-56" />
       <div className="grid gap-3 sm:grid-cols-2">
         {[0, 1].map((index) => (
-          <div key={index} className="h-32 animate-pulse rounded-surface border border-border bg-muted/30 motion-reduce:animate-none" />
+          <div
+            key={index}
+            className="h-28 animate-pulse rounded-surface border border-border bg-muted/40 motion-reduce:animate-none"
+          />
         ))}
       </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[0, 1, 2].map((index) => (
+          <div
+            key={index}
+            className="h-24 animate-pulse rounded-surface border border-border bg-muted/30 motion-reduce:animate-none"
+          />
+        ))}
+      </div>
+      <div className="h-36 animate-pulse rounded-surface-lg border border-border bg-muted/25 motion-reduce:animate-none" />
     </div>
   );
 }
