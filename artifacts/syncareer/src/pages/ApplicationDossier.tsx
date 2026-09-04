@@ -1158,6 +1158,29 @@ export default function ApplicationDossier() {
       ? `${dueState === 'overdue' ? 'Overdue' : dueState === 'today' ? 'Due today' : 'Upcoming'} · ${application.next_action_due}`
       : undefined;
 
+  const deleteControl = (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button size="sm" variant="outline" disabled={deleting} className="text-destructive">
+          {deleting ? 'Removing…' : 'Remove application'}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove this application?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This removes {facts.title || 'this application'} from your tracker, including its notes and next
+            step. Your CVs and evidence are kept. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep application</AlertDialogCancel>
+          <AlertDialogAction onClick={() => void handleDelete()}>Remove application</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   const renderProgressStrip = () => (
     <div className="border-b border-border bg-card">
       <ApplicationStageRail stages={railStages} label="Stage progress" />
