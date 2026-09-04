@@ -47,6 +47,45 @@ const DEADLINE_FILTERS = [
 type LoadStatus = 'loading' | 'error' | 'ready';
 const SCROLL_STORAGE_KEY = 'syncareer.opportunities.scrollTop';
 const INITIAL_VISIBLE_ROWS = 20;
+const WORKSPACE_MIN_HEIGHT = 420;
+const WORKSPACE_BOTTOM_PADDING = 24;
+
+// On desktop, sizes the two-pane workspace to the remaining viewport height so the
+// job list scrolls inside the viewport instead of extending below the fold (a fixed
+// calc offset breaks whenever the header height changes). When too little room
+// remains — short viewports — it opts out so the page scrolls naturally instead of
+// showing a cramped, half-clipped pane.
+const useRemainingViewportHeight = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const update = () => {
+      if (!desktop.matches) {
+        setHeight(null);
+        return;
+      }
+      const available = window.innerHeight - element.getBoundingClientRect().top - WORKSPACE_BOTTOM_PADDING;
+      setHeight(available >= WORKSPACE_MIN_HEIGHT ? Math.floor(available) : null);
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(document.documentElement);
+    window.addEventListener('resize', update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
+  const constrained = height !== null;
+  return { ref, constrained, style: constrained ? { height: `${height}px` } : undefined };
+};
 
 const Opportunities = () => {
   const navigate = useNavigate();
@@ -73,6 +112,7 @@ const Opportunities = () => {
   const saveRequestVersions = useRef(new Map<string, number>());
   const pendingTrackingIds = useRef(new Set<string>());
   const listRef = useRef<HTMLDivElement>(null);
+  const { ref: workspaceRef, style: workspaceStyle } = useRemainingViewportHeight();
   const openMobileOnSelection = useRef(Boolean(searchParams.get('job')));
 
   // Filters
@@ -472,7 +512,7 @@ const Opportunities = () => {
     >
       <div className="layout-section">
         {/* STEP 1 — What I'm looking for: strong search on the Syncareer canvas */}
-        <section className="discover-hero p-5 sm:p-6" aria-labelledby="opportunity-search-title">
+        <section className="discover-hero p-4 sm:p-5" aria-labelledby="opportunity-search-title">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 id="opportunity-search-title" className="type-section-title">
@@ -499,7 +539,7 @@ const Opportunities = () => {
             role="search"
             aria-label="Search the opportunity feed"
             onSubmit={(event) => event.preventDefault()}
-            className="mt-4 flex flex-col gap-2.5 sm:flex-row"
+            className="mt-3 flex flex-col gap-2.5 sm:flex-row"
           >
             <div className="relative flex-1">
               <Search
@@ -625,7 +665,9 @@ const Opportunities = () => {
 
         {isLoading ? (
           <div
-            className="surface-content grid min-h-[520px] gap-3 p-4 lg:h-[calc(100vh-340px)] lg:grid-cols-[minmax(340px,420px)_1fr] lg:overflow-hidden"
+            ref={workspaceRef}
+            style={workspaceStyle}
+            className="surface-content grid min-h-[520px] gap-3 p-4 lg:grid-cols-[minmax(340px,420px)_1fr] lg:overflow-hidden"
             aria-busy="true"
             aria-label="Loading opportunities"
           >
@@ -675,7 +717,11 @@ const Opportunities = () => {
         ) : (
           <>
             {/* STEP 2–4 — Relevant opportunities → why they fit → what to do */}
-            <div className="surface-content grid min-h-[520px] grid-cols-1 lg:h-[calc(100vh-340px)] lg:grid-cols-[minmax(340px,420px)_1fr] lg:overflow-hidden">
+            <div
+              ref={workspaceRef}
+              style={workspaceStyle}
+              className="surface-content grid min-h-[520px] grid-cols-1 lg:grid-cols-[minmax(340px,420px)_1fr] lg:overflow-hidden"
+            >
               <section
                 className="flex min-h-0 min-w-0 flex-col border-border lg:border-r"
                 aria-label="Opportunity results"
