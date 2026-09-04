@@ -378,6 +378,12 @@ Healthy free-product state in code:
 
 - `visual-fixtures/` is isolated from routes by `visualFixtureIsolation.test.ts`
   — good; keep fixture components out of the lazy route graph.
+- The dossier concept demonstrated in `visual-fixtures/EvidenceDossierReview.tsx`
+  now ships on `/applications/:id`: the requirement → evidence → application
+  material → next action chain, selection-driven inspector with a keyed
+  entrance, a mobile inspector sheet, and next actions that focus the control
+  that performs the change. `visualFixtureIsolation.test.ts` guards that
+  parity so the richer interaction cannot retreat into the fixture.
 - The three-mode hooks are implemented + tested but the test *blocks* pages from
   using them (deliberate). When applying mode layout, migrate
   `designSystem.test.tsx` deliberately (this is the "fixture vs applied" gap) so

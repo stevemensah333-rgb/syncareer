@@ -31,6 +31,7 @@ import {
 import { DossierRequirementsEvidence } from '@/components/applications/dossier/DossierRequirementsEvidence';
 import { DossierEvidenceLedger } from '@/components/applications/dossier/DossierEvidenceLedger';
 import { DossierIndexNav, type IndexNavStage } from '@/components/applications/dossier/DossierIndexNav';
+import { DossierFlowRail, type DossierFlowStep } from '@/components/applications/dossier/DossierFlowRail';
 import { ApplicationEvidenceInspector, type InspectorSelection } from '@/components/applications/dossier/ApplicationEvidenceInspector';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
@@ -49,9 +50,20 @@ import {
   canRecordStatus,
   statusLabel,
 } from '@/features/application-tracker/workflow';
+import { formatShortDate, getDaysAgo } from '@/features/application-tracker/constants';
 import { applicationFacts, nextActionDueState, type WorkspaceResume } from '@/features/application-tracker/workspace';
 import { getOrganisation, getProvenanceFacts } from '@/features/opportunities/opportunity';
 import { loadDossierBundle, type DossierBundle, type DossierEvidenceData, type DossierMentorRequest } from '@/features/application-dossier/dossier';
+import {
+  DOSSIER_SECTIONS,
+  FLOW_STEPS,
+  describeApplicationFlow,
+  flowStepForSelection,
+  flowStepForSection,
+  type ApplicationCvFact,
+  type DossierSectionId,
+  type FlowStepId,
+} from '@/features/application-dossier/requirementFlow';
 import {
   addEvidenceSource,
   addManualApplicationRequirement,
@@ -74,16 +86,16 @@ import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'failed';
 
-const SECTION_ORDER = ['brief', 'progress', 'requirements', 'ledger', 'cv', 'interview', 'mentor'] as const;
-type SectionId = (typeof SECTION_ORDER)[number];
+const SECTION_ORDER = DOSSIER_SECTIONS;
+type SectionId = DossierSectionId;
 
 const SECTION_LABELS: Record<SectionId, string> = {
-  brief: 'Overview',
-  progress: 'Next step',
+  brief: 'Application',
+  progress: 'Progress',
   requirements: 'Requirements',
   ledger: 'Evidence',
-  cv: 'CV',
-  interview: 'Interview',
+  cv: 'Application CV',
+  interview: 'Interview practice',
   mentor: 'Mentor',
 };
 
@@ -626,12 +638,12 @@ export default function ApplicationDossier() {
   // ── Section renderers (plain calls, not components, to preserve focus) ───
 
   const renderBrief = () => (
-    <DossierSection label="Overview" title="The role as recorded">
+    <DossierSection label="Application" title="The role as recorded">
       {application?.job === null && (
         <RecordState
           tone="warning"
-          title="The source posting is unavailable"
-          description="This dossier uses the durable facts saved with your application. Live posting details cannot be refreshed."
+          title="The job listing is unavailable"
+          description="This application keeps the role facts saved with it. The listing cannot be refreshed."
           className="mb-4"
         />
       )}
@@ -651,7 +663,9 @@ export default function ApplicationDossier() {
           </div>
           <div className="flex items-start justify-between gap-4 py-3">
             <dt className="text-muted-foreground">Deadline</dt>
-            <dd className="text-right font-medium">{facts.application_deadline || 'Not provided'}</dd>
+            <dd className="text-right font-medium">
+              {facts.application_deadline ? formatShortDate(facts.application_deadline) : 'Not provided'}
+            </dd>
           </div>
           <div className="flex items-start justify-between gap-4 py-3">
             <dt className="text-muted-foreground">Source</dt>
@@ -676,7 +690,7 @@ export default function ApplicationDossier() {
   );
 
   const renderProgress = () => (
-    <DossierSection label="Next step" title="Where the application stands">
+    <DossierSection label="Progress" title="Where the application stands">
       <div className="space-y-5">
         <div className="space-y-2">
           <p className="dossier-eyebrow">Stage</p>
@@ -724,8 +738,8 @@ export default function ApplicationDossier() {
                 dueState === 'overdue' ? 'text-destructive' : dueState === 'today' ? 'text-warning' : 'text-muted-foreground'
               }`}
             >
-              {dueState === 'overdue' ? 'Overdue' : dueState === 'today' ? 'Due today' : 'Upcoming'} ·{' '}
-              {application.next_action_due}
+              {dueState === 'overdue' ? 'Overdue' : dueState === 'today' ? 'Due today' : 'Due'} ·{' '}
+              {formatShortDate(application.next_action_due)}
             </p>
           )}
           <div className="grid max-w-xl gap-2 sm:grid-cols-2">
@@ -751,7 +765,8 @@ export default function ApplicationDossier() {
             }
           >
             {workspaceState === 'saving' && <Spinner className="size-4" />}
-            Save next action
+            {workspaceState === 'failed' && <RotateCcw aria-hidden="true" className="h-4 w-4" />}
+            {workspaceState === 'failed' ? 'Retry save' : 'Save next action'}
           </Button>
           <SaveMessage state={workspaceState} />
         </div>
@@ -814,8 +829,8 @@ export default function ApplicationDossier() {
   const renderRequirements = () => (
     <DossierSection
       label="Requirements"
-      title="Requirements"
-      description="Each requirement lists the evidence you have attached to answer it."
+      title="Requirements and evidence"
+      description="Each requirement shows the evidence you attached, where that evidence already appears, and the next action it needs."
     >
       {evidence ? (
         <DossierRequirementsEvidence
@@ -835,6 +850,11 @@ export default function ApplicationDossier() {
           onImportPostingSkills={handleImportSkills}
           onAddManualRequirement={handleAddRequirement}
           onRemoveRequirement={handleRemoveRequirement}
+          applicationCvId={application?.resume_id ?? null}
+          applicationCvTitle={linkedApplicationCv?.title ?? null}
+          cvHref={cvHref}
+          interviewHref={practiceHref}
+          onRequestSourceForEvidence={(evidenceId) => focusControl('ledger', `dossier-source-${evidenceId}`)}
         />
       ) : (
         <RecordState
@@ -855,12 +875,14 @@ export default function ApplicationDossier() {
     <DossierSection
       label="Evidence"
       title="Evidence"
-      description="A durable record of real work, projects, and achievements you can attach to any application."
+      description="Every example you have saved, with its source, ready to attach to a requirement."
     >
       {evidence ? (
         <DossierEvidenceLedger
           items={evidence.items}
           sources={evidence.sources}
+          requirements={evidence.requirements}
+          requirementLinks={evidence.links}
           resumes={bundle?.resumes ?? []}
           interviews={(bundle?.interviews ?? []).map((interview) => ({
             id: interview.id,
@@ -891,14 +913,22 @@ export default function ApplicationDossier() {
   );
 
   const cvHref = application ? `/applications/${encodeURIComponent(application.id)}/cv` : '/cv-builder';
+  const linkedApplicationCv = application?.resume_id
+    ? bundle?.resumes.find((resume) => resume.id === application.resume_id)
+    : undefined;
+  const applicationCvFact: ApplicationCvFact = linkedApplicationCv
+    ? { state: 'linked', label: linkedApplicationCv.title || 'Untitled CV' }
+    : application?.resume_id || bundle?.resumesError
+      ? { state: 'unavailable' }
+      : { state: 'none' };
   const practiceHref = application
     ? `/applications/${encodeURIComponent(application.id)}/interview`
     : '/interview-simulator';
 
   const renderCv = () => (
     <DossierSection
-      label="CV"
-      title="CV"
+      label="Application material"
+      title="Application CV"
       description="The application CV is an independent copy of a base CV; editing it never changes the original."
     >
       <div className="space-y-4">
@@ -908,7 +938,7 @@ export default function ApplicationDossier() {
             value={application?.resume_id ?? 'none'}
             onValueChange={(value) => void handleWorkspace({ resume_id: value === 'none' ? null : value })}
           >
-            <SelectTrigger aria-label="Linked CV">
+            <SelectTrigger id="dossier-application-cv" aria-label="Linked CV">
               <SelectValue placeholder="No linked CV" />
             </SelectTrigger>
             <SelectContent>
@@ -961,7 +991,7 @@ export default function ApplicationDossier() {
     const linked = (bundle?.interviews ?? []).filter((interview) => interview.application_id === application?.id);
     const available = (bundle?.interviews ?? []).filter((interview) => !interview.application_id);
     return (
-      <DossierSection label="Interview" title="Interview">
+      <DossierSection label="Application material" title="Interview practice">
         <div className="space-y-4">
           {linked.length === 0 ? (
             <p className="text-sm text-muted-foreground">No interview practice linked to this application yet.</p>
@@ -995,7 +1025,7 @@ export default function ApplicationDossier() {
             </div>
           )}
           <Button size="sm" variant="outline" asChild>
-            <Link to={practiceHref}>
+            <Link to={practiceHref} id="dossier-start-practice">
               <MessageSquare aria-hidden="true" className="h-4 w-4" />
               Start practice
             </Link>
@@ -1044,7 +1074,7 @@ export default function ApplicationDossier() {
 
   if (loading) {
     return (
-      <div className="space-y-6" aria-busy="true" aria-label="Loading dossier">
+      <div className="space-y-6" aria-busy="true" aria-label="Loading application">
         <div className="dossier-document overflow-hidden">
           <div className="h-40 animate-pulse border-b border-border bg-muted/60 motion-reduce:animate-none" />
           <div className="h-12 animate-pulse border-b border-border bg-muted/40 motion-reduce:animate-none" />
@@ -1059,7 +1089,7 @@ export default function ApplicationDossier() {
       <div className="space-y-4 py-6">
         <RecordState
           tone="error"
-          title="Dossier not found"
+          title="Application not found"
           description="This application does not exist or belongs to another account."
           action={
             <Button variant="outline" onClick={() => navigate('/applications')}>
@@ -1076,7 +1106,7 @@ export default function ApplicationDossier() {
       <div className="space-y-4 py-6">
         <RecordState
           tone="error"
-          title="The dossier could not be loaded"
+          title="The application could not be loaded"
           description={applicationError ?? 'Retry to load this application.'}
           action={
             <Button variant="outline" onClick={reload}>
@@ -1149,16 +1179,7 @@ export default function ApplicationDossier() {
     );
   };
 
-  // Progress strip: the application at a glance — stage, requirement
-  // coverage, evidence readiness, linked material and the next step.
-  const linkedResume = application.resume_id
-    ? bundle?.resumes.find((resume) => resume.id === application.resume_id)
-    : undefined;
   const coverage = evidenceFacts?.coverage ?? null;
-  const dueDetail =
-    application.next_action && application.next_action_due
-      ? `${dueState === 'overdue' ? 'Overdue' : dueState === 'today' ? 'Due today' : 'Upcoming'} · ${application.next_action_due}`
-      : undefined;
 
   const deleteControl = (
     <AlertDialog>
@@ -1183,58 +1204,50 @@ export default function ApplicationDossier() {
     </AlertDialog>
   );
 
+  // The spine of the workspace: what the role asks, what answers it, where that
+  // answer is already used, and what to do next. Same rows as the sections.
+  const flowFacts = describeApplicationFlow({
+    requirementCount: coverage ? coverage.requirementCount : null,
+    supportedRequirementCount: coverage?.supportedRequirementCount ?? 0,
+    gapRequirementCount: coverage?.gapRequirementCount ?? 0,
+    evidenceReady: evidenceFacts?.readyCount ?? 0,
+    evidenceTotal: evidenceFacts?.totalCount ?? 0,
+    applicationCv: applicationCvFact,
+    nextActionLabel: application.next_action?.trim() || null,
+    nextActionDue: application.next_action_due ? formatShortDate(application.next_action_due) : null,
+    dueState,
+  });
+
+  const flowSteps: DossierFlowStep[] = FLOW_STEPS.map((step) => ({
+    ...step,
+    value: flowFacts[step.id].value,
+    tone: flowFacts[step.id].tone,
+  }));
+
+  // One emphasis follows one selection: the requirement being inspected lights
+  // its own step, so the chain reads as one connected object.
+  const emphasisStepId: FlowStepId | null =
+    flowStepForSelection(inspectorSelection?.kind ?? null) ?? flowStepForSection(activeSection);
+
   const renderProgressStrip = () => (
     <div className="border-b border-border bg-card">
       <ApplicationStageRail stages={railStages} label="Stage progress" />
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 py-4 sm:px-6 lg:grid-cols-4">
-        <Fact
-          label="Progress"
-          value={
-            coverage
-              ? coverage.requirementCount > 0
-                ? `${coverage.supportedRequirementCount} of ${coverage.requirementCount} requirements supported`
-                : 'No requirements recorded'
-              : 'Requirements unavailable'
-          }
-          tone={
-            coverage && coverage.requirementCount > 0
-              ? coverage.gapRequirementCount === 0
-                ? 'success'
-                : 'warning'
-              : undefined
-          }
-        />
-        <Fact
-          label="Evidence"
-          value={evidenceFacts ? `${evidenceFacts.readyCount} of ${evidenceFacts.totalCount} ready` : 'Unavailable'}
-          tone={evidenceFacts && evidenceFacts.readyCount > 0 ? 'success' : undefined}
-        />
-        <Fact
-          label="Application CV"
-          value={
-            linkedResume
-              ? linkedResume.title || 'Untitled CV'
-              : application.resume_id
-                ? 'Linked CV'
-                : 'Not linked'
-          }
-        />
-        <Fact
-          label="Next step"
-          value={application.next_action || 'None set'}
-          detail={dueDetail}
-          tone={dueState === 'overdue' || dueState === 'today' ? 'warning' : undefined}
-        />
-      </div>
+      <DossierFlowRail
+        steps={flowSteps}
+        emphasisStepId={emphasisStepId}
+        interactive={!isCompact}
+        onSelectSection={selectSection}
+      />
     </div>
   );
 
   const inspectorTitle = 'Evidence context';
-  const inspectorActions = {
-    onLinkEvidenceForRequirement: (requirementId: string) =>
-      focusControl('requirements', `dossier-link-${requirementId}`),
-    onAddRequirement: () => focusControl('requirements', 'dossier-add-requirement'),
-    onAddSourceForEvidence: (evidenceId: string) => focusControl('ledger', `dossier-source-${evidenceId}`),
+  // The inspector's next action never duplicates the edit: it moves focus to the
+  // control in the document that performs the change.
+  const inspectorProps = {
+    applicationCvId: application.resume_id,
+    applicationCvTitle: linkedApplicationCv ? linkedApplicationCv.title || 'Untitled CV' : null,
+    onFocusControl: focusControl,
     onConfirmEvidence: (evidenceId: string) => handleConfirmEvidence(evidenceId),
   };
 
@@ -1243,13 +1256,13 @@ export default function ApplicationDossier() {
       <p aria-live="polite" className="sr-only">
         {inspectorAnnouncement}
       </p>
-        <div
-          className={
-            isCompact
-              ? 'grid gap-4 min-w-0'
-              : 'grid items-start gap-5 xl:grid-cols-[230px_minmax(0,1fr)_330px] min-w-0'
-          }
-        >
+      <div
+        className={
+          isCompact
+            ? 'grid gap-4 min-w-0'
+            : 'grid items-start gap-5 xl:grid-cols-[230px_minmax(0,1fr)_330px] min-w-0'
+        }
+      >
         {!isCompact && (
           <div className="hidden xl:sticky xl:top-4 xl:block xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:overscroll-contain">
             <DossierIndexNav
@@ -1302,11 +1315,9 @@ export default function ApplicationDossier() {
               </nav>
 
               <div className="flex items-center justify-end gap-2">
-                {inspectorSelection && (
-                  <Button size="sm" variant="outline" onClick={() => setMobileInspectorOpen(true)}>
-                    {inspectorTitle}
-                  </Button>
-                )}
+                <Button size="sm" variant="outline" onClick={() => setMobileInspectorOpen(true)}>
+                  {inspectorTitle}
+                </Button>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button size="sm" variant="ghost" aria-label="More application navigation">
@@ -1355,7 +1366,13 @@ export default function ApplicationDossier() {
               eyebrow="Application"
               title={facts.title || 'Tracked application'}
               description={[organisation, facts.location].filter(Boolean).join(' · ')}
-              metadata={<span className="font-mono">{statusLabel(application.status)}</span>}
+              metadata={
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="font-mono">{statusLabel(application.status)}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>Last update {getDaysAgo(application.updated_at).toLowerCase()}</span>
+                </span>
+              }
             />
 
             {renderProgressStrip()}
@@ -1432,7 +1449,7 @@ export default function ApplicationDossier() {
 
         {!isCompact && evidence && (
           <div className="hidden xl:sticky xl:top-4 xl:block xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:overscroll-contain">
-            <ApplicationEvidenceInspector data={evidence} selection={inspectorSelection} {...inspectorActions} />
+            <ApplicationEvidenceInspector data={evidence} selection={inspectorSelection} {...inspectorProps} />
           </div>
         )}
       </div>
@@ -1447,7 +1464,7 @@ export default function ApplicationDossier() {
               </SheetDescription>
             </SheetHeader>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
-              <ApplicationEvidenceInspector data={evidence} selection={inspectorSelection} {...inspectorActions} />
+              <ApplicationEvidenceInspector data={evidence} selection={inspectorSelection} {...inspectorProps} />
             </div>
           </SheetContent>
         </Sheet>
@@ -1471,44 +1488,23 @@ function useDossierCompact(isMobile: boolean): boolean {
   return compact;
 }
 
+/**
+ * Immediate save feedback. `state-saved` is the shared saved flash: colour only,
+ * so it collapses to a plain label under reduced motion.
+ */
 function SaveMessage({ state }: { state: SaveState }) {
   if (state === 'idle') return null;
   return (
-    <p role="status" className={`text-xs ${state === 'failed' ? 'text-destructive' : 'text-muted-foreground'}`}>
+    <p
+      role="status"
+      className={cn(
+        'text-xs',
+        state === 'saved' && 'state-saved inline-block px-1.5 py-0.5 text-foreground',
+        state === 'failed' && 'text-destructive',
+      )}
+    >
       {state === 'saving' ? 'Saving…' : state === 'saved' ? 'Saved' : 'Save failed. Your changes are still here; retry when ready.'}
     </p>
   );
 }
 
-function Fact({
-  label,
-  value,
-  detail,
-  tone,
-}: {
-  label: string;
-  value: string;
-  detail?: string;
-  tone?: 'success' | 'warning';
-}) {
-  return (
-    <div
-      className={cn(
-        'min-w-0 border-l-2 pl-3',
-        tone === 'success' ? 'border-success' : tone === 'warning' ? 'border-warning' : 'border-border',
-      )}
-    >
-      <p className="dossier-eyebrow">{label}</p>
-      <p
-        className={cn(
-          'mt-1 truncate text-sm font-semibold',
-          tone === 'success' && 'text-success',
-          tone === 'warning' && 'text-warning',
-        )}
-      >
-        {value}
-      </p>
-      {detail && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{detail}</p>}
-    </div>
-  );
-}

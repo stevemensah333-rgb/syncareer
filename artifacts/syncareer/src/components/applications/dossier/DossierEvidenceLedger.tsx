@@ -17,12 +17,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { EvidenceReference, EvidenceStamp, RecordList, RecordRow, SourceReference } from '@/components/dossier';
 import { EVIDENCE_CATEGORIES, EVIDENCE_SOURCE_TYPES } from '@/features/evidence/validation';
 import { deriveSupportStatus } from '@/features/evidence/supportStatus';
-import type { EvidenceCategory, EvidenceItemRow, EvidenceSourceRow, EvidenceSourceType } from '@/features/evidence/types';
+import type {
+  ApplicationEvidenceLinkRow,
+  ApplicationRequirementRow,
+  EvidenceCategory,
+  EvidenceItemRow,
+  EvidenceSourceRow,
+  EvidenceSourceType,
+} from '@/features/evidence/types';
 
 /**
- * The evidence ledger: every saved evidence record with its sources, plus
- * create / confirm / archive / source flows. The parent page owns data and
- * mutations; this component owns dialog state.
+ * The evidence list: every saved piece of evidence with its sources, plus the
+ * create / confirm / archive / source flows that keep it honest. The parent
+ * page owns data and mutations; this component owns dialog state.
  */
 
 export interface LedgerHandlers {
@@ -45,6 +52,9 @@ export interface LedgerHandlers {
 interface Props extends LedgerHandlers {
   items: EvidenceItemRow[];
   sources: EvidenceSourceRow[];
+  /** The application's requirements, so each record can say what it answers. */
+  requirements: ApplicationRequirementRow[];
+  requirementLinks: ApplicationEvidenceLinkRow[];
   resumes: Array<{ id: string; title: string | null }>;
   interviews: Array<{ id: string; label: string }>;
   busy: boolean;
@@ -59,9 +69,21 @@ const SOURCE_TYPE_LABELS: Record<string, string> = {
   manual_note: 'Manual note',
 };
 
+/** One requirement by name, several by count — never a vague "in use". */
+function describeAnswers(labels: string[]): string {
+  if (labels.length === 0) return 'Not linked to a requirement yet';
+  if (labels.length === 1) {
+    const [label = ''] = labels;
+    return `Answers “${label.length > 28 ? `${label.slice(0, 28)}…` : label}”`;
+  }
+  return `Answers ${labels.length} requirements`;
+}
+
 export function DossierEvidenceLedger({
   items,
   sources,
+  requirements,
+  requirementLinks,
   resumes,
   interviews,
   busy,
@@ -96,6 +118,17 @@ export function DossierEvidenceLedger({
     const existing = sourcesByEvidence.get(source.evidence_id);
     if (existing) existing.push(source);
     else sourcesByEvidence.set(source.evidence_id, [source]);
+  }
+
+  // Which requirements each record answers. Evidence that answers nothing is
+  // stated as unlinked instead of quietly sitting in the list.
+  const requirementsByEvidence = new Map<string, string[]>();
+  for (const link of requirementLinks) {
+    const label = requirements.find((requirement) => requirement.id === link.requirement_id)?.label;
+    if (!label) continue;
+    const existing = requirementsByEvidence.get(link.evidence_id);
+    if (existing) existing.push(label);
+    else requirementsByEvidence.set(link.evidence_id, [label]);
   }
 
   const openCreate = () => {
@@ -174,6 +207,15 @@ export function DossierEvidenceLedger({
                 meta={
                   <div className="flex flex-wrap items-center gap-2">
                     <EvidenceReference id={item.id} />
+                    <span
+                      className={
+                        (requirementsByEvidence.get(item.id)?.length ?? 0) === 0
+                          ? 'text-warning'
+                          : 'text-muted-foreground'
+                      }
+                    >
+                      {describeAnswers(requirementsByEvidence.get(item.id) ?? [])}
+                    </span>
                     {onSelectEvidence && (
                       <Button
                         type="button"
@@ -354,7 +396,7 @@ export function DossierEvidenceLedger({
           <DialogHeader>
             <DialogTitle>Add a source — “{sourceTarget?.title}”</DialogTitle>
             <DialogDescription>
-              A source is where this evidence is visible or recorded. Attaching one changes the stamp to Supported.
+              A source is where this evidence can be seen or checked. Attaching one marks it as Supported.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">

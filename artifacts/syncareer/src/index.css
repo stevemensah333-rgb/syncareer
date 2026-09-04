@@ -778,8 +778,12 @@
     border-radius: var(--radius-document);
   }
 
+  /* Each evidence row hangs off a rule line so the requirement → evidence
+     relationship is readable as one track. Selection tints the track the
+     inspector is describing; the wash is never the only signal (the rule line
+     and the inspector itself carry the same state). */
   .evidence-thread-track {
-    @apply relative border-l-2 border-border pl-4;
+    @apply relative border-l-2 border-border py-1 pr-2 pl-4 transition-[border-color,background-color] duration-150 ease-standard motion-reduce:transition-none;
   }
 
   .evidence-thread-track[data-state='supported'] {
@@ -787,7 +791,7 @@
   }
 
   .evidence-thread-track[data-state='selected'] {
-    @apply border-primary;
+    @apply border-primary bg-selected text-selected-foreground;
   }
 
   .evidence-thread-track[data-state='missing'],
@@ -837,9 +841,11 @@
     }
   }
 
-  /* One-tick emphasis for an evidence row that was just attached. */
+  /* One-tick emphasis for an evidence row that was just attached. No fill
+     mode: after the wash the row returns to whatever state it really has
+     (selected, supported, or plain). */
   .dossier-flash {
-    animation: dossier-flash 900ms ease-out both;
+    animation: dossier-flash 900ms ease-out;
   }
 
   @keyframes dossier-flash {
