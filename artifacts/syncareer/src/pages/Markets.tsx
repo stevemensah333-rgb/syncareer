@@ -70,6 +70,7 @@ const useRemainingViewportHeight = () => {
         return;
       }
       const available = window.innerHeight - element.getBoundingClientRect().top - WORKSPACE_BOTTOM_PADDING;
+      console.log("[ws-measure]", { top: element.getBoundingClientRect().top, available, desktop: desktop.matches });
       setHeight(available >= WORKSPACE_MIN_HEIGHT ? Math.floor(available) : null);
     };
 
