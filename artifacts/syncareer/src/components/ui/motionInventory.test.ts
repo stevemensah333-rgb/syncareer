@@ -29,8 +29,13 @@ const tailwind = read('tailwind.config.ts');
  * | Interview question | question id | opacity | 150ms | ease-standard | next item | none |
  * | Landing stage | tab | 8px slide + fade | 180ms | ease-standard | storytelling | none |
  * | Landing scroll | view timeline | 8px rise | view | linear | narrative | none |
- * | Discover object hover | fine pointer | 1px lift + border | 150ms | ease-standard | clickability | no lift |
- */
+   * | Discover object hover | fine pointer | 1px lift + border | 150ms | ease-standard | clickability | no lift |
+   * | Command next-move CTA | fine pointer hover | 1px lift + shadow | 120ms | ease-standard | next-action | no lift |
+   * | Command why reveal | hero mount | 4px slide + fade | 180ms | ease-standard | contextual reveal | none |
+   * | Command section enter | mount stagger | 8px rise + fade | 180ms | ease-standard | section entrance | none |
+   * | Save flash | save success | success wash fade | 180ms | ease-standard | save feedback | color only |
+   * | Progress fill | value change | width transform | 150ms | ease-standard | progress transition | none |
+   */
 describe('motion inventory', () => {
   it('keeps the 120–180ms token set and standard easing', () => {
     expect(css).toMatch(/--motion-fast:\s*120ms/);
@@ -63,6 +68,17 @@ describe('motion inventory', () => {
   it('does not lift discover objects on coarse pointers', () => {
     expect(css).toContain('@media (hover: hover) and (pointer: fine)');
     expect(css).toContain('transform: translateY(-1px)');
+  });
+
+  it('keeps command-center microinteractions restrained and reduced-motion safe', () => {
+    expect(css).toContain('.command-cta');
+    expect(css).toContain('.command-why-reveal');
+    expect(css).toContain('.career-signal-rail');
+    expect(css).toContain('.state-saved');
+    // Reduced motion collapses command entrance/reveal (shared discover block).
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.command-why-reveal[\s\S]*?animation:\s*none/,
+    );
   });
 
   it('dialogs fade without scale and drawers do not scale the page', () => {
