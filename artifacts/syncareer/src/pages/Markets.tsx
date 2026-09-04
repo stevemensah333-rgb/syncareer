@@ -112,7 +112,7 @@ const Opportunities = () => {
   const saveRequestVersions = useRef(new Map<string, number>());
   const pendingTrackingIds = useRef(new Set<string>());
   const listRef = useRef<HTMLDivElement>(null);
-  const { ref: workspaceRef, style: workspaceStyle } = useRemainingViewportHeight();
+  const { ref: workspaceRef, style: workspaceStyle, constrained: workspaceConstrained } = useRemainingViewportHeight();
   const openMobileOnSelection = useRef(Boolean(searchParams.get('job')));
 
   // Filters
@@ -667,7 +667,10 @@ const Opportunities = () => {
           <div
             ref={workspaceRef}
             style={workspaceStyle}
-            className="surface-content grid min-h-[520px] gap-3 p-4 lg:grid-cols-[minmax(340px,420px)_1fr] lg:overflow-hidden"
+            className={cn(
+              'surface-content grid min-h-[520px] gap-3 p-4 lg:grid-cols-[minmax(340px,420px)_1fr]',
+              workspaceConstrained && 'lg:overflow-hidden',
+            )}
             aria-busy="true"
             aria-label="Loading opportunities"
           >
@@ -720,7 +723,10 @@ const Opportunities = () => {
             <div
               ref={workspaceRef}
               style={workspaceStyle}
-              className="surface-content grid min-h-[520px] grid-cols-1 lg:grid-cols-[minmax(340px,420px)_1fr] lg:overflow-hidden"
+              className={cn(
+                'surface-content grid min-h-[520px] grid-cols-1 lg:grid-cols-[minmax(340px,420px)_1fr]',
+                workspaceConstrained && 'lg:overflow-hidden',
+              )}
             >
               <section
                 className="flex min-h-0 min-w-0 flex-col border-border lg:border-r"
@@ -752,7 +758,10 @@ const Opportunities = () => {
                     <TabsContent key={value} value={value} className="flex min-h-0 flex-col lg:flex-1">
                       <div
                         ref={listRef}
-                        className="grid flex-1 content-start gap-3 p-3 sm:grid-cols-2 lg:grid-cols-1 lg:overflow-y-auto"
+                        className={cn(
+                          'grid min-h-0 flex-1 content-start gap-3 p-3 sm:grid-cols-2 lg:grid-cols-1',
+                          workspaceConstrained && 'lg:overflow-y-auto',
+                        )}
                         aria-label={value === 'saved' ? 'Saved opportunities' : 'Latest opportunities'}
                         onScroll={(event) =>
                           sessionStorage.setItem(SCROLL_STORAGE_KEY, String(event.currentTarget.scrollTop))
