@@ -130,7 +130,7 @@ export default function ApplicationRecord({
         </div>
       )}
 
-      <div className="grid lg:grid-cols-[minmax(0,1.04fr)_minmax(230px,0.96fr)]">
+      <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.04fr)_minmax(230px,0.96fr)]">
         <section className="border-b p-4 sm:p-5 lg:border-b-0 lg:border-r" aria-label="Record fields">
           <div className="grid gap-3 border-b pb-4 sm:grid-cols-3">
             <Field label="Source" value="External listing" />
