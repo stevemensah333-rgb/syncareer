@@ -74,12 +74,16 @@ const useRemainingViewportHeight = () => {
     };
 
     update();
+    // Observe body (not just viewport): the header/hero above the workspace can
+    // finish rendering after mount, changing the workspace's top offset.
     const observer = new ResizeObserver(update);
-    observer.observe(document.documentElement);
+    observer.observe(document.body);
     window.addEventListener('resize', update);
+    window.addEventListener('load', update);
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', update);
+      window.removeEventListener('load', update);
     };
   }, []);
 
