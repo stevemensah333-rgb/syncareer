@@ -1,52 +1,108 @@
-import React, { Suspense, lazy, useState, useCallback, useEffect, useRef } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Suspense, lazy, useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
 import { removeStructuredData, setMetaTags, setBreadcrumbSchema } from '@/lib/seo';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import {
-  ClipboardCheck, ArrowRight, ArrowLeft, RotateCcw, Calendar,
-  Trophy, Brain, Clock, LogIn, Compass, User, Zap,
+  ArrowRight,
+  RotateCcw,
+  Calendar,
+  Clock,
+  LogIn,
+  Compass,
+  Brain,
+  FileText,
+  BarChart3,
 } from 'lucide-react';
 import { useAssessment, type AssessmentResult } from '@/hooks/useAssessment';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
 import { useCareerRecommendations } from '@/hooks/useCareerRecommendations';
-import { ASSESSMENT_QUESTIONS, RIASEC_LABELS, RIASEC_DESCRIPTIONS } from '@/data/assessmentQuestions';
-import { personalityRadarData, skillsBarData } from '@/features/assessment/chartData';
-import CareerRecommendations from '@/components/assessment/CareerRecommendations';
+import { useCareerProfileData } from '@/hooks/useCareerProfileData';
+import { ASSESSMENT_QUESTIONS } from '@/data/assessmentQuestions';
 import { format, differenceInDays } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import AnimatedSection from '@/components/landing/AnimatedSection';
-import {
-  QUESTIONS_PER_PAGE,
-  TOTAL_QUESTIONS,
-  SECTION_INTROS,
-  SECTION_START_PAGES,
-  calculateScoresLocally,
-} from './assessment/assessmentConstants';
-import { assessmentResumeCapability, hasAssessmentAnalyticsConsent, setAssessmentAnalyticsConsent, trackAssessmentLifecycle } from '@/features/assessment/lifecycle';
+import { TOTAL_QUESTIONS, calculateScoresLocally } from './assessment/assessmentConstants';
+import { hasAssessmentAnalyticsConsent, setAssessmentAnalyticsConsent, trackAssessmentLifecycle } from '@/features/assessment/lifecycle';
 import { validateAssessmentAnswers } from '@/features/assessment/scoring';
-import { AssessmentQuestionCard } from '@/components/assessment/AssessmentQuestionCard';
+import {
+  topInterestThemes,
+  derivedWorkPreferences,
+  splitCareerDirections,
+  marketSignalForDirection,
+  relevantSkillsForDirections,
+  explorationGapsForDirections,
+  type MarketSignal,
+} from '@/features/assessment/careerProfile';
+import { AssessmentFlow } from '@/components/assessment/AssessmentFlow';
+import { ResultReveal } from '@/components/assessment/ResultReveal';
+import {
+  ProfileSection,
+  InterestThemesSection,
+  WorkPreferencesSection,
+  CareerDirectionsSection,
+  WhyDirectionsNote,
+} from '@/components/assessment/CareerProfileResult';
+import { PersistentCareerProfile } from '@/components/assessment/PersistentCareerProfile';
+import { AssessmentHistory } from '@/components/assessment/AssessmentHistory';
+import { opportunitySearchForRoleFamily } from '@/features/assessment/roleFamilies';
+import { personalityRadarData, skillsBarData } from '@/features/assessment/chartData';
 
 // Result charts are only needed once a completed assessment is shown. Keeping
 // recharts out of this route's static imports means answering questions (and
-// the landing page's idle prefetch of this public route) no longer downloads
+// the landing page's idle prefetch of this public route) does not download
 // the ~384 kB chart chunk.
-const RiasecBarChart = lazy(() => import('@/components/assessment/AssessmentResultCharts').then((m) => ({ default: m.RiasecBarChart })));
-const PersonalityRadarChart = lazy(() => import('@/components/assessment/AssessmentResultCharts').then((m) => ({ default: m.PersonalityRadarChart })));
-const SkillsBarChart = lazy(() => import('@/components/assessment/AssessmentResultCharts').then((m) => ({ default: m.SkillsBarChart })));
+const PersonalityRadarChart = lazy(() =>
+  import('@/components/assessment/AssessmentResultCharts').then((m) => ({
+    default: m.PersonalityRadarChart,
+  })),
+);
+const SkillsBarChart = lazy(() =>
+  import('@/components/assessment/AssessmentResultCharts').then((m) => ({
+    default: m.SkillsBarChart,
+  })),
+);
 
 const ChartFallback = () => <div className="h-full animate-pulse rounded-md bg-muted" />;
 
+const SECTION_NAMES: Record<string, string> = {
+  personality: 'Work style',
+  skills: 'Task preferences',
+  work_interest: 'RIASEC interests',
+};
+
+const FLOW_SECTION_INTROS = [
+  {
+    key: 'personality',
+    title: 'How you work',
+    description:
+      'Fifteen statements about how you think, work and relate to others. There are no right or wrong answers — respond based on how you genuinely behave.',
+    questionRange: '1–15',
+  },
+  {
+    key: 'skills',
+    title: 'Tasks you enjoy',
+    description:
+      'Fifteen statements about the kinds of tasks and activities you enjoy doing. Rate each by what genuinely interests you — this is about preference, not proving ability.',
+    questionRange: '16–30',
+  },
+  {
+    key: 'work_interest',
+    title: 'Your work interests',
+    description:
+      'The final fifteen statements map your interests to the six RIASEC themes — Realistic, Investigative, Artistic, Social, Enterprising and Conventional — the backbone of your Career Profile.',
+    questionRange: '31–45',
+  },
+];
+
 const Assessment = () => {
-  const { profile, studentDetails } = useUserProfile();
+  const { profile } = useUserProfile();
   const navigate = useNavigate();
   const [isGuest, setIsGuest] = useState<boolean | null>(null); // null = loading
   const [guestResult, setGuestResult] = useState<AssessmentResult | null>(null);
@@ -86,15 +142,24 @@ const Assessment = () => {
     });
   }, []);
 
-  // Only use DB hooks for authenticated users
+  // DB-backed state for authenticated users.
   const { latestResult, allResults, loading, submitting, canRetake, submitAssessment } = useAssessment();
   const activeResult = guestResult || latestResult;
   const { recommendations, clusterInsight, loading: careersLoading } = useCareerRecommendations(activeResult);
+
+  // Persisted Career Profile data (skills, evidence, saved roles, postings).
+  const {
+    loading: profileDataLoading,
+    recordedSkills,
+    evidence,
+    targetRoles,
+    postings,
+  } = useCareerProfileData(activeResult !== null);
+
   const feedbackModal = useFeedbackModal('assessment');
   const [takingAssessment, setTakingAssessment] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [revealing, setRevealing] = useState(false);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [showIntro, setShowIntro] = useState<string | null>(null);
   const [guestSubmitting, setGuestSubmitting] = useState(false);
   const [analyticsConsent, setAnalyticsConsent] = useState(() => hasAssessmentAnalyticsConsent());
   const startedAtRef = useRef<number | null>(null);
@@ -102,22 +167,15 @@ const Assessment = () => {
   const answeredRef = useRef(0);
   const completedRef = useRef(false);
 
-  const totalPages = Math.ceil(TOTAL_QUESTIONS / QUESTIONS_PER_PAGE);
-  const currentQuestions = ASSESSMENT_QUESTIONS.slice(
-    currentPage * QUESTIONS_PER_PAGE,
-    (currentPage + 1) * QUESTIONS_PER_PAGE
-  );
-
   const answeredCount = Object.keys(answers).length;
-  const progressPercent = (answeredCount / TOTAL_QUESTIONS) * 100;
-  const currentSection = currentQuestions[0]?.category;
-  const sectionLabel = currentSection === 'personality' ? 'Personality' : currentSection === 'skills' ? 'Skills Preference' : 'Work Interest';
 
   const handleAnswer = useCallback((questionId: number, value: number) => {
-    setAnswers(prev => {
+    setAnswers((prev) => {
       const next = { ...prev, [questionId]: value };
       const count = Object.keys(next).length;
-      if (count !== Object.keys(prev).length) trackAssessmentLifecycle('progress', { answered: count, total: TOTAL_QUESTIONS });
+      if (count !== Object.keys(prev).length) {
+        trackAssessmentLifecycle('progress', { answered: count, total: TOTAL_QUESTIONS });
+      }
       answeredRef.current = count;
       return next;
     });
@@ -128,42 +186,44 @@ const Assessment = () => {
     answeredRef.current = answeredCount;
   }, [takingAssessment, answeredCount]);
 
-  useEffect(() => () => {
-    if (takingRef.current && answeredRef.current > 0 && !completedRef.current) {
-      trackAssessmentLifecycle('abandonment', { answered: answeredRef.current, total: TOTAL_QUESTIONS, elapsedSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : undefined });
-    }
-  }, []);
-
-  const handleNext = () => {
-    if (currentPage < totalPages - 1) {
-      const nextPage = currentPage + 1;
-      const nextSectionKey = SECTION_START_PAGES[nextPage];
-      if (nextSectionKey) setShowIntro(nextSectionKey);
-      else setCurrentPage(nextPage);
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentPage > 0) setCurrentPage(p => p - 1);
-  };
-
-  const handleIntroNext = () => {
-    const startPage = Object.entries(SECTION_START_PAGES).find(([, k]) => k === showIntro)?.[0];
-    if (startPage !== undefined) setCurrentPage(parseInt(startPage));
-    setShowIntro(null);
-  };
+  useEffect(
+    () => () => {
+      if (takingRef.current && answeredRef.current > 0 && !completedRef.current) {
+        trackAssessmentLifecycle('abandonment', {
+          answered: answeredRef.current,
+          total: TOTAL_QUESTIONS,
+          elapsedSeconds: startedAtRef.current
+            ? Math.round((Date.now() - startedAtRef.current) / 1000)
+            : undefined,
+        });
+      }
+    },
+    [],
+  );
 
   const handleStartAssessment = () => {
     completedRef.current = false;
     startedAtRef.current = Date.now();
     trackAssessmentLifecycle('start', { answered: 0, total: TOTAL_QUESTIONS });
+    setAnswers({});
     setTakingAssessment(true);
-    setShowIntro('personality');
   };
 
-  const handleSubmit = async () => {
+  const finishAndReveal = () => {
+    completedRef.current = true;
+    trackAssessmentLifecycle('completion', {
+      answered: TOTAL_QUESTIONS,
+      total: TOTAL_QUESTIONS,
+      elapsedSeconds: startedAtRef.current
+        ? Math.round((Date.now() - startedAtRef.current) / 1000)
+        : undefined,
+    });
+    setTakingAssessment(false);
+    setRevealing(true);
+  };
+
+  const handleComplete = async () => {
     if (isGuest) {
-      // Guest: calculate results locally without requiring an account.
       setGuestSubmitting(true);
       try {
         if (!validateAssessmentAnswers(answers, ASSESSMENT_QUESTIONS)) {
@@ -175,39 +235,54 @@ const Assessment = () => {
           created_at: new Date().toISOString(),
           ...result,
         });
-        completedRef.current = true;
-        trackAssessmentLifecycle('completion', { answered: TOTAL_QUESTIONS, total: TOTAL_QUESTIONS, elapsedSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : undefined });
-        setTakingAssessment(false);
+        finishAndReveal();
         setAnswers({});
-        setCurrentPage(0);
       } finally {
         setGuestSubmitting(false);
       }
     } else {
       const success = await submitAssessment(answers);
       if (success) {
-        completedRef.current = true;
-        trackAssessmentLifecycle('completion', { answered: TOTAL_QUESTIONS, total: TOTAL_QUESTIONS, elapsedSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : undefined });
-        setTakingAssessment(false);
+        finishAndReveal();
         setAnswers({});
-        setCurrentPage(0);
         feedbackModal.triggerFeedback();
       }
     }
   };
 
-  const allCurrentAnswered = currentQuestions.every(q => answers[q.id] !== undefined);
-  const isLastPage = currentPage === totalPages - 1;
-
   const daysUntilRetake = latestResult
     ? Math.max(0, 30 - differenceInDays(new Date(), new Date(latestResult.completed_at)))
     : 0;
+
+  const goSignUp = useCallback(() => {
+    navigate('/sign-up?returnTo=%2Fassessment');
+  }, [navigate]);
+
+  // ── Derived Career Profile (pure, memoised) ───────────────────────────
+  const profileModel = useMemo(() => {
+    if (!activeResult) return null;
+
+    const themes = topInterestThemes(activeResult);
+    const preferences = derivedWorkPreferences(activeResult);
+    const { strongest, alternatives } = splitCareerDirections(recommendations, themes);
+
+    const marketSignals = new Map<string, MarketSignal>();
+    for (const direction of [...strongest, ...alternatives]) {
+      const signal = marketSignalForDirection(direction.recommendation.career.title, postings);
+      if (signal) marketSignals.set(direction.recommendation.career.title, signal);
+    }
+
+    const relevantSkills = relevantSkillsForDirections(strongest, recordedSkills);
+    const gaps = explorationGapsForDirections(strongest, recordedSkills);
+
+    return { themes, preferences, strongest, alternatives, marketSignals, relevantSkills, gaps };
+  }, [activeResult, recommendations, postings, recordedSkills]);
 
   // Loading state
   if (isGuest === null || (!isGuest && loading)) {
     return (
       <PageLayout title="Assessment">
-        <div className="flex items-center justify-center h-64">
+        <div className="flex h-64 items-center justify-center">
           <p className="text-muted-foreground">Loading assessment...</p>
         </div>
       </PageLayout>
@@ -219,168 +294,154 @@ const Assessment = () => {
     return <Navigate to={getHomeRouteForRole(profile.user_type)} replace />;
   }
 
-  // ── Section Intro Screen ──────────────────────────────────────────
-  if (takingAssessment && showIntro) {
-    const intro = SECTION_INTROS.find(s => s.key === showIntro)!;
-    const Icon = intro.icon;
-    const introIndex = SECTION_INTROS.indexOf(intro);
-    return (
-      <PageLayout title="Assessment">
-        <div className="max-w-xl mx-auto">
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2 text-sm text-muted-foreground">
-              <span>{answeredCount} of {TOTAL_QUESTIONS} answered</span>
-              <span>Section {introIndex + 1} of 3</span>
-            </div>
-            <Progress value={progressPercent} className="h-1.5" aria-label={`Assessment progress: ${answeredCount} of ${TOTAL_QUESTIONS} questions answered`} />
-          </div>
-          <Card>
-            <CardContent className="pt-10 pb-10 flex flex-col items-center text-center space-y-5">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${intro.bg}`}>
-                <Icon className={`h-8 w-8 ${intro.color}`} />
-              </div>
-              <div className="space-y-1">
-                <Badge variant="secondary" className="text-xs mb-2">Questions {intro.questionRange}</Badge>
-                <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">{intro.title}</h2>
-              </div>
-              <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">{intro.description}</p>
-              <Button size="lg" onClick={handleIntroNext} className="mt-2 rounded-full px-6">
-                Begin Section <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </PageLayout>
-    );
-  }
-
-  // ── Taking Assessment ─────────────────────────────────────────────
+  // ── Taking the assessment (one question at a time) ─────────────────────
   if (takingAssessment) {
     return (
-      <PageLayout title="Assessment">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="secondary">{sectionLabel}</Badge>
-                <span className="text-sm text-muted-foreground">
-                  Question {currentPage * QUESTIONS_PER_PAGE + 1}–{Math.min((currentPage + 1) * QUESTIONS_PER_PAGE, TOTAL_QUESTIONS)} of {TOTAL_QUESTIONS}
-                </span>
-              </div>
-              <Progress value={progressPercent} className="h-2" aria-label={`Assessment progress: ${answeredCount} of ${TOTAL_QUESTIONS} questions answered`} />
-              <p className="text-xs text-muted-foreground mt-1">{answeredCount} of {TOTAL_QUESTIONS} answered</p>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-4">
-            {currentQuestions.map((question, index) => <AssessmentQuestionCard key={question.id} question={question} questionNumber={currentPage * QUESTIONS_PER_PAGE + index + 1} value={answers[question.id]} onChange={handleAnswer} />)}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={handlePrev} disabled={currentPage === 0} className="rounded-full px-5">
-              <ArrowLeft className="h-4 w-4 mr-2" /> Previous
-            </Button>
-            {isLastPage ? (
-              <div className="flex flex-col items-end gap-1">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={answeredCount < TOTAL_QUESTIONS || submitting || guestSubmitting}
-                  className="rounded-full px-6"
-                >
-                  {(submitting || guestSubmitting) ? 'Submitting...' : 'Submit Assessment'}
-                  <ClipboardCheck className="h-4 w-4 ml-2" />
-                </Button>
-              </div>
-            ) : (
-              <Button onClick={handleNext} disabled={!allCurrentAnswered} className="rounded-full px-6">
-                Next <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            )}
-          </div>
-        </div>
+      <PageLayout title="Career Assessment">
+        <AssessmentFlow
+          questions={ASSESSMENT_QUESTIONS}
+          sectionIntros={FLOW_SECTION_INTROS}
+          sectionStartIndices={[0, 15, 30]}
+          sectionName={(category) => SECTION_NAMES[category] ?? category}
+          answers={answers}
+          onAnswer={handleAnswer}
+          onComplete={handleComplete}
+          submitting={submitting || guestSubmitting}
+        />
       </PageLayout>
     );
   }
 
-  // ── No Result Yet ─────────────────────────────────────────────────
-  if (!activeResult) {
+  // ── Result transition ─────────────────────────────────────────────────
+  if (revealing) {
     return (
-      <PageLayout title="Assessment">
-        <div className="max-w-xl mx-auto">
+      <PageLayout title="Career Assessment">
+        <ResultReveal
+          onDone={() => {
+            setRevealing(false);
+            window.scrollTo({ top: 0, behavior: 'auto' });
+          }}
+        />
+      </PageLayout>
+    );
+  }
+
+  // ── No result yet: landing / start ────────────────────────────────────
+  if (!activeResult || !profileModel) {
+    return (
+      <PageLayout title="Career Assessment">
+        <div className="mx-auto max-w-2xl">
           <AnimatedSection y={20}>
-          <Card className="text-center">
-            <CardContent className="pt-8 pb-8 space-y-4">
-              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                <Brain className="h-8 w-8 text-primary" />
-              </div>
-              <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                Still choosing a direction?
-              </h2>
-              <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                Answer all 45 questions to explore interest themes, preferred work environments and broad role families. This does not measure your skills, readiness, employability or hiring chances.
-              </p>
-              {isGuest && (
-                <p className="text-xs text-primary font-medium">No sign-up required. Guest results remain on this page only.</p>
-              )}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                {SECTION_INTROS.map(s => {
-                  const Icon = s.icon;
-                  return (
-                    <div key={s.key} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center ${s.bg}`}>
-                        <Icon className={`h-4 w-4 ${s.color}`} />
+            <Card className="overflow-hidden">
+              <CardContent className="space-y-6 pt-8 pb-8">
+                <div className="space-y-2 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                    <Compass className="h-7 w-7 text-primary" />
+                  </div>
+                  <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                    What kinds of work fit you?
+                  </h1>
+                  <p className="mx-auto max-w-md text-sm text-muted-foreground">
+                    45 quick statements about how you work, the tasks you enjoy and the activities
+                    that draw you in. Your answers build a Career Profile of interest themes and
+                    broad directions — one input while you choose what to pursue.
+                  </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    { icon: Compass, title: 'Interest themes', text: 'RIASEC patterns in the kinds of work that draw you in.' },
+                    { icon: Brain, title: 'Career directions', text: 'Broad role families worth investigating from your interests.' },
+                    { icon: BarChart3, title: 'Market signals', text: 'What current opportunities in those directions commonly emphasise.' },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={item.title} className="rounded-surface border border-border bg-secondary/20 p-4 text-left">
+                        <Icon className="mb-2 h-4 w-4 text-primary" aria-hidden="true" />
+                        <p className="text-sm font-semibold">{item.title}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{item.text}</p>
                       </div>
-                      {s.title}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mx-auto flex max-w-md items-start gap-2 rounded-lg border p-3 text-left"><Checkbox id="assessment-analytics-consent" checked={analyticsConsent} onCheckedChange={(checked) => { const granted = checked === true; setAnalyticsConsent(granted); setAssessmentAnalyticsConsent(granted); }} /><div><Label htmlFor="assessment-analytics-consent" className="text-sm">Share anonymous assessment progress events</Label><p className="mt-1 text-xs text-muted-foreground">Optional. Sends start, answered-count, abandonment and completion timing only—never answers or result themes.</p></div></div>
-              <p className="text-xs text-muted-foreground">{assessmentResumeCapability.explanation}</p>
-              <Button size="lg" onClick={handleStartAssessment} className="rounded-full px-6">
-                Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </CardContent>
-          </Card>
+                    );
+                  })}
+                </div>
+
+                <div className="rounded-surface border border-border-subtle bg-secondary/20 p-4">
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    This assessment explores <strong className="font-medium text-foreground">interests</strong> — the kinds
+                    of work you are drawn to. It does not measure skills, readiness, aptitude or hiring probability, and
+                    interest alignment never proves a role is right for you. There are no right or wrong answers.
+                  </p>
+                </div>
+
+                <div className="mx-auto flex max-w-md items-start gap-2 rounded-lg border p-3 text-left">
+                  <Checkbox
+                    id="assessment-analytics-consent"
+                    checked={analyticsConsent}
+                    onCheckedChange={(checked) => {
+                      const granted = checked === true;
+                      setAnalyticsConsent(granted);
+                      setAssessmentAnalyticsConsent(granted);
+                    }}
+                  />
+                  <div>
+                    <Label htmlFor="assessment-analytics-consent" className="text-sm">
+                      Share anonymous assessment progress events
+                    </Label>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Optional. Sends start, answered-count, abandonment and completion timing only —
+                      never answers or result themes.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-center text-xs text-muted-foreground">
+                  Answers are not saved as a draft. Leaving or refreshing before submission clears progress.
+                </p>
+
+                <div className="text-center">
+                  {isGuest && (
+                    <p className="mb-3 text-xs font-medium text-primary">
+                      No sign-up required — guest results stay on this page.
+                    </p>
+                  )}
+                  <Button size="lg" onClick={handleStartAssessment} className="rounded-full px-8">
+                    Start exploring <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </AnimatedSection>
         </div>
       </PageLayout>
     );
   }
 
-  // ── Results View ──────────────────────────────────────────────────
-  const riasecChartData = Object.entries(activeResult.work_interest_score_json)
-    .map(([key, value]) => ({
-      name: RIASEC_LABELS[key] || key,
-      score: value as number,
-    }))
-    .sort((a, b) => b.score - a.score);
-
-  const personalityRadar = personalityRadarData(
+  // ── Career Profile result ─────────────────────────────────────────────
+  const { themes, preferences, strongest, alternatives, marketSignals, relevantSkills, gaps } = profileModel;
+  const personalityChart = personalityRadarData(
     activeResult.personality_score_json as Record<string, number>,
   );
-
-  const skillsChartData = skillsBarData(
-    activeResult.skills_score_json as Record<string, number>,
-  );
+  const skillsChart = skillsBarData(activeResult.skills_score_json as Record<string, number>);
 
   return (
-    <PageLayout title="Assessment">
-      <div className="space-y-6">
+    <PageLayout title="Your Career Profile">
+      <div className="space-y-10">
         {/* Guest sign-up banner */}
         {isGuest && (
           <Card className="border-primary/30 bg-primary/5">
             <CardContent className="pt-5 pb-5">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <LogIn className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="font-medium text-sm">Continue with a Syncareer account</p>
-                    <p className="text-xs text-muted-foreground">Create a free account to keep future assessment results and continue into your career workspace.</p>
+                    <p className="text-sm font-medium">Keep this Career Profile</p>
+                    <p className="text-xs text-muted-foreground">
+                      Create a free account to save results over time and connect them with your skills, evidence and opportunities.
+                    </p>
                   </div>
                 </div>
-                <Button size="sm" onClick={() => navigate('/sign-up?returnTo=%2Fdashboard')} className="rounded-full px-5">
-                  Create Account <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                <Button size="sm" onClick={goSignUp} className="rounded-full px-5">
+                  Create account <ArrowRight className="ml-1 h-3.5 w-3.5" />
                 </Button>
               </div>
             </CardContent>
@@ -389,267 +450,252 @@ const Assessment = () => {
 
         {/* Header */}
         <AnimatedSection y={20}>
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {isGuest ? 'Completed just now' : `Last taken on ${format(new Date(activeResult.completed_at), 'MMMM d, yyyy')}`}
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1">
+              <p className="type-label text-primary">Career Profile · Interest assessment</p>
+              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                What kinds of work fit you
+              </h1>
+              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                {isGuest
+                  ? 'Completed just now'
+                  : `Completed ${format(new Date(activeResult.completed_at), 'MMMM d, yyyy')}`}
+              </p>
+            </div>
+            {!isGuest && (
+              <div className="flex items-center gap-3">
+                {!canRetake() && daysUntilRetake > 0 && (
+                  <div className="flex items-center gap-1.5 rounded-lg bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>
+                      {daysUntilRetake} day{daysUntilRetake !== 1 ? 's' : ''} until retake
+                    </span>
+                  </div>
+                )}
+                <Button variant="outline" onClick={handleStartAssessment} disabled={!canRetake()} className="rounded-full px-5">
+                  <RotateCcw className="mr-2 h-4 w-4" /> Retake
+                </Button>
+              </div>
+            )}
           </div>
-          {!isGuest && (
-            <div className="flex items-center gap-3">
-              {!canRetake() && daysUntilRetake > 0 && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-1.5">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>{daysUntilRetake} day{daysUntilRetake !== 1 ? 's' : ''} until retake</span>
-                </div>
-              )}
-              <Button variant="outline" onClick={handleStartAssessment} disabled={!canRetake()} className="rounded-full px-5">
-                <RotateCcw className="h-4 w-4 mr-2" /> Retake Assessment
-              </Button>
-            </div>
-          )}
-        </div>
         </AnimatedSection>
 
-        {/* Top 3 Interests */}
-        <AnimatedSection delay={0.08} y={20}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              Your strongest interest themes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[activeResult.primary_interest, activeResult.secondary_interest, activeResult.tertiary_interest].map((interest, i) => {
-                if (!interest) return null;
-                const key = Object.entries(RIASEC_LABELS).find(([, v]) => v === interest)?.[0] || '';
-                return (
-                  <div key={i} className="p-4 rounded-lg border bg-card">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant={i === 0 ? 'default' : 'secondary'}>#{i + 1}</Badge>
-                      <span className="font-semibold">{interest}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{RIASEC_DESCRIPTIONS[key] || ''}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        {/* 1. Interest themes */}
+        <AnimatedSection delay={0.06} y={12}>
+          <ProfileSection
+            eyebrow="Interest themes"
+            title="Your RIASEC interest profile"
+            description="The three themes your answers point to most strongly, alongside all six interest themes."
+          >
+            <InterestThemesSection
+              themes={themes}
+              allScores={activeResult.work_interest_score_json as Record<string, number>}
+            />
+          </ProfileSection>
         </AnimatedSection>
 
-        {/* RIASEC Chart */}
-        <AnimatedSection delay={0.12} y={20}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Compass className="h-5 w-5 text-primary" />
-              Work Interest — RIASEC Profile
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              className="h-72"
-              role="img"
-              aria-label={`RIASEC work-interest scores. ${riasecChartData.map((item) => `${item.name}: ${item.score}%`).join('. ')}`}
-            >
-              <Suspense fallback={<ChartFallback />}>
-                <RiasecBarChart data={riasecChartData} />
-              </Suspense>
-            </div>
-          </CardContent>
-        </Card>
+        {/* 2. What this suggests */}
+        <AnimatedSection delay={0.08} y={12}>
+          <ProfileSection
+            eyebrow="What this suggests"
+            title="Work preferences your answers describe"
+            description="Patterns read directly from your responses about how you work and the tasks you enjoy. These are interests and preferences — not measured skill levels."
+          >
+            <WorkPreferencesSection preferences={preferences} />
+          </ProfileSection>
         </AnimatedSection>
 
-        {/* Personality + Skills */}
-        <AnimatedSection delay={0.16} y={20}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <User className="h-4 w-4 text-primary" /> Personality Profile
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div
-                className="h-64"
-                role="img"
-                aria-label={`Personality-profile scores: ${personalityRadar.map((item) => `${item.axis}: ${item.value}`).join('. ')}`}
-              >
-                <Suspense fallback={<ChartFallback />}>
-                  <PersonalityRadarChart data={personalityRadar} />
-                </Suspense>
-              </div>
-              <p className="text-xs text-muted-foreground text-center mt-1">Scores aggregated from personality questions (1–15)</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Zap className="h-4 w-4 text-accent" /> Skills Preference
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div
-                className="h-64"
-                role="img"
-                aria-label={`Skills-preference scores: ${skillsChartData.map((item) => `${item.axis}: ${item.value}%`).join('. ')}`}
-              >
-                <Suspense fallback={<ChartFallback />}>
-                  <SkillsBarChart data={skillsChartData} />
-                </Suspense>
-              </div>
-              <p className="text-xs text-muted-foreground text-center mt-1">Task-preference responses from questions 16–30; not verified skill level</p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* 3. Career directions */}
+        <AnimatedSection delay={0.1} y={12}>
+          <ProfileSection
+            eyebrow="Career directions"
+            title="Role families worth investigating"
+            description="Ordered from how strongly each family's typical work overlaps with your interest themes. Closely scored families can swap order with a few different answers — treat these as starting points to explore, not verdicts. Strongest matches lead; alternatives stay one tap away."
+          >
+            {careersLoading ? (
+              <Card>
+                <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                  Matching broad role families…
+                </CardContent>
+              </Card>
+            ) : (
+              <CareerDirectionsSection
+                directions={[...strongest, ...alternatives]}
+                marketSignals={marketSignals}
+                onExplore={opportunitySearchForRoleFamily}
+                isGuest={isGuest || false}
+                onGuestCta={goSignUp}
+              />
+            )}
+          </ProfileSection>
         </AnimatedSection>
 
-        {/* Career Recommendations */}
-        <AnimatedSection delay={0.2} y={20}>
-        <CareerRecommendations
-          recommendations={recommendations}
-          clusterInsight={clusterInsight}
-          primaryInterest={activeResult.primary_interest}
-          secondaryInterest={activeResult.secondary_interest}
-          tertiaryInterest={activeResult.tertiary_interest}
-          loading={careersLoading}
-          isGuest={isGuest || false}
-          userMajor={studentDetails?.major ?? null}
-        />
+        {/* 4. Why */}
+        <AnimatedSection delay={0.12} y={12}>
+          <WhyDirectionsNote themes={themes} clusterInsight={clusterInsight} />
         </AnimatedSection>
 
-        {/* History (authenticated only) */}
-        {!isGuest && allResults.length > 1 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Assessment History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {allResults.map((r, i) => (
-                  <div key={r.id} className="flex items-center justify-between p-3 rounded-lg border">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground">{format(new Date(r.completed_at), 'MMM d, yyyy')}</span>
-                      {i === 0 && <Badge>Latest</Badge>}
-                    </div>
-                    <div className="flex gap-2">
-                      {[r.primary_interest, r.secondary_interest, r.tertiary_interest].filter(Boolean).map((interest, j) => (
-                        <Badge key={j} variant="outline" className="text-xs">{interest}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Authenticated Next Actions Closing Section */}
-        {!isGuest && (
-          <AnimatedSection delay={0.24} y={20}>
-            <section
-              aria-labelledby="assessment-next-steps-title"
-              className="rounded-surface border border-border/70 bg-card p-5 sm:p-6 space-y-4"
-            >
+        {/* Personality + task-preference charts (supporting detail) */}
+        <AnimatedSection delay={0.14} y={12}>
+          <details className="group rounded-surface border border-border bg-card">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold marker:content-none">
+              <span className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Supporting detail: work-style & task-preference responses
+              </span>
+              <span className="type-label text-muted-foreground transition-transform duration-150 ease-standard group-open:rotate-180 motion-reduce:transition-none">
+                ▾
+              </span>
+            </summary>
+            <div className="grid gap-6 border-t border-border-subtle p-5 lg:grid-cols-2">
               <div>
-                <h2 id="assessment-next-steps-title" className="text-sm font-semibold text-foreground">
-                  Next Steps with Your Interest Profile
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Use your RIASEC work-style themes to guide your opportunity search and application evidence
+                <p className="type-label mb-2 text-muted-foreground">How you describe working with others</p>
+                <div
+                  className="h-64"
+                  role="img"
+                  aria-label={`Work-style responses: ${personalityChart.map((item) => `${item.axis}: ${item.value}`).join('. ')}`}
+                >
+                  <Suspense fallback={<ChartFallback />}>
+                    <PersonalityRadarChart data={personalityChart} />
+                  </Suspense>
+                </div>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  Self-reported work style from questions 1–15 — behaviour preferences, not ability.
                 </p>
               </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-surface border border-border bg-secondary/20 p-4 space-y-2 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 text-primary">
-                      <Compass className="h-4 w-4" aria-hidden="true" />
-                      <h3 className="text-xs font-semibold text-foreground">Explore Open Roles</h3>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Search opportunities aligned with your #{1} theme ({activeResult.primary_interest}).
-                    </p>
-                  </div>
-                  <div className="pt-2">
-                    <Button size="sm" variant="outline" asChild className="w-full text-xs rounded-control justify-between">
-                      <a href={`/opportunities?q=${encodeURIComponent(activeResult.primary_interest || '')}`}>
-                        Find opportunities <ArrowRight className="h-3.5 w-3.5" />
-                      </a>
-                    </Button>
-                  </div>
+              <div>
+                <p className="type-label mb-2 text-muted-foreground">Tasks you enjoy</p>
+                <div
+                  className="h-64"
+                  role="img"
+                  aria-label={`Task-preference responses: ${skillsChart.map((item) => `${item.axis}: ${item.value}%`).join('. ')}`}
+                >
+                  <Suspense fallback={<ChartFallback />}>
+                    <SkillsBarChart data={skillsChart} />
+                  </Suspense>
                 </div>
-
-                <div className="rounded-surface border border-border bg-secondary/20 p-4 space-y-2 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 text-primary">
-                      <Brain className="h-4 w-4" aria-hidden="true" />
-                      <h3 className="text-xs font-semibold text-foreground">Update Your Primary CV</h3>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Frame your skills and experience towards your recommended career clusters.
-                    </p>
-                  </div>
-                  <div className="pt-2">
-                    <Button size="sm" variant="outline" asChild className="w-full text-xs rounded-control justify-between">
-                      <a href="/cv-builder">
-                        Edit primary CV <ArrowRight className="h-3.5 w-3.5" />
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="rounded-surface border border-border bg-secondary/20 p-4 space-y-2 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 text-primary">
-                      <Zap className="h-4 w-4" aria-hidden="true" />
-                      <h3 className="text-xs font-semibold text-foreground">Market Demand & Salaries</h3>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Check live hiring signals, in-demand skills, and salary benchmarks for your field.
-                    </p>
-                  </div>
-                  <div className="pt-2">
-                    <Button size="sm" variant="outline" asChild className="w-full text-xs rounded-control justify-between">
-                      <a href="/analysis">
-                        View market data <ArrowRight className="h-3.5 w-3.5" />
-                      </a>
-                    </Button>
-                  </div>
-                </div>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  Enjoyment ratings from questions 16–30 — not verified skill levels.
+                </p>
               </div>
-            </section>
+            </div>
+          </details>
+        </AnimatedSection>
+
+        {/* 5. Persistent Career Profile */}
+        <AnimatedSection delay={0.16} y={12}>
+          <ProfileSection
+            eyebrow="Your Career Profile in Syncareer"
+            title="Interests connected to what you've built"
+            description="Your interest themes sit alongside the skills, evidence and saved roles already in your workspace. Only data you have actually created appears here."
+          >
+            <PersistentCareerProfile
+              loading={profileDataLoading}
+              isGuest={isGuest || false}
+              onGuestCta={goSignUp}
+              recordedSkills={recordedSkills}
+              evidence={evidence}
+              targetRoles={targetRoles}
+              relevantSkills={relevantSkills}
+              gaps={gaps}
+            />
+          </ProfileSection>
+        </AnimatedSection>
+
+        {/* 6. Longitudinal history (authenticated only) */}
+        {!isGuest && allResults.length > 0 && (
+          <AnimatedSection delay={0.18} y={12}>
+            <AssessmentHistory results={allResults} />
           </AnimatedSection>
         )}
 
-        {/* Guest bottom CTA */}
-        {isGuest && (
-          <Card className="border-primary/30 bg-accent text-center">
-            <CardContent className="pt-8 pb-8 space-y-3">
-              <h3 className="text-xl font-semibold tracking-tight md:text-2xl">
-                Ready for the next step?
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Create a free account to keep future results, build your CV, practise interviews, and track applications.
+        {/* Next actions */}
+        <AnimatedSection delay={0.2} y={12}>
+          <section
+            aria-labelledby="assessment-next-steps-title"
+            className="space-y-4 rounded-surface border border-border/70 bg-card p-5 sm:p-6"
+          >
+            <div>
+              <h2 id="assessment-next-steps-title" className="text-sm font-semibold text-foreground">
+                What to do with this profile
+              </h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Interests narrow the field — your next steps build the evidence.
               </p>
-              <Button size="lg" onClick={() => navigate('/sign-up?returnTo=%2Fdashboard')} className="rounded-full px-6">
-                Create Free Account <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <NextActionTile
+                icon={<Compass className="h-4 w-4 text-primary" aria-hidden="true" />}
+                title="Explore real opportunities"
+                text={`Search current roles connected to your ${themes[0]?.label ?? 'top'} interests.`}
+                href={isGuest ? undefined : `/opportunities?q=${encodeURIComponent(activeResult.primary_interest || '')}`}
+                isGuest={isGuest || false}
+                onGuestCta={goSignUp}
+              />
+              <NextActionTile
+                icon={<FileText className="h-4 w-4 text-primary" aria-hidden="true" />}
+                title="Build evidence for a direction"
+                text="Choose a direction that interests you and add projects or experience to your dossier."
+                href={isGuest ? undefined : '/cv-builder'}
+                isGuest={isGuest || false}
+                onGuestCta={goSignUp}
+              />
+              <NextActionTile
+                icon={<BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" />}
+                title="Compare market signals"
+                text="See demand, commonly emphasised skills and salary context for your field."
+                href={isGuest ? undefined : '/analysis'}
+                isGuest={isGuest || false}
+                onGuestCta={goSignUp}
+              />
+            </div>
+          </section>
+        </AnimatedSection>
       </div>
+
       <FeedbackModal
         isOpen={feedbackModal.isOpen}
         onSubmit={feedbackModal.submitFeedback}
         onDismiss={feedbackModal.dismiss}
       />
     </PageLayout>
+  );
+};
+
+function NextActionTile({
+  icon,
+  title,
+  text,
+  href,
+  isGuest,
+  onGuestCta,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+  href?: string;
+  isGuest: boolean;
+  onGuestCta: () => void;
+}) {
+  return (
+    <div className="flex flex-col justify-between gap-3 rounded-surface border border-border bg-secondary/20 p-4">
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2">{icon}<h3 className="text-xs font-semibold text-foreground">{title}</h3></div>
+        <p className="text-[11px] leading-relaxed text-muted-foreground">{text}</p>
+      </div>
+      {isGuest ? (
+        <Button size="sm" variant="outline" onClick={onGuestCta} className="w-full justify-between text-xs">
+          Create account to continue <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+      ) : (
+        <Button size="sm" variant="outline" asChild className="w-full justify-between text-xs">
+          <Link to={href!}>
+            Continue <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </Button>
+      )}
+    </div>
   );
 };
 
