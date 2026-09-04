@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { ThumbsUp, ThumbsDown, MessageSquare, TrendingUp, Filter, Search, Trash2 } from 'lucide-react';
+import { AlertTriangle, ThumbsUp, ThumbsDown, MessageSquare, TrendingUp, Filter, Search, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 
@@ -19,6 +19,20 @@ interface FeedbackRow {
   comment: string | null;
   created_at: string;
 }
+
+/**
+ * `response_type` carries sentiment for the in-feature prompts ('positive' /
+ * 'negative') and the intent of whole-product feedback written from Settings →
+ * Feedback ('problem', 'improvement', 'general'). Both vocabularies are
+ * displayed here; the sentiment charts only count sentiment rows.
+ */
+const RESPONSE_LABELS: Record<string, string> = {
+  positive: 'Helped',
+  negative: 'Needs work',
+  problem: 'Problem report',
+  improvement: 'Improvement idea',
+  general: 'General feedback',
+};
 
 const FEATURE_LABELS: Record<string, string> = {
   general: 'General',
@@ -81,7 +95,8 @@ const FeedbackDashboard = () => {
     const positive = feedback.filter(f => f.response_type === 'positive').length;
     const negative = feedback.filter(f => f.response_type === 'negative').length;
     const withComments = feedback.filter(f => f.comment).length;
-    return { total, positive, negative, withComments, positiveRate: total ? Math.round((positive / total) * 100) : 0 };
+    const rated = positive + negative;
+    return { total, positive, negative, withComments, positiveRate: rated ? Math.round((positive / rated) * 100) : 0 };
   }, [feedback]);
 
   const featureBreakdown = useMemo(() => {
@@ -105,7 +120,7 @@ const FeedbackDashboard = () => {
     const stopWords = new Set(['the', 'a', 'an', 'is', 'it', 'to', 'and', 'of', 'in', 'for', 'was', 'not', 'i', 'my', 'me', 'this', 'that', 'with', 'on', 'but', 'be', 'have', 'had', 'do', 'did', 'so', 'too', 'very']);
     const words: Record<string, number> = {};
     feedback
-      .filter(f => f.response_type === 'negative' && f.comment)
+      .filter(f => (f.response_type === 'negative' || f.response_type === 'problem') && f.comment)
       .forEach(f => {
         f.comment!.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).forEach(w => {
           if (w.length > 2 && !stopWords.has(w)) {
@@ -345,16 +360,25 @@ const FeedbackDashboard = () => {
               <div className="space-y-3 max-h-96 overflow-auto">
                 {filteredComments.map(f => (
                   <div key={f.id} className="flex items-start gap-3 p-3 rounded-lg border">
-                    {f.response_type === 'positive' ? (
+                    {f.response_type === 'problem' ? (
+                      <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                    ) : f.response_type === 'positive' ? (
                       <ThumbsUp className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                    ) : (
+                    ) : f.response_type === 'negative' ? (
                       <ThumbsDown className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                    ) : (
+                      <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="secondary" className="text-xs">
                           {FEATURE_LABELS[f.feature_name] || f.feature_name}
                         </Badge>
+                        {RESPONSE_LABELS[f.response_type] && f.response_type !== 'positive' && f.response_type !== 'negative' && (
+                          <Badge variant="soft-neutral" className="text-xs">
+                            {RESPONSE_LABELS[f.response_type]}
+                          </Badge>
+                        )}
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(f.created_at), 'MMM d, yyyy HH:mm')}
                         </span>

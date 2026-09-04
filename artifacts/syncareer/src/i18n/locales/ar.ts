@@ -1,9 +1,24 @@
 export default {
   translation: {
     settings: {
-      title: "الإعدادات", account: "الحساب", notifications: "الإشعارات", security: "الأمان",
-      regional: "الإعدادات الإقليمية", preferences: "التفضيلات", saveChanges: "حفظ التغييرات", cancel: "إلغاء",
-      language: "اللغة", country: "البلد"
+      title: "الإعدادات",
+      sectionAccount: "الحساب",
+      profile: "الملف الشخصي",
+      accountSecurity: "الحساب والأمان",
+      notifications: "الإشعارات",
+      preferences: "التفضيلات",
+      feedback: "الملاحظات",
+      help: "المساعدة",
+      supportSyncareer: "دعم Syncareer",
+      language: "اللغة",
+      country: "البلد / المنطقة",
+      timezone: "المنطقة الزمنية",
+      theme: "المظهر",
+      lightTheme: "فاتح",
+      darkTheme: "داكن",
+      saveChanges: "حفظ التغييرات",
+      cancel: "إلغاء",
+      changePassword: "تغيير كلمة المرور"
     }
   }
 };

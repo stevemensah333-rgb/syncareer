@@ -193,3 +193,9 @@ export const countries = [
   { code: "260", name: "Zambia" },
   { code: "263", name: "Zimbabwe" }
 ];
+
+/** Names only. The `code` field is a phone dial code, which is what the phone
+ *  inputs need; region pickers want the label alone. */
+export const countryNames = countries
+  .map((country) => country.name)
+  .sort((a, b) => a.localeCompare(b));

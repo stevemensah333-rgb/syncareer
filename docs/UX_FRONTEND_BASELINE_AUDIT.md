@@ -148,11 +148,12 @@ Strong, token-driven, and already doctrine-aligned (see §0). Remaining gaps:
   WhatsApp) — good.
 - Legacy aliases retained intentionally: `.app-canvas` (→ `.surface-canvas`) and
   `.eyebrow`/`.type-eyebrow`/`.dossier-eyebrow` — fine, documented.
-- `body.compact-view` rules at the *bottom* of `index.css` are global overrides
-  (not tokens); a settings feature, implemented via a body class with
-  `[class*="CardHeader"]` string selectors — fragile, styles shadcn internals
-  rather than the new surface primitives, and won't apply to dossier/surface
-  components consistently (`P2`, #7/#12).
+- `body.compact-view` rules at the *bottom* of `index.css` were global overrides
+  (not tokens): a settings feature implemented via a body class with
+  `[class*="CardHeader"]` string selectors — fragile, styling shadcn internals
+  rather than the new surface primitives, and inconsistent on dossier/surface
+  components (`P2`, #7/#12). **Resolved 2026-09-04:** the toggle and the rule
+  block are deleted; density now comes from the surface/row primitives alone.
 
 ## 6. Current navigation
 
@@ -254,13 +255,32 @@ Weaknesses:
 
 ## 12. Settings architecture
 
+> **Resolved 2026-09-04 (rewrite shipped).** Settings is now `pages/Settings.tsx`
+> (shell only) + `components/settings/*`, grouped **Account** (Profile, Account &
+> Security) · **Preferences** (Notifications, Preferences) · **Support**
+> (Feedback, Help, and `Support Syncareer` only while `VITE_SUPPORT_URL` is set).
+> There is no Regional or Subscription destination; the legacy `?tab=` values
+> `security`, `regional`, `subscription` and `billing` resolve to the destination
+> that absorbed them. Desktop
+> keeps a rail with an identity summary, mobile is a plain list with a back link.
+> The geo-IP fetch, the compact-view toggle and the ad-hoc display/localStorage
+> writes are gone: `lib/displayPreferences.ts` (theme) and
+> `lib/localePreferences.ts` (region/time zone, device-local) are the only seams,
+> and language is applied through i18next alone. Profile/education/qualification
+> editing exists where RLS permits it (owner-writable `profiles` columns,
+> `student_details`, `qualifications`); email/password/other-sessions go through
+> `supabase.auth`; account closure keeps the `delete-account` function contract.
+> Protected by `pages/Settings.test.tsx` (matrix 1.25). The findings below are the
+> audit text that drove it.
+
 - Areas: Profile, Account, Notifications, Security, Regional, Preferences.
-  Matches the Settings rule (no billing/subscription as a setting); stale deep
-  link `?tab=subscription` is guarded to `account`. Good.
-- **`Settings.tsx` fires an unconsented third-party geo-IP fetch
+  Matched the Settings rule (no billing/subscription as a setting); stale deep
+  link `?tab=subscription` was guarded to `account`.
+- **`Settings.tsx` used to fire an unconsented third-party geo-IP fetch
   (`https://ipapi.co/json/`)** on first load to pre-fill country/timezone
   (`P1`, privacy/consent + reliability; also a stray empty
-  `import { } from '@/utils/countries'`).
+  `import { } from '@/utils/countries'`). Removed: region/time zone are stated
+  as device choices with the browser time zone as the default.
 - Timezone + language + country + display (dark/compact) preferences are
   persisted ad hoc in `localStorage` across `Settings.tsx`,
   `displayPreferences.ts`, and an i18n key, with a parallel hard-coded fallback
@@ -351,8 +371,9 @@ landing + assessment. Gaps:
   panels and `components/analysis/*` + `CareerOutlookTab`/`MarketOverviewTab`;
   verify it is not downloaded on the Opportunities list cold path
   (`P1`, verify).
-- `ipapi.co` call in Settings adds a blocking-ish third-party request on a
-  utility page (`P2`).
+- ~~`ipapi.co` call in Settings adds a blocking-ish third-party request on a
+  utility page~~ (`P2`) — removed 2026-09-04; no third-party request remains on
+  that route.
 - `visual-fixtures/EvidenceDossierReview.tsx` and the fixture are isolated by
   `visualFixtureIsolation.test.ts` — keep out of production chunks (`P1`, guard
   already present; keep it).
@@ -408,11 +429,11 @@ Healthy free-product state in code:
 | D | Unproven numeric panels (market/alumni/"success"/readiness) need provenance or removal | 10/19 | P0 (verify) |
 | E | Advance-mode surfaces not differentiated; mode hooks defined but un-applied | 2/5/7/15 | P1 |
 | F | Dead primitives + orphaned legacy modules (ai-coach, counsellor constants, App.css) | 3/4/5 | P1 |
-| G | Hard-coded phone/Gmail support channel; ipapi.co call in Settings | 6/12/14 | P1 |
+| G | Hard-coded phone/Gmail support channel; ipapi.co call in Settings | 6/12/14 | P1 — geo-IP call removed 2026-09-04; contact values moved to `lib/contact.ts` (still one owner-edited seam) |
 | H | Mobile: CV/Interview behind "More"; current-dossier chip disappears on nav | 6/8 | P1 |
 | I | Doc/fixture drift (subscription doc, audit docs) contradicts current state | 19/20 | P1 |
 | J | Micro-label duplication, generic Card walls on Advance, eyebrow drift | 2/7/13 | P2 |
-| K | Mobile geo-ip + timezone/localStorage duplication + i18n inconsistency | 12/14 | P2 |
+| K | Mobile geo-ip + timezone/localStorage duplication + i18n inconsistency | 12/14 | P2 — geo-IP and duplicated storage seams closed 2026-09-04; locale coverage (FD-4) stays open |
 | L | Empty-state vocab duplication (`ui/empty` vs hand-rolled) | 4/3 | P2 |
 
 ---

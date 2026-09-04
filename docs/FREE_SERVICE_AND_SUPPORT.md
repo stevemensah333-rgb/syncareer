@@ -12,9 +12,12 @@ This document supersedes the former `PAYMENT_AND_SUBSCRIPTIONS.md`.
 - Every product feature is available to every signed-in user without payment:
   assistant proposals, mock interviews, CV exports, career assessments,
   applications tracking, analytics and career recommendations.
-- The profile menu and settings expose **Feedback** (reuses the `user_feedback`
-  mechanism; whole-product entries are recorded with `feature_name = 'general'`)
-  and — only when configured — **Support Syncareer**.
+- Settings exposes **Feedback** (reuses the `user_feedback` mechanism;
+  whole-product entries are recorded with `feature_name = 'general'` and the
+  chosen kind in `response_type`: `problem` / `improvement` / `general`) and
+  **Help** (email, phone/WhatsApp, policy links — no ticket system, no invented
+  knowledge base). The profile menu links to both. **Support Syncareer** appears
+  in Settings and in the profile menu only when configured.
 - There is no `/pricing` or `/subscription-success` route. Both redirect to `/`
   so external links keep working, and they are removed from SEO surfaces
   (sitemap, llms.txt, robots comments, page titles, analytics route enum).
@@ -41,8 +44,10 @@ Voluntary, one-time, and separate from the product:
   it running, you can support the project." It is never presented as a
   subscription, membership, premium upgrade, paid feature, or requirement for
   continued access.
-- **Entry points:** profile account menu (all roles) and, when enabled, the
-  public landing footer ("Resources" group).
+- **Entry points:** Settings → Support (last item of the Support group) and the
+  profile account menu (all roles), plus the public landing footer ("Resources"
+  group) when enabled. All three are gated by the same `isSupportEnabled()`
+  check and none of them is ever labelled premium/upgrade/benefits.
 - **Configuration seam:** `VITE_SUPPORT_URL` (browser-exposed) must point at a
   secure, hosted one-time payment/donation link. While unset the entry points
   are hidden. There is no payment code and no fallback URL in the client.
@@ -83,6 +88,8 @@ update or retire them in the same approved change.
 - Navbar regression tests — account menu contains Feedback; contains no
   Subscription/Upgrade/Billing/premium/renewal items; support item only when
   `VITE_SUPPORT_URL` is set.
+- `pages/Settings.test.tsx` — the Support destination is absent from the settings
+  list until `VITE_SUPPORT_URL` is configured (matrix 1.25).
 - `ApplicationInterview.test.tsx` — voice interview start is not premium-gated.
 
 ## Related

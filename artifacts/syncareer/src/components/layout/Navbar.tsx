@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BellRing, HeartHandshake, HelpCircle, LogOut, Mail, MessageSquareHeart, Phone, Settings, Shield, User } from 'lucide-react';
+import { BellRing, HeartHandshake, LifeBuoy, LogOut, MessageSquareHeart, Settings, Shield, User } from 'lucide-react';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
 
 import { cn } from '@/lib/utils';
@@ -25,14 +25,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 import { findNavContext, type NavGroup } from './AppSidebar';
-import { GeneralFeedbackDialog } from '@/components/feedback/GeneralFeedbackDialog';
 import { isSupportEnabled, supportUrl } from '@/lib/support';
 
 export interface BreadcrumbItem {
@@ -62,7 +58,6 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
 
   const isCounsellor = profile?.user_type === 'career_counsellor';
   const [isAdmin, setIsAdmin] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useEffect(() => {
     if (!supabaseUserId) return;
@@ -182,9 +177,13 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
                   Mentor requests
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => setFeedbackOpen(true)} className="cursor-pointer">
+              <DropdownMenuItem onClick={() => navigate('/settings?tab=feedback')} className="cursor-pointer">
                 <MessageSquareHeart className="h-4 w-4 mr-2" />
                 Feedback
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/settings?tab=help')} className="cursor-pointer">
+                <LifeBuoy className="h-4 w-4 mr-2" />
+                Help
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
                 <Settings className="h-4 w-4 mr-2" />
@@ -199,48 +198,21 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
                   </DropdownMenuItem>
                 </>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="cursor-pointer">
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  Contact Support
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="bg-popover z-50">
-                  <div className="px-3 py-2 space-y-2">
-                    <a
-                      href="tel:+233555156128"
-                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <Phone className="h-3.5 w-3.5" />
-                      +233 555 156 128
-                    </a>
-                    <a
-                      href="mailto:syncareer01@gmail.com"
-                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <Mail className="h-3.5 w-3.5" />
-                      syncareer01@gmail.com
-                    </a>
-                  </div>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
               {isSupportEnabled() && (
-                <DropdownMenuItem asChild>
-                  <a
-                    href={supportUrl()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="cursor-pointer"
-                  >
-                    <HeartHandshake className="h-4 w-4 mr-2" />
-                    <span>
-                      <span className="block">Support Syncareer</span>
-                      <span className="block text-[11px] font-normal text-muted-foreground">
-                        Optional one-time support — Syncareer is free either way
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <a href={supportUrl()} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+                      <HeartHandshake className="h-4 w-4 mr-2" />
+                      <span>
+                        <span className="block">Support Syncareer</span>
+                        <span className="block text-[11px] font-normal text-muted-foreground">
+                          Optional one-time support — Syncareer is free either way
+                        </span>
                       </span>
-                    </span>
-                  </a>
-                </DropdownMenuItem>
+                    </a>
+                  </DropdownMenuItem>
+                </>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
@@ -252,7 +224,6 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
         </div>
       </div>
     </header>
-    <GeneralFeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </>
   );
 }

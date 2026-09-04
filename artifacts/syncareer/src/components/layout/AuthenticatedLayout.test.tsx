@@ -33,10 +33,6 @@ vi.mock('@/features/navigation/useCurrentDossier', () => ({ useCurrentDossier: (
 vi.mock('@/components/notifications/NotificationsDropdown', () => ({
   NotificationsDropdown: () => <button type="button">Notifications</button>,
 }));
-vi.mock('@/components/feedback/GeneralFeedbackDialog', () => ({
-  GeneralFeedbackDialog: () => null,
-}));
-
 function renderShell(initialEntry = '/dashboard') {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>

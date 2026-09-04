@@ -1,10 +1,22 @@
 export default {
   translation: {
     settings: {
-      title: "Izilungiselelo", account: "I-akhawunti", notifications: "Izaziso", security: "Ukuphepha",
-      regional: "Izilungiselelo Zesifunda", preferences: "Okuthandwayo", saveChanges: "Londoloza Izinguquko", cancel: "Khansela",
-      language: "Ulimi", country: "Izwe",
-      darkMode: "Imodi Emnyama", darkModeDesc: "Shintsha phakathi kwezihloko ezikhanya nezimnyama"
+      title: "Izilungiselelo",
+      sectionAccount: "I-akhawunti",
+      profile: "Iphrofayela",
+      accountSecurity: "I-akhawunti Nokuphepha",
+      notifications: "Izaziso",
+      preferences: "Okuthandwayo",
+      feedback: "Impendulo",
+      help: "Usizo",
+      supportSyncareer: "Sekela i-Syncareer",
+      language: "Ulimi",
+      country: "Izwe / indawo",
+      timezone: "Isikhathi sendawo",
+      theme: "Isitayela",
+      saveChanges: "Londoloza izinguquko",
+      cancel: "Khansela",
+      changePassword: "Shintsha iphasiwedi"
     }
   }
 };

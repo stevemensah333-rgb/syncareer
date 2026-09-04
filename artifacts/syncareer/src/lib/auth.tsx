@@ -19,6 +19,9 @@ interface AuthContextValue {
   isLoaded: boolean;
 }
 
+/** Scopes Supabase understands for `signOut`. */
+export type SignOutScope = 'global' | 'local' | 'others';
+
 const AuthContext = createContext<AuthContextValue>({
   session: null,
   isLoaded: false,
@@ -64,11 +67,12 @@ export function useAuth() {
   return {
     isLoaded,
     isSignedIn: !!session,
+    user: session?.user ?? null,
     userId: session?.user?.id ?? null,
     sessionId: session?.access_token ?? null,
     getToken: async () => session?.access_token ?? null,
-    signOut: async (opts?: { redirectUrl?: string }) => {
-      await supabase.auth.signOut();
+    signOut: async (opts?: { redirectUrl?: string; scope?: SignOutScope }) => {
+      await supabase.auth.signOut(opts?.scope ? { scope: opts.scope } : undefined);
       if (opts?.redirectUrl && typeof window !== "undefined") {
         window.location.assign(opts.redirectUrl);
       }

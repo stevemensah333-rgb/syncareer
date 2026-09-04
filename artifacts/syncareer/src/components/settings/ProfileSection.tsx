@@ -1,420 +1,275 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useUserProfile } from '@/contexts/UserProfileContext';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Pencil } from 'lucide-react';
+import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
-import { GraduationCap, Briefcase, Plus, Trash2, Edit2, X, Check } from 'lucide-react';
-import { z } from 'zod';
+import { Textarea } from '@/components/ui/textarea';
+import { useUserProfile } from '@/contexts/UserProfileContext';
+import { useAuth } from '@/lib/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { accountRoleLabel } from '@/lib/accountRoles';
+import { EducationSection } from './EducationSection';
+import { QualificationsSection } from './QualificationsSection';
+import { SettingField, SettingsEditor, SettingsGroup, SettingsRow, SettingsValue } from './SettingsScaffold';
 
-// Validation schema for qualifications
-const qualificationSchema = z.object({
-  school: z.string().trim().min(1, 'School name is required').max(200, 'School name must be less than 200 characters'),
-  degree_type: z.string().min(1, 'Degree type is required'),
-  major: z.string().min(1, 'Major is required'),
-});
+const BIO_MAX_LENGTH = 500;
 
-interface Qualification {
-  id: string;
-  school: string;
-  degree_type: string;
-  major: string;
-  year_of_admission: number | null;
-  year_of_completion: number | null;
-  is_current: boolean;
+interface IdentityForm {
+  fullName: string;
+  username: string;
+  bio: string;
+  linkedinUrl: string;
 }
 
-const MAJORS = [
-  'Computer Science', 'Business Administration', 'Law', 'Electrical Engineering',
-  'Mechanical Engineering', 'Civil Engineering', 'Chemical Engineering',
-  'Information Technology', 'Data Science', 'Finance', 'Accounting', 'Marketing',
-  'Human Resources', 'Economics', 'Psychology', 'Medicine', 'Nursing', 'Pharmacy',
-  'Architecture', 'Graphic Design', 'Communications', 'Education',
-  'Environmental Science', 'Agriculture', 'Other',
-];
+interface IdentityErrors {
+  fullName?: string;
+  username?: string;
+  linkedinUrl?: string;
+}
 
-const DEGREE_TYPES = [
-  'Certificate', 'Diploma', 'Associate Degree', "Bachelor's Degree",
-  'Honours Degree', 'Postgraduate Diploma', "Master's Degree",
-  'Doctoral Degree (PhD)', 'Professional Degree',
-];
+const emptyForm: IdentityForm = { fullName: '', username: '', bio: '', linkedinUrl: '' };
 
-const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 30 }, (_, i) => currentYear - 20 + i);
+/** The rules the profile record itself needs: a name that exists, and a handle
+ *  that can be shown as `@handle`. */
+function validateIdentity(form: IdentityForm): IdentityErrors {
+  const errors: IdentityErrors = {};
+  const name = form.fullName.trim();
+  if (name.length < 2) errors.fullName = 'Enter your full name (at least 2 characters).';
+  else if (name.length > 80) errors.fullName = 'Keep your name under 80 characters.';
 
+  const username = form.username.trim();
+  if (username && !/^[a-z0-9_.]{3,30}$/.test(username)) {
+    errors.username = 'Use 3–30 characters: lowercase letters, numbers, dot or underscore.';
+  }
+
+  const linkedin = form.linkedinUrl.trim();
+  if (linkedin && !/^https?:\/\/\S+$/.test(linkedin)) {
+    errors.linkedinUrl = 'Enter the full link, starting with https://';
+  }
+  return errors;
+}
+
+/**
+ * Profile is the human-facing identity record. Every editable field is a real
+ * column on `profiles` that RLS lets the owner write; what the backend does not
+ * let a user change here (email, role, avatar upload) is displayed, never
+ * mocked. Each group carries its own edit affordance so the page stays a
+ * record to read rather than one enormous form.
+ */
 export function ProfileSection() {
-  const { profile, studentDetails } = useUserProfile();
-  const [qualifications, setQualifications] = useState<Qualification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { profile, loading, refreshProfile } = useUserProfile();
+  const { userId, user } = useAuth();
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<IdentityForm>(emptyForm);
+  const [errors, setErrors] = useState<IdentityErrors>({});
 
-  // Form state for new/edit qualification
-  const [formData, setFormData] = useState({
-    school: '',
-    degree_type: '',
-    major: '',
-    year_of_admission: '',
-    year_of_completion: '',
-    is_current: false,
-  });
+  const email = user?.email ?? '';
 
-  useEffect(() => {
-    fetchQualifications();
-  }, []);
-
-  const fetchQualifications = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data, error } = await supabase
-        .from('qualifications')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('year_of_admission', { ascending: false });
-
-      if (error) throw error;
-      setQualifications((data as Qualification[]) || []);
-    } catch (error) {
-      console.error('Error fetching qualifications:', error);
-    } finally {
-      setLoading(false);
-    }
+  const startEdit = () => {
+    setForm({
+      fullName: profile?.full_name ?? '',
+      username: profile?.username ?? '',
+      bio: profile?.bio ?? '',
+      linkedinUrl: profile?.linkedin_url ?? '',
+    });
+    setErrors({});
+    setEditing(true);
   };
 
-  const resetForm = () => {
-    setFormData({
-      school: '',
-      degree_type: '',
-      major: '',
-      year_of_admission: '',
-      year_of_completion: '',
-      is_current: false,
-    });
-    setShowAddForm(false);
-    setEditingId(null);
-  };
+  const save = async () => {
+    if (!userId) return;
+    const nextErrors = validateIdentity(form);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
-  const handleAddQualification = async () => {
-    const result = qualificationSchema.safeParse({
-      school: formData.school.trim(),
-      degree_type: formData.degree_type,
-      major: formData.major,
-    });
-    if (!result.success) {
-      toast.error(result.error.errors[0]?.message ?? "Validation failed");
+    setSaving(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: form.fullName.trim(),
+        username: form.username.trim() || null,
+        bio: form.bio.trim() || null,
+        linkedin_url: form.linkedinUrl.trim() || null,
+      })
+      .eq('id', userId);
+
+    if (error) {
+      setSaving(false);
+      toast.error(error.message || 'Your profile could not be saved.');
       return;
     }
 
-    setSaving(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { error } = await supabase.from('qualifications').insert({
-        user_id: session.user.id,
-        school: formData.school,
-        degree_type: formData.degree_type,
-        major: formData.major,
-        year_of_admission: formData.year_of_admission ? parseInt(formData.year_of_admission) : null,
-        year_of_completion: formData.year_of_completion ? parseInt(formData.year_of_completion) : null,
-        is_current: formData.is_current,
-      });
-
-      if (error) throw error;
-      toast.success('Qualification added');
-      resetForm();
-      fetchQualifications();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add qualification');
-    } finally {
-      setSaving(false);
-    }
+    await refreshProfile();
+    setSaving(false);
+    setEditing(false);
+    toast.success('Profile updated');
   };
 
-  const handleUpdateQualification = async () => {
-    if (!editingId) return;
-    
-    const result = qualificationSchema.safeParse({
-      school: formData.school.trim(),
-      degree_type: formData.degree_type,
-      major: formData.major,
-    });
-    if (!result.success) {
-      toast.error(result.error.errors[0]?.message ?? "Validation failed");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('qualifications')
-        .update({
-          school: formData.school,
-          degree_type: formData.degree_type,
-          major: formData.major,
-          year_of_admission: formData.year_of_admission ? parseInt(formData.year_of_admission) : null,
-          year_of_completion: formData.year_of_completion ? parseInt(formData.year_of_completion) : null,
-          is_current: formData.is_current,
-        })
-        .eq('id', editingId);
-
-      if (error) throw error;
-      toast.success('Qualification updated');
-      resetForm();
-      fetchQualifications();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update qualification');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteQualification = async (id: string) => {
-    try {
-      const { error } = await supabase.from('qualifications').delete().eq('id', id);
-      if (error) throw error;
-      toast.success('Qualification removed');
-      fetchQualifications();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete qualification');
-    }
-  };
-
-  const startEdit = (qual: Qualification) => {
-    setFormData({
-      school: qual.school,
-      degree_type: qual.degree_type,
-      major: qual.major,
-      year_of_admission: qual.year_of_admission?.toString() || '',
-      year_of_completion: qual.year_of_completion?.toString() || '',
-      is_current: qual.is_current,
-    });
-    setEditingId(qual.id);
-    setShowAddForm(true);
-  };
-
-  const getUserTypeLabel = () => {
-    switch (profile?.user_type) {
-      case 'student': return 'Student';
-      case 'career_counsellor': return 'Career Counsellor';
-      default: return 'User';
-    }
-  };
+  const initials = (profile?.full_name ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Profile Information</h2>
-
-      {/* Status Badge */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">Status:</span>
-        <Badge variant="secondary" className="flex items-center gap-1">
-          {profile?.user_type === 'student' ? (
-            <GraduationCap className="h-3 w-3" />
-          ) : (
-            <Briefcase className="h-3 w-3" />
-          )}
-          {getUserTypeLabel()}
-        </Badge>
-      </div>
-
-      {/* Current Primary Details */}
-      {profile?.user_type === 'student' && studentDetails && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" />
-              Primary Education
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Major:</span>
-                <p className="font-medium">{studentDetails.major}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Degree:</span>
-                <p className="font-medium">{studentDetails.degree_type}</p>
-              </div>
-              {studentDetails.school && (
-                <div>
-                  <span className="text-muted-foreground">School:</span>
-                  <p className="font-medium">{studentDetails.school}</p>
-                </div>
-              )}
-              {studentDetails.year_of_admission && (
-                <div>
-                  <span className="text-muted-foreground">Year of Admission:</span>
-                  <p className="font-medium">{studentDetails.year_of_admission}</p>
-                </div>
-              )}
-              {studentDetails.expected_completion && (
-                <div>
-                  <span className="text-muted-foreground">Expected Completion:</span>
-                  <p className="font-medium">{studentDetails.expected_completion}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Additional Qualifications */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium">Additional Qualifications</h3>
-          {!showAddForm && (
-            <Button size="sm" onClick={() => setShowAddForm(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Add Qualification
+    <div className="space-y-4">
+      <SettingsGroup
+        title="Identity"
+        description="What Syncareer shows about you."
+        action={
+          !editing && (
+            <Button variant="outline" size="sm" onClick={startEdit} disabled={loading || !profile}>
+              <Pencil className="size-3.5" aria-hidden="true" />
+              Edit
             </Button>
-          )}
+          )
+        }
+      >
+        <div className="workspace-row flex items-center gap-3">
+          <Avatar className="size-11 border">
+            <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
+            <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
+              {initials || '—'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-foreground">
+              {profile?.full_name || 'Add your name'}
+            </p>
+            <p className="type-metadata truncate">{email || 'Signed in'}</p>
+          </div>
+          <Badge variant="soft-neutral" className="shrink-0">
+            {accountRoleLabel(profile?.user_type)}
+          </Badge>
         </div>
 
-        {/* Add/Edit Form */}
-        {showAddForm && (
-          <Card className="mb-4">
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="qualification-school">School / University *</Label>
+        <SettingsRow
+          label="Username"
+          hint={profile?.username ? `Shown as @${profile.username}` : 'An optional handle for your account.'}
+        >
+          <SettingsValue>{profile?.username ? `@${profile.username}` : 'Not set'}</SettingsValue>
+        </SettingsRow>
+
+        <SettingsRow label="Email" hint="Your sign-in address lives with your security settings.">
+          <SettingsValue>{email || 'Unavailable'}</SettingsValue>
+        </SettingsRow>
+
+        <SettingsRow label="Account type" hint="Set when you joined; ask support if it is wrong.">
+          <SettingsValue>{accountRoleLabel(profile?.user_type)}</SettingsValue>
+        </SettingsRow>
+
+        <SettingsRow label="Profile picture" hint="Syncareer has no image upload of its own.">
+          <SettingsValue>{profile?.avatar_url ? 'Shown from your account image' : 'Your initials are used'}</SettingsValue>
+        </SettingsRow>
+
+        <SettingsRow label="Summary" hint="A short note on what you study or do.">
+          <SettingsValue>{profile?.bio || 'Not added'}</SettingsValue>
+        </SettingsRow>
+
+        <SettingsRow label="LinkedIn" hint="Stored on your profile record.">
+          {profile?.linkedin_url ? (
+            <a
+              href={profile.linkedin_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="max-w-full truncate text-sm text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {profile.linkedin_url}
+            </a>
+          ) : (
+            <SettingsValue>Not added</SettingsValue>
+          )}
+        </SettingsRow>
+
+        {editing && (
+          <SettingsEditor>
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void save();
+              }}
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <SettingField id="profile-name" label="Full name" error={errors.fullName}>
                   <Input
-                    id="qualification-school"
-                    value={formData.school}
-                    onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-                    placeholder="Enter school name"
+                    id="profile-name"
+                    value={form.fullName}
+                    maxLength={80}
+                    autoComplete="name"
+                    aria-invalid={errors.fullName ? true : undefined}
+                    aria-describedby={errors.fullName ? 'profile-name-error' : undefined}
+                    onChange={(event) => setForm({ ...form, fullName: event.target.value })}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="qualification-major">Major / Field of Study *</Label>
-                  <Select value={formData.major} onValueChange={(v) => setFormData({ ...formData, major: v })}>
-                    <SelectTrigger id="qualification-major">
-                      <SelectValue placeholder="Select major" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border shadow-lg z-50">
-                      {MAJORS.map((m) => (
-                        <SelectItem key={m} value={m}>{m}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="qualification-degree">Degree Type *</Label>
-                  <Select value={formData.degree_type} onValueChange={(v) => setFormData({ ...formData, degree_type: v })}>
-                    <SelectTrigger id="qualification-degree">
-                      <SelectValue placeholder="Select degree" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border shadow-lg z-50">
-                      {DEGREE_TYPES.map((d) => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="qualification-admission-year">Year of Admission</Label>
-                  <Select value={formData.year_of_admission} onValueChange={(v) => setFormData({ ...formData, year_of_admission: v })}>
-                    <SelectTrigger id="qualification-admission-year">
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border shadow-lg z-50">
-                      {years.map((y) => (
-                        <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="qualification-completion-year">Year of Completion</Label>
-                  <Select value={formData.year_of_completion} onValueChange={(v) => setFormData({ ...formData, year_of_completion: v })}>
-                    <SelectTrigger id="qualification-completion-year">
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border shadow-lg z-50">
-                      {years.map((y) => (
-                        <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center gap-2 pt-6">
-                  <input
-                    type="checkbox"
-                    id="is_current"
-                    checked={formData.is_current}
-                    onChange={(e) => setFormData({ ...formData, is_current: e.target.checked })}
-                    className="h-4 w-4"
-                  />
-                  <Label htmlFor="is_current">Currently studying here</Label>
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  onClick={editingId ? handleUpdateQualification : handleAddQualification}
-                  disabled={saving}
+                </SettingField>
+                <SettingField
+                  id="profile-username"
+                  label="Username"
+                  hint="Optional. Lowercase letters, numbers, dot or underscore."
+                  error={errors.username}
                 >
-                  <Check className="h-4 w-4 mr-1" />
-                  {saving ? 'Saving...' : editingId ? 'Update' : 'Add'}
+                  <Input
+                    id="profile-username"
+                    value={form.username}
+                    maxLength={30}
+                    aria-invalid={errors.username ? true : undefined}
+                    aria-describedby={errors.username ? 'profile-username-error' : 'profile-username-hint'}
+                    onChange={(event) => setForm({ ...form, username: event.target.value })}
+                  />
+                </SettingField>
+              </div>
+
+              <SettingField id="profile-bio" label="Summary" hint={`${form.bio.length}/${BIO_MAX_LENGTH}`}>
+                <Textarea
+                  id="profile-bio"
+                  rows={3}
+                  maxLength={BIO_MAX_LENGTH}
+                  value={form.bio}
+                  onChange={(event) => setForm({ ...form, bio: event.target.value })}
+                />
+              </SettingField>
+
+              <SettingField id="profile-linkedin" label="LinkedIn" hint="Full URL, including https://" error={errors.linkedinUrl}>
+                <Input
+                  id="profile-linkedin"
+                  type="url"
+                  value={form.linkedinUrl}
+                  placeholder="https://linkedin.com/in/…"
+                  aria-invalid={errors.linkedinUrl ? true : undefined}
+                  aria-describedby={errors.linkedinUrl ? 'profile-linkedin-error' : 'profile-linkedin-hint'}
+                  onChange={(event) => setForm({ ...form, linkedinUrl: event.target.value })}
+                />
+              </SettingField>
+
+              <div className="flex flex-wrap gap-2">
+                <Button type="submit" disabled={saving}>
+                  {saving ? 'Saving…' : 'Save changes'}
                 </Button>
-                <Button variant="outline" onClick={resetForm}>
-                  <X className="h-4 w-4 mr-1" />
+                <Button type="button" variant="ghost" onClick={() => setEditing(false)} disabled={saving}>
                   Cancel
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </form>
+          </SettingsEditor>
         )}
+      </SettingsGroup>
 
-        {/* List of qualifications */}
-        {loading ? (
-          <p className="text-muted-foreground text-sm">Loading qualifications...</p>
-        ) : qualifications.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No additional qualifications added yet.</p>
-        ) : (
-          <div className="space-y-3">
-            {qualifications.map((qual) => (
-              <Card key={qual.id}>
-                <CardContent className="py-4 flex items-start justify-between">
-                  <div className="space-y-1">
-                    <p className="font-medium">{qual.degree_type} in {qual.major}</p>
-                    <p className="text-sm text-muted-foreground">{qual.school}</p>
-                    {(qual.year_of_admission || qual.year_of_completion) && (
-                      <p className="text-xs text-muted-foreground">
-                        {qual.year_of_admission} - {qual.is_current ? 'Present' : qual.year_of_completion}
-                      </p>
-                    )}
-                    {qual.is_current && (
-                      <Badge variant="outline" className="text-xs">Current</Badge>
-                    )}
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" aria-label={`Edit ${qual.degree_type} in ${qual.major}`} onClick={() => startEdit(qual)}>
-                      <Edit2 aria-hidden="true" className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" aria-label={`Remove ${qual.degree_type} in ${qual.major}`} onClick={() => handleDeleteQualification(qual.id)}>
-                      <Trash2 aria-hidden="true" className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+      <EducationSection />
+
+      <QualificationsSection />
+
+      <p className="type-supporting px-1">
+        Password, email address and account closure live in{' '}
+        <Link to="/settings?tab=account" className="text-primary underline underline-offset-2">
+          Account &amp; Security
+        </Link>
+        .
+      </p>
     </div>
   );
 }

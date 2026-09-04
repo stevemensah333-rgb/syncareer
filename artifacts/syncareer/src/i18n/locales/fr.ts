@@ -1,10 +1,24 @@
 export default {
   translation: {
     settings: {
-      title: "Paramètres", account: "Compte", notifications: "Notifications", security: "Sécurité",
-      regional: "Paramètres Régionaux", preferences: "Préférences", saveChanges: "Enregistrer les Modifications", cancel: "Annuler",
-      language: "Langue", country: "Pays",
-      darkMode: "Mode Sombre", darkModeDesc: "Basculer entre thème clair et sombre"
+      title: "Paramètres",
+      sectionAccount: "Compte",
+      profile: "Profil",
+      accountSecurity: "Compte et sécurité",
+      notifications: "Notifications",
+      preferences: "Préférences",
+      feedback: "Commentaires",
+      help: "Aide",
+      supportSyncareer: "Soutenir Syncareer",
+      language: "Langue",
+      country: "Pays / région",
+      timezone: "Fuseau horaire",
+      theme: "Thème",
+      lightTheme: "Clair",
+      darkTheme: "Sombre",
+      saveChanges: "Enregistrer les modifications",
+      cancel: "Annuler",
+      changePassword: "Changer le mot de passe"
     }
   }
 };
