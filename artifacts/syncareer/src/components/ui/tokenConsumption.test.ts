@@ -69,6 +69,7 @@ describe('design tokens are consumed, not re-implemented', () => {
       'src/components/dossier/EvidenceStamp.tsx',
       'src/components/cv-builder/CVPreview.tsx',
       'src/components/landing/HeroSection.tsx',
+      'src/components/landing/ScrollStory.tsx',
       'src/components/landing/LandingFooter.tsx',
       'src/components/opportunities/DeadlinePill.tsx',
       'src/components/layout/MessageScreen.tsx',
