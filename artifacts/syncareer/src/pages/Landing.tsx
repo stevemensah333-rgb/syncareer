@@ -5,6 +5,7 @@ import { useUserProfile } from "@/contexts/UserProfileContext";
 import { getHomeRouteForRole } from "@/components/auth/RoleRoute";
 import {
   generateStructuredData,
+  removeStructuredData,
   setApplicationSchema,
   setMetaTags,
   setOrganizationSchema,
@@ -74,6 +75,8 @@ export default function Landing() {
         },
       })),
     });
+
+    return () => removeStructuredData("Organization", "SoftwareApplication", "WebSite", "FAQPage");
   }, []);
 
   if (oauthReturn) return <OAuthReturnState />;

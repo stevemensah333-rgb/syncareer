@@ -26,6 +26,19 @@ export function getReturnToFromLocationState(state: unknown): string {
   return getSafeReturnTo(`${from.pathname}${from.search ?? ''}${from.hash ?? ''}`);
 }
 
+/** Auth entry points use a query parameter for public CTAs and location state
+ * for protected-route redirects. Protected-route state takes precedence. */
+export function getAuthReturnTo(state: unknown, search: string): string {
+  const stateReturnTo = getReturnToFromLocationState(state);
+  if (stateReturnTo !== '/') return stateReturnTo;
+  return getSafeReturnTo(new URLSearchParams(search).get('returnTo'));
+}
+
+export function authPath(path: '/sign-in' | '/sign-up' | '/onboarding', returnTo: string): string {
+  const safeReturnTo = getSafeReturnTo(returnTo);
+  return safeReturnTo === '/' ? path : `${path}?returnTo=${encodeURIComponent(safeReturnTo)}`;
+}
+
 export function getAuthErrorMessage(error: unknown, context: 'sign-in' | 'sign-up' | 'reset' | 'oauth'): string {
   const message = error instanceof Error
     ? error.message.toLowerCase()

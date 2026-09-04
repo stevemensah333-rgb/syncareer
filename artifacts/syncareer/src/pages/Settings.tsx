@@ -4,6 +4,7 @@ import { NotificationSettingsPanel } from '@/components/notifications/Notificati
 import { useSearchParams } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Bell, Globe, Lock, User, Settings as SettingsIcon, UserCircle, CreditCard, AlertTriangle } from 'lucide-react';
 
 import {
@@ -25,6 +26,7 @@ import { ProfileSection } from '@/components/settings/ProfileSection';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
 import SubscriptionManager from '@/components/subscription/SubscriptionManager';
 import { SecuritySection } from '@/components/settings/SecuritySection';
 import AnimatedSection from '@/components/landing/AnimatedSection';
@@ -131,6 +133,12 @@ const Settings = () => {
     });
   };
 
+  const resetRegionalSettings = () => {
+    setSelectedLanguage(i18n.language);
+    setSelectedCountry(localStorage.getItem('userCountry') || '');
+    setSelectedTimezone(localStorage.getItem('userTimezone') || Intl.DateTimeFormat().resolvedOptions().timeZone);
+  };
+
   const handleDeleteAccount = async () => {
     setDeletingAccount(true);
     try {
@@ -162,7 +170,7 @@ const Settings = () => {
     <PageLayout title={t('settings.title')}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <AnimatedSection y={20} className="lg:col-span-1">
-          <div className="rounded-lg border bg-card p-4">
+          <div className="surface-content p-3">
             <nav aria-label="Settings sections" className="space-y-1">
               <Button 
                 variant={activeSection === 'profile' ? 'secondary' : 'ghost'} 
@@ -234,12 +242,8 @@ const Settings = () => {
         </AnimatedSection>
         
         <AnimatedSection delay={0.08} y={20} className="lg:col-span-2">
-          {activeSection === 'profile' && (
-            <div className="bg-card rounded-lg p-6 shadow">
-              <ProfileSection />
-            </div>
-          )}
-          <div className="bg-card rounded-lg p-6 shadow">
+          <div className="surface-content p-5 sm:p-6">
+            {activeSection === 'profile' && <ProfileSection />}
             {activeSection === 'account' && (
               <>
                 <h2 className="text-xl font-semibold mb-6">{t('settings.accountSettings')}</h2>
@@ -426,8 +430,9 @@ const Settings = () => {
                 </p>
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium mb-1">{t('settings.language')}</label>
+                    <label htmlFor="settings-language" className="block text-sm font-medium mb-1">{t('settings.language')}</label>
                     <select
+                      id="settings-language"
                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                       value={selectedLanguage}
                       onChange={(e) => setSelectedLanguage(e.target.value)}
@@ -438,8 +443,9 @@ const Settings = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">{t('settings.country')}</label>
+                    <label htmlFor="settings-country" className="block text-sm font-medium mb-1">{t('settings.country')}</label>
                     <input
+                      id="settings-country"
                       type="text"
                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                       value={selectedCountry}
@@ -449,8 +455,9 @@ const Settings = () => {
                     <p className="text-xs text-muted-foreground mt-1">Auto-detected from your IP address</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">{t('settings.timezone')}</label>
+                    <label htmlFor="settings-timezone" className="block text-sm font-medium mb-1">{t('settings.timezone')}</label>
                     <select
+                      id="settings-timezone"
                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                       value={selectedTimezone}
                       onChange={(e) => setSelectedTimezone(e.target.value)}
@@ -463,7 +470,7 @@ const Settings = () => {
                   </div>
                   <div className="pt-4 border-t">
                     <Button onClick={handleSave}>{t('settings.saveChanges')}</Button>
-                    <Button variant="outline" className="ml-2">{t('settings.cancel')}</Button>
+                    <Button variant="outline" className="ml-2" onClick={resetRegionalSettings}>{t('settings.cancel')}</Button>
                   </div>
                 </div>
               </>
@@ -478,44 +485,33 @@ const Settings = () => {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">{t('settings.darkMode')}</p>
-                          <p className="text-sm text-muted-foreground">{t('settings.darkModeDesc')}</p>
+                          <Label htmlFor="settings-dark-mode" className="font-medium">{t('settings.darkMode')}</Label>
+                          <p id="settings-dark-mode-description" className="text-sm text-muted-foreground">{t('settings.darkModeDesc')}</p>
                         </div>
-                        <div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              className="sr-only peer" 
-                              checked={isDarkMode}
-                              onChange={(e) => setIsDarkMode(e.target.checked)}
-                            />
-                            <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                          </label>
-                        </div>
+                        <Switch
+                          id="settings-dark-mode"
+                          checked={isDarkMode}
+                          onCheckedChange={setIsDarkMode}
+                          aria-describedby="settings-dark-mode-description"
+                        />
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">{t('settings.compactView')}</p>
-                          <p className="text-sm text-muted-foreground">Reduce spacing for a more compact layout</p>
+                          <Label htmlFor="settings-compact-view" className="font-medium">{t('settings.compactView')}</Label>
+                          <p id="settings-compact-view-description" className="text-sm text-muted-foreground">Reduce spacing for a more compact layout</p>
                         </div>
-                        <div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              className="sr-only peer" 
-                              checked={isCompactView}
-                              onChange={(e) => setIsCompactView(e.target.checked)}
-                            />
-                            <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                          </label>
-                        </div>
+                        <Switch
+                          id="settings-compact-view"
+                          checked={isCompactView}
+                          onCheckedChange={setIsCompactView}
+                          aria-describedby="settings-compact-view-description"
+                        />
                       </div>
                     </div>
                   </div>
-                  <div className="pt-4 border-t">
-                    <Button onClick={handleSave}>{t('settings.saveChanges')}</Button>
-                    <Button variant="outline" className="ml-2">{t('settings.cancel')}</Button>
-                  </div>
+                  <p className="border-t pt-4 text-sm text-muted-foreground" role="status">
+                    Display changes are saved automatically.
+                  </p>
                 </div>
               </>
             )}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAuthErrorMessage, getSafeReturnTo } from './authUtils';
+import { authPath, getAuthErrorMessage, getAuthReturnTo, getSafeReturnTo } from './authUtils';
 
 describe('auth redirect and error helpers', () => {
   it('keeps safe internal routes including search and hash', () => {
@@ -8,6 +8,18 @@ describe('auth redirect and error helpers', () => {
 
   it.each(['https://attacker.example/path', '//attacker.example/path', '/sign-in', '/reset-password'])('rejects unsafe or recursive destination %s', (value) => {
     expect(getSafeReturnTo(value)).toBe('/');
+  });
+
+  it('reads a safe public CTA destination and preserves it through onboarding', () => {
+    expect(getAuthReturnTo(null, '?returnTo=%2Fopportunities')).toBe('/opportunities');
+    expect(authPath('/onboarding', '/opportunities')).toBe('/onboarding?returnTo=%2Fopportunities');
+  });
+
+  it('prefers a protected-route destination over a query parameter', () => {
+    expect(getAuthReturnTo(
+      { from: { pathname: '/applications', search: '?stage=interview' } },
+      '?returnTo=%2Fopportunities',
+    )).toBe('/applications?stage=interview');
   });
 
   it('maps provider details to plain, non-raw guidance', () => {

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import GoogleSignInButton from './GoogleSignInButton';
 import PasswordField from './PasswordField';
-import { getAuthErrorMessage, getReturnToFromLocationState } from './authUtils';
+import { authPath, getAuthErrorMessage, getAuthReturnTo } from './authUtils';
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 import { ACCOUNT_ROLES } from '@/lib/accountRoles';
 
@@ -33,7 +33,7 @@ export default function SignUpForm() {
   const [errorMessage, setErrorMessage] = useState('');
   const [confirmationEmail, setConfirmationEmail] = useState('');
   const submissionInFlight = useRef(false);
-  const returnTo = getReturnToFromLocationState(location.state);
+  const returnTo = getAuthReturnTo(location.state, location.search);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +60,7 @@ export default function SignUpForm() {
             full_name: fullName.trim(),
             user_type: userType,
           },
-          emailRedirectTo: `${window.location.origin}/sign-in`,
+          emailRedirectTo: `${window.location.origin}${authPath('/sign-in', returnTo)}`,
         },
       });
       if (error) throw error;
@@ -83,8 +83,8 @@ export default function SignUpForm() {
         return;
       }
 
-      // Logged in immediately — onboarding route will pick up user_type from auth metadata.
-      navigate(returnTo === '/' ? '/onboarding' : returnTo, { replace: true });
+      // Every new account completes onboarding before continuing to the CTA destination.
+      navigate(authPath('/onboarding', returnTo), { replace: true });
     } catch (error) {
       setErrorMessage(getAuthErrorMessage(error, 'sign-up'));
     } finally {
@@ -102,7 +102,7 @@ export default function SignUpForm() {
             <p className="mt-1 text-sm leading-6 text-muted-foreground">If the address can be registered, we sent confirmation instructions to <strong className="text-foreground">{confirmationEmail}</strong>.</p>
           </div>
           <p className="text-sm text-muted-foreground">Open the latest message, confirm your email, then return to sign in. Check spam if it does not arrive.</p>
-          <Button asChild className="w-full"><Link to="/sign-in">Continue to sign in</Link></Button>
+          <Button asChild className="w-full"><Link to={authPath('/sign-in', returnTo)}>Continue to sign in</Link></Button>
         </div>
       ) : <>
       <div className="mb-5 space-y-4">
@@ -120,7 +120,7 @@ export default function SignUpForm() {
           </Select>
         </div>
         {userType === 'student' ? (
-          <GoogleSignInButton label="Sign up with Google" returnTo={returnTo === '/' ? '/onboarding' : returnTo} />
+          <GoogleSignInButton label="Sign up with Google" returnTo={authPath('/onboarding', returnTo)} />
         ) : (
           <p className="rounded-lg border bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">
             Mentor accounts use an organization email. The Syncareer team verifies the email domain before your profile is listed.
@@ -168,7 +168,7 @@ export default function SignUpForm() {
         </Button>
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link to="/sign-in" className="font-medium text-primary hover:underline">Sign in</Link>
+          <Link to={authPath('/sign-in', returnTo)} className="font-medium text-primary hover:underline">Sign in</Link>
         </p>
       </form></>}
     </div>

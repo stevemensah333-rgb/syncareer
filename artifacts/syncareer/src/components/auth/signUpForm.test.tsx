@@ -23,9 +23,9 @@ beforeEach(() => {
   });
 });
 
-function renderForm() {
+function renderForm(entry = '/sign-up') {
   return render(
-    <MemoryRouter initialEntries={['/sign-up']}>
+    <MemoryRouter initialEntries={[entry]}>
       <SignUpForm />
     </MemoryRouter>
   );
@@ -59,6 +59,17 @@ describe('SignUpForm (email sign-up contract)', () => {
         },
       });
     });
+  });
+
+  it('preserves a public CTA destination through email confirmation', async () => {
+    renderForm('/sign-up?returnTo=%2Fopportunities');
+    await submitAsStudent();
+
+    expect(signUp).toHaveBeenCalledWith(expect.objectContaining({
+      options: expect.objectContaining({
+        emailRedirectTo: `${window.location.origin}/sign-in?returnTo=%2Fopportunities`,
+      }),
+    }));
   });
 
   it('preserves mentor role through organization-email signup and does not offer role-losing Google signup', async () => {

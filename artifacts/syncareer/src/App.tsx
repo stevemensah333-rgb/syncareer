@@ -13,6 +13,7 @@ import { getPageTitle } from "@/lib/pageTitle";
 
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { LoadingFallback } from "./components/LoadingFallback";
+import { RouteFocusManager } from "./components/layout/RouteFocusManager";
 
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import RoleRoute from "./components/auth/RoleRoute";
@@ -167,6 +168,7 @@ const AppContent = () => (
           <Toaster />
             <Sonner />
             <Suspense fallback={<LoadingFallback />}>
+            <RouteFocusManager />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />

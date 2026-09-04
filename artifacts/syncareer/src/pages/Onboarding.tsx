@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertCircle, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
+import { getSafeReturnTo } from '@/components/auth/authUtils';
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -78,6 +79,8 @@ function saveErrorMessage(error: unknown): string {
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = getSafeReturnTo(searchParams.get('returnTo'));
   const { refreshProfile } = useUserProfile();
   const mounted = useRef(true);
   const submissionInFlight = useRef(false);
@@ -154,7 +157,7 @@ const Onboarding = () => {
       }
 
       if (profile?.onboarding_completed && isOnboardingRole(profile.user_type)) {
-        navigate(getHomeRouteForRole(profile.user_type), { replace: true });
+        navigate(returnTo === '/' ? getHomeRouteForRole(profile.user_type) : returnTo, { replace: true });
         return;
       }
 
@@ -233,7 +236,7 @@ const Onboarding = () => {
       setInitialError(loadErrorMessage(error));
       setInitialState('error');
     }
-  }, [navigate]);
+  }, [navigate, returnTo]);
 
   useEffect(() => {
     void initialise();
@@ -358,7 +361,7 @@ const Onboarding = () => {
       captureProductEvent(ANALYTICS_EVENTS.ONBOARDING_COMPLETED, { user_role: userType });
       await refreshProfile();
       toast.success('Profile setup complete');
-      navigate(getHomeRouteForRole(userType), { replace: true });
+      navigate(returnTo === '/' ? getHomeRouteForRole(userType) : returnTo, { replace: true });
     } catch (error) {
       console.error('[Onboarding] Save failed', {
         kind: error instanceof OnboardingFlowError ? error.kind : isNetworkError(error) ? 'network' : 'database',

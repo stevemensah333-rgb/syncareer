@@ -282,7 +282,7 @@ export function OpportunityDetail({
         <Button variant="outline" className="gap-2" asChild>
           <Link to={cvHref}>
             <FileText aria-hidden="true" className="size-4" />
-            Tailor my CV
+            Review primary CV
           </Link>
         </Button>
       </div>

@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import type { AccountRole } from '@/lib/accountRoles';
+import { authPath } from './authUtils';
 
 type UserRole = AccountRole;
 
@@ -36,11 +37,11 @@ const RoleRoute = ({ children, allowedRoles }: RoleRouteProps) => {
   const userRole = profile?.user_type as UserRole | null;
 
   if (!profile || !userRole) {
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to={authPath('/onboarding', `${location.pathname}${location.search}${location.hash}`)} replace />;
   }
 
   if (!profile.onboarding_completed) {
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to={authPath('/onboarding', `${location.pathname}${location.search}${location.hash}`)} replace />;
   }
 
   if (!allowedRoles.includes(userRole)) {

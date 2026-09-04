@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { generateStructuredData, setMetaTags, setRobotsMeta } from './seo';
+import { generateStructuredData, removeStructuredData, setMetaTags, setRobotsMeta } from './seo';
 
 afterEach(() => {
   document.head.innerHTML = '';
@@ -17,6 +17,16 @@ describe('SEO utilities', () => {
       '@type': 'FAQPage',
       headline: 'Latest',
     });
+  });
+
+  it('removes route-owned schema when its page unmounts', () => {
+    generateStructuredData('FAQPage', { headline: 'FAQs' });
+    generateStructuredData('Organization', { name: 'Syncareer' });
+
+    removeStructuredData('FAQPage');
+
+    expect(document.getElementById('seo-jsonld-faqpage')).toBeNull();
+    expect(document.getElementById('seo-jsonld-organization')).not.toBeNull();
   });
 
   it('keeps separate schema types and updates canonical metadata', () => {

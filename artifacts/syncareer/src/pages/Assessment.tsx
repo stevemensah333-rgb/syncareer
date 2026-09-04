@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useState, useCallback, useEffect, useRef } from 
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
-import { setMetaTags, setBreadcrumbSchema } from '@/lib/seo';
+import { removeStructuredData, setMetaTags, setBreadcrumbSchema } from '@/lib/seo';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,6 +75,8 @@ const Assessment = () => {
       { name: 'Home', url: 'https://syncareer.me' },
       { name: 'Assessment', url: 'https://syncareer.me/assessment' },
     ]);
+
+    return () => removeStructuredData('BreadcrumbList');
   }, []);
 
   // Check auth status
@@ -131,21 +133,6 @@ const Assessment = () => {
       trackAssessmentLifecycle('abandonment', { answered: answeredRef.current, total: TOTAL_QUESTIONS, elapsedSeconds: startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : undefined });
     }
   }, []);
-
-  // Auto-advance
-  useEffect(() => {
-    if (!takingAssessment || showIntro) return;
-    const allAnswered = currentQuestions.every(q => answers[q.id] !== undefined);
-    if (!allAnswered || currentPage >= totalPages - 1) return;
-
-    const nextPage = currentPage + 1;
-    const nextSectionKey = SECTION_START_PAGES[nextPage];
-    const timer = setTimeout(() => {
-      if (nextSectionKey) setShowIntro(nextSectionKey);
-      else setCurrentPage(nextPage);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [answers, currentPage, currentQuestions, takingAssessment, showIntro, totalPages]);
 
   const handleNext = () => {
     if (currentPage < totalPages - 1) {
@@ -289,12 +276,6 @@ const Assessment = () => {
             {currentQuestions.map((question, index) => <AssessmentQuestionCard key={question.id} question={question} questionNumber={currentPage * QUESTIONS_PER_PAGE + index + 1} value={answers[question.id]} onChange={handleAnswer} />)}
           </div>
 
-          {allCurrentAnswered && !isLastPage && (
-            <p className="text-center text-xs text-muted-foreground animate-pulse">
-              All answered — advancing automatically...
-            </p>
-          )}
-
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={handlePrev} disabled={currentPage === 0} className="rounded-full px-5">
               <ArrowLeft className="h-4 w-4 mr-2" /> Previous
@@ -394,11 +375,11 @@ const Assessment = () => {
                 <div className="flex items-center gap-3">
                   <LogIn className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="font-medium text-sm">Sign up to save your results</p>
-                    <p className="text-xs text-muted-foreground">Create a free account to save your assessment, get career recommendations, and track your progress.</p>
+                    <p className="font-medium text-sm">Continue with a Syncareer account</p>
+                    <p className="text-xs text-muted-foreground">Create a free account to keep future assessment results and continue into your career workspace.</p>
                   </div>
                 </div>
-                <Button size="sm" onClick={() => navigate('/', { state: { openAuth: true } })} className="rounded-full px-5">
+                <Button size="sm" onClick={() => navigate('/sign-up?returnTo=%2Fdashboard')} className="rounded-full px-5">
                   Create Account <ArrowRight className="h-3.5 w-3.5 ml-1" />
                 </Button>
               </div>
@@ -576,9 +557,9 @@ const Assessment = () => {
                 Ready for the next step?
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Create a free account to save your results, build your CV, practice interviews, and apply to jobs.
+                Create a free account to keep future results, build your CV, practise interviews, and track applications.
               </p>
-              <Button size="lg" onClick={() => navigate('/', { state: { openAuth: true } })} className="rounded-full px-6">
+              <Button size="lg" onClick={() => navigate('/sign-up?returnTo=%2Fdashboard')} className="rounded-full px-6">
                 Create Free Account <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </CardContent>
