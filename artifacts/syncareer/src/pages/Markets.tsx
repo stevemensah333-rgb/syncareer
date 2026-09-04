@@ -60,17 +60,14 @@ const useRemainingViewportHeight = () => {
   const [height, setHeight] = useState<number | null>(null);
 
   useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
     const desktop = window.matchMedia('(min-width: 1024px)');
     const update = () => {
-      if (!desktop.matches) {
-        setHeight(null);
+      const element = ref.current;
+      if (!desktop.matches || !element || !element.isConnected) {
+        if (!desktop.matches) setHeight(null);
         return;
       }
       const available = window.innerHeight - element.getBoundingClientRect().top - WORKSPACE_BOTTOM_PADDING;
-      console.log("[ws-measure]", { top: element.getBoundingClientRect().top, available, desktop: desktop.matches });
       setHeight(available >= WORKSPACE_MIN_HEIGHT ? Math.floor(available) : null);
     };
 
