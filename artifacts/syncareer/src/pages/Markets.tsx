@@ -78,10 +78,12 @@ const useRemainingViewportHeight = () => {
     observer.observe(document.body);
     window.addEventListener('resize', update);
     window.addEventListener('load', update);
+    window.addEventListener('scroll', update, { passive: true });
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', update);
       window.removeEventListener('load', update);
+      window.removeEventListener('scroll', update);
     };
   }, []);
 
