@@ -156,7 +156,7 @@ export default function ApplicationRecord({
                       onMouseEnter={() => setSelectedRequirement(row.requirement)}
                       onFocus={() => setSelectedRequirement(row.requirement)}
                       onClick={() => setSelectedRequirement(row.requirement)}
-                      className={`group/requirement grid w-full gap-2 border-l-2 px-3 py-3 text-left transition-[background-color,border-color] duration-150 ease-out motion-reduce:transition-none sm:grid-cols-[0.62fr_1fr] sm:items-center ${isSelected ? "border-primary bg-primary/[0.075]" : "border-transparent hover:border-primary/40 hover:bg-secondary/60"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`}
+                      className={`group/requirement grid w-full gap-2 border-l-2 px-3 py-3 text-left transition-[background-color,border-color] duration-150 ease-standard motion-reduce:transition-none sm:grid-cols-[0.62fr_1fr] sm:items-center ${isSelected ? "border-primary bg-primary/[0.075]" : "border-transparent hover:border-primary/40 hover:bg-secondary/60"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`}
                     >
                       <span className={`text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none ${isSelected ? "text-primary" : ""}`}>{row.requirement}</span>
                       <span className={`flex items-center gap-2 text-sm ${supported ? "text-success" : "text-muted-foreground"}`}>

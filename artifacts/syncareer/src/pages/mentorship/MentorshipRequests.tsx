@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ExternalLink, Mail } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RecordState, WorkingDocument } from '@/components/dossier';
@@ -32,12 +33,8 @@ export default function MentorshipRequests() {
   const act = async (request: MentorshipRequest, action: 'accepted' | 'declined' | 'withdraw' | 'complete') => { setBusy(request.id); try { if (action === 'accepted' || action === 'declined') await mentorshipApi.respond(request.id, action); else await mentorshipApi.updateStatus(request.id, action); await load(); toast.success('Request updated'); } catch (error) { toast.error(error instanceof Error ? error.message : 'Request could not be updated.'); } finally { setBusy(null); } };
   const reveal = async (request: MentorshipRequest) => { try { const context = await mentorshipApi.requestContext(request.id); if (typeof context.contactEmail === 'string') setContacts((current) => ({ ...current, [request.id]: context.contactEmail as string })); if (context.resume && typeof context.resume === 'object') setCvContext({ title: request.resume_title ?? 'Shared CV', data: resumeRowToCVData(context.resume as Parameters<typeof resumeRowToCVData>[0]) }); } catch { toast.error('Accepted request details could not be loaded.'); } };
 
-  const statusLabelClass = (status: string) =>
-    status === 'accepted'
-      ? 'border-success/50 bg-[hsl(var(--dossier-jade-wash))] text-success'
-      : status === 'declined'
-        ? 'border-destructive/40 bg-destructive/5 text-destructive'
-        : 'border-border bg-muted text-muted-foreground';
+  const statusVariant = (status: string) =>
+    status === 'accepted' ? 'soft-success' : status === 'declined' ? 'soft-destructive' : 'soft-neutral';
 
   const list = (items: MentorshipRequest[]) => items.length ? (
     <div className="divide-y divide-border border-y border-border">
@@ -49,7 +46,7 @@ export default function MentorshipRequests() {
               <h2 className="mt-1 font-semibold">{request.goal}</h2>
               <p className="text-sm text-muted-foreground">{mentor ? request.mentee_name : `${request.mentor_name}${request.mentor_company ? ` · ${request.mentor_company}` : ''}`}</p>
             </div>
-            <span className={`inline-flex min-h-7 shrink-0 items-center border px-2 text-[11px] font-semibold uppercase tracking-[0.08em] ${statusLabelClass(request.status)}`}>{request.status}</span>
+            <Badge variant={statusVariant(request.status)} className="shrink-0">{request.status}</Badge>
           </div>
           <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{request.context}</p>
           {(request.application_title || request.resume_title) && <p className="text-xs text-muted-foreground">Context: {[request.application_title && `${request.application_title}${request.application_company ? ` at ${request.application_company}` : ''}`, request.resume_title && `CV: ${request.resume_title}`].filter(Boolean).join(' · ')}</p>}

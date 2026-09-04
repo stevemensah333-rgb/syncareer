@@ -29,7 +29,7 @@ export default function AuthShell({ title, subtitle, children }: AuthShellProps)
         aria-hidden="true"
       />
       <div className="relative w-full max-w-md">
-        <a href="/" className="mb-8 inline-flex items-center gap-2 rounded-md text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <a href="/" className="mb-8 inline-flex items-center gap-2 rounded-control text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <img src={syncareerLogo} alt="" className="h-8 w-8 object-contain" />
           Syncareer
         </a>

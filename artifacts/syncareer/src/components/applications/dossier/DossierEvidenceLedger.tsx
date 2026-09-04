@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Archive, Check, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Archive, Check, Plus, Trash2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -340,7 +342,7 @@ export function DossierEvidenceLedger({
               Cancel
             </Button>
             <Button type="button" disabled={createBusy || !title.trim() || !summary.trim()} onClick={submitCreate}>
-              {createBusy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+              {createBusy && <Spinner className="size-4" />}
               Save as draft
             </Button>
           </DialogFooter>
@@ -489,7 +491,7 @@ export function DossierEvidenceLedger({
               }
               onClick={submitSource}
             >
-              {sourceBusy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+              {sourceBusy && <Spinner className="size-4" />}
               Attach source
             </Button>
           </DialogFooter>

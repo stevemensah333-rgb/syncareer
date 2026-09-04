@@ -42,7 +42,7 @@ export default function OAuthReturnState() {
   return (
     <main id="main-content" tabIndex={-1} className="app-canvas grid min-h-screen place-items-center px-4 py-8 focus:outline-none">
       <section className="w-full max-w-md rounded-xl border bg-card p-6 text-center" aria-live="polite">
-        <div aria-hidden="true" className={`mx-auto mb-4 h-9 w-9 rounded-full border-2 border-primary/25 border-t-primary ${failed ? '' : 'animate-spin'}`} />
+        <div aria-hidden="true" className={`mx-auto mb-4 h-9 w-9 rounded-full border-2 border-primary/25 border-t-primary ${failed ? '' : 'animate-spin motion-reduce:animate-none'}`} />
         <h1 className="text-xl font-semibold">{failed ? 'Google sign-in was not completed' : 'Completing Google sign-in'}</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           {failed

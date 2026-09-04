@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Check, Loader2, Mic, Phone } from 'lucide-react';
+import { ArrowLeft, Check, Mic, Phone } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { InterviewErrorBoundary } from '@/components/interview/InterviewErrorBoundary';
@@ -348,7 +350,7 @@ export default function ApplicationInterview() {
                   </div>
                 </div>
                 <div className="mt-4 max-w-2xl space-y-2">
-                  <Label id="interview-session-length" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Session length</Label>
+                  <Label id="interview-session-length" className="type-label">Session length</Label>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="group" aria-labelledby="interview-session-length">
                     {SESSION_OPTIONS.map((option) => (
                       <button
@@ -426,7 +428,7 @@ export default function ApplicationInterview() {
                                 disabled={savingId === suggestion.id}
                                 onClick={() => void handleConfirmSuggestion(suggestion)}
                               >
-                                {savingId === suggestion.id && <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none mr-1" />}
+                                {savingId === suggestion.id && <Spinner className="size-3.5 mr-1" />}
                                 Save as draft evidence
                               </Button>
                             )

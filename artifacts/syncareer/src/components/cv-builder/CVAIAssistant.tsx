@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Check, Lightbulb, Loader2, RotateCcw, Send, X, Sparkles } from 'lucide-react';
+import { AlertTriangle, Check, Lightbulb, RotateCcw, Send, X, Sparkles } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -187,7 +189,7 @@ export function CVAIAssistant({
         <CardContent className="space-y-4">
           {opportunityLoading ? (
             <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <Spinner className="size-4 text-primary" />
               Loading the selected opportunity…
             </p>
           ) : opportunityError ? (
@@ -215,7 +217,7 @@ export function CVAIAssistant({
           ) : (
             <>
               <div className="rounded-surface border border-primary/20 bg-primary/5 p-3 text-xs">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Active context</p>
+                <p className="type-label text-primary">Active context</p>
                 <p className="mt-0.5 font-medium text-foreground">{opportunity.title}{opportunity.organisation ? ` · ${opportunity.organisation}` : ''}</p>
                 <p className="mt-1 text-[11px] text-muted-foreground">Only the selected requirement and evidence below will be sent.</p>
               </div>
@@ -311,7 +313,7 @@ export function CVAIAssistant({
               >
                 {state === 'pending' ? (
                   <>
-                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    <Spinner className="mr-1.5 size-3.5" />
                     Preparing suggestion…
                   </>
                 ) : (
@@ -334,7 +336,7 @@ export function CVAIAssistant({
               {currentSuggestion && state !== 'rejected' && (
                 <section aria-labelledby="cv-suggestion-heading" className="space-y-3.5 rounded-surface border border-border bg-card p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 id="cv-suggestion-heading" className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                    <h3 id="cv-suggestion-heading" className="type-label text-foreground">
                       Suggested for review
                     </h3>
                     <Badge variant="secondary" className="rounded-control capitalize text-[11px]">
@@ -343,13 +345,13 @@ export function CVAIAssistant({
                   </div>
                   <div className="grid gap-3">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Original</p>
+                      <p className="type-label">Original</p>
                       <p className="mt-1 whitespace-pre-wrap rounded-surface bg-secondary/50 p-2.5 text-xs text-foreground">
                         {currentSuggestion.originalText}
                       </p>
                     </div>
                     <div>
-                      <Label htmlFor="assistant-edited-proposal" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <Label htmlFor="assistant-edited-proposal" className="type-label">
                         Proposed — editable
                       </Label>
                       <Textarea
@@ -361,11 +363,11 @@ export function CVAIAssistant({
                     </div>
                   </div>
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Requirement addressed</p>
+                    <p className="type-label">Requirement addressed</p>
                     <p className="mt-0.5 text-xs text-foreground">{requirement?.text}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Evidence used</p>
+                    <p className="type-label">Evidence used</p>
                     <ul className="mt-0.5 space-y-0.5 text-xs text-foreground">
                       {selectedEvidence.filter((item) => currentSuggestion.evidenceIds.includes(item.evidenceId)).map((item) => (
                         <li key={item.evidenceId}>[{item.evidenceId}] {evidenceLabel(item)}</li>
@@ -373,7 +375,7 @@ export function CVAIAssistant({
                     </ul>
                   </div>
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Why this was suggested</p>
+                    <p className="type-label">Why this was suggested</p>
                     <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{currentSuggestion.rationale}</p>
                   </div>
                   {(currentSuggestion.unsupportedClaims.length > 0 || currentSuggestion.warnings.length > 0) && (
@@ -434,7 +436,7 @@ export function CVAIAssistant({
 
       <Card className="border-border bg-card shadow-none">
         <CardHeader className="pb-2.5">
-          <CardTitle className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <CardTitle className="flex items-center gap-2 type-label">
             <Lightbulb className="h-3.5 w-3.5 text-info" />
             Tips for {activeSection}
           </CardTitle>

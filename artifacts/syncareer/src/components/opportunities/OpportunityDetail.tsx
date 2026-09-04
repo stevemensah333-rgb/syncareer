@@ -8,11 +8,12 @@ import {
   DollarSign,
   ExternalLink,
   FileText,
-  Loader2,
   MapPin,
   MessageSquare,
   ShieldQuestion,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { Button } from '@/components/ui/button';
 import {
   experienceLevelLabel,
@@ -188,7 +189,7 @@ export function OpportunityDetail({
           aria-pressed={saved}
         >
           {savingBookmark ? (
-            <Loader2 aria-hidden="true" className="size-5 animate-spin" />
+            <Spinner className="size-5" />
           ) : saved ? (
             <BookmarkCheck aria-hidden="true" className="size-5 text-primary" />
           ) : (
@@ -247,7 +248,7 @@ export function OpportunityDetail({
           </Button>
           <Button variant="outline" className="w-full gap-2" onClick={onTrack} disabled={tracking}>
             {tracking ? (
-              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+              <Spinner className="size-4" />
             ) : (
               <CheckCircle2 aria-hidden="true" className="size-4" />
             )}
@@ -263,7 +264,7 @@ export function OpportunityDetail({
       ) : (
         <Button className="w-full gap-2" onClick={onTrack} disabled={tracking}>
           {tracking ? (
-            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+            <Spinner className="size-4" />
           ) : (
             <Briefcase aria-hidden="true" className="size-4" />
           )}

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link2, ListPlus, Loader2, Plus, Trash2, Unlink } from 'lucide-react';
+import { Link2, ListPlus, Plus, Trash2, Unlink } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -278,7 +280,7 @@ export function DossierRequirementsEvidence({
               Cancel
             </Button>
             <Button type="button" disabled={!linkCandidateId || linkBusy} onClick={submitLink}>
-              {linkBusy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+              {linkBusy && <Spinner className="size-4" />}
               Link evidence
             </Button>
           </DialogFooter>
@@ -324,7 +326,7 @@ export function DossierRequirementsEvidence({
               Cancel
             </Button>
             <Button type="button" disabled={manualBusy || manualLabel.trim().length === 0} onClick={submitManual}>
-              {manualBusy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+              {manualBusy && <Spinner className="size-4" />}
               Add requirement
             </Button>
           </DialogFooter>

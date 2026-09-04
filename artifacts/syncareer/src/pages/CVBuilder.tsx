@@ -153,7 +153,7 @@ const CVBuilder = () => {
     <div className="rounded-surface border border-primary/25 bg-primary/5 p-4 min-w-0">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Tailoring primary CV for</p>
+          <p className="type-label text-primary">Tailoring primary CV for</p>
           <p className="mt-0.5 text-base font-semibold text-foreground">
             {targetRole}{targetCompany ? ` · ${targetCompany}` : ''}
           </p>
@@ -178,7 +178,7 @@ const CVBuilder = () => {
             if (!items.length) return null;
             return (
               <section key={group.title} className="rounded-surface border border-border bg-card p-3 space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{group.title}</p>
+                <p className="type-label">{group.title}</p>
                 <div className="space-y-1.5">
                   {items.map(({ requirement, match }) => (
                     <div key={requirement.requirementId}>

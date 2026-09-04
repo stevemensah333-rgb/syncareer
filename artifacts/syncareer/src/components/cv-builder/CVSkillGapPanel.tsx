@@ -25,7 +25,7 @@ export const CVSkillGapPanel: React.FC<CVSkillGapPanelProps> = ({ result }) => {
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <Briefcase className="h-3 w-3 text-muted-foreground" />
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="type-label">
                 Matched target roles
               </p>
             </div>
@@ -43,7 +43,7 @@ export const CVSkillGapPanel: React.FC<CVSkillGapPanelProps> = ({ result }) => {
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <TrendingUp className="h-3 w-3 text-muted-foreground" />
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="type-label">
                 High-priority skills to build
               </p>
             </div>

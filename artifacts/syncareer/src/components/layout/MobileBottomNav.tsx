@@ -68,8 +68,8 @@ export function MobileBottomNavView({ userType }: { userType?: string | null }) 
               to={tab.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1',
-                'transition-colors duration-150 ease-out active:bg-muted motion-reduce:transition-none',
+                'relative flex min-h-touch min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1',
+                'transition-colors duration-150 ease-standard active:bg-muted motion-reduce:transition-none',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                 isActive ? 'text-primary' : 'text-muted-foreground',
               )}
@@ -94,8 +94,8 @@ export function MobileBottomNavView({ userType }: { userType?: string | null }) 
                 type="button"
                 aria-label="More destinations"
                 className={cn(
-                  'relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1',
-                  'transition-colors duration-150 ease-out hover:bg-muted/60 active:bg-muted motion-reduce:transition-none',
+                  'relative flex min-h-touch min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1',
+                  'transition-colors duration-150 ease-standard hover:bg-muted/60 active:bg-muted motion-reduce:transition-none',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                   moreIsActive ? 'text-primary' : 'text-muted-foreground',
                 )}
@@ -129,8 +129,8 @@ export function MobileBottomNavView({ userType }: { userType?: string | null }) 
                               aria-current={isActive ? 'page' : undefined}
                               onClick={() => setMoreOpen(false)}
                               className={cn(
-                                'flex min-h-11 items-center gap-3 px-3 text-sm',
-                                'transition-colors duration-150 ease-out hover:bg-muted/60 active:bg-muted motion-reduce:transition-none',
+                                'flex min-h-touch items-center gap-3 px-3 text-sm',
+                                'transition-colors duration-150 ease-standard hover:bg-muted/60 active:bg-muted motion-reduce:transition-none',
                                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                                 isActive
                                   ? 'bg-selected font-medium text-selected-foreground'

@@ -110,7 +110,7 @@ export default function AnimatedSection({
   const clampedDelay = reduce ? 0 : Math.min(delay, 0.08);
   const transition = reduce
     ? "none"
-    : `opacity 0.15s ease-out ${clampedDelay}s, transform 0.15s ease-out ${clampedDelay}s`;
+    : `opacity var(--motion-base) var(--ease-standard) ${clampedDelay}s, transform var(--motion-base) var(--ease-standard) ${clampedDelay}s`;
 
   return (
     <div

@@ -3,7 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { CVEditorWorkspace } from '@/components/cv-builder/CVEditorWorkspace';
 import { CVEvidenceShelf } from '@/components/cv-builder/CVEvidenceShelf';
 import {
@@ -292,7 +294,7 @@ export default function ApplicationCVEditor() {
     <div className="rounded-surface border border-primary/25 bg-primary/5 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Application tailoring context</p>
+          <p className="type-label text-primary">Application tailoring context</p>
           <p className="mt-0.5 text-base font-semibold text-foreground">{roleTitle}</p>
           <p className="mt-1 max-w-xl text-xs text-muted-foreground leading-relaxed">
             This is the application&rsquo;s own CV copy. Saving changes only this copy; the base CV stays untouched.
@@ -402,7 +404,7 @@ export default function ApplicationCVEditor() {
             )}
             <div className="flex flex-wrap items-center gap-2">
               <Button disabled={creating || !creationSourceId} onClick={() => void handleCreateCv()} className="rounded-control">
-                {creating && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+                {creating && <Spinner className="size-4" />}
                 Create application CV
               </Button>
               <Button variant="outline" className="rounded-control" asChild>

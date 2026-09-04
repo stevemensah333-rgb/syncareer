@@ -168,7 +168,7 @@ const UsersDashboard = () => {
                   disabled={loading}
                   className="gap-1.5 rounded-full px-4"
                 >
-                  <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`size-3.5 ${loading ? 'animate-spin motion-reduce:animate-none' : ''}`} />
                   Refresh
                 </Button>
               </div>
@@ -239,7 +239,7 @@ const UsersDashboard = () => {
                                 onClick={() => handleToggleAdmin(user)}
                               >
                                 {isTogglingRole ? (
-                                  <RefreshCw className="h-3 w-3 animate-spin" />
+                                  <RefreshCw className="size-3 animate-spin motion-reduce:animate-none" />
                                 ) : user.is_admin ? (
                                   <>
                                     <ShieldOff className="h-3 w-3" />

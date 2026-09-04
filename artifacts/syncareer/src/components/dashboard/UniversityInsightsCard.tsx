@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { GraduationCap, TrendingUp, Loader2 } from 'lucide-react';
+import { GraduationCap, TrendingUp } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface UniversityInsightsCardProps {
@@ -74,7 +76,7 @@ export const UniversityInsightsCard: React.FC<UniversityInsightsCardProps> = ({ 
       <CardContent>
         {loading ? (
           <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Spinner className="size-4" />
             <span className="text-sm">Generating insights...</span>
           </div>
         ) : insights.length > 0 ? (
