@@ -67,7 +67,8 @@ const useRemainingViewportHeight = () => {
         if (!desktop.matches) setHeight(null);
         return;
       }
-      const available = window.innerHeight - element.getBoundingClientRect().top - WORKSPACE_BOTTOM_PADDING;
+      const top = Math.max(element.getBoundingClientRect().top, 56); // clamp when page is scrolled past the workspace
+      const available = window.innerHeight - top - WORKSPACE_BOTTOM_PADDING;
       setHeight(available >= WORKSPACE_MIN_HEIGHT ? Math.floor(available) : null);
     };
 
