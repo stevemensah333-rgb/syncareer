@@ -1192,13 +1192,13 @@ export default function ApplicationDossier() {
       <p aria-live="polite" className="sr-only">
         {inspectorAnnouncement}
       </p>
-      <div
-        className={
-          isCompact
-            ? 'grid gap-4'
-            : 'grid items-start gap-5 xl:grid-cols-[230px_minmax(0,1fr)_330px]'
-        }
-      >
+        <div
+          className={
+            isCompact
+              ? 'grid gap-4 min-w-0'
+              : 'grid items-start gap-5 xl:grid-cols-[230px_minmax(0,1fr)_330px] min-w-0'
+          }
+        >
         {!isCompact && (
           <div className="hidden xl:sticky xl:top-4 xl:block xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:overscroll-contain">
             <DossierIndexNav

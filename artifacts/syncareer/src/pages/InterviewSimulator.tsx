@@ -259,7 +259,7 @@ const InterviewSimulator = () => {
                           key={application.id}
                           type="button"
                           variant={isSelected ? 'default' : 'outline'}
-                          className="h-auto justify-start whitespace-normal text-left rounded-control text-xs p-2.5"
+                          className="h-auto justify-start text-left rounded-control text-xs p-2.5 min-w-0"
                           onClick={() => {
                             setSelectedApplicationId(application.id);
                             setConfig((prev) => ({

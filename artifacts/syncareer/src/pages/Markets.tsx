@@ -542,11 +542,11 @@ const Opportunities = () => {
             </Button>
           </form>
 
-          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 min-w-0">
             <p
               key={searchFeedback}
               aria-live="polite"
-              className={cn('type-meta animate-fade-in motion-reduce:animate-none', 'pr-1')}
+              className={cn('type-meta animate-fade-in motion-reduce:animate-none', 'pr-1 min-w-0')}
             >
               {searchFeedback}
             </p>
@@ -564,7 +564,7 @@ const Opportunities = () => {
 
           {/* Active filters as removable chips — progressive disclosure, not a filter wall */}
           {activeFilterCount > 0 && (
-            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5 min-w-0">
               {locationFilter && (
                 <FilterChip label={`Location · ${locationFilter}`} onRemove={() => removeChip('location')} />
               )}

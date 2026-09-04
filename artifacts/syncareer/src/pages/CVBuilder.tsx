@@ -150,7 +150,7 @@ const CVBuilder = () => {
   const [dismissedTargetSkills, setDismissedTargetSkills] = useState<string[]>([]);
 
   const contextBanner = (targetRole || opportunityContext) && initialCv ? (
-    <div className="rounded-surface border border-primary/25 bg-primary/5 p-4">
+    <div className="rounded-surface border border-primary/25 bg-primary/5 p-4 min-w-0">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">Tailoring primary CV for</p>
