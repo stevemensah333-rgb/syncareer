@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link2, Loader2, Unlink } from 'lucide-react';
+import { Link2, Unlink } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EvidenceReference, EvidenceStamp, RecordState } from '@/components/dossier';
@@ -186,7 +188,7 @@ export function CVEvidenceShelf({ items, sources, resumeLinks, resumeId, cvData,
                     </Select>
                     <div className="flex items-center gap-2">
                       <Button type="button" size="sm" disabled={rowBusy || !pickedEntry} onClick={submitAttach} className="rounded-control text-xs">
-                        {rowBusy && <Loader2 aria-hidden="true" className="mr-1 h-3.5 w-3.5 animate-spin motion-reduce:animate-none" />}
+                        {rowBusy && <Spinner className="mr-1 size-3.5" />}
                         <Link2 aria-hidden="true" className="mr-1 h-3.5 w-3.5" />
                         Attach
                       </Button>

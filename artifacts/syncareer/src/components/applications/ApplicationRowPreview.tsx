@@ -17,9 +17,9 @@ import {
   getOrganisation,
   getProvenanceFacts,
 } from '@/features/opportunities/opportunity';
-import { STATUS_COLORS } from '@/features/application-tracker/constants';
+import { Badge } from '@/components/ui/badge';
+import { STATUS_BADGE_VARIANT } from '@/features/application-tracker/constants';
 import type { TrackedApplication } from './ApplicationDetailSheet';
-import { cn } from '@/lib/utils';
 
 interface ApplicationRowPreviewProps {
   application: TrackedApplication;
@@ -61,14 +61,12 @@ export function ApplicationRowPreview({ application, hasCv, children }: Applicat
               <p className="text-sm font-semibold leading-tight truncate">
                 {job?.title || 'Tracked application'}
               </p>
-              <span
-                className={cn(
-                  'shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium',
-                  STATUS_COLORS[application.status] ?? 'bg-muted text-muted-foreground',
-                )}
+              <Badge
+                variant={STATUS_BADGE_VARIANT[application.status] ?? 'soft-neutral'}
+                className="shrink-0"
               >
                 {statusLabel(application.status)}
-              </span>
+              </Badge>
             </div>
             {organisation && <p className="text-xs text-muted-foreground">{organisation}</p>}
           </div>

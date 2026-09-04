@@ -66,7 +66,7 @@ export const CVFormSkills: React.FC<CVFormSkillsProps> = ({ skills, onChange }) 
 
         {skills.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your listed skills ({skills.length}):</p>
+            <p className="type-label">Your listed skills ({skills.length}):</p>
             <div className="flex flex-wrap gap-2">
               {skills.map((skill) => (
                 <Badge
@@ -90,7 +90,7 @@ export const CVFormSkills: React.FC<CVFormSkillsProps> = ({ skills, onChange }) 
         )}
 
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recommended skills for career readiness:</p>
+          <p className="type-label">Recommended skills for career readiness:</p>
           <div className="flex flex-wrap gap-2">
             {SUGGESTED_SKILLS
               .filter((skill) => !skills.includes(skill))

@@ -7,7 +7,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Upload, FileText, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import type { AnalysisStatus } from '@/hooks/useCVAnalysis';
 
 interface CVUploadDialogProps {
@@ -97,7 +99,7 @@ export const CVUploadDialog: React.FC<CVUploadDialogProps> = ({
           </div>
         ) : isBusy ? (
           <div className="py-10 text-center space-y-3">
-            <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+            <Spinner className="mx-auto size-8 text-primary" />
             <p className="text-sm font-medium text-foreground">
               {status === 'uploading' ? 'Reading your file…' : 'Analyzing your CV…'}
             </p>

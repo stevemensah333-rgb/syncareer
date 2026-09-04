@@ -161,7 +161,7 @@ export function CareerOutlookTab({ data }: Props) {
 
         <Card className="border-border/50 bg-muted/30">
           <CardContent className="pt-4 space-y-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <p className="type-label">
               Data Methodology
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">

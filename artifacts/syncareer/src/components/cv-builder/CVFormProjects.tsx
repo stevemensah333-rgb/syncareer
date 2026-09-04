@@ -208,7 +208,7 @@ export const CVFormProjects: React.FC<CVFormProjectsProps> = ({
                 {/* Bullets */}
                 <div className="space-y-3 pt-1">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <Label className="type-label">
                       Key Technical Objectives, Tools Used & Results
                     </Label>
                     <Button

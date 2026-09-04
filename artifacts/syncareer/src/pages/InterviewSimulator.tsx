@@ -225,7 +225,7 @@ const InterviewSimulator = () => {
               <CardContent className="space-y-4">
                 {/* Practice Context Selection */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Label className="type-label">
                     Practice context
                   </Label>
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -338,7 +338,7 @@ const InterviewSimulator = () => {
 
                 {/* Session Length Cards */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Label className="type-label">
                     Session length & scope
                   </Label>
                   <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">

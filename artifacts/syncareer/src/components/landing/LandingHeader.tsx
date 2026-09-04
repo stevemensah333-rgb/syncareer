@@ -61,7 +61,7 @@ export default function LandingHeader({
 
   return (
     <header
-      className={`sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 transition-shadow duration-200 ${
+      className={`sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 transition-shadow duration-150 ${
         scrolled ? "shadow-[0_1px_3px_0_rgba(16,24,40,0.04)]" : ""
       }`}
     >

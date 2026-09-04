@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
+import { Spinner } from '@/components/ui/spinner';
 
 interface AdminRouteProps {
   children: React.ReactNode;
@@ -39,7 +40,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
   if (!isLoaded || (supabaseUserId && isLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <Spinner className="size-8 text-primary" role="status" aria-label="Loading" />
       </div>
     );
   }

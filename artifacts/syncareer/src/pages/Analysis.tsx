@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Spinner } from '@/components/ui/spinner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GraduationCap, RefreshCw, AlertCircle, BarChart3, TrendingUp, Download } from 'lucide-react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
@@ -43,7 +44,7 @@ const Analysis = () => {
       <PageLayout title="Market Analysis">
         <div className="flex items-center justify-center h-64">
           <div className="text-center space-y-2">
-            <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <Spinner className="mx-auto size-6 text-primary" />
             <p className="text-sm text-muted-foreground">Loading your profile...</p>
           </div>
         </div>
@@ -131,7 +132,7 @@ const Analysis = () => {
                   disabled={loading}
                   className="gap-1.5"
                 >
-                  <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                  <RefreshCw className={`size-3.5 ${loading ? "animate-spin motion-reduce:animate-none" : ""}`} />
                   <span className="hidden sm:inline">Refresh</span>
                 </Button>
               </div>

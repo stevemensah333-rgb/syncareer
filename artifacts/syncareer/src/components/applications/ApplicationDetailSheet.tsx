@@ -6,10 +6,11 @@ import {
   Check,
   ExternalLink,
   FileText,
-  Loader2,
   MessageSquare,
   Trash2,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +42,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
-import { formatShortDate, getDaysAgo, STATUS_COLORS } from '@/features/application-tracker/constants';
+import { formatShortDate, getDaysAgo, STATUS_BADGE_VARIANT } from '@/features/application-tracker/constants';
 import {
   APPLICATION_NOTES_MAX,
   buildJourney,
@@ -110,7 +111,7 @@ interface ApplicationDetailSheetProps {
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</h3>;
+  return <h3 className="type-label">{children}</h3>;
 }
 
 /**
@@ -196,14 +197,12 @@ export function ApplicationDetailSheet({
                 </div>
               </SheetDescription>
             </div>
-            <span
-              className={cn(
-                'shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium',
-                STATUS_COLORS[application.status] ?? 'bg-muted text-muted-foreground',
-              )}
+            <Badge
+              variant={STATUS_BADGE_VARIANT[application.status] ?? 'soft-neutral'}
+              className="shrink-0"
             >
               {statusLabel(application.status)}
-            </span>
+            </Badge>
           </div>
           <p className="text-xs text-muted-foreground">
             Applied {formatShortDate(application.created_at)} · Last update {getDaysAgo(application.updated_at).toLowerCase()}
@@ -295,7 +294,7 @@ export function ApplicationDetailSheet({
           {/* Next recommended action */}
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="p-4 space-y-1.5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
+              <p className="type-label text-primary">
                 Recommended next step
               </p>
               <p className="text-sm font-medium">{nextAction.title}</p>
@@ -399,7 +398,7 @@ export function ApplicationDetailSheet({
                 disabled={!notesDirty || savingNotes}
                 onClick={() => onSaveNotes(notesDraft)}
               >
-                {savingNotes ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                {savingNotes ? <Spinner className="size-3.5" /> : <Check className="h-3.5 w-3.5" />}
                 {savingNotes ? 'Saving…' : 'Save notes'}
               </Button>
             </div>
@@ -436,7 +435,7 @@ export function ApplicationDetailSheet({
             </Select>
             {savingStatus && (
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Spinner className="size-3" />
                 Saving status…
               </p>
             )}
@@ -476,7 +475,7 @@ export function ApplicationDetailSheet({
           <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" size="sm" className="text-destructive gap-1.5" disabled={deleting}>
-                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                {deleting ? <Spinner className="size-4" /> : <Trash2 className="h-4 w-4" />}
                 Remove
               </Button>
             </AlertDialogTrigger>

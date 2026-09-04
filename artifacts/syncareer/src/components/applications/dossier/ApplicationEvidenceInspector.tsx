@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
-import { FileText, Loader2, Mic2 } from 'lucide-react';
+import { FileText, Mic2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { Button } from '@/components/ui/button';
 import type { DossierEvidenceData } from '@/features/application-dossier/dossier';
 import { buildRequirementThreads } from '@/features/evidence/dossierViewModel';
@@ -359,7 +361,7 @@ function buildBody({
               disabled={confirmBusy}
               onClick={() => void onConfirmEvidence(item.id)}
             >
-              {confirmBusy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+              {confirmBusy && <Spinner className="size-4" />}
               Confirm evidence
             </Button>
           )}

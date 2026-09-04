@@ -38,7 +38,10 @@ describe('motion inventory', () => {
     expect(css).toMatch(/--motion-slow:\s*180ms/);
     expect(css).toMatch(/--motion-panel:\s*200ms/);
     expect(css).toContain('--ease-standard: cubic-bezier(0.2, 0, 0, 1)');
-    expect(tailwind).toContain("'fade-in': 'fade-in 150ms ease-out'");
+    expect(tailwind).toContain(
+      "'fade-in': 'fade-in var(--motion-base) var(--ease-standard)'",
+    );
+    expect(tailwind).toContain("standard: 'var(--ease-standard)'");
     expect(tailwind).not.toContain('zoom-in-95');
   });
 

@@ -65,7 +65,7 @@ export function OnboardingShell({
             <div className="mt-6" aria-label={`Onboarding progress: step ${currentStep} of ${totalSteps}`}>
               <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out motion-reduce:transition-none"
+                  className="h-full rounded-pill bg-primary transition-[width] duration-150 ease-standard motion-reduce:transition-none"
                   style={{ width: `${progress}%` }}
                 />
               </div>

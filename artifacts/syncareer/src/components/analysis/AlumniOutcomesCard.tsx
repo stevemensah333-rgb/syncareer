@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Loader2, ExternalLink, Building2, RefreshCw } from 'lucide-react';
+import { GraduationCap, ExternalLink, Building2, RefreshCw } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
@@ -65,7 +67,7 @@ export const AlumniOutcomesCard: React.FC<Props> = ({ university, major, region 
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={fetchOutcomes} disabled={loading} className="gap-1.5">
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin motion-reduce:animate-none' : ''}`} />
             Refresh
           </Button>
         </div>
@@ -74,7 +76,7 @@ export const AlumniOutcomesCard: React.FC<Props> = ({ university, major, region 
       <CardContent className="space-y-5">
         {loading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Spinner className="size-4" />
             Researching alumni outcomes…
           </div>
         )}
@@ -91,7 +93,7 @@ export const AlumniOutcomesCard: React.FC<Props> = ({ university, major, region 
 
             {data.top_employers?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Top employers</p>
+                <p className="type-label mb-2">Top employers</p>
                 <div className="grid sm:grid-cols-2 gap-2">
                   {data.top_employers.slice(0, 8).map((e: Employer, i: number) => (
                     <div key={i} className="rounded-lg border p-3">
@@ -114,7 +116,7 @@ export const AlumniOutcomesCard: React.FC<Props> = ({ university, major, region 
 
             {data.common_roles?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Common first jobs</p>
+                <p className="type-label mb-2">Common first jobs</p>
                 <div className="flex flex-wrap gap-1.5">
                   {data.common_roles.map((r: Role, i: number) => (
                     <Badge
@@ -131,14 +133,14 @@ export const AlumniOutcomesCard: React.FC<Props> = ({ university, major, region 
 
             {data.salary_observations && (
               <div className="rounded-lg bg-muted/40 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Salary signal</p>
+                <p className="type-label mb-1">Salary signal</p>
                 <p className="text-sm">{data.salary_observations}</p>
               </div>
             )}
 
             {data.sources?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Sources</p>
+                <p className="type-label mb-2">Sources</p>
                 <div className="flex flex-col gap-1">
                   {data.sources.slice(0, 5).map((s: Source, i: number) => (
                     <a

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertCircle, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
+import { AlertCircle, ArrowRight, RefreshCw } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { supabase } from '@/integrations/supabase/client';
 import { getHomeRouteForRole } from '@/components/auth/RoleRoute';
 import { getSafeReturnTo } from '@/components/auth/authUtils';
@@ -379,7 +381,7 @@ const Onboarding = () => {
       <OnboardingShell eyebrow="Account setup" title="Loading your profile" subtitle="We’re checking your saved details before you continue.">
         <Card aria-busy="true">
           <CardContent className="flex min-h-32 items-center justify-center gap-3 p-6" role="status" aria-live="polite">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+            <Spinner className="size-5 text-primary" />
             <span className="text-sm text-muted-foreground">Loading account setup…</span>
           </CardContent>
         </Card>
@@ -547,7 +549,7 @@ const Onboarding = () => {
             <Button type="submit" disabled={saving} aria-busy={saving} className="gap-2 sm:min-w-40">
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  <Spinner className="size-4" />
                   Saving profile…
                 </>
               ) : (

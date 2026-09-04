@@ -113,7 +113,7 @@ export const CVStrengthScore: React.FC<CVStrengthScoreProps> = ({ result }) => {
 
         {strengths.length > 0 && (
           <div className="space-y-2">
-            <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h4 className="flex items-center gap-1.5 type-label">
               <CheckCircle2 className="h-3.5 w-3.5 text-success" />
               Identified strengths
             </h4>
@@ -129,7 +129,7 @@ export const CVStrengthScore: React.FC<CVStrengthScoreProps> = ({ result }) => {
 
         {suggestions.length > 0 && (
           <div className="space-y-2">
-            <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h4 className="flex items-center gap-1.5 type-label">
               <TrendingUp className="h-3.5 w-3.5 text-warning" />
               Suggested improvements
             </h4>

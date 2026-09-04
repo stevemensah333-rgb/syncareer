@@ -6,9 +6,10 @@ import {
   BookmarkCheck,
   CheckCircle2,
   ExternalLink,
-  Loader2,
   MapPin,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { Button } from '@/components/ui/button';
 import { CompanyLogo } from './CompanyLogo';
 import { DeadlinePill } from './DeadlinePill';
@@ -201,7 +202,7 @@ export const OpportunityCard = memo(function OpportunityCard({
           aria-pressed={saved}
         >
           {saving ? (
-            <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+            <Spinner className="size-4" />
           ) : saved ? (
             <BookmarkCheck aria-hidden="true" className="size-4 text-primary" />
           ) : (
@@ -257,7 +258,7 @@ function OpportunityPrimaryAction({
     return (
       <Button size="sm" variant="outline" className="gap-1.5" onClick={onTrack} disabled={tracking}>
         {tracking ? (
-          <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+          <Spinner className="size-4" />
         ) : (
           <CheckCircle2 aria-hidden="true" className="size-4" />
         )}
@@ -274,7 +275,7 @@ function OpportunityPrimaryAction({
       aria-label="Apply with Syncareer"
     >
       {tracking ? (
-        <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+        <Spinner className="size-4" />
       ) : (
         <Briefcase aria-hidden="true" className="size-4" />
       )}

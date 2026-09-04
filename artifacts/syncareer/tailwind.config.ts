@@ -52,6 +52,14 @@ export default {
 					foreground: 'hsl(var(--primary-foreground))',
 					hover: 'hsl(var(--primary-hover))',
 				},
+				// Brand = the cobalt action colour. Same values as `primary`;
+				// the separate name is for chrome and brand marks, so "brand"
+				// is never mistaken for "the default button variant".
+				brand: {
+					DEFAULT: 'hsl(var(--brand))',
+					foreground: 'hsl(var(--brand-foreground))',
+					hover: 'hsl(var(--brand-hover))',
+				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
@@ -118,10 +126,37 @@ export default {
 				'surface-lg': 'var(--radius-surface-lg)',
 				overlay: 'var(--radius-overlay)',
 				document: 'var(--radius-document)',
+				// Badges, avatars, progress bars and status dots only. Never
+				// on buttons, inputs, cards or panels.
+				pill: 'var(--radius-pill)',
+			},
+			// Control heights come from tokens so a button, input, select and
+			// toggle on the same row are guaranteed to line up.
+			height: {
+				control: 'var(--control-height)',
+				'control-sm': 'var(--control-height-sm)',
+				'control-lg': 'var(--control-height-lg)',
+			},
+			width: {
+				control: 'var(--control-height)',
+				'control-sm': 'var(--control-height-sm)',
+				'control-lg': 'var(--control-height-lg)',
+			},
+			minHeight: {
+				control: 'var(--control-height)',
+				touch: 'var(--touch-min)',
+			},
+			minWidth: {
+				touch: 'var(--touch-min)',
 			},
 			transitionDuration: {
 				fast: 'var(--motion-fast)',
 				panel: 'var(--motion-panel)',
+			},
+			// One easing curve. Tailwind's built-in `ease-out` keyword is a
+			// different curve, so shared controls use `ease-standard`.
+			transitionTimingFunction: {
+				standard: 'var(--ease-standard)',
 			},
 			keyframes: {
 				'accordion-down': {
@@ -157,13 +192,15 @@ export default {
 					'100%': { transform: 'translateY(0)', opacity: '1' }
 				}
 			},
+			// Overlay/entrance animations run on the same 120–180ms scale and
+			// the same curve as control transitions.
 			animation: {
-				'accordion-down': 'accordion-down 150ms ease-out',
-				'accordion-up': 'accordion-up 150ms ease-out',
-				'fade-in': 'fade-in 150ms ease-out',
-				'fade-out': 'fade-out 150ms ease-out',
-				'slide-up': 'slide-up 180ms ease-out',
-				'slide-down': 'slide-down 180ms ease-out'
+				'accordion-down': 'accordion-down var(--motion-base) var(--ease-standard)',
+				'accordion-up': 'accordion-up var(--motion-base) var(--ease-standard)',
+				'fade-in': 'fade-in var(--motion-base) var(--ease-standard)',
+				'fade-out': 'fade-out var(--motion-base) var(--ease-standard)',
+				'slide-up': 'slide-up var(--motion-slow) var(--ease-standard)',
+				'slide-down': 'slide-down var(--motion-slow) var(--ease-standard)'
 			},
 			// Minimal, restrained elevation. Content surfaces are flat and
 			// bordered; only genuinely elevated things (overlays, dragged

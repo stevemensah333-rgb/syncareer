@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, FileText, Loader2, MessageSquare, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, MessageSquare, RotateCcw } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -748,7 +750,7 @@ export default function ApplicationDossier() {
               void handleWorkspace({ next_action: nextAction, next_action_due: nextAction.trim() ? due || null : null })
             }
           >
-            {workspaceState === 'saving' && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+            {workspaceState === 'saving' && <Spinner className="size-4" />}
             Save next action
           </Button>
           <SaveMessage state={workspaceState} />
@@ -798,7 +800,7 @@ export default function ApplicationDossier() {
           )}
           <div>
             <Button size="sm" disabled={!notesDirty || notesState === 'saving' || !application} onClick={() => void handleNotes()}>
-              {notesState === 'saving' && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+              {notesState === 'saving' && <Spinner className="size-4" />}
               {notesState === 'failed' && <RotateCcw aria-hidden="true" className="h-4 w-4" />}
               {notesState === 'failed' ? 'Retry save' : 'Save notes'}
             </Button>
@@ -935,7 +937,7 @@ export default function ApplicationDossier() {
           </Select>
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" disabled={cvBusy || !cvSourceId} onClick={() => void handleCreateApplicationCv()}>
-              {cvBusy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />}
+              {cvBusy && <Spinner className="size-4" />}
               Create application CV
             </Button>
             <Button size="sm" variant="outline" asChild>
@@ -1020,7 +1022,7 @@ export default function ApplicationDossier() {
                 <li key={request.id} className="py-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium">{request.mentor_name ?? 'Mentor'}</span>
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground">{request.status}</span>
+                    <span className="type-meta">{request.status}</span>
                   </div>
                   <p className="mt-1 line-clamp-2 text-muted-foreground">{request.goal}</p>
                 </li>

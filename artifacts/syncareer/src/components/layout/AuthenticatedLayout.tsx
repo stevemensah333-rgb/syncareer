@@ -50,7 +50,7 @@ export function AuthenticatedLayout({
       {!isMobile && (
         <div
           className={cn(
-            'fixed inset-y-0 left-0 z-40 transition-[width] duration-150 ease-out motion-reduce:transition-none',
+            'fixed inset-y-0 left-0 z-40 transition-[width] duration-150 ease-standard motion-reduce:transition-none',
             isCollapsed ? 'w-[68px]' : 'w-64',
           )}
         >
@@ -75,7 +75,7 @@ export function AuthenticatedLayout({
         id="main-content"
         tabIndex={-1}
         className={cn(
-          'min-h-screen pt-14 transition-[margin] duration-150 ease-out focus:outline-none motion-reduce:transition-none',
+          'min-h-screen pt-14 transition-[margin] duration-150 ease-standard focus:outline-none motion-reduce:transition-none',
           !isMobile && (isCollapsed ? 'ml-[68px]' : 'ml-64'),
           isMobile && 'pb-[calc(3.75rem+env(safe-area-inset-bottom,0px))]',
         )}

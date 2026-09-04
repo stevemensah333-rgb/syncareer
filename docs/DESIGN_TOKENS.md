@@ -45,11 +45,36 @@ or radii.
 | `--selected` | selected row/object fill | `221 55% 95%` |
 | `--error` | alias of `--destructive` | `0 72% 51%` |
 
-Named aliases for the same palette (not a second theme): `--canvas`,
-`--surface`, `--surface-secondary`, `--surface-elevated`, `--text`,
-`--text-secondary`, `--text-muted`, `--foreground-secondary`. Tailwind maps
-`bg-canvas`, `bg-surface`, `bg-surface-elevated`, `border-border-subtle`,
-`bg-primary-hover`, `bg-selected`, `bg-error`.
+### The sixteen semantic roles
+
+Every surface in the product may use exactly these roles. Each named alias is a
+`var()` reference to the palette value above, so a role can never drift from the
+colour it names.
+
+| Role | Token | Tailwind |
+|---|---|---|
+| application canvas | `--canvas` | `bg-canvas` / `bg-background` |
+| primary surface | `--surface` | `bg-surface` / `bg-card` |
+| secondary surface | `--surface-secondary` | `bg-surface-secondary` / `bg-secondary` |
+| elevated / focused surface | `--surface-elevated` | `bg-surface-elevated` / `bg-popover` |
+| primary text | `--text` | `text-foreground` |
+| secondary text | `--text-secondary` | `text-foreground-secondary` |
+| muted text | `--text-muted` | `text-muted-foreground` |
+| border | `--border` | `border-border` |
+| subtle border | `--border-subtle` | `border-border-subtle` |
+| brand | `--brand` | `bg-brand` / `text-brand` |
+| brand hover | `--brand-hover` | `bg-brand-hover` |
+| selected | `--selected` | `bg-selected` / `text-selected-foreground` |
+| success | `--success` | `bg-success` / `text-success` |
+| warning | `--warning` | `bg-warning` / `text-warning` |
+| error | `--error` | `bg-error` / `text-error` |
+| informational | `--info` | `bg-info` / `text-info` |
+
+`--brand` is `var(--primary)`: the cobalt action colour *is* the Syncareer brand
+colour. The separate name exists so chrome and brand marks can say "brand"
+without reading as "the default button variant". `--foreground-secondary` is a
+retained alias of `--text-secondary`. Other retained aliases: `bg-error`,
+`bg-primary-hover`.
 
 `--info` is exposed as the Tailwind `info` color for badges/alerts; `--accent`
 is a pale contextual lavender surface. Generic navigation, menus, and row
@@ -83,9 +108,13 @@ Uppercase micro-labels are limited to `.eyebrow` (and its alias
 | `--radius-pill` | badges, avatars, progress only | `9999px` |
 
 Exposed to Tailwind as `rounded-control`, `rounded-input`, `rounded-surface`,
-`rounded-surface-lg`, `rounded-overlay`, `rounded-document`. Prefer these over
-ad-hoc `rounded-2xl` etc. Do not use pill radii on buttons, inputs, cards, or
-panels.
+`rounded-surface-lg`, `rounded-overlay`, `rounded-document` and `rounded-pill`.
+Prefer these over ad-hoc `rounded-2xl` etc. Do not use pill radii on buttons,
+inputs, cards, or panels.
+
+Checkboxes use `rounded-sm` (`calc(var(--radius) - 4px)`): `--radius-control` is
+too round on a 16px box. Radios, switches, badges, avatars, progress bars and
+status dots use `rounded-pill`.
 
 ## Surfaces & elevation
 
@@ -109,6 +138,16 @@ repeating `mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8`.
 Numeric scale: `--space-1` (4px) through `--space-16` (64px), plus
 `--control-height` (40px), `--control-height-sm` (36px), `--control-height-lg`
 (44px), and `--touch-min` (44px).
+
+Control heights are exposed to Tailwind so a button, input, select, tab list and
+toggle on the same row are guaranteed to line up:
+
+| Utility | Token | Use |
+|---|---|---|
+| `h-control` / `w-control` | `--control-height` | default buttons, inputs, selects, tab lists, icon buttons |
+| `h-control-sm` | `--control-height-sm` | compact buttons and toggles, overlay close buttons |
+| `h-control-lg` | `--control-height-lg` | large buttons and toggles |
+| `min-h-touch` | `--touch-min` | any target reachable on touch (mobile nav) |
 
 Layout primitives (structural, not a second visual theme):
 
@@ -138,28 +177,99 @@ Discover and Advance must not become documents.
 
 ## Iconography
 
-`lucide-react` is the single icon system. Use Tailwind `size-*`:
-`size-3.5` dense/badges, `size-4` default, `size-5` section headers, `size-6`
-empty-state illustrations. Buttons/badges force their own icon size, so callers
-should not re-specify it. Decorative icons carry `aria-hidden="true"`.
+`lucide-react` is the single icon system, at its default 24px viewBox and
+`stroke-width="2"` — never restroked per call site. Use Tailwind `size-*`, never
+an `h-`/`w-` pair:
+
+| Utility | Use |
+|---|---|
+| `size-3` | dense status dots, inline refresh affordances |
+| `size-3.5` | badges, dense metadata rows, compact buttons |
+| `size-4` | **default** — buttons, inputs, list rows, navigation |
+| `size-5` | section headers and standalone affordances |
+| `size-6` | empty-state and status illustrations |
+
+Buttons, badges and alerts force their own icon size (`[&_svg]:size-4`,
+`[&_svg]:size-3`), so callers must not re-specify it. Icons are inline-flex
+siblings with `shrink-0`, so they cannot be squeezed by a truncating label.
+Decorative icons carry `aria-hidden="true"`; an icon-only control carries an
+`aria-label` instead.
+
+## Shared control system
+
+One implementation per control, in `src/components/ui/`. `designSystem.test.tsx`
+and `tokenConsumption.test.ts` lock the shared vocabulary; a control that
+diverges fails the suite.
+
+| Control | Radius | Height | Surface |
+|---|---|---|---|
+| Button / IconButton | `rounded-control` | `h-control` (`-sm` / `-lg`, square for icon) | variant |
+| Input, Textarea | `rounded-input` | `h-control` | `bg-card` |
+| Select trigger | `rounded-input` | `h-control` | `bg-card` |
+| Checkbox | `rounded-sm` | `size-4` | `border-primary` |
+| Radio | `rounded-pill` | `size-4` | `border-primary` |
+| Switch | `rounded-pill` | `h-6 w-11` | `bg-input` unchecked |
+| Tabs list / trigger | `rounded-control` / inset | `h-control` | `bg-muted` / `bg-card` |
+| Toggle | `rounded-control` | `h-control` (`-sm` / `-lg`) | `bg-selected` when on |
+| Badge | `rounded-pill` | intrinsic | variant (`soft-*` for inline status) |
+| Menu / select item | `rounded-control` | intrinsic | `focus:bg-muted` |
+| Dialog, Sheet, Drawer, Popover, Tooltip, Toast | `rounded-overlay` / `rounded-surface` | — | `bg-card` / `bg-popover` |
+| Progress | `rounded-pill` | `h-4` | `bg-secondary` track |
+| Skeleton | `rounded-control` | intrinsic | `bg-muted` |
+
+Every control shares: `focus-visible:ring-2 ring-ring ring-offset-2` (never a
+bare `focus:` ring, so mouse clicks do not draw a ring), `duration-150
+ease-standard`, `motion-reduce:transition-none`, `disabled:opacity-50` with
+`pointer-events-none` where the control can still receive pointer events, and
+`aria-invalid:border-destructive` on text entry. Hover and focus land on
+`--muted` / `--selected`, never on lavender `--accent`. Overlay motion is
+opacity and transform only — dialogs fade, they do not scale; drawers never
+scale the page (`shouldScaleBackground = false`).
+
+Text inputs, selects and textareas all sit on `bg-card`. They used to disagree
+(`Input` white, `Select`/`Textarea` canvas-tinted), which made the same form
+render two different field surfaces.
+
+**Status colour lives in `Badge`.** Application status is rendered with
+`STATUS_BADGE_VARIANT` → `soft-warning` / `soft-primary` / `soft-neutral` /
+`soft-success` / `soft-destructive` / `success`. The previous `STATUS_COLORS`
+map was a page-local palette of raw `bg-*` / `text-*` strings and is gone;
+`MentorshipRequests` and `NotificationItem` hand-rolled the same idea and now
+use `Badge` too.
+
+**One busy indicator.** `Spinner` (`ui/spinner.tsx`) is the only generic loading
+animation. It is decorative (`aria-hidden`) by default so an inline spinner
+inside a button does not announce "Loading" on top of the button's own label;
+callers pass `role="status"` and a label when it stands alone. The five
+hand-rolled CSS border-ring spinners (`LoadingFallback`, `AdminRoute`,
+`RoleRoute`, `NotificationsDropdown`, `Analysis`) and 33 `<Loader2 …
+animate-spin>` call sites now use it. A `RefreshCw` that spins while refetching
+is *not* a generic spinner and stays, but it must carry
+`motion-reduce:animate-none` like everything else that animates.
 
 ## States
 
 `.interactive` supplies the shared hover / active / focus vocabulary to bespoke
-clickable rows and tiles. State classes: `.is-selected` (left rule +
-`--selected` tint), `.is-pressed`, `.is-disabled`, `.is-loading`, `.is-error`,
-`.is-success`. Radix/shadcn controls already implement these natively.
+clickable rows and tiles (5 call sites). The rest is shared vocabulary for
+bespoke rows, cards and tiles that cannot use a primitive: `.is-selected` (left
+rule + `--selected` tint), `.is-pressed`, `.is-disabled`, `.is-loading`,
+`.is-error`, `.is-warning`, `.is-success`. Radix/shadcn controls implement all
+nine natively; prefer a primitive over an `is-*` class.
 
-Icon-only actions use `Button size="icon"` or `IconButton`. Shared controls
-(Button, Input, Select, Checkbox, Radio, Switch, Tabs, Badge, Tooltip,
-Dropdown, Dialog, Sheet, Toast, Progress, Skeleton) hover and focus on muted /
-selected surfaces, not lavender `--accent`. Overlay motion is opacity and
-transform only — dialogs fade, they do not scale.
+Icon-only actions use `Button size="icon"` or `IconButton`, and must carry an
+`aria-label`.
 
 Motion tokens: `--motion-fast` 120ms, `--motion-base` 150ms, `--motion-slow`
 180ms, `--motion-panel` 200ms, `--ease-standard` `cubic-bezier(0.2, 0, 0, 1)`.
 Tailwind: `duration-150`, `duration-fast`, `duration-panel`. No spring easing;
 `prefers-reduced-motion` collapses motion globally.
+
+**One easing curve.** Tailwind's built-in `ease-out` keyword is
+`cubic-bezier(0, 0, 0.58, 1)` — a different curve from `--ease-standard`. Shared
+controls therefore use the `ease-standard` utility, and the built-in
+`animate-*` entries in `tailwind.config.ts` reference `var(--motion-*)` and
+`var(--ease-standard)` rather than hard-coded values. `tokenConsumption.test.ts`
+fails if `ease-out` reappears outside `components/ui/`.
 
 Shared motion classes: `.route-enter` (page continuity), `.interview-question-enter`
 (question change), `.cv-section-body` (section expand via `grid-template-rows`),
@@ -167,6 +277,33 @@ Shared motion classes: `.route-enter` (page continuity), `.interview-question-en
 `.scroll-reveal` (CSS `animation-timeline: view()` when supported, 8px rise).
 Hover lift on Discover objects is limited to `(hover: hover) and (pointer: fine)`
 and 1px — never the only way to act. Drawers do not scale the page background.
+
+## Legacy primitives left in place
+
+These `ui/` files have **no importer outside `components/ui/`** and were not
+migrated or deleted in the token work (removal is a separate, approved step).
+They still carry pre-token styling — `rounded-md`, `duration-100`/`duration-200`,
+`focus:` rings — so they are excluded from the control-system tests:
+
+`button-group` · `calendar` · `carousel` · `chart` · `collapsible` · `command` ·
+`context-menu` · `empty` · `field` · `form` · `input-group` · `input-otp` ·
+`item` · `kbd` · `menubar` · `navigation-menu` · `pagination` · `resizable` ·
+`separator` · `slider`
+
+Aligned anyway, because they are reachable from a shared component or named in
+the control inventory: `accordion` (one page), `breadcrumb` (one page),
+`hover-card` (via `contextual-preview`), `drawer`, `toggle`, `toggle-group`.
+
+`scroll-area` and `table` each have one importer and are data/layout primitives
+rather than controls, so they were left as-is. `input-otp`, `item` and
+`navigation-menu` are the only remaining files carrying off-scale durations
+(`duration-100`, `duration-200`); they are unused, and the motion tests scope
+themselves to code that ships.
+
+`body.compact-view` rules at the bottom of `index.css` are also untouched: they
+are a settings feature implemented as global overrides with
+`[class*="CardHeader"]` selectors, and reconciling them with the surface
+primitives is a behaviour change, not a token change.
 
 ## Dossier rule
 

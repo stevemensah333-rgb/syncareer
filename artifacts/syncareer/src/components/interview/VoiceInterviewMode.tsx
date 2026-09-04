@@ -228,13 +228,13 @@ export function VoiceInterviewMode({
                 assessed.map(({ pair, checks }, index) => (
                   <article key={`${pair.question}-${index}`} className="p-4 space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="rounded-control bg-secondary px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <span className="rounded-control bg-secondary px-2 py-0.5 type-label">
                         Question {index + 1}
                       </span>
                     </div>
                     <h3 className="text-sm font-semibold text-foreground leading-snug">{pair.question}</h3>
                     <div className="rounded-surface bg-secondary/40 p-3 text-xs text-foreground">
-                      <p className="font-medium text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Your recorded response:</p>
+                      <p className="type-label mb-1">Your recorded response:</p>
                       <p className="leading-relaxed">{pair.answer || 'No recognised answer is available for this question.'}</p>
                     </div>
 
@@ -422,7 +422,7 @@ export function VoiceInterviewMode({
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+              <span className="type-label text-primary">
                 Practice Workbench
               </span>
               {difficulty && (
@@ -495,7 +495,7 @@ export function VoiceInterviewMode({
             </div>
 
             <div>
-              <p id="question-heading" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+              <p id="question-heading" className="type-label mb-1">
                 Active Interview Prompt:
               </p>
               <h3
@@ -514,7 +514,7 @@ export function VoiceInterviewMode({
           >
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle pb-3">
               <div className="flex items-center gap-2">
-                <span id="response-heading" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <span id="response-heading" className="type-label">
                   Your Response:
                 </span>
                 {/* State Chip */}
@@ -625,13 +625,13 @@ export function VoiceInterviewMode({
             aria-label="Interview transcript"
           >
             <div className="flex items-center justify-between border-b border-border-subtle pb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Session Transcript</span>
+              <span className="type-label">Session Transcript</span>
               <span className="text-[11px] text-muted-foreground">{interview.messages.length} messages</span>
             </div>
             <div className="space-y-3" role="log" aria-live="polite">
               {interview.messages.map((message) => (
                 <div key={message.id} className="text-xs space-y-0.5">
-                  <p className="font-semibold text-muted-foreground uppercase text-[10px]">
+                  <p className="type-label">
                     {message.role === 'assistant' ? 'Interviewer' : 'You'}
                   </p>
                   <p className="text-foreground leading-relaxed bg-secondary/30 p-2 rounded-control">
@@ -641,7 +641,7 @@ export function VoiceInterviewMode({
               ))}
               {interview.currentTranscript && (
                 <div className="text-xs space-y-0.5">
-                  <p className="font-semibold text-success uppercase text-[10px]">Recognition in progress</p>
+                  <p className="type-label text-success">Recognition in progress</p>
                   <p className="text-foreground italic bg-secondary/30 p-2 rounded-control">{interview.currentTranscript}</p>
                 </div>
               )}

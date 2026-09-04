@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Bell, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Popover,
   PopoverContent,
@@ -86,7 +87,7 @@ export function NotificationsDropdown() {
           >
             {loading ? (
               <div className="flex items-center justify-center h-32" role="status">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                <Spinner className="size-6 text-primary" />
                 <span className="sr-only">Loading notifications</span>
               </div>
             ) : error ? (

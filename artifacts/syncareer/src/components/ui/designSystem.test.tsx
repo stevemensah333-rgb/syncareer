@@ -91,7 +91,9 @@ describe('Syncareer design system foundation', () => {
     expect(stylesheet).toContain('--motion-fast:');
     expect(stylesheet).toContain('--motion-base:');
     expect(stylesheet).toContain('--motion-panel:');
-    expect(tailwind).toContain("'fade-in': 'fade-in 150ms ease-out'");
+    expect(tailwind).toContain(
+      "'fade-in': 'fade-in var(--motion-base) var(--ease-standard)'",
+    );
     expect(tailwind).not.toContain('pulse-gentle');
     expect(tailwind).not.toContain("'float'");
   });
@@ -120,7 +122,61 @@ describe('Syncareer design system foundation', () => {
 
   it('exports IconButton as the icon-sized button primitive', () => {
     render(<IconButton aria-label="Close" />);
-    expect(screen.getByRole('button', { name: 'Close' }).className).toContain('w-10');
+    const className = screen.getByRole('button', { name: 'Close' }).className;
+    expect(className).toContain('h-control');
+    expect(className).toContain('w-control');
+  });
+
+  it('sizes shared controls from the control-height tokens', () => {
+    expect(buttonVariants({ size: 'default' })).toContain('h-control');
+    expect(buttonVariants({ size: 'sm' })).toContain('h-control-sm');
+    expect(buttonVariants({ size: 'lg' })).toContain('h-control-lg');
+    expect(read('src/components/ui/input.tsx')).toContain('h-control');
+    expect(read('src/components/ui/select.tsx')).toContain('h-control');
+    expect(read('src/components/ui/tabs.tsx')).toContain('h-control');
+  });
+
+  it('unifies the shared control surface, radius, focus and easing vocabulary', () => {
+    const controls = [
+      'button.tsx',
+      'input.tsx',
+      'select.tsx',
+      'textarea.tsx',
+      'checkbox.tsx',
+      'radio-group.tsx',
+      'switch.tsx',
+      'tabs.tsx',
+      'toggle.tsx',
+      'badge.tsx',
+    ];
+
+    for (const control of controls) {
+      const source = read(`src/components/ui/${control}`);
+      expect(source, control).toContain('focus-visible:');
+      expect(source, control).toContain('motion-reduce:');
+      expect(source, control).not.toMatch(/\brounded-md\b/);
+      expect(source, control).not.toMatch(/\brounded-lg\b/);
+      expect(source, control).not.toMatch(/\brounded-2xl\b/);
+      expect(source, control).not.toContain('bg-accent');
+    }
+
+    // One easing curve, and no off-scale control durations.
+    for (const control of controls) {
+      const source = read(`src/components/ui/${control}`);
+      expect(source, control).toContain('ease-standard');
+      expect(source, control).not.toMatch(/duration-(?:75|100|200|300|500|700|1000)\b/);
+    }
+
+    // Text inputs, selects and textareas share one work surface.
+    expect(read('src/components/ui/input.tsx')).toContain('bg-card');
+    expect(read('src/components/ui/select.tsx')).toContain('bg-card');
+    expect(read('src/components/ui/textarea.tsx')).toContain('bg-card');
+
+    // Pills stay reserved for badges, progress and round affordances.
+    expect(read('src/components/ui/badge.tsx')).toContain('rounded-pill');
+    expect(read('src/components/ui/progress.tsx')).toContain('rounded-pill');
+    expect(read('src/components/ui/button.tsx')).not.toContain('rounded-full');
+    expect(read('src/components/ui/input.tsx')).not.toContain('rounded-full');
   });
 
   it('does not restyle existing routes onto mode wrappers', () => {

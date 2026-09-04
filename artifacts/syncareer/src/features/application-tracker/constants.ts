@@ -1,14 +1,27 @@
 // ── Application status display ────────────────────────────────────
 
-export const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-warning/15 text-warning',
-  reviewing: 'bg-primary/15 text-primary',
-  shortlisted: 'bg-secondary/15 text-secondary',
-  interview: 'bg-primary/20 text-primary',
-  offered: 'bg-success/15 text-success',
-  hired: 'bg-success text-success-foreground',
-  rejected: 'bg-destructive/15 text-destructive',
-  withdrawn: 'bg-muted text-muted-foreground',
+import type { VariantProps } from 'class-variance-authority';
+
+import type { badgeVariants } from '@/components/ui/badge';
+
+type BadgeVariant = VariantProps<typeof badgeVariants>['variant'];
+
+/**
+ * Application status → shared `Badge` variant.
+ *
+ * Status is rendered with the one badge primitive, so the semantic colour
+ * lives in the badge system rather than in a parallel page-local palette.
+ * `hired` is the only solid fill: it is the terminal achievement.
+ */
+export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
+  pending: 'soft-warning',
+  reviewing: 'soft-primary',
+  shortlisted: 'soft-neutral',
+  interview: 'soft-primary',
+  offered: 'soft-success',
+  hired: 'success',
+  rejected: 'soft-destructive',
+  withdrawn: 'soft-neutral',
 };
 
 // ── Status → outcome mapping for analytics ────────────────────────

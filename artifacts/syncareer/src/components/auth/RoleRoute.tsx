@@ -2,6 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import type { AccountRole } from '@/lib/accountRoles';
 import { authPath } from './authUtils';
+import { Spinner } from '@/components/ui/spinner';
 
 type UserRole = AccountRole;
 
@@ -29,7 +30,7 @@ const RoleRoute = ({ children, allowedRoles }: RoleRouteProps) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <Spinner className="size-8 text-primary" role="status" aria-label="Loading" />
       </div>
     );
   }

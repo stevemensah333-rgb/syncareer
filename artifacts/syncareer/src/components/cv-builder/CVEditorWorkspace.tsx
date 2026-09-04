@@ -19,7 +19,6 @@ import {
   Users,
   Wrench,
   User,
-  Loader2,
   RotateCcw,
   Save,
   Sparkles,
@@ -27,6 +26,8 @@ import {
   Layers,
   BookOpen,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+
 import { toast } from 'sonner';
 import { CVFormPersonal } from '@/components/cv-builder/CVFormPersonal';
 import { CVFormEducation } from '@/components/cv-builder/CVFormEducation';
@@ -529,7 +530,7 @@ export function CVEditorWorkspace({
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:inline">
+                <span className="type-label hidden sm:inline">
                   CV Editor
                 </span>
               </div>
@@ -542,7 +543,7 @@ export function CVEditorWorkspace({
               >
                 {saveState === 'saving' ? (
                   <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                    <Spinner className="size-3.5 text-primary" />
                     <span className="font-medium text-foreground">Saving…</span>
                   </>
                 ) : saveState === 'saved' ? (
@@ -606,7 +607,7 @@ export function CVEditorWorkspace({
                 className="rounded-control text-xs"
               >
                 {saveState === 'saving' ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  <Spinner className="mr-1.5 size-3.5" />
                 ) : saveState === 'saved' ? (
                   <Check className="mr-1.5 h-3.5 w-3.5 text-success-foreground" />
                 ) : (
@@ -863,7 +864,7 @@ export function CVEditorWorkspace({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h3 className="type-label">
                   Wording help
                 </h3>
               </div>

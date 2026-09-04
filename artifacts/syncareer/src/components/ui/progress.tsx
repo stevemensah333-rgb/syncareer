@@ -10,7 +10,7 @@ const Progress = React.forwardRef<
   <ProgressPrimitive.Root
     ref={ref}
     className={cn(
-      "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
+      "relative h-4 w-full overflow-hidden rounded-pill bg-secondary",
       className
     )}
     {...props}
@@ -18,7 +18,7 @@ const Progress = React.forwardRef<
     aria-valuetext={props['aria-valuetext'] ?? `${Math.round(value ?? 0)}%`}
   >
     <ProgressPrimitive.Indicator
-      className="h-full w-full flex-1 bg-primary transition-transform duration-150 motion-reduce:transition-none"
+      className="h-full w-full flex-1 bg-primary transition-transform duration-150 ease-standard motion-reduce:transition-none"
       style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
     />
   </ProgressPrimitive.Root>

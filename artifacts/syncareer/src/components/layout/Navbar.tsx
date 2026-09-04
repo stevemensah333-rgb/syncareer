@@ -104,7 +104,7 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
     <header
       className={cn(
         'fixed left-0 right-0 top-0 z-30 h-14 border-b border-border bg-background',
-        'transition-[left] duration-150 ease-out motion-reduce:transition-none',
+        'transition-[left] duration-150 ease-standard motion-reduce:transition-none',
         className,
       )}
     >

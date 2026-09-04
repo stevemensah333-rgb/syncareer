@@ -111,7 +111,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed, currentDoss
     <aside
       className={cn(
         'relative flex h-full flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground',
-        'transition-[width] duration-150 ease-out motion-reduce:transition-none',
+        'transition-[width] duration-150 ease-standard motion-reduce:transition-none',
         isCollapsed ? 'w-[68px]' : 'w-64'
       )}
     >
@@ -126,7 +126,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed, currentDoss
           className={cn(
             'flex min-w-0 items-center gap-2 rounded-control px-1.5 py-1 text-sm font-semibold tracking-tight text-sidebar-foreground',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar-background',
-            isCollapsed ? 'hover:bg-sidebar-accent' : 'hover:text-primary',
+            isCollapsed ? 'hover:bg-sidebar-accent' : 'hover:text-brand',
           )}
           aria-label="Syncareer home"
         >
@@ -168,7 +168,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed, currentDoss
                           title={isCollapsed ? item.title : undefined}
                           className={cn(
                             'relative flex min-h-11 items-center gap-3 px-3 text-sm',
-                            'transition-colors duration-150 ease-out lg:min-h-10',
+                            'transition-colors duration-150 ease-standard lg:min-h-10',
                             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar-background',
                             isCollapsed && 'justify-center px-0',
                             isActive
@@ -180,7 +180,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed, currentDoss
                             aria-hidden="true"
                             className={cn(
                               'absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 bg-primary',
-                              'transition-opacity duration-150 ease-out motion-reduce:transition-none',
+                              'transition-opacity duration-150 ease-standard motion-reduce:transition-none',
                               isActive ? 'opacity-100' : 'opacity-0',
                             )}
                           />
@@ -193,7 +193,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed, currentDoss
                           />
                           <span
                             className={cn(
-                              'truncate transition-[opacity,width] duration-150 ease-out motion-reduce:transition-none',
+                              'truncate transition-[opacity,width] duration-150 ease-standard motion-reduce:transition-none',
                               isCollapsed && 'w-0 opacity-0',
                             )}
                           >
@@ -218,7 +218,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed, currentDoss
             title={isCollapsed ? `Current dossier: ${currentDossier.title}` : undefined}
             className={cn(
               'block min-h-11 border border-sidebar-border bg-card p-3 text-sidebar-foreground',
-              'transition-colors duration-150 ease-out hover:border-primary/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar-background',
+              'transition-colors duration-150 ease-standard hover:border-primary/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar-background',
               isCollapsed ? 'flex items-center justify-center p-2' : '',
             )}
           >
@@ -226,7 +226,7 @@ export function AppSidebar({ groups, isCollapsed, onToggleCollapsed, currentDoss
               <FileStack aria-hidden="true" className="size-5 text-primary" />
             ) : (
               <>
-                <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">Current dossier</span>
+                <span className="block type-label text-primary">Current dossier</span>
                 <span className="mt-1.5 block truncate text-sm font-semibold">{currentDossier.title}</span>
                 <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
                   {[currentDossier.company, currentDossier.statusLabel].filter(Boolean).join(' · ')}

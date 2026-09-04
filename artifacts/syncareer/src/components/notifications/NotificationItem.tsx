@@ -1,5 +1,6 @@
 import { Bell, Briefcase, Calendar, MessageSquare, Star, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Notification } from '@/hooks/useNotifications';
 
@@ -86,16 +87,12 @@ export function NotificationItem({ notification, onDelete, onClick }: Notificati
               {notification.title}
             </p>
             {priorityLabel && (
-              <span
-                className={cn(
-                  'text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0',
-                  notification.priority === 'urgent'
-                    ? 'bg-destructive/10 text-destructive'
-                    : 'bg-warning/10 text-warning'
-                )}
+              <Badge
+                variant={notification.priority === 'urgent' ? 'soft-destructive' : 'soft-warning'}
+                className="shrink-0"
               >
                 {priorityLabel}
-              </span>
+              </Badge>
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
