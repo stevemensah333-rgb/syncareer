@@ -8,6 +8,17 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   ApplicationStageRail,
   DossierActionBar,
   DossierHeader,
@@ -24,6 +35,7 @@ import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import {
+  removeApplicationRecord,
   saveApplicationNotes,
   updateApplicationStatus,
   updateApplicationWorkspace,
@@ -120,6 +132,7 @@ export default function ApplicationDossier() {
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
   const [pendingFocus, setPendingFocus] = useState<{ section: SectionId; elementId: string } | null>(null);
   const [statusSaving, setStatusSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [notesState, setNotesState] = useState<SaveState>('idle');
   const [workspaceState, setWorkspaceState] = useState<SaveState>('idle');
   const [sectionBusy, setSectionBusy] = useState(false);
@@ -344,6 +357,19 @@ export default function ApplicationDossier() {
     const saved = notes.trim() || null;
     setBundle((current) => (current ? { ...current, application: { ...current.application, notes: saved } } : current));
     setNotesState('saved');
+  };
+
+  const handleDelete = async () => {
+    if (!application) return;
+    setDeleting(true);
+    const result = await removeApplicationRecord(supabase, application.id);
+    if (!result.ok) {
+      setDeleting(false);
+      toast.error(result.userMessage);
+      return;
+    }
+    toast.success('Application removed');
+    navigate('/applications');
   };
 
   const handleWorkspace = async (update: { resume_id?: string | null; next_action?: string | null; next_action_due?: string | null }) => {
@@ -1132,6 +1158,29 @@ export default function ApplicationDossier() {
       ? `${dueState === 'overdue' ? 'Overdue' : dueState === 'today' ? 'Due today' : 'Upcoming'} · ${application.next_action_due}`
       : undefined;
 
+  const deleteControl = (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button size="sm" variant="outline" disabled={deleting} className="text-destructive">
+          {deleting ? 'Removing…' : 'Remove application'}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove this application?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This removes {facts.title || 'this application'} from your tracker, including its notes and next
+            step. Your CVs and evidence are kept. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep application</AlertDialogCancel>
+          <AlertDialogAction onClick={() => void handleDelete()}>Remove application</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   const renderProgressStrip = () => (
     <div className="border-b border-border bg-card">
       <ApplicationStageRail stages={railStages} label="Stage progress" />
@@ -1333,6 +1382,7 @@ export default function ApplicationDossier() {
                       {application.resume_id ? 'Open CV editor' : 'Prepare CV'}
                     </Link>
                   </Button>
+                  {deleteControl}
                 </DossierActionBar>
               </>
             ) : (
@@ -1371,6 +1421,7 @@ export default function ApplicationDossier() {
                       {application.resume_id ? 'Open CV editor' : 'Prepare CV'}
                     </Link>
                   </Button>
+                  {deleteControl}
                 </DossierActionBar>
               </>
             )}
