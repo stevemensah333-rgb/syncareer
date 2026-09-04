@@ -30,6 +30,7 @@ import {
 } from '@/components/dossier';
 import { DossierRequirementsEvidence } from '@/components/applications/dossier/DossierRequirementsEvidence';
 import { DossierEvidenceLedger } from '@/components/applications/dossier/DossierEvidenceLedger';
+import { ProductJourneyRail } from '@/components/journey/ProductJourneyRail';
 import { DossierIndexNav, type IndexNavStage } from '@/components/applications/dossier/DossierIndexNav';
 import { DossierFlowRail, type DossierFlowStep } from '@/components/applications/dossier/DossierFlowRail';
 import { ApplicationEvidenceInspector, type InspectorSelection } from '@/components/applications/dossier/ApplicationEvidenceInspector';
@@ -1373,6 +1374,32 @@ export default function ApplicationDossier() {
                   <span>Last update {getDaysAgo(application.updated_at).toLowerCase()}</span>
                 </span>
               }
+            />
+
+            <ProductJourneyRail
+              className="border-x-0 border-t-0"
+              steps={[
+                {
+                  id: 'application',
+                  label: 'Application',
+                  description: 'Review the role record, evidence coverage and next action in one workspace.',
+                  state: 'current',
+                },
+                {
+                  id: 'cv',
+                  label: 'CV',
+                  description: application.resume_id ? 'Open the application-specific CV copy and continue tailoring.' : 'Create the application-specific CV copy for this role.',
+                  to: cvHref,
+                  state: application.resume_id ? 'available' : 'available',
+                },
+                {
+                  id: 'interview',
+                  label: 'Interview',
+                  description: 'Practise answers against the same application context in Advance mode.',
+                  to: practiceHref,
+                  state: 'available',
+                },
+              ]}
             />
 
             {renderProgressStrip()}

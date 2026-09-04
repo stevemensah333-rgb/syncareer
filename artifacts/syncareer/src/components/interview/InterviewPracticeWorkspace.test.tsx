@@ -72,7 +72,7 @@ describe('InterviewPracticeWorkspace (Advance / Practice mode)', () => {
     expect(screen.getByRole('button', { name: /end interview/i })).toBeTruthy();
   });
 
-  it('structures completed feedback around actual signals (strengths, missing depth, retry blueprint, rubric)', () => {
+  it('structures completed feedback around supported dimensions, question review, and a next-challenge plan', () => {
     hookState.value = {
       ...mockBaseState,
       phase: 'completed',
@@ -87,14 +87,18 @@ describe('InterviewPracticeWorkspace (Advance / Practice mode)', () => {
 
     render(<VoiceInterviewMode jobRole="Backend Developer" difficulty="intermediate" onEnd={vi.fn()} />);
 
-    // Evaluation Pillars
     expect(screen.getByText('Interview Performance Review')).toBeTruthy();
-    expect(screen.getByText(/Assessment Rubric & Signal Verification/i)).toBeTruthy();
-    expect(screen.getByText('Strongest Moments')).toBeTruthy();
-    expect(screen.getByText(/Missing Depth & High-Priority Improvements/i)).toBeTruthy();
-    expect(screen.getByText(/Structured STAR Retry Blueprint/i)).toBeTruthy();
+    expect(screen.getByText(/Question and response review/i)).toBeTruthy();
+    expect(screen.getByText('Feedback')).toBeTruthy();
+    expect(screen.getByText('Strengths')).toBeTruthy();
+    expect(screen.getByText('Missing depth')).toBeTruthy();
+    expect(screen.getByText('Communication')).toBeTruthy();
+    expect(screen.getByText('Technical understanding')).toBeTruthy();
+    expect(screen.getByText('Evidence used')).toBeTruthy();
+    expect(screen.getByText('Next improvement')).toBeTruthy();
+    expect(screen.getByText(/Next challenge/i)).toBeTruthy();
 
-    // Rubric checks
+    // Visible transcript checks remain grounded in actual signals
     expect(screen.getByText('relevance')).toBeTruthy();
     expect(screen.getByText('specificity')).toBeTruthy();
     expect(screen.getByText('evidence')).toBeTruthy();

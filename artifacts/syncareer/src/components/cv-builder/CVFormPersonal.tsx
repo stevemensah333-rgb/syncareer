@@ -26,14 +26,14 @@ interface CVFormPersonalProps {
 
 export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, errors = {} }) => {
   return (
-    <Card className="border-border bg-card shadow-none">
-      <CardHeader className="pb-3">
+    <Card className="border-0 bg-transparent shadow-none">
+      <CardHeader className="gap-0 px-0 pb-4 pt-0">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
           <User className="h-4 w-4 text-primary" aria-hidden="true" />
           Personal & Contact Information
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-0 pb-0 pt-0">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="firstName" className="text-xs font-medium">
