@@ -1382,6 +1382,7 @@ export default function ApplicationDossier() {
                       {application.resume_id ? 'Open CV editor' : 'Prepare CV'}
                     </Link>
                   </Button>
+                  {deleteControl}
                 </DossierActionBar>
               </>
             ) : (
@@ -1420,6 +1421,7 @@ export default function ApplicationDossier() {
                       {application.resume_id ? 'Open CV editor' : 'Prepare CV'}
                     </Link>
                   </Button>
+                  {deleteControl}
                 </DossierActionBar>
               </>
             )}
