@@ -291,17 +291,18 @@ export function ProfileSection() {
             <CardContent className="pt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>School / University *</Label>
+                  <Label htmlFor="qualification-school">School / University *</Label>
                   <Input
+                    id="qualification-school"
                     value={formData.school}
                     onChange={(e) => setFormData({ ...formData, school: e.target.value })}
                     placeholder="Enter school name"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Major / Field of Study *</Label>
+                  <Label htmlFor="qualification-major">Major / Field of Study *</Label>
                   <Select value={formData.major} onValueChange={(v) => setFormData({ ...formData, major: v })}>
-                    <SelectTrigger>
+                    <SelectTrigger id="qualification-major">
                       <SelectValue placeholder="Select major" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border shadow-lg z-50">
@@ -312,9 +313,9 @@ export function ProfileSection() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Degree Type *</Label>
+                  <Label htmlFor="qualification-degree">Degree Type *</Label>
                   <Select value={formData.degree_type} onValueChange={(v) => setFormData({ ...formData, degree_type: v })}>
-                    <SelectTrigger>
+                    <SelectTrigger id="qualification-degree">
                       <SelectValue placeholder="Select degree" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border shadow-lg z-50">
@@ -325,9 +326,9 @@ export function ProfileSection() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Year of Admission</Label>
+                  <Label htmlFor="qualification-admission-year">Year of Admission</Label>
                   <Select value={formData.year_of_admission} onValueChange={(v) => setFormData({ ...formData, year_of_admission: v })}>
-                    <SelectTrigger>
+                    <SelectTrigger id="qualification-admission-year">
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border shadow-lg z-50">
@@ -338,9 +339,9 @@ export function ProfileSection() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Year of Completion</Label>
+                  <Label htmlFor="qualification-completion-year">Year of Completion</Label>
                   <Select value={formData.year_of_completion} onValueChange={(v) => setFormData({ ...formData, year_of_completion: v })}>
-                    <SelectTrigger>
+                    <SelectTrigger id="qualification-completion-year">
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border shadow-lg z-50">
@@ -401,11 +402,11 @@ export function ProfileSection() {
                     )}
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => startEdit(qual)}>
-                      <Edit2 className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" aria-label={`Edit ${qual.degree_type} in ${qual.major}`} onClick={() => startEdit(qual)}>
+                      <Edit2 aria-hidden="true" className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteQualification(qual.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                    <Button variant="ghost" size="icon" aria-label={`Remove ${qual.degree_type} in ${qual.major}`} onClick={() => handleDeleteQualification(qual.id)}>
+                      <Trash2 aria-hidden="true" className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 </CardContent>

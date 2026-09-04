@@ -116,11 +116,15 @@ export function setRobotsMeta(content: string) {
 /**
  * Generate JSON-LD structured data for rich snippets
  */
+function structuredDataId(type: string) {
+  return `seo-jsonld-${type.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+}
+
 export function generateStructuredData(type: string, data: Record<string, unknown>) {
   // Keep one current schema per type. SPA routes and React Strict Mode can run
   // effects more than once; updating a keyed script avoids duplicate entities
   // while preserving the existing client-side SEO integration.
-  const id = `seo-jsonld-${type.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  const id = structuredDataId(type);
   let script = document.getElementById(id) as HTMLScriptElement | null;
   if (!script) {
     script = document.createElement('script');
@@ -134,6 +138,10 @@ export function generateStructuredData(type: string, data: Record<string, unknow
     ...data,
   });
   return script;
+}
+
+export function removeStructuredData(...types: string[]) {
+  for (const type of types) document.getElementById(structuredDataId(type))?.remove();
 }
 
 /**

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import GoogleSignInButton from './GoogleSignInButton';
 import PasswordField from './PasswordField';
-import { getAuthErrorMessage, getReturnToFromLocationState } from './authUtils';
+import { authPath, getAuthErrorMessage, getAuthReturnTo } from './authUtils';
 
 export default function SignInForm() {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ export default function SignInForm() {
   const [errorMessage, setErrorMessage] = useState('');
   const submissionInFlight = useRef(false);
 
-  const returnTo = getReturnToFromLocationState(location.state);
+  const returnTo = getAuthReturnTo(location.state, location.search);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +83,7 @@ export default function SignInForm() {
         </Button>
         <p className="text-center text-sm text-muted-foreground">
           New to Syncareer?{' '}
-          <Link to="/sign-up" className="font-medium text-primary hover:underline">Create an account</Link>
+          <Link to={authPath('/sign-up', returnTo)} className="font-medium text-primary hover:underline">Create an account</Link>
         </p>
       </form>
     </div>
