@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import syncareerLogo from "@/assets/syncareer-logo.svg";
+import { isSupportEnabled, supportUrl } from "@/lib/support";
 
 interface FooterGroup {
   title: string;
@@ -36,6 +37,22 @@ const FOOTER_GROUPS: FooterGroup[] = [
 export default function LandingFooter() {
   const year = new Date().getFullYear();
 
+  // "Support Syncareer" is optional and configured by URL only; while unset it
+  // is absent from the footer. Syncareer stays free to use regardless.
+  const groups: FooterGroup[] = isSupportEnabled()
+    ? FOOTER_GROUPS.map((group) =>
+        group.title === "Resources"
+          ? {
+              ...group,
+              links: [
+                ...group.links,
+                { label: "Support Syncareer", href: supportUrl(), external: true },
+              ],
+            }
+          : group,
+      )
+    : FOOTER_GROUPS;
+
   return (
     <footer className="border-t bg-background" aria-labelledby="footer-brand">
       <div className="mx-auto w-full max-w-[1400px] px-4 pb-8 pt-14 sm:px-6 lg:px-8 lg:pt-16">
@@ -51,7 +68,7 @@ export default function LandingFooter() {
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-            {FOOTER_GROUPS.map((group) => (
+            {groups.map((group) => (
               <div key={group.title}>
                 <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{group.title}</h2>
                 <ul className="mt-4 space-y-3 text-sm">

@@ -5,12 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Check, Loader2, Lock, Mic, Phone } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Mic, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { InterviewErrorBoundary } from '@/components/interview/InterviewErrorBoundary';
 import { VoiceInterviewMode } from '@/components/interview/VoiceInterviewMode';
-import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 import { useQueryClient } from '@tanstack/react-query';
@@ -50,7 +49,6 @@ export default function ApplicationInterview() {
   const { applicationId } = useParams<{ applicationId: string }>();
   const navigate = useNavigate();
   const userId = useSupabaseUserId();
-  const { isPremium } = useSubscription();
   const queryClient = useQueryClient();
 
   const [loading, setLoading] = useState(true);
@@ -380,23 +378,10 @@ export default function ApplicationInterview() {
                     placeholder="Key experiences the practice should account for. Only what you type is sent."
                   />
                 </div>
-                {!isPremium && (
-                  <div className="mt-4 flex items-center gap-2 rounded-surface border border-border bg-muted/60 p-3 text-xs text-muted-foreground">
-                    <Lock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                    <span>Voice interview is a <strong className="text-foreground">Premium feature</strong>.</span>
-                    <Button size="sm" variant="outline" className="ml-auto h-7 text-xs rounded-control" onClick={() => navigate('/pricing')}>
-                      Upgrade
-                    </Button>
-                  </div>
-                )}
                 <div className="mt-5">
                   <Button
                     className="w-full max-w-sm rounded-control text-xs"
                     onClick={() => {
-                      if (!isPremium) {
-                        navigate('/pricing');
-                        return;
-                      }
                       setReadiness('unchecked');
                       setStep('readiness');
                     }}

@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Bell, Globe, Lock, User, Settings as SettingsIcon, UserCircle, CreditCard, AlertTriangle } from 'lucide-react';
+import { Bell, Globe, Lock, User, Settings as SettingsIcon, UserCircle, AlertTriangle } from 'lucide-react';
 
 import {
   AlertDialog,
@@ -27,12 +27,11 @@ import { useUserProfile } from '@/contexts/UserProfileContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
-import SubscriptionManager from '@/components/subscription/SubscriptionManager';
 import { SecuritySection } from '@/components/settings/SecuritySection';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 import { applyDisplayPreferences, readDisplayPreferences } from '@/lib/displayPreferences';
 
-type SettingsSection = 'profile' | 'account' | 'notifications' | 'security' | 'regional' | 'preferences' | 'subscription';
+type SettingsSection = 'profile' | 'account' | 'notifications' | 'security' | 'regional' | 'preferences';
 
 // All IANA timezones grouped for display
 const ALL_TIMEZONES: string[] = (Intl as any).supportedValuesOf ? (Intl as any).supportedValuesOf('timeZone') : [
@@ -66,10 +65,12 @@ const Settings = () => {
   const { t, i18n } = useTranslation();
   const { userId, signOut } = useAuth();
   const [searchParams] = useSearchParams();
-  const initialTab = (searchParams.get('tab') as SettingsSection) || 'account';
+  const SETTINGS_SECTIONS: SettingsSection[] = ['profile', 'account', 'notifications', 'security', 'regional', 'preferences'];
+  const requestedTab = searchParams.get('tab') as SettingsSection | null;
+  // Guard stale/unknown deep links (e.g. legacy ?tab=subscription) to 'account'.
+  const initialTab: SettingsSection = requestedTab && SETTINGS_SECTIONS.includes(requestedTab) ? requestedTab : 'account';
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialTab);
   const { profile, studentDetails, loading: profileLoading } = useUserProfile();
-  const isStudentRole = !profile?.user_type || profile.user_type === 'student';
   const [userEmail, setUserEmail] = useState<string>('');
   const [deletingAccount, setDeletingAccount] = useState(false);
   const initialDisplayPreferences = React.useMemo(() => readDisplayPreferences(), []);
@@ -226,17 +227,6 @@ const Settings = () => {
                 <SettingsIcon className="mr-2 h-5 w-5" />
                 {t('settings.preferences')}
               </Button>
-              {isStudentRole && (
-                <Button 
-                  variant={activeSection === 'subscription' ? 'secondary' : 'ghost'} 
-                  className="w-full justify-start" 
-                  size="lg"
-                  onClick={() => setActiveSection('subscription')}
-                >
-                  <CreditCard className="mr-2 h-5 w-5" />
-                  Subscription
-                </Button>
-              )}
             </nav>
           </div>
         </AnimatedSection>
@@ -516,12 +506,6 @@ const Settings = () => {
               </>
             )}
 
-            {activeSection === 'subscription' && isStudentRole && (
-              <div>
-                <h2 className="text-xl font-semibold mb-6">Subscription & Billing</h2>
-                <SubscriptionManager />
-              </div>
-            )}
           </div>
         </AnimatedSection>
       </div>

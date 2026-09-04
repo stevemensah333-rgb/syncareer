@@ -60,7 +60,6 @@ describe('Syncareer design system scope', () => {
       'src/pages/Dashboard.tsx',
       'src/pages/Markets.tsx',
       'src/pages/Assessment.tsx',
-      'src/pages/Pricing.tsx',
       'src/features/onboarding/OnboardingShell.tsx',
       'src/components/auth/AuthShell.tsx',
     ]) {

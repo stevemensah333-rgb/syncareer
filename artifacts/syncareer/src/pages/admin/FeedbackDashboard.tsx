@@ -21,6 +21,7 @@ interface FeedbackRow {
 }
 
 const FEATURE_LABELS: Record<string, string> = {
+  general: 'General',
   assessment: 'Assessment',
   cv_builder: 'CV Builder',
   interview_simulator: 'Interview Simulator',

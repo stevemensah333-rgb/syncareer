@@ -154,7 +154,7 @@ In `pnpm-workspace.yaml`:
 | The entire `catalog:` block (20 entries incl. `drizzle-orm`, `tsx`, `wouter`, `@tailwindcss/vite`) | No `catalog:` specifier exists in any `package.json`; `pnpm-lock.yaml` has **no** `catalogs:` section; `PUBLISH_TROUBLESHOOTING.md` explicitly forbids introducing them ("`artifacts/syncareer/package.json` must stay standalone-publishable") |
 | 10 `@expo/ngrok-bin>*` overrides | Residue of an Expo/React-Native artifact that does not exist. `@expo/ngrok-bin` appears **0×** in `pnpm-lock.yaml` |
 | `@esbuild-kit/esm-loader` → `tsx` override | `@esbuild-kit/esm-loader` appears 0× in the lockfile; the override was a no-op |
-| `stripe-replit-sync` in `minimumReleaseAgeExclude` | Not a dependency anywhere; Paystack (not Stripe) is the payment provider |
+| `stripe-replit-sync` in `minimumReleaseAgeExclude` | Not a dependency anywhere; no client payment provider remains after the free-product change (legacy Paystack verification stays deployed-only) |
 | `@swc/core`, `msw`, `unrs-resolver` in `onlyBuiltDependencies` | All 0× in the lockfile. `core-js`, `esbuild`, `protobufjs` are real and were kept |
 
 ### 3.4 Dead dependencies — `GENERATED CODE DEBT`

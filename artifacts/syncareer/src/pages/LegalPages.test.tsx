@@ -17,7 +17,7 @@ describe('legal document pages', () => {
     expect(screen.getByRole('link', { name: 'Terms' }).getAttribute('aria-current')).toBe('page');
     expect(screen.getByRole('link', { name: 'Read the Privacy Policy' }).getAttribute('href')).toBe('/privacy');
     expect(document.getElementById(TERMS_SECTIONS[5].id)).toBeTruthy();
-    expect(screen.getByText(/Stripe, Mobile Money/)).toBeTruthy();
+    expect(screen.getByText(/Syncareer is free to use/)).toBeTruthy();
     expect(document.title).toBe('Terms and Conditions — Syncareer');
     expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://syncareer.me/terms');
   });

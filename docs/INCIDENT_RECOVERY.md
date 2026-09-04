@@ -10,8 +10,8 @@ runbook replacement — it is the triage starting point.
 - The hosted backend is **Lovable Cloud**. Do not run `supabase link`, remote
   `db pull`/`db push`, migration repair, function deploys, or remote type
   generation from a personal Supabase account.
-- **Never weaken security** (RLS, grants, triggers, payment verification, usage
-  enforcement) to fix an incident.
+- **Never weaken security** (RLS, grants, triggers, legacy payment write
+  restrictions, AI cost-control quota enforcement) to fix an incident.
 - Never commit or log secrets (`SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY`,
   `PAYSTACK_SECRET_KEY`, webhook secrets, user tokens).
 - Prefer the **smallest, targeted repair**; do not rewrite working domains.
@@ -19,7 +19,7 @@ runbook replacement — it is the triage starting point.
 ## Incident triage
 
 1. **Which layer?** Frontend build/typecheck, tests, schema/RLS, edge functions,
-   payments, or email.
+   email, or the optional support link.
 2. **Repository vs live?** Distinguish repo evidence from live-project evidence.
    Git history is not proof of the live deployed state.
 3. **Is it pre-existing or introduced?** Reproduce with the current branch and
@@ -49,12 +49,16 @@ runbook replacement — it is the triage starting point.
   exact source via Lovable Cloud ("View code" / Git sync) or support.
 - Reference: [`EDGE_FUNCTIONS.md`](./EDGE_FUNCTIONS.md).
 
-### Payments / premium not granting
-- Confirm the client boundary (signed-in user, public key only) and the server
-  boundary (verify status/amount/currency/plan/ownership/idempotency) before
-  changing anything.
-- Run the payment/subscription unit tests and the RLS payment write checks.
-- Reference: [`PAYMENT_AND_SUBSCRIPTIONS.md`](./PAYMENT_AND_SUBSCRIPTIONS.md).
+### "Premium / plan" reports after the free-product change
+- The product is free; subscription UI and gates were removed (2026-09-04). If
+  a screen still shows plan/premium/upgrade copy, treat it as a regression of
+  that removal, not as a payment incident.
+- The optional "Support Syncareer" link only mirrors `VITE_SUPPORT_URL`; if it
+  is missing or broken, check that the browser-exposed URL is configured in the
+  publish environment — support never affects feature access.
+- Legacy subscription-era tables/functions remain deployed-only and untouched;
+  do not "repair" premium flows against them.
+- Reference: [`FREE_SERVICE_AND_SUPPORT.md`](./FREE_SERVICE_AND_SUPPORT.md).
 
 ### Email not sending
 - Email infra is queue-based (`process-email-queue`, `send-transactional-email`,

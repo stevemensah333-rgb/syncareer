@@ -8,7 +8,7 @@ Modules:
 
 - `contract.ts` — task/provenance/kind allowlists, size limits, request and model-output validation.
 - `prompts.ts` — bounded per-family server prompts built only from supplied context.
-- `handler.ts` — dependency-injected flow: validate → authenticate → reserve → entitlement → gateway → validate output → commit one unit.
+- `handler.ts` — dependency-injected flow: validate → authenticate → reserve → quota (uniform per-user AI cost control) → gateway → validate output → commit one unit.
 - `index.ts` — real dependencies (Supabase Auth `getUser`, `check-feature-access`, `assistant_requests`, Lovable AI gateway) plus the retained legacy branch.
 - `index.test.ts` — 18 Deno tests, synthetic fixtures only. Run: `deno test --allow-net supabase/functions/career-guidance/index.test.ts`.
 
@@ -17,7 +17,7 @@ The revision adds a CV preflight requiring opportunity, `requirement-*` and `evi
 ### Live audit findings (recorded before implementation)
 
 - `career-guidance` had **no invocations** in the retained log window; the frontend sends only v2 and `/ai-coach` is a static transition page. No live v1 caller was found. Legacy branch retained until **2026-09-30**; remove if the logs still show no v1 traffic then.
-- Quota feature key: `ai_coach_session` (free tier 5/month), enforced by the deployed-only `check-feature-access` (still `UNKNOWN` source — called, never rewritten or bypassed). If it is unreachable the server fails closed.
+- Quota feature key: `ai_coach_session` — a **uniform per-user quota (5/month) used as an AI cost control**, not a subscription entitlement. Enforced by the deployed-only `check-feature-access` (still `UNKNOWN` source — called, never rewritten or bypassed). If it is unreachable the server fails closed.
 - No durable idempotency store existed. Added the smallest additive table `assistant_requests` with a unique `(user_id, request_id)` pair, service-role only, RLS enabled.
 
 ### Not yet verified
@@ -30,8 +30,8 @@ Lovable classifications:
 - Supabase Auth/client/function boundary: **ACTIVE PLATFORM DEPENDENCY**.
 - Lovable AI gateway and `LOVABLE_API_KEY`: **USEFUL INTEGRATION**.
 - `career-guidance`: **USEFUL INTEGRATION**; retain the legacy branch while bookmarks/older clients transition.
-- deployed-only `check-feature-access`: **UNKNOWN** until exact source and quota transaction behavior are recovered; do not remove or bypass it.
-- unused legacy `components/ai-coach/*`: **HISTORICAL COMPATIBILITY** for the transition period. Remove only after v2 deployment, usage review and explicit approval.
+- deployed-only `check-feature-access`: **UNKNOWN** until exact source and quota transaction behavior are recovered; do not remove or bypass it. Since 2026-09-04 it backs the uniform per-user AI quota only — the client no longer calls it.
+- legacy `components/ai-coach/*` chat components (ChatMessage, QuickActions, TypingIndicator, CareerInsightsPanel): unused since the AI coach became a workspace hub; `ChatInput` was removed 2026-09-04. Removal of the remaining files still needs explicit approval.
 - PostHog helpers: **UNKNOWN** live status. Contextual-assistant events are intentionally not emitted before consent rules are approved.
 
 ## Request

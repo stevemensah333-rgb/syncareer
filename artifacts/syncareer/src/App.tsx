@@ -28,8 +28,6 @@ import ResetPasswordForm from "./components/auth/ResetPasswordForm";
 const Landing = lazy(() => import("./pages/Landing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
@@ -177,8 +175,10 @@ const AppContent = () => (
               <Route path="/sign-in/*" element={<SignInPage />} />
               <Route path="/sign-up/*" element={<SignUpPage />} />
               <Route path="/signed-out" element={<SignedOut />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/subscription-success" element={<SubscriptionSuccess />} />
+              {/* Legacy monetization routes: Syncareer is free. Redirecting keeps
+                  any externally indexed or bookmarked URLs from breaking. */}
+              <Route path="/pricing" element={<Navigate to="/" replace />} />
+              <Route path="/subscription-success" element={<Navigate to="/" replace />} />
               <Route path="/terms" element={<TermsAndConditions />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />

@@ -2,8 +2,6 @@ const exactTitles: Record<string, string> = {
   '/': 'Syncareer — Stronger, Evidence-Based Graduate Applications',
   '/assessment': 'Free RIASEC Career Assessment | Syncareer',
   '/onboarding': 'Set up your account | Syncareer',
-  '/pricing': 'Pricing — Syncareer Free & Premium Plans',
-  '/subscription-success': 'Subscription activated | Syncareer',
   '/terms': 'Terms and Conditions — Syncareer',
   '/privacy': 'Privacy Policy — Syncareer',
   '/unsubscribe': 'Email preferences | Syncareer',

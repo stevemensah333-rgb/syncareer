@@ -67,12 +67,15 @@ describe('Landing routing', () => {
     expect(router.state.location.search).toBe('?returnTo=%2Fopportunities');
   });
 
-  it('keeps truthful canonical metadata and four FAQ schema entries', () => {
+  it('keeps truthful canonical metadata and FAQ schema entries including the free-service question', () => {
     renderLanding();
     expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://syncareer.me');
-    expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).toMatch(/real opportunities/i);
+    const description = document.querySelector('meta[name="description"]')?.getAttribute('content') ?? '';
+    expect(description).toMatch(/real opportunities/i);
+    expect(description).toMatch(/free career support/i);
+    expect(description).not.toMatch(/subscription|premium|pricing|plan/i);
     const schema = JSON.parse(document.getElementById('seo-jsonld-faqpage')?.textContent || '{}') as { mainEntity?: unknown[] };
-    expect(schema.mainEntity).toHaveLength(4);
+    expect(schema.mainEntity).toHaveLength(5);
   });
 
   it('preserves the role-aware redirect for an onboarded authenticated visitor', async () => {

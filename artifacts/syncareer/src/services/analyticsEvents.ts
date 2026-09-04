@@ -59,7 +59,7 @@ export type Surface = 'opportunity' | 'application' | 'cv';
 export type AssistantTask = 'opportunity.explain_requirement' | 'opportunity.compare_evidence' | 'opportunity.research_questions' | 'cv.rewrite_bullet' | 'application.draft_follow_up' | 'application.clarify_next_action' | 'application.organise_notes' | 'interview.explain_feedback' | 'interview.practice_question';
 
 export interface AnalyticsEventProperties {
-  page_viewed: { route: 'landing' | 'auth' | 'onboarding' | 'dashboard' | 'opportunities' | 'applications' | 'cv_builder' | 'interview' | 'assessment' | 'pricing' | 'settings' | 'other' };
+  page_viewed: { route: 'landing' | 'auth' | 'onboarding' | 'dashboard' | 'opportunities' | 'applications' | 'cv_builder' | 'interview' | 'assessment' | 'settings' | 'other' };
   public_cta_selected: { destination: 'opportunities' | 'assessment'; placement: 'header' | 'hero' | 'final' };
   sign_up_started: { method: AuthMethod; user_role: UserRole };
   account_created: { method: AuthMethod; user_role: UserRole; confirmation_required: boolean };

@@ -35,7 +35,9 @@ export const PROPOSAL_KINDS = [
 ] as const;
 export type ProposalKind = typeof PROPOSAL_KINDS[number];
 
-/** Quota feature key recovered from the live system (free tier: 5 / month). */
+/** Quota feature key recovered from the live system. The quota is a uniform
+ * per-user AI cost-control ceiling (5 / month for every user); it is not a
+ * subscription or premium entitlement. */
 export const QUOTA_FEATURE_KEY = "ai_coach_session";
 
 export const LIMITS = {

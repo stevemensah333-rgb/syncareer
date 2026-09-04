@@ -13,7 +13,6 @@ export function routeCategory(pathname: string): AnalyticsEventProperties['page_
   if (pathname.startsWith('/cv-builder')) return 'cv_builder';
   if (pathname.startsWith('/interview-simulator')) return 'interview';
   if (pathname.startsWith('/assessment')) return 'assessment';
-  if (pathname.startsWith('/pricing')) return 'pricing';
   if (pathname.startsWith('/settings')) return 'settings';
   return 'other';
 }

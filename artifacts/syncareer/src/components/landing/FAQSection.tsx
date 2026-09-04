@@ -8,6 +8,10 @@ import AnimatedSection from "./AnimatedSection";
 
 export const LANDING_FAQS = [
   {
+    q: "Is Syncareer free?",
+    a: "Yes. Syncareer is free to use for students and recent graduates, with no subscription or paid tier. Every feature is available to every user, and no feature is gated behind a payment.",
+  },
+  {
     q: "Does Syncareer apply to roles for me?",
     a: "No. You apply directly on the original employer's posting, then track your stage, notes, and deadlines in your Syncareer workspace.",
   },

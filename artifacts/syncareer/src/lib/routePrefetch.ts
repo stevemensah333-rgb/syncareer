@@ -27,7 +27,6 @@ export function prefetch(importer: Importer) {
 // Public / unauth landing → most likely next stops
 export const prefetchLandingRoutes = () => {
   prefetch(() => import("@/pages/Assessment"));
-  prefetch(() => import("@/pages/Pricing"));
 };
 
 // Signed-in student → warm the primary tabs and the dossier routes they open

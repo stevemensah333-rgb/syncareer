@@ -1,5 +1,7 @@
 # Performance baseline (pre-optimization)
 
+> **Historical note:** Historical performance baseline (pre-2026-09-04) recorded while the subscription hook existed. That layer was removed with the free-product change — see ../FREE_SERVICE_AND_SUPPORT.md.
+
 Captured on this branch before optimization work.
 
 ## Production build chunks (rollup reported, top N)

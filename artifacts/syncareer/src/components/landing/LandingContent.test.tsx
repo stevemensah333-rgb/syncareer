@@ -90,7 +90,7 @@ describe("landing page content and navigation", () => {
 
   it("exposes every FAQ as a keyboard-operable short-answer accordion", () => {
     render(<FAQSection />);
-    expect(LANDING_FAQS).toHaveLength(4);
+    expect(LANDING_FAQS).toHaveLength(5);
     for (const faq of LANDING_FAQS) {
       const trigger = screen.getByRole("button", { name: faq.q });
       expect(trigger.getAttribute("aria-expanded")).toBe("false");

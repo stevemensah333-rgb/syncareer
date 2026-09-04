@@ -26,7 +26,6 @@ import { InterviewErrorBoundary } from '@/components/interview/InterviewErrorBou
 import { VoiceInterviewMode } from '@/components/interview/VoiceInterviewMode';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 import { FeedbackModal } from '@/components/feedback/FeedbackModal';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -50,7 +49,6 @@ import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 type SessionLength = SessionLengthOption['value'];
 
 const InterviewSimulator = () => {
-  const { isPremium: _isPremium } = useSubscription();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<'setup' | 'readiness' | 'interview'>('setup');

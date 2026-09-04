@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
+import { ArrowDown, ArrowRight, CheckCircle2, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ApplicationRecord, { APPLICATION_STAGES } from "./ApplicationRecord";
 
@@ -86,6 +86,12 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
             <p className="mt-8 flex max-w-lg items-start gap-2 border-t pt-6 text-sm leading-6 text-muted-foreground">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
               External opportunities keep their original source links.
+            </p>
+
+            <p className="mt-3 flex max-w-lg items-start gap-2 text-sm leading-6 text-muted-foreground">
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              Free for students and recent graduates — no subscription or paid tier, and every
+              feature is available to every user.
             </p>
           </div>
 

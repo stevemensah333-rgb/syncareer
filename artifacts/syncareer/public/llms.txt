@@ -2,11 +2,12 @@
 
 > An opportunity-first career workspace for African students and recent graduates. Save real opportunities, connect their requirements to your evidence, improve your CV, practise for the interview, and track the outcome.
 
+Syncareer is free to use. There are no paid plans, tiers, or subscriptions, and no product feature is gated by payment.
+
 ## Pages
 
 - [Home](/): Platform overview, product story, FAQs, and sign-up.
 - [Career assessment](/assessment): A public 45-question RIASEC interest assessment; results are shown without an account.
-- [Pricing](/pricing): Free and Premium plans.
 - [Terms and Conditions](/terms): Rules governing access to and use of Syncareer.
 - [Privacy Policy](/privacy): How Syncareer collects, uses and handles information.
 

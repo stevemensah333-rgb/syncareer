@@ -15,7 +15,7 @@ suite below was implemented so each test has an explicit intent.
   backend. The matrix marks them accordingly and they are expected to run in an isolated,
   throwaway environment before a release.
 - **Fakes around external providers** are used everywhere (Lovable auth, Supabase client,
-  Paystack, TTS/STT, LLM). No production data or secrets are ever used by a test.
+  TTS/STT, LLM). No production data or secrets are ever used by a test.
 
 ## Layer 1 — Pure unit tests (local CI)
 
@@ -24,10 +24,10 @@ suite below was implemented so each test has an explicit intent.
 | 1.1 | Deterministic RIASEC scoring, normalization to 0–100, and **tie behavior** (stable order) | `assessmentConstants.test.ts` | No LLM; pure arithmetic |
 | 1.2 | Deterministic CV completion (empty/whitespace/placeholders/ids/defaults = 0; documented section contributions) kept separate from deterministic quality guidance | `features/cv-builder/scoring.test.ts`, `useCVStrengthScore.test.ts` | Pure functions around CV fixtures; no ATS outcome claim |
 | 1.2a | CV persistence: required fields/ownership, authenticated create/update, unauthenticated save, RLS permission error, network/database error, repeated-click coalescing, safe error copy, and full reload round-trip including Activities | `features/cv-builder/persistence.test.ts` | In-memory Supabase fake; live policy execution remains Layer 3 |
-| 1.3 | Feature-access gating: free limits, premium-only features | `featureAccess.test.ts` (existing) | |
+| 1.3 | Product model: feature access does not depend on subscription/plan state; account menu offers Feedback and no Subscription/Upgrade/Billing items | `Navbar.test.tsx`, `ApplicationInterview.test.tsx` | Replaces the former `featureAccess.test.ts` premium-gating coverage |
 | 1.4 | Progress %, milestones, next-action ordering | `progressCalculations.test.ts` | |
 | 1.5 | Auth validation contracts: email/password/name/phone, signup & login schemas | `validationSchemas.test.ts` | |
-| 1.6 | Subscription access gating (`isPremiumUser`), active/expired/canceled tiers | `subscriptionService.test.ts` | Deterministic fakes around `subscriptions` |
+| 1.6 | Optional support seam: entry hidden until `VITE_SUPPORT_URL` is configured; support carries no feature semantics | `lib/support.test.ts` | Replaces former `subscriptionService.test.ts` |
 | 1.7 | Opportunity facts: organisation fallback, work mode (remote-only evidence), eligibility labels, deadline classification (none/passed/today/closing-soon/upcoming), provenance honesty (`verified: false`, no fabricated claims), ingestion freshness, and CTA routing (external/native/tracked/source unavailable) | `features/opportunities/opportunity.test.ts` | Pure functions; no DB |
 | 1.8 | Application status vocabulary & journey: labels, stage mapping, honest terminal/unknown handling, status-editor grouping, notes normalisation, context-aware next actions (missing posting / expired deadline / no CV / offer outcome) | `features/application-tracker/workflow.test.ts` | Pure functions; no DB |
 | 1.9 | Tracker write seam: create-on-first-track, per-user duplicate detection, unique-violation race → alreadyTracked, status/notes updates (blank → null), remove, and error classification (auth-expired / permission / network / server) with no internal leakage | `features/application-tracker/tracking.test.ts` | In-memory fake table; asserts emitted RLS scoping |
@@ -73,7 +73,7 @@ Runnable against an isolated verified-schema restore. Not wired into local CI.
 | 3.7 | Role **immutability**: `user_type` cannot be changed after insert; INSERT limited to `NULL`/`student` | same |
 | 3.8 | Resume/assessment/application **ownership** (RLS `user_id` checks) | same |
 | 3.9 | Counsellor **booking/session visibility** and permitted state changes (client may only cancel; payment fields service-role only) | same |
-| 3.10 | Payment/subscription **write restrictions** (client inserts only `status='pending'`; cannot grant premium) | same |
+| 3.10 | Legacy payment **write restrictions** (client inserts only `status='pending'`) — retained while the legacy `payments` table exists | same |
 | 3.11 | Storage **video ownership** (owner-folder read only; no public bucket policy) | same |
 | 3.12 | SECURITY DEFINER functions not executable by `anon`; only explicitly granted roles | `schema_rls_smoke.sql` (existing) |
 | 3.13 | **Evidence tables**: RLS on all five relations, owner SELECT-only policies (no direct client writes), 14 SECURITY DEFINER operations not executable by `anon`, application-CV exclusivity trigger, 8 composite owner-matched FKs | `supabase/tests/evidence_dossier_rls.sql` (part 1) |
@@ -85,8 +85,8 @@ These exercise **deterministic contracts** only — never exact LLM prose.
 
 | ID | Behavior protected | Note |
 |----|--------------------|------|
-| 4.1 | `verify-paystack-payment`: confirms provider status, amount, currency, plan, ownership, replay/idempotency before granting premium | Deployed-only; source not in repo. Contract asserted via `PaystackButton` verification boundary test. |
-| 4.2 | `check-feature-access`: server-side usage enforcement + increment | Deployed-only; covered indirectly by `featureAccess.test.ts` + `useAICoachAccess.test.ts` |
+| 4.1 | ~~`verify-paystack-payment`~~ **Legacy (no client caller).** No in-repo contract remains; decommissioning requires an owner-approved live-project change | Deployed-only; source not in repo |
+| 4.2 | `check-feature-access`: server-side uniform per-user AI quota (cost control) + increment | Deployed-only; covered indirectly by `features/contextual-assistant/contract.test.ts` and career-guidance contract tests |
 | 4.3 | `delete-account`: owner-only deletion contract | Deployed-only; frontend contract in `Settings.tsx` |
 | 4.4 | `mock-interview` / `interview-tts`: state-machine stub, retry/backoff, cleanup, and ambiguous-start duplicate-billing guard; **LLM prose excluded** | Covered by deterministic retry/backoff + phase/resource contract tests |
 | 4.5 | Email queue RPCs restricted to `service_role` | SQL-level (Layer 3.5) |
@@ -114,9 +114,9 @@ level in `happy-dom`:
 
 - **Live RLS behavior** is only statically asserted; it must be run against an isolated
   restore to be proven (no live Supabase instance in CI).
-- **Deployed edge-function logic** (`verify-paystack-payment`, `check-feature-access`,
+- **Deployed edge-function logic** (`verify-paystack-payment` (legacy), `check-feature-access`,
   `delete-account`, `mock-interview`, `interview-tts`) is not in the repository; only its
-  client-facing contract is tested. Recover exact deployed source before deeper testing.
+  caller-facing contract is tested. Recover exact deployed source before deeper testing.
 - **LLM output quality** (interview feedback prose, career-guidance text) is intentionally
   not tested.
 - **Browser-level E2E** is not run locally; covered by integration tests until a browser
@@ -129,9 +129,9 @@ level in `happy-dom`:
 
 ## Failure policy
 
-Critical authorization and revenue regressions fail the relevant layer:
-- Revenue: if payment/subscription gating breaks, `subscriptionService.test.ts`,
-  `featureAccess.test.ts`, and the RLS payment SQL fail.
+Critical authorization and product-model regressions fail the relevant layer:
+- Product model: if subscription/premium gating is reintroduced (or the profile menu
+  regains plan/billing items), the Navbar/ApplicationInterview/support tests fail.
 - Authorization: if ownership/RLS breaks, `rls_authorization_matrix.sql` fails.
 - Role immutability/privacy: if a user can escalate a role or read others' data, the RLS SQL
   and profile policy tests fail.
