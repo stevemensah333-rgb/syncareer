@@ -126,6 +126,26 @@ Every visible element must answer at least one of: what does this tell me? what 
 
 Show explicit loading, empty, success, warning, and error states. Keep hierarchy clear, placement predictable, navigation persistent on desktop, and next actions visible. Use progressive disclosure and contextual panels/previews that preserve context.
 
+## Career objects, voice, composition, and settings
+
+Design in real career objects, each an intentional composition (never a bare card wall):
+
+- Opportunity = company + role + fit + requirements + action.
+- Application = opportunity + stage + CV + evidence + next action.
+- Evidence = claim + proof + source + requirement relationship.
+- Career Profile = interests + direction + skills + evidence + gaps + goals.
+- Assessment = interests/preferences → career directions → interpretation.
+- Market = signal → demand → skills → implications for this user.
+- Interview = question → response → feedback → next challenge.
+
+Career Profile is the connective anchor of `discover → prove → advance`: assessment direction, CV evidence, and goals should stay readable as one coherent user profile rather than scatter across unrelated pages.
+
+Compose viewports intentionally. Do not fix vertical emptiness with arbitrary min-heights, filler content, or decorative placeholders. Let major editors and workspaces own the viewport, and let pages close naturally.
+
+Use human, concrete product language. Do not write "unlock your potential", "supercharge your career", "revolutionary/AI-powered journey", or "transform your future". Never fabricate user counts, testimonials, employers, success or placement rates, ratings, partners, or market statistics.
+
+Settings is administrative infrastructure, not a career workflow. Keep it to Profile, Account & Security, Notifications, Preferences, Feedback, Help, and optional Support Syncareer. Never present billing or subscription as a user setting — the product is free.
+
 ## AI principle
 
 AI is embedded intelligence, not the brand. Prefer contextual suggestions, explanations, recommendations, evidence guidance, and feedback inside the workflow. Avoid standalone AI chat surfaces where in-workflow assistance suffices, plus AI avatars, sparkles, and repeated "AI-powered" labelling.
