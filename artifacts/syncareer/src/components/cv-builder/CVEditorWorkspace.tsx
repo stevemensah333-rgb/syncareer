@@ -515,8 +515,10 @@ export function CVEditorWorkspace({
       <div className={`grid grid-cols-1 gap-6 ${leftShelf ? 'xl:grid-cols-[minmax(260px,0.85fr)_minmax(0,2fr)_minmax(280px,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(280px,1fr)]' : 'lg:grid-cols-3'}`}>
         {leftShelf && <aside className="min-w-0">{leftShelf}</aside>}
 
-        {/* Main Work Surface Column */}
-        <div className="min-w-0 space-y-4">
+        {/* Main Work Surface Column. With no left shelf the grid is 3 equal
+            columns, so this must span two of them — otherwise the editor
+            renders at one-third width and the last column sits empty. */}
+        <div className={`min-w-0 space-y-4 ${leftShelf ? '' : 'lg:col-span-2'}`}>
           {/* Column heading: keeps the section cards' h3 titles in a valid
               order below the page h1 without adding visible chrome. */}
           <h2 className="sr-only">CV sections</h2>
@@ -650,8 +652,8 @@ export function CVEditorWorkspace({
           )}
 
           {/* Section Outline / Quick Navigation */}
-          <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
-            <div className="flex gap-1.5" role="tablist" aria-label="CV sections">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-1">
+            <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="CV sections">
               {sectionsList.map((sec) => {
                 const isCurrent = activeTab === sec.key;
                 const Icon = sec.icon;
