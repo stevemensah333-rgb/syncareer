@@ -12,7 +12,7 @@ import {
 } from "@/lib/seo";
 import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
-import ProductStory from "@/components/landing/ProductStory";
+import ScrollStory from "@/components/landing/ScrollStory";
 import FAQSection, { LANDING_FAQS } from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
@@ -113,7 +113,7 @@ export default function Landing() {
             startAssessment();
           }}
         />
-        <ProductStory />
+        <ScrollStory />
         <FAQSection />
         <FinalCTASection
           onGetStarted={() => {
