@@ -1,9 +1,24 @@
 export default {
   translation: {
     settings: {
-      title: "Configurações", account: "Conta", notifications: "Notificações", security: "Segurança",
-      regional: "Configurações Regionais", preferences: "Preferências", saveChanges: "Salvar Alterações", cancel: "Cancelar",
-      language: "Idioma", country: "País"
+      title: "Configurações",
+      sectionAccount: "Conta",
+      profile: "Perfil",
+      accountSecurity: "Conta e segurança",
+      notifications: "Notificações",
+      preferences: "Preferências",
+      feedback: "Comentários",
+      help: "Ajuda",
+      supportSyncareer: "Apoiar o Syncareer",
+      language: "Idioma",
+      country: "País / região",
+      timezone: "Fuso horário",
+      theme: "Tema",
+      lightTheme: "Claro",
+      darkTheme: "Escuro",
+      saveChanges: "Salvar alterações",
+      cancel: "Cancelar",
+      changePassword: "Alterar senha"
     }
   }
 };

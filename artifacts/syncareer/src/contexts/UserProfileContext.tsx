@@ -18,6 +18,8 @@ interface UserProfile {
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  linkedin_url: string | null;
+  created_at: string | null;
   onboarding_completed: boolean;
   // tour_completed is optional because the column may not exist in the live
   // Supabase schema cache; QuickTour falls back to localStorage when missing.
@@ -25,7 +27,7 @@ interface UserProfile {
   user_type: string | null;
 }
 
-interface UserProfileContextType {
+export interface UserProfileContextType {
   profile: UserProfile | null;
   studentDetails: StudentDetails | null;
   loading: boolean;
@@ -50,7 +52,7 @@ interface UserProfileProviderProps {
 // the live Supabase schema and PostgREST 42703s on explicit selects of unknown
 // columns (it tolerates missing columns only when using select('*')).
 const PROFILE_COLUMNS =
-  'id, username, full_name, avatar_url, bio, onboarding_completed, user_type';
+  'id, username, full_name, avatar_url, bio, linkedin_url, created_at, onboarding_completed, user_type';
 const STUDENT_COLUMNS =
   'year_of_admission, expected_completion, major, school, degree_type';
 

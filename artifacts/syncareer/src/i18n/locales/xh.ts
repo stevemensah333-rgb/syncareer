@@ -1,9 +1,22 @@
 export default {
   translation: {
     settings: {
-      title: "Iisetingi", account: "I-akhawunti", notifications: "Izaziso", security: "Ukhuseleko",
-      regional: "Iisetingi Zommandla", preferences: "Izinto Ozikhethayo", saveChanges: "Gcina Utshintsho", cancel: "Rhoxisa",
-      language: "Ulwimi", country: "Ilizwe"
+      title: "Iisetingi",
+      sectionAccount: "I-akhawunti",
+      profile: "Iprofayile",
+      accountSecurity: "I-akhawunti noKhuseleko",
+      notifications: "Izaziso",
+      preferences: "Izinto ozikhethayo",
+      feedback: "Impendulo",
+      help: "Uncedo",
+      supportSyncareer: "Xhasa i-Syncareer",
+      language: "Ulwimi",
+      country: "Ilizwe / ummandla",
+      timezone: "Ixesha lommandla",
+      theme: "Umxholo",
+      saveChanges: "Gcina utshintsho",
+      cancel: "Rhoxisa",
+      changePassword: "Tshintha igama eliyimfihlo"
     }
   }
 };

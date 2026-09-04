@@ -221,10 +221,20 @@ Format per feature: identity & ownership → data → usage/burden/cost/security
 ### 3.15 i18n locales — **PAUSE/SIMPLIFY candidate** (founder market decision)
 
 - **Routes/ownership:** `i18n/config.ts` + `i18n/locales/{af,ar,de,es,fr,pt,xh,zh,zu}.ts`; deps `i18next`, `react-i18next`, `i18next-browser-languagedetector`.
-- **Repository evidence:** Only **2 files** consume `useTranslation` (`pages/Settings.tsx`, `components/settings/SecuritySection.tsx`). Locale files are **stubs** (9–14 lines each; English 53 lines). `LanguageDetector` auto-detects browser language and **dynamically loads stub locales** — a French-browser user gets a partially-"translated" Settings page (mixed-language UI), and detection caches the choice in localStorage.
+- **Repository evidence:** Only **3 files** consume `useTranslation`
+  (`pages/Settings.tsx`, `components/settings/PreferencesSection.tsx`,
+  `components/settings/AccountSecuritySection.tsx` — the former `SecuritySection.tsx`
+  is gone with the settings rewrite, 2026-09-04). Locale files are **stubs**
+  (16–18 keys each; English carries the full settings namespace). `LanguageDetector` auto-detects browser language and **dynamically loads stub locales** — a French-browser user gets a partially-"translated" Settings page (mixed-language UI), and detection caches the choice in localStorage.
 - **Usage/cost:** No analytics on language; no runtime cost beyond bundle (lazy chunks) and the detection behavior.
 - **Centrality:** African-market strategy could justify French/Portuguese/Swahili etc. — but a stub-level i18n that auto-activates on one settings page is **worse than English-only** and currently invisible to measurement.
 - **Classification: PAUSE the multi-locale surface** (set supported languages to `en` only, which also stops auto-detection from loading stubs) **or SIMPLIFY to a real en+fr scope** — this is founder decision FD-4 (market strategy). Removal of locale files (RC-4) only after that decision. No user data is implicated either way.
+- **Partial mitigation shipped with the settings rewrite (2026-09-04):** the
+  language picker is generated from `SUPPORTED_LANGUAGES` in `i18n/config.ts`, so
+  Settings can no longer offer a language the app cannot render; switching applies
+  through `i18next.changeLanguage` (one store, `localStorage` key `i18nextLng`)
+  instead of a parallel write. FD-4 (how many locales to keep funding) is still
+  open — most non-English locales still cover only the settings namespace.
 
 ### 3.16 MCP server — **UNKNOWN** → REMOVE CANDIDATE (conditional)
 

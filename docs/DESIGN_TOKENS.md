@@ -300,10 +300,11 @@ rather than controls, so they were left as-is. `input-otp`, `item` and
 (`duration-100`, `duration-200`); they are unused, and the motion tests scope
 themselves to code that ships.
 
-`body.compact-view` rules at the bottom of `index.css` are also untouched: they
-are a settings feature implemented as global overrides with
-`[class*="CardHeader"]` selectors, and reconciling them with the surface
-primitives is a behaviour change, not a token change.
+`body.compact-view` is **removed** (2026-09-04): it was a Settings toggle wired
+to global `[class*="CardHeader"]` overrides, which bypassed the surface
+primitives instead of using them. Density now comes from `.workspace-row` /
+`.surface-content` alone, so there is no page-wide styling exception left in
+`index.css`.
 
 ## Dossier rule
 

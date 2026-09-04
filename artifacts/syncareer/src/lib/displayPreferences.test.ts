@@ -5,28 +5,32 @@ describe('display preferences', () => {
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.classList.remove('dark');
-    document.body.classList.remove('compact-view');
     vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: false }));
   });
 
-  it('restores dark and compact preferences before the workspace renders', () => {
+  it('restores the stored theme before the workspace renders', () => {
     localStorage.setItem('theme', 'dark');
-    localStorage.setItem('compactView', 'true');
     initializeDisplayPreferences();
     expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(document.body.classList.contains('compact-view')).toBe(true);
   });
 
   it('uses the system theme only when no explicit theme is stored', () => {
     vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }));
-    expect(readDisplayPreferences()).toEqual({ dark: true, compact: false });
+    expect(readDisplayPreferences()).toEqual({ dark: true });
   });
 
-  it('applies and persists settings changes together', () => {
-    applyDisplayPreferences({ dark: false, compact: true });
+  it('applies and persists a theme change', () => {
+    applyDisplayPreferences({ dark: true });
+    expect(localStorage.getItem('theme')).toBe('dark');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+    applyDisplayPreferences({ dark: false });
     expect(localStorage.getItem('theme')).toBe('light');
-    expect(localStorage.getItem('compactView')).toBe('true');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
-    expect(document.body.classList.contains('compact-view')).toBe(true);
+  });
+
+  it('does not persist during the initial paint', () => {
+    initializeDisplayPreferences();
+    expect(localStorage.getItem('theme')).toBeNull();
   });
 });

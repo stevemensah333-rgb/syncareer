@@ -2,6 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import en from './locales/en';
+import { languages } from '@/utils/languages';
 
 // Eager-load English only; other locales are dynamically imported on demand
 // so they don't bloat the initial JS bundle.
@@ -13,6 +14,13 @@ import en from './locales/en';
 
 const SUPPORTED = ['en', 'af', 'zu', 'xh', 'es', 'fr', 'de', 'pt', 'zh', 'ar'] as const;
 type Lng = (typeof SUPPORTED)[number];
+
+/** The only languages the app can actually render. Settings offers exactly
+ *  these, so a choice can never silently fall back to English. */
+export const SUPPORTED_LANGUAGES: { code: Lng; name: string }[] = SUPPORTED.map((code) => ({
+  code,
+  name: languages.find((language) => language.code === code)?.name ?? code,
+}));
 
 const loaders: Record<Exclude<Lng, 'en'>, () => Promise<{ default: { translation: Record<string, unknown> } }>> = {
   af: () => import('./locales/af'),
