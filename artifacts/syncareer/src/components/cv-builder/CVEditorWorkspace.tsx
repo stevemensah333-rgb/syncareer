@@ -652,8 +652,8 @@ export function CVEditorWorkspace({
           )}
 
           {/* Section Outline / Quick Navigation */}
-          <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
-            <div className="flex gap-1.5" role="tablist" aria-label="CV sections">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-1">
+            <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="CV sections">
               {sectionsList.map((sec) => {
                 const isCurrent = activeTab === sec.key;
                 const Icon = sec.icon;
