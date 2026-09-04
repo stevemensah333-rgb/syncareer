@@ -74,6 +74,38 @@ describe('Evidence Dossier primitives', () => {
     expect(screen.getByText('Used in CV')).toBeTruthy();
   });
 
+  it('labels each band of the requirement → evidence → material → action chain', () => {
+    render(
+      <EvidenceThread
+        requirement="SQL reporting"
+        detail="Build and explain reporting queries."
+        evidence={[
+          {
+            id: 'a13f2c99',
+            title: 'Reporting dashboard',
+            note: 'Explains the dashboard',
+            status: 'supported',
+            flash: true,
+          },
+        ]}
+        material={<p>Graduate Analyst CV · Projects · entry 1</p>}
+        nextAction={<p>Practice this in interview prep</p>}
+        editActions={<button type="button">Unlink Reporting dashboard</button>}
+      />,
+    );
+    const thread = screen.getByRole('region', { name: 'Evidence for SQL reporting' });
+    expect(thread.textContent).toMatch(
+      /Job requirement[\s\S]*Your evidence[\s\S]*Application material[\s\S]*Next action/,
+    );
+    // The student's own reason for the link stays beside the link itself.
+    expect(thread.textContent).toContain('Explains the dashboard');
+    // A just-attached row is emphasised once, and maintenance never shares a
+    // band with the next action.
+    expect(thread.querySelector('.evidence-thread-track')?.className).toContain('dossier-flash');
+    expect(thread.querySelector('[data-flow-band="next-action"]')?.textContent).not.toContain('Unlink');
+    expect(thread.querySelector('[data-flow-band="edits"]')?.textContent).toContain('Unlink Reporting dashboard');
+  });
+
   it('announces local loading and error states', () => {
     const { rerender } = render(<RecordState tone="loading" title="Loading dossier" description="Your navigation remains available." />);
     expect(screen.getByRole('status').getAttribute('aria-busy')).toBe('true');

@@ -25,6 +25,7 @@ const tailwind = read('tailwind.config.ts');
  * | Requirement/evidence select | click/focus | left rule + tint | 150ms | ease-standard | selection | color only |
  * | Inspector change | selection key | 4px rise + fade | 150ms | ease-standard | context | none |
  * | Evidence attach | flash class | wash fade | 900ms | ease-out | confirmation | none |
+ * | Dossier flow step | selection/section | tint + rule follows | 150ms | ease-standard | relationship | color only |
  * | CV section | expand | grid-rows | 150ms | ease-standard | reveal | instant |
  * | Interview question | question id | opacity | 150ms | ease-standard | next item | none |
  * | Landing stage | tab | 8px slide + fade | 180ms | ease-standard | storytelling | none |
@@ -79,6 +80,21 @@ describe('motion inventory', () => {
     expect(css).toMatch(
       /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.command-why-reveal[\s\S]*?animation:\s*none/,
     );
+  });
+
+  it('keeps the dossier flow selection on the shared tokens and reduced-motion safe', () => {
+    // Requirement/evidence selection is a tint plus the rule line, the flow
+    // step follows it, and the inspector rises on the same scale.
+    expect(css).toContain(".evidence-thread-track[data-state='selected']");
+    expect(css).toContain(
+      'transition-[border-color,background-color] duration-150 ease-standard motion-reduce:transition-none',
+    );
+    expect(css).toContain('.dossier-inspector-enter');
+    // Relationship is carried by colour and the rule line only: the thread and
+    // the flash never introduce a second surface, so the inspector stays the
+    // single elevated level in the workspace.
+    expect(css).not.toMatch(/\.evidence-thread-track[^{]*\{[^}]*shadow/);
+    expect(css).toMatch(/\.dossier-inspector-enter,\s*\.dossier-flash \{\s*animation: none;/);
   });
 
   it('dialogs fade without scale and drawers do not scale the page', () => {
