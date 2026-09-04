@@ -10,7 +10,7 @@ const exactTitles: Record<string, string> = {
   '/settings': 'Settings | Syncareer',
   '/dashboard': 'Application Desk | Syncareer',
   '/opportunities': 'Opportunities | Syncareer',
-  '/analysis': 'Market analysis | Syncareer',
+  '/analysis': 'Market Intelligence | Syncareer',
   '/ai-coach': 'Assistant | Syncareer',
   '/interview-simulator': 'Interview simulator | Syncareer',
   '/applications': 'Applications | Syncareer',
