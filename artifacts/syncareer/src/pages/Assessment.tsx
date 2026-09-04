@@ -549,6 +549,84 @@ const Assessment = () => {
           </Card>
         )}
 
+        {/* Authenticated Next Actions Closing Section */}
+        {!isGuest && (
+          <AnimatedSection delay={0.24} y={20}>
+            <section
+              aria-labelledby="assessment-next-steps-title"
+              className="rounded-surface border border-border/70 bg-card p-5 sm:p-6 space-y-4"
+            >
+              <div>
+                <h2 id="assessment-next-steps-title" className="text-sm font-semibold text-foreground">
+                  Next Steps with Your Interest Profile
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Use your RIASEC work-style themes to guide your opportunity search and application evidence
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-surface border border-border bg-secondary/20 p-4 space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-primary">
+                      <Compass className="h-4 w-4" aria-hidden="true" />
+                      <h3 className="text-xs font-semibold text-foreground">Explore Open Roles</h3>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Search opportunities aligned with your #{1} theme ({activeResult.primary_interest}).
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <Button size="sm" variant="outline" asChild className="w-full text-xs rounded-control justify-between">
+                      <a href={`/opportunities?q=${encodeURIComponent(activeResult.primary_interest || '')}`}>
+                        Find opportunities <ArrowRight className="h-3.5 w-3.5" />
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-surface border border-border bg-secondary/20 p-4 space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-primary">
+                      <Brain className="h-4 w-4" aria-hidden="true" />
+                      <h3 className="text-xs font-semibold text-foreground">Update Your Primary CV</h3>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Frame your skills and experience towards your recommended career clusters.
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <Button size="sm" variant="outline" asChild className="w-full text-xs rounded-control justify-between">
+                      <a href="/cv-builder">
+                        Edit primary CV <ArrowRight className="h-3.5 w-3.5" />
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-surface border border-border bg-secondary/20 p-4 space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-primary">
+                      <Zap className="h-4 w-4" aria-hidden="true" />
+                      <h3 className="text-xs font-semibold text-foreground">Market Demand & Salaries</h3>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Check live hiring signals, in-demand skills, and salary benchmarks for your field.
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <Button size="sm" variant="outline" asChild className="w-full text-xs rounded-control justify-between">
+                      <a href="/analysis">
+                        View market data <ArrowRight className="h-3.5 w-3.5" />
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </AnimatedSection>
+        )}
+
         {/* Guest bottom CTA */}
         {isGuest && (
           <Card className="border-primary/30 bg-accent text-center">

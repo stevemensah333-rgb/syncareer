@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,12 +7,22 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Spinner } from '@/components/ui/spinner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GraduationCap, RefreshCw, AlertCircle, BarChart3, TrendingUp, Download } from 'lucide-react';
+import {
+  GraduationCap,
+  RefreshCw,
+  AlertCircle,
+  BarChart3,
+  TrendingUp,
+  Download,
+  ArrowRight,
+  Briefcase,
+  FileText,
+  Mic,
+} from 'lucide-react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useMarketIntelligence } from '@/hooks/useMarketIntelligence';
 import { MarketOverviewTab } from '@/components/analysis/MarketOverviewTab';
 import { CareerOutlookTab } from '@/components/analysis/CareerOutlookTab';
-import { } from 'react-router-dom';
 import AnimatedSection from '@/components/landing/AnimatedSection';
 
 import { PrescriptiveActionPlan } from '@/components/analysis/PrescriptiveActionPlan';
@@ -28,6 +39,7 @@ const REGIONS = [
 ];
 
 const Analysis = () => {
+  const navigate = useNavigate();
   const { studentDetails, loading: profileLoading } = useUserProfile();
   const major = studentDetails?.major;
   const university = (studentDetails as any)?.school ?? null;
@@ -62,6 +74,11 @@ const Analysis = () => {
             <p className="text-sm text-muted-foreground">
               Add your major and degree in Settings, then come back to see skill demand and salary data for your field.
             </p>
+            <div className="pt-2">
+              <Button onClick={() => navigate('/settings?tab=profile')} className="rounded-control text-xs">
+                Go to Profile Settings
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </PageLayout>
@@ -224,6 +241,84 @@ const Analysis = () => {
               <CareerOutlookTab data={data} />
             </TabsContent>
           </Tabs>
+          </AnimatedSection>
+        )}
+
+        {/* Intentional Lower Context / Action Closure */}
+        {data && !loading && (
+          <AnimatedSection delay={0.1} y={20}>
+            <section
+              aria-labelledby="market-actions-title"
+              className="rounded-surface border border-border/70 bg-card p-5 sm:p-6 space-y-4 print:hidden"
+            >
+              <div>
+                <h2 id="market-actions-title" className="text-sm font-semibold text-foreground">
+                  Apply These Market Signals
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Translate {major} skill demand and salary data into real career moves
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-surface border border-border bg-secondary/20 p-4 space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-primary">
+                      <Briefcase className="h-4 w-4" aria-hidden="true" />
+                      <h3 className="text-xs font-semibold text-foreground">Find Matching Roles</h3>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Search active job postings in {REGIONS.find((r) => r.value === region)?.label ?? 'your region'} filtered for {major}.
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <Button size="sm" variant="outline" asChild className="w-full text-xs rounded-control justify-between">
+                      <Link to={`/opportunities?q=${encodeURIComponent(major)}`}>
+                        Browse opportunities <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-surface border border-border bg-secondary/20 p-4 space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-primary">
+                      <FileText className="h-4 w-4" aria-hidden="true" />
+                      <h3 className="text-xs font-semibold text-foreground">Add In-Demand Skills</h3>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Ensure your primary CV contains evidence of top skills like {data.hard_skills?.slice(0, 2).join(' and ') || 'key requirements'}.
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <Button size="sm" variant="outline" asChild className="w-full text-xs rounded-control justify-between">
+                      <Link to="/cv-builder">
+                        Update primary CV <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-surface border border-border bg-secondary/20 p-4 space-y-2 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-primary">
+                      <Mic className="h-4 w-4" aria-hidden="true" />
+                      <h3 className="text-xs font-semibold text-foreground">Simulate Interviews</h3>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Rehearse role-specific technical and behavioral questions for entry-level {major} positions.
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <Button size="sm" variant="outline" asChild className="w-full text-xs rounded-control justify-between">
+                      <Link to={`/interview-simulator?role=${encodeURIComponent(major)}`}>
+                        Practise interview <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </section>
           </AnimatedSection>
         )}
       </div>

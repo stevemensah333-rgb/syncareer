@@ -206,8 +206,9 @@ const InterviewSimulator = () => {
       ]}
     >
       {step === 'setup' && (
-        <div className="mx-auto max-w-4xl space-y-6">
-          <div className="mx-auto max-w-2xl space-y-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Main Setup Work Surface */}
+          <div className="space-y-6 lg:col-span-7">
             {/* Setup Form */}
             <Card className="rounded-surface border border-border bg-card shadow-card">
               <CardHeader className="pb-3">
@@ -390,6 +391,20 @@ const InterviewSimulator = () => {
               </CardContent>
             </Card>
 
+            {/* Reassurance & Privacy note */}
+            <div className="rounded-surface border border-border/60 bg-secondary/30 p-4 text-xs text-muted-foreground flex items-start gap-2.5">
+              <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="font-semibold text-foreground">Private & Local Simulation</p>
+                <p className="mt-0.5 leading-relaxed text-[11px]">
+                  Answers are evaluated in real time for evidence, clarity, and structure. Audio capture is used solely for speech-to-text; voice recordings are never stored on Syncareer servers.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Context, Methodology & Past Practice */}
+          <div className="space-y-6 lg:col-span-5">
             {/* Live Opportunities Suggestions */}
             {(liveJobs && liveJobs.length > 0) && (
               <Card className="rounded-surface border border-border bg-card shadow-card">
