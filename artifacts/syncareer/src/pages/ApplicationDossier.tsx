@@ -348,6 +348,19 @@ export default function ApplicationDossier() {
     setNotesState('saved');
   };
 
+  const handleDelete = async () => {
+    if (!application) return;
+    setDeleting(true);
+    const result = await removeApplicationRecord(supabase, application.id);
+    if (!result.ok) {
+      setDeleting(false);
+      toast.error(result.userMessage);
+      return;
+    }
+    toast.success('Application removed');
+    navigate('/applications');
+  };
+
   const handleWorkspace = async (update: { resume_id?: string | null; next_action?: string | null; next_action_due?: string | null }) => {
     if (!application || !userId) return;
     if (update.resume_id && !bundle?.resumes.some((resume) => resume.id === update.resume_id)) {
