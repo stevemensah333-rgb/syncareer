@@ -24,6 +24,7 @@ import { useSupabaseUserId } from '@/hooks/useSupabaseUserId';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import {
+  removeApplicationRecord,
   saveApplicationNotes,
   updateApplicationStatus,
   updateApplicationWorkspace,
@@ -120,6 +121,7 @@ export default function ApplicationDossier() {
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
   const [pendingFocus, setPendingFocus] = useState<{ section: SectionId; elementId: string } | null>(null);
   const [statusSaving, setStatusSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [notesState, setNotesState] = useState<SaveState>('idle');
   const [workspaceState, setWorkspaceState] = useState<SaveState>('idle');
   const [sectionBusy, setSectionBusy] = useState(false);

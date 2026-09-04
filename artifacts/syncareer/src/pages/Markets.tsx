@@ -680,7 +680,7 @@ const Opportunities = () => {
                 className="flex min-h-0 min-w-0 flex-col border-border lg:border-r"
                 aria-label="Opportunity results"
               >
-                <Tabs value={tab} onValueChange={(value) => setTab(value as 'all' | 'saved')}>
+                <Tabs value={tab} onValueChange={(value) => setTab(value as 'all' | 'saved')} className="flex min-h-0 flex-1 flex-col">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
                     <TabsList>
                       <TabsTrigger value="all">Latest</TabsTrigger>
