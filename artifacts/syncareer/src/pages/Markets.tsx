@@ -67,7 +67,11 @@ const useRemainingViewportHeight = () => {
         if (!desktop.matches) setHeight(null);
         return;
       }
-      const top = Math.max(element.getBoundingClientRect().top, 56); // clamp when page is scrolled past the workspace
+      // Measure the workspace's top relative to the document, not the viewport:
+      // measuring the viewport-relative top while scrolled produces a smaller
+      // height, which shrinks the page, which changes the scroll position —
+      // an oscillation that leaves the workspace clipped.
+      const top = element.getBoundingClientRect().top + window.scrollY;
       const available = window.innerHeight - top - WORKSPACE_BOTTOM_PADDING;
       setHeight(available >= WORKSPACE_MIN_HEIGHT ? Math.floor(available) : null);
     };
@@ -79,12 +83,10 @@ const useRemainingViewportHeight = () => {
     observer.observe(document.body);
     window.addEventListener('resize', update);
     window.addEventListener('load', update);
-    window.addEventListener('scroll', update, { passive: true });
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', update);
       window.removeEventListener('load', update);
-      window.removeEventListener('scroll', update);
     };
   }, []);
 
