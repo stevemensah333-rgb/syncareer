@@ -850,6 +850,80 @@ export function CVEditorWorkspace({
                 })}
               </div>
             )}
+
+            {/* Intentional Editor Workspace Footer & Completion Area */}
+            <div className="rounded-surface border border-border bg-card p-4 sm:p-5 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <FileText className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">
+                      Draft Progress: {sectionsList.filter((s) => s.filled).length} of {sectionsList.length} sections complete
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {saveState === 'saved'
+                        ? 'All changes saved to your primary CV'
+                        : saveState === 'unsaved'
+                        ? 'Unsaved changes in draft'
+                        : saveState === 'saving'
+                        ? 'Saving changes…'
+                        : 'Save draft to preserve your work'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowPreview(true)}
+                    className="rounded-control text-xs"
+                  >
+                    <Eye className="mr-1.5 h-3.5 w-3.5" />
+                    View PDF document
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={saveState === 'saved' || saveState === 'saving'}
+                    onClick={() => handleSaveCV()}
+                    className="rounded-control text-xs gap-1.5"
+                  >
+                    {saveState === 'saving' ? (
+                      <>
+                        <Spinner className="size-3.5" />
+                        Saving…
+                      </>
+                    ) : saveState === 'saved' ? (
+                      <>
+                        <Check className="h-3.5 w-3.5" />
+                        Saved
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-3.5 w-3.5" />
+                        Save draft
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                <p>
+                  Ready to apply? Use this primary CV as your career baseline or tailor copies for specific roles in Opportunities.
+                </p>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-xs text-primary font-medium"
+                  onClick={() => navigate('/opportunities')}
+                >
+                  Find matching opportunities →
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 

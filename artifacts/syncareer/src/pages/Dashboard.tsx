@@ -30,6 +30,7 @@ import {
   ActiveApplications,
   CareerJourney,
   ContinueWork,
+  DashboardLowerContext,
   DiscoverHero,
   OpportunitySpotlight,
 } from '@/components/dashboard/discover';
@@ -243,6 +244,10 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          <div className="order-7 lg:order-none">
+            <DashboardLowerContext snapshot={snapshot} />
+          </div>
         </div>
       )}
     </StudentLayout>
