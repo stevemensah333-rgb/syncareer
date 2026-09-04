@@ -55,7 +55,7 @@ export function CareerJourney({ phases }: { phases: JourneyPhase[] }) {
                     </span>
                   </span>
                   {phase.current && (
-                    <span className="rounded-control bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                    <span className="rounded-control bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-selected-foreground">
                       You are here
                     </span>
                   )}

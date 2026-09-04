@@ -213,10 +213,13 @@ const InterviewSimulator = () => {
             {/* Setup Form */}
             <Card className="rounded-surface border border-border bg-card shadow-card">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Mic className="h-4 w-4 text-primary" />
+                {/* h2 (not CardTitle's h3): this card is the page's only
+                    top-level section; an h3 directly under the page h1 breaks
+                    heading order. */}
+                <h2 className="text-base font-semibold leading-tight tracking-tight flex items-center gap-2">
+                  <Mic className="h-4 w-4 text-primary" aria-hidden="true" />
                   Set Up Your Practice Interview
-                </CardTitle>
+                </h2>
                 <CardDescription className="text-xs text-muted-foreground">
                   Customize the difficulty, round structure, and role requirements for your practice session.
                 </CardDescription>

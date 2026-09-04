@@ -63,7 +63,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
         >
           {import.meta.env.DEV && this.state.error && (
             <details className="surface-content mt-8 w-full p-4 text-left">
-              <summary className="type-label cursor-pointer text-foreground">Error details</summary>
+              <summary className="type-label inline-flex min-h-6 cursor-pointer items-center text-foreground">Error details</summary>
               <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-xs text-destructive">
                 {this.state.error.message}
                 {'\n'}

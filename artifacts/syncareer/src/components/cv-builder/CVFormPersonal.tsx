@@ -42,6 +42,7 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
             <Input
               id="firstName"
               placeholder="e.g. Kwame"
+              autoComplete="given-name"
               value={data.firstName}
               aria-invalid={!!errors.firstName}
               aria-describedby={errors.firstName ? 'firstName-error' : undefined}
@@ -59,6 +60,7 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
             <Input
               id="lastName"
               placeholder="e.g. Mensah"
+              autoComplete="family-name"
               value={data.lastName}
               onChange={(e) => onChange({ lastName: e.target.value })}
               className="rounded-input"
@@ -75,6 +77,7 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
             <Input
               id="phone"
               placeholder="+233 24 000 0000"
+              autoComplete="tel"
               value={data.phone}
               onChange={(e) => onChange({ phone: e.target.value })}
               className="rounded-input"
@@ -88,6 +91,7 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
             <Input
               id="nationality"
               placeholder="e.g. Ghanaian · Accra, Ghana"
+              autoComplete="country-name"
               value={data.nationality}
               onChange={(e) => onChange({ nationality: e.target.value })}
               className="rounded-input"
@@ -105,6 +109,7 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
               id="email"
               type="email"
               placeholder="kwame.mensah@gmail.com"
+              autoComplete="email"
               value={data.email}
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? 'email-error' : undefined}
@@ -141,6 +146,7 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
           <Input
             id="linkedIn"
             placeholder="https://linkedin.com/in/kwamemensah"
+              autoComplete="url"
             value={data.linkedIn}
             onChange={(e) => onChange({ linkedIn: e.target.value })}
             className="rounded-input"

@@ -1097,6 +1097,11 @@ export default function ApplicationDossier() {
     if (!next) return;
     event.preventDefault();
     selectSection(next);
+    // Roving focus: arrows must move focus with selection, otherwise repeated
+    // arrow presses re-select the same neighbour and strand the keyboard user.
+    requestAnimationFrame(() => {
+      document.getElementById(`dossier-section-tab-${next}`)?.focus();
+    });
   };
 
   const renderSection = (id: SectionId) => {
@@ -1183,7 +1188,7 @@ export default function ApplicationDossier() {
   };
 
   return (
-    <div ref={pageRef} tabIndex={-1} className="space-y-0 focus:outline-none">
+    <main ref={pageRef} tabIndex={-1} className="space-y-0 focus:outline-none">
       <p aria-live="polite" className="sr-only">
         {inspectorAnnouncement}
       </p>
@@ -1228,6 +1233,7 @@ export default function ApplicationDossier() {
                       <button
                         key={section}
                         type="button"
+                        id={`dossier-section-tab-${section}`}
                         aria-pressed={active}
                         tabIndex={0}
                         onClick={() => selectSection(section)}
@@ -1393,7 +1399,7 @@ export default function ApplicationDossier() {
           </SheetContent>
         </Sheet>
       )}
-    </div>
+    </main>
   );
 }
 

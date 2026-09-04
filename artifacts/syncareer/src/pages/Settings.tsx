@@ -256,39 +256,46 @@ const Settings = () => {
                       <h3 className="text-lg font-medium mb-4">{t('settings.personalInfo')}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium mb-1">Full Name</label>
-                          <input 
-                            type="text" 
+                          <label htmlFor="settings-full-name" className="block text-sm font-medium mb-1">Full Name</label>
+                          <input
+                            id="settings-full-name"
+                            type="text"
                             value={profile?.full_name || ''}
+                            autoComplete="name"
                             readOnly
-                            className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
+                            className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-1">Username</label>
-                          <input 
-                            type="text" 
+                          <label htmlFor="settings-username" className="block text-sm font-medium mb-1">Username</label>
+                          <input
+                            id="settings-username"
+                            type="text"
                             value={profile?.username || ''}
+                            autoComplete="username"
                             readOnly
-                            className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
+                            className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-1">{t('settings.email')}</label>
-                          <input 
-                            type="email" 
+                          <label htmlFor="settings-email" className="block text-sm font-medium mb-1">{t('settings.email')}</label>
+                          <input
+                            id="settings-email"
+                            type="email"
                             value={userEmail}
+                            autoComplete="email"
                             readOnly
-                            className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
+                            className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-1">Account Type</label>
-                          <input 
-                            type="text" 
+                          <label htmlFor="settings-account-type" className="block text-sm font-medium mb-1">Account Type</label>
+                          <input
+                            id="settings-account-type"
+                            type="text"
                             value={getUserTypeLabel(profile?.user_type || null)}
                             readOnly
-                            className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
+                            className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed"
                           />
                         </div>
                       </div>
@@ -300,48 +307,54 @@ const Settings = () => {
                         <h3 className="text-lg font-medium mb-4">Education Details</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium mb-1">School</label>
-                            <input 
-                              type="text" 
+                            <label htmlFor="settings-school" className="block text-sm font-medium mb-1">School</label>
+                            <input
+                              id="settings-school"
+                              type="text"
                               value={studentDetails.school || ''}
+                              autoComplete="organization"
                               readOnly
-                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
+                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium mb-1">Major</label>
-                            <input 
-                              type="text" 
+                            <label htmlFor="settings-major" className="block text-sm font-medium mb-1">Major</label>
+                            <input
+                              id="settings-major"
+                              type="text"
                               value={studentDetails.major || ''}
                               readOnly
-                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
+                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium mb-1">Degree Type</label>
-                            <input 
-                              type="text" 
+                            <label htmlFor="settings-degree-type" className="block text-sm font-medium mb-1">Degree Type</label>
+                            <input
+                              id="settings-degree-type"
+                              type="text"
                               value={studentDetails.degree_type || ''}
                               readOnly
-                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
+                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium mb-1">Year of Admission</label>
-                            <input 
-                              type="text" 
+                            <label htmlFor="settings-year-of-admission" className="block text-sm font-medium mb-1">Year of Admission</label>
+                            <input
+                              id="settings-year-of-admission"
+                              type="text"
                               value={studentDetails.year_of_admission?.toString() || ''}
                               readOnly
-                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
+                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium mb-1">Expected Completion</label>
-                            <input 
-                              type="text" 
+                            <label htmlFor="settings-expected-completion" className="block text-sm font-medium mb-1">Expected Completion</label>
+                            <input
+                              id="settings-expected-completion"
+                              type="text"
                               value={studentDetails.expected_completion?.toString() || ''}
                               readOnly
-                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed" 
+                              className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground cursor-not-allowed"
                             />
                           </div>
                         </div>

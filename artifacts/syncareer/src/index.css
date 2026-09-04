@@ -52,18 +52,21 @@
     --accent: 252 55% 96%;
     --accent-foreground: 252 44% 31%;
 
-    --destructive: 0 72% 51%;
+    /* Status accents keep their hue; lightness is set so their *text* usage
+       meets AA (4.5:1) on white and on their /10 tints, verified by the
+       accessibility audit (qa/contrast notes). */
+    --destructive: 0 72% 46%;
     --destructive-foreground: 0 0% 100%;
 
     /* Success / progress: teal-mint */
-    --success: 166 70% 36%;
+    --success: 166 70% 28%;
     --success-foreground: 0 0% 100%;
 
     /* Attention / deadlines: restrained amber */
-    --warning: 38 90% 42%;
+    --warning: 38 90% 32%;
     --warning-foreground: 0 0% 100%;
 
-    --danger: 0 72% 51%;
+    --danger: 0 72% 46%;
     --danger-foreground: 0 0% 100%;
 
     /* Contextual guidance: lavender */
@@ -88,7 +91,7 @@
     --primary-hover: 221 78% 46%;
     --selected: 221 55% 95%;
     --selected-foreground: 221 50% 28%;
-    --error: 0 72% 51%;
+    --error: 0 72% 46%;
     --error-foreground: 0 0% 100%;
 
     /* ---------------------------------------------------------------
@@ -242,7 +245,11 @@
 
   html,
   body {
-    @apply min-h-full overflow-x-hidden antialiased;
+    /* No global overflow-x clip: it silently hides real horizontal overflow
+       and breaks position:sticky descendants (e.g. the CV editor toolbar).
+       Overflow is fixed at the component level and verified by the
+       responsive/accessibility audit. */
+    @apply min-h-full antialiased;
   }
 
   body {

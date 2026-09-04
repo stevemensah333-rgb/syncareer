@@ -517,10 +517,13 @@ export function CVEditorWorkspace({
 
         {/* Main Work Surface Column */}
         <div className="min-w-0 space-y-4">
+          {/* Column heading: keeps the section cards' h3 titles in a valid
+              order below the page h1 without adding visible chrome. */}
+          <h2 className="sr-only">CV sections</h2>
           {contextBanner}
 
           {/* Consistent Top Toolbar */}
-          <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 rounded-surface border border-border bg-card/95 p-3 sm:px-4 backdrop-blur-sm shadow-card">
+          <div className="sticky top-14 z-20 flex flex-wrap items-center justify-between gap-3 rounded-surface border border-border bg-card/95 p-3 sm:px-4 backdrop-blur-sm shadow-card">
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -849,6 +852,7 @@ export function CVEditorWorkspace({
 
         {/* Right Sidebar: Progress, Guidance & Contextual AI Panel */}
         <div className="space-y-4 lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
+          <h2 className="sr-only">CV progress and guidance</h2>
           <CVStrengthScore result={strengthResult} />
           {sidebarExtras}
 

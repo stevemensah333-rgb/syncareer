@@ -47,7 +47,10 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
 
             {/* DISCOVER → PROVE → ADVANCE journey sequence */}
             <div className="mt-8" role="list" aria-label="Application journey: Discover, Prove, Advance">
-              <div className="flex items-stretch gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none lg:gap-3 lg:overflow-visible lg:pb-0">
+              <div
+                tabIndex={0}
+                className="flex items-stretch gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:gap-3 lg:overflow-visible lg:pb-0"
+              >
                 {JOURNEY_STEPS.map((step, index) => (
                   <div key={step.id} className="flex items-center gap-2 snap-start lg:gap-3" role="listitem">
                     <div className="group flex min-w-[120px] flex-col items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5 transition-[border-color,background-color] duration-150 hover:border-primary/30 hover:bg-primary/[0.04] motion-reduce:transition-none lg:min-w-0 lg:px-4 lg:py-3">
