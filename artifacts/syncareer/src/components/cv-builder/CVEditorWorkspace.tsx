@@ -485,7 +485,9 @@ export function CVEditorWorkspace({
     },
   ], [cvData]);
 
-  if (loading || !initialCv) {
+  // Only the load itself gates the editor. A user with no saved CV yet gets the
+  // blank editor, not a permanent skeleton.
+  if (loading) {
     return (
       <div
         className="grid grid-cols-1 gap-6 lg:grid-cols-3"
