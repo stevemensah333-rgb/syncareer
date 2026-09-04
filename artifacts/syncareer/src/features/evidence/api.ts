@@ -220,6 +220,13 @@ export async function listApplicationRequirements(
   }
 }
 
+/** Every requirement the caller owns, across applications (RLS scopes the read). */
+export async function listOwnedApplicationRequirements(
+  client: EvidenceClient,
+): Promise<EvidenceResult<ApplicationRequirementRow[]>> {
+  return fetchRows(client, 'application_requirements', applicationRequirementSchema, { column: 'sort_order', ascending: true });
+}
+
 export async function listApplicationEvidenceLinks(client: EvidenceClient): Promise<EvidenceResult<ApplicationEvidenceLinkRow[]>> {
   return fetchRows(client, 'application_evidence_links', applicationEvidenceLinkSchema, { column: 'created_at', ascending: true });
 }

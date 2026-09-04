@@ -69,7 +69,7 @@ beforeEach(() => {
 });
 
 describe('Application Tracker page', () => {
-  it('renders applications with status, and filters by journey stage', async () => {
+  it('renders applications with stage, and filters by application state', async () => {
     installSupabaseMock({
       tables: {
         job_applications: {
@@ -84,18 +84,18 @@ describe('Application Tracker page', () => {
     });
     renderPage();
 
-    expect(await screen.findByText('Graduate Analyst')).toBeTruthy();
-    expect(screen.getByText('Credit Officer')).toBeTruthy();
-    expect(screen.getByText('Field Coordinator')).toBeTruthy();
+    await screen.findAllByText('Graduate Analyst');
+    const list = () => screen.getByRole('group', { name: 'Applications' });
+    const roles = () =>
+      Array.from(list().querySelectorAll('h3')).map((node) => node.textContent);
+    expect(roles()).toEqual(['Graduate Analyst', 'Credit Officer', 'Field Coordinator']);
 
-    // Stage filter: "In review" keeps only reviewing/shortlisted rows
-    fireEvent.click(screen.getByRole('button', { name: /In review/ }));
-    expect(screen.queryByText('Graduate Analyst')).toBeNull();
-    expect(screen.getByText('Credit Officer')).toBeTruthy();
-    expect(screen.queryByText('Field Coordinator')).toBeNull();
+    // State filter: "Completed" keeps only terminal outcomes.
+    fireEvent.click(screen.getByRole('button', { name: /Completed/ }));
+    expect(roles()).toEqual(['Field Coordinator']);
   });
 
-  it('navigates a row to its canonical dossier route', async () => {
+  it('navigates an application object to its canonical workspace route', async () => {
     installSupabaseMock({
       tables: {
         job_applications: { data: [makeAppRow({ status: 'interview', notes: 'Prepare SQL stories' })], error: null },
@@ -103,7 +103,7 @@ describe('Application Tracker page', () => {
     });
     const page = renderPage();
 
-    const row = await screen.findByRole('button', { name: /Graduate Analyst.*Open dossier/ });
+    const row = await screen.findByRole('button', { name: /Graduate Analyst.*Open application/ });
     fireEvent.click(row);
 
     expect(page.getPath()).toBe('/applications/app-1');
@@ -121,13 +121,13 @@ describe('Application Tracker page', () => {
         },
       },
     });
-    const page = renderPage('/applications?application=app-2&stage=offer&q=credit');
+    const page = renderPage('/applications?application=app-2&state=completed&q=credit');
 
-    expect(await screen.findByText('Credit Officer')).toBeTruthy();
-    expect(page.getPath()).toBe('/applications/app-2?q=credit&stage=offer');
+    expect((await screen.findAllByText('Credit Officer')).length).toBeGreaterThan(0);
+    expect(page.getPath()).toBe('/applications/app-2?q=credit&state=completed');
   });
 
-  it('flags rows whose posting is gone instead of hiding them', async () => {
+  it('flags applications whose posting is gone instead of hiding them', async () => {
     installSupabaseMock({
       tables: {
         job_applications: { data: [makeAppRow({ job: null })], error: null },
@@ -135,7 +135,7 @@ describe('Application Tracker page', () => {
     });
     renderPage();
 
-    expect(await screen.findByText(/Posting unavailable/)).toBeTruthy();
+    expect(await screen.findByText(/Original posting unavailable/)).toBeTruthy();
     expect(screen.getAllByText('Tracked application').length).toBeGreaterThan(0);
   });
 
@@ -184,13 +184,50 @@ describe('Application Tracker page', () => {
     expect(screen.getByRole('button', { name: /Browse Opportunities/i })).toBeTruthy();
   });
 
+  it('shows evidence coverage, linked CV and the next action on the application object', async () => {
+    installSupabaseMock({
+      tables: {
+        job_applications: {
+          data: [makeAppRow({ id: '66666666-6666-4666-8666-666666666666', status: 'interview', resume_id: 'cv-1', next_action: 'Review missing evidence' })],
+          error: null,
+        },
+        resumes: { data: [{ id: 'cv-1', user_id: '77777777-7777-4777-8777-777777777777', title: 'Backend CV v2', updated_at: null }], error: null },
+        application_requirements: {
+          data: [
+            { id: '11111111-1111-4111-8111-111111111111', application_id: '66666666-6666-4666-8666-666666666666', user_id: '77777777-7777-4777-8777-777777777777', label: 'SQL', detail: null, origin: 'posting_skill', sort_order: 0, created_at: '2026-08-28T09:00:00.000Z', updated_at: '2026-08-28T09:00:00.000Z' },
+            { id: '22222222-2222-4222-8222-222222222222', application_id: '66666666-6666-4666-8666-666666666666', user_id: '77777777-7777-4777-8777-777777777777', label: 'APIs', detail: null, origin: 'posting_skill', sort_order: 1, created_at: '2026-08-28T09:00:00.000Z', updated_at: '2026-08-28T09:00:00.000Z' },
+          ],
+          error: null,
+        },
+        evidence_items: {
+          data: [{ id: '33333333-3333-4333-8333-333333333333', user_id: '77777777-7777-4777-8777-777777777777', category: 'work', title: 'Reporting pipeline', summary: 'Built it', occurred_on: null, review_status: 'confirmed', created_at: '2026-08-28T09:00:00.000Z', updated_at: '2026-08-28T09:00:00.000Z' }],
+          error: null,
+        },
+        evidence_sources: {
+          data: [{ id: '44444444-4444-4444-8444-444444444444', evidence_id: '33333333-3333-4333-8333-333333333333', user_id: '77777777-7777-4777-8777-777777777777', source_type: 'manual_note', resume_id: null, interview_id: null, entry_locator: null, source_label: 'Note', source_excerpt: 'Excerpt', source_url: null, created_at: '2026-08-28T09:00:00.000Z', updated_at: '2026-08-28T09:00:00.000Z' }],
+          error: null,
+        },
+        application_evidence_links: {
+          data: [{ id: '55555555-5555-4555-8555-555555555555', requirement_id: '11111111-1111-4111-8111-111111111111', evidence_id: '33333333-3333-4333-8333-333333333333', user_id: '77777777-7777-4777-8777-777777777777', relevance_note: null, created_at: '2026-08-28T09:00:00.000Z' }],
+          error: null,
+        },
+        resume_evidence_links: { data: [], error: null },
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByText('1 / 2')).toBeTruthy();
+    expect(screen.getByText('Backend CV v2')).toBeTruthy();
+    expect(screen.getByText('Review missing evidence')).toBeTruthy();
+  });
+
   it('supports keyboard navigation between applications', async () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
     installSupabaseMock({ tables: {
       job_applications: { data: [makeAppRow({ id: 'app-1' }), makeAppRow({ id: 'app-2', job: { ...makeAppRow().job, title: 'Second role' } })], error: null },
     }});
     renderPage();
-    const first = await screen.findByRole('button', { name: /Graduate Analyst.*Open dossier/i });
+    const first = await screen.findByRole('button', { name: /Graduate Analyst.*Open application/i });
     fireEvent.keyDown(first, { key: 'ArrowDown' });
     await new Promise((resolve) => requestAnimationFrame(resolve));
     expect(document.activeElement?.getAttribute('data-application-id')).toBe('app-2');
