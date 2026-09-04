@@ -729,8 +729,8 @@ const Opportunities = () => {
               ref={workspaceRef}
               style={workspaceStyle}
               className={cn(
-                'surface-content grid min-h-[520px] grid-cols-1 lg:grid-cols-[minmax(340px,420px)_1fr]',
-                workspaceConstrained && 'lg:overflow-hidden',
+                'surface-content grid grid-cols-1 lg:grid-cols-[minmax(340px,420px)_1fr]',
+                workspaceConstrained ? 'lg:overflow-hidden' : 'min-h-[520px]',
               )}
             >
               <section
