@@ -153,11 +153,11 @@ Format per feature: identity & ownership → data → usage/burden/cost/security
 
 ### 3.7 Market intelligence / alumni outcomes — **SUPPORTING** (PAUSE option flagged)
 
-- **Routes/ownership:** `/analysis` — `pages/Analysis.tsx` (233 lines), `components/analysis/*` (4 tabs/cards), `hooks/useMarketIntelligence.ts`, dashboard `UniversityInsightsCard.tsx`. Tracked functions `market-intelligence`, `alumni-outcomes` (both in-repo), deployed-only `compute-university-insights`.
+- **Routes/ownership:** `/analysis` — `pages/Analysis.tsx` (decision-support composition: conclusion → provenance → market signal → employer demand → position → gaps → next actions), `components/analysis/*` (MarketConclusion, MarketSignalSection, EmployerDemandSection, YourPositionSection, YourGapsSection, NextActionsSection, shared provenance), `features/market-intelligence/derive.ts` (pure derivation), `hooks/useMarketIntelligence.ts` + `hooks/useMarketSignals.ts`, dashboard `UniversityInsightsCard.tsx`. Tracked functions `market-intelligence`, `alumni-outcomes` (both in-repo), deployed-only `compute-university-insights`.
 - **Data:** `market_intelligence_cache`, `alumni_outcomes_cache`, `university_insights`.
 - **Usage/burden/cost:** No events. Cost model: Firecrawl crawls + Gemini calls, results cached per major/region — cost scales with *distinct* major/region pairs and refresh cadence, not headcount. If the user base is small and concentrated, cost is modest; if traffic is thin, the feature is paying rent for zero readers.
 - **Security/privacy:** Aggregated labor-market data; no personal data beyond major/region keys. Alumni-outcomes crawls public web data about institutions — keep an eye on source terms.
-- **Tests:** none feature-specific (hook exercised indirectly). Gap.
+- **Tests:** `features/market-intelligence/derive.test.ts`, `pages/Analysis.test.tsx`, `hooks/useMarketSignals.test.ts`. The UI labels all model output as estimates with provenance/confidence/freshness; figures are not presented as verified statistics.
 - **Platform deps:** Tracked functions + Firecrawl + Lovable AI gateway.
 - **Centrality/AI:** Supports the "Discover/Apply" story with African-market-specific data that generic tools lack — credible differentiation, but it is a *read* surface, not the transactional loop. AI/web crawling is genuinely needed to produce it.
 - **Classification: SUPPORTING**, with a PAUSE trigger: if counts (cache freshness vs. distinct readers) and invocation logs show near-zero consumption, pause refresh and keep the last cache (static read remains).
