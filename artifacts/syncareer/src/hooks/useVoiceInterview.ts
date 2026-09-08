@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeWithTimeout } from '@/lib/invokeWithTimeout';
 import type {
   InterviewMessage,
   InterviewPhase,
@@ -380,7 +381,7 @@ export function useVoiceInterview({
 
     try {
       const { data, error: fnError } = await withRetry(
-        () => supabase.functions.invoke('mock-interview', {
+        () => invokeWithTimeout(() => supabase.functions.invoke('mock-interview', {
           body: {
             action: 'answer',
             interviewId: interviewIdRef.current,
@@ -388,7 +389,7 @@ export function useVoiceInterview({
             conversationHistory: conversationHistoryRef.current,
             sessionLength,
           },
-        }),
+        }), { label: 'The interviewer', timeoutMs: 45_000 }),
         { maxRetries: 2, baseDelayMs: 2000, maxDelayMs: 8000 },
         'AI response'
       );
@@ -424,12 +425,15 @@ export function useVoiceInterview({
         responseText = "Excellent! You've completed all the interview questions. Let me prepare your comprehensive feedback report...";
 
         try {
-          const { data: feedbackData } = await supabase.functions.invoke('mock-interview', {
-            body: {
-              action: 'feedback',
-              interviewId: interviewIdRef.current,
-            },
-          });
+          const { data: feedbackData } = await invokeWithTimeout(
+            () => supabase.functions.invoke('mock-interview', {
+              body: {
+                action: 'feedback',
+                interviewId: interviewIdRef.current,
+              },
+            }),
+            { label: 'The interview report', timeoutMs: 60_000 },
+          );
 
           if (feedbackData?.overallFeedback) {
             const fb = feedbackData.overallFeedback;
@@ -511,7 +515,7 @@ export function useVoiceInterview({
       mediaStreamRef.current = null;
 
       const { data, error: fnError } = await withRetry(
-        () => supabase.functions.invoke('mock-interview', {
+        () => invokeWithTimeout(() => supabase.functions.invoke('mock-interview', {
           body: {
             action: 'start',
             jobRole,
@@ -522,7 +526,7 @@ export function useVoiceInterview({
             interviewType: interviewType || 'mixed',
             sessionLength,
           },
-        }),
+        }), { label: 'The interviewer', timeoutMs: 45_000 }),
         // Starting can create a billable persisted session. Do not retry an
         // ambiguous start without a server-supported idempotency key.
         START_INTERVIEW_RETRY_CONFIG,

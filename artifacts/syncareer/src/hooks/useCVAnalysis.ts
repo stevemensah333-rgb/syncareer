@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionTimeoutError, invokeWithTimeout } from '@/lib/invokeWithTimeout';
 import { toast } from 'sonner';
 import type { CVData } from '@/features/cv-builder/types';
 import { MAX_UPLOAD_FILE_SIZE, ALLOWED_UPLOAD_TYPES } from '@/features/cv-builder/constants';
@@ -87,13 +88,16 @@ export const useCVAnalysis = () => {
       const fileBase64 = await fileToBase64(file);
 
       setStatus('analyzing');
-      const { data, error: fnError } = await supabase.functions.invoke('analyze-portfolio', {
-        body: {
-          fileBase64,
-          fileMimeType: file.type,
-          fileName: file.name,
-        },
-      });
+      const { data, error: fnError } = await invokeWithTimeout(
+        () => supabase.functions.invoke('analyze-portfolio', {
+          body: {
+            fileBase64,
+            fileMimeType: file.type,
+            fileName: file.name,
+          },
+        }),
+        { label: 'CV analysis', timeoutMs: 90_000 },
+      );
 
       if (fnError) throw fnError;
       const parsed = parseCVAnalysisResult(data);
@@ -104,9 +108,11 @@ export const useCVAnalysis = () => {
       toast.success('CV analyzed — review and edit each section.');
     } catch (cause: unknown) {
       console.error('[useCVAnalysis] CV analysis failed', { name: cause instanceof Error ? cause.name : 'UnknownError' });
-      const msg = cause instanceof Error && cause.message === 'MALFORMED_ANALYSIS_RESPONSE'
-        ? 'The CV analysis service returned an unsupported response. Nothing was applied.'
-        : 'Failed to analyze CV. Nothing was applied.';
+      const msg = cause instanceof FunctionTimeoutError
+        ? 'CV analysis took too long and was stopped. Nothing was applied — try again, or fill the sections in yourself.'
+        : cause instanceof Error && cause.message === 'MALFORMED_ANALYSIS_RESPONSE'
+          ? 'The CV analysis service returned an unsupported response. Nothing was applied.'
+          : 'Failed to analyze CV. Nothing was applied.';
       setError(msg);
       setStatus('error');
       toast.error(msg);

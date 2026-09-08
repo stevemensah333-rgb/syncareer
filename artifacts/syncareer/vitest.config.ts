@@ -15,5 +15,10 @@ export default defineConfig({
     globals: true,
     include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/test/setup.ts'],
+    // Page-level suites mount the real workspace shell under happy-dom, which
+    // costs seconds per render on shared CI hardware. The default 5s budget
+    // measured the machine, not the code, so whole suites failed on load.
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
   },
 });

@@ -16,6 +16,7 @@ import { DeadlinePill } from './DeadlinePill';
 import {
   formatPostedAgo,
   getDeadlineState,
+  getIngestionFreshness,
   getOpportunityCta,
   getOrganisation,
   getProvenanceFacts,
@@ -74,6 +75,7 @@ export const OpportunityCard = memo(function OpportunityCard({
   const workMode = getWorkModeLabel(job);
   const provenance = getProvenanceFacts(job);
   const posted = formatPostedAgo(job.created_at);
+  const freshness = getIngestionFreshness(job.updated_at);
   const cta = getOpportunityCta({
     isExternal: job.is_external,
     hasSourceUrl: Boolean(job.source_url),
@@ -122,6 +124,17 @@ export const OpportunityCard = memo(function OpportunityCard({
             via {provenance.sourceLabel}
             {posted ? ` · added ${posted}` : ''}
           </span>
+          {/* Ingestion age, shown only when the record has gone stale. It says
+              what is actually known — when the listing data was last pulled —
+              and never implies the role is still open or already closed. */}
+          {freshness.kind === 'stale' && (
+            <span
+              className="rounded-control border border-warning/40 bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning"
+              title={freshness.label}
+            >
+              Not refreshed recently
+            </span>
+          )}
           {application && (
             <span className="rounded-control border border-border bg-secondary px-2 py-0.5 text-[11px] font-medium text-foreground-secondary">
               Tracking · {statusLabel(application.status)}

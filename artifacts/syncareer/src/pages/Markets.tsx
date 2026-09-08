@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 import { OpportunityCard } from '@/components/opportunities/OpportunityCard';
 import { OpportunityDetail } from '@/components/opportunities/OpportunityDetail';
-import { getDeadlineState, type OpportunityJob } from '@/features/opportunities/opportunity';
+import { formatPostedAgo, getDeadlineState, type OpportunityJob } from '@/features/opportunities/opportunity';
 import { buildFitExplanation, hasProfileSignals, type FitExplanation } from '@/features/opportunities/fit';
 import {
   getMajorTerms,
@@ -225,6 +225,15 @@ const Opportunities = () => {
   );
   const rankingSummary = useMemo(() => opportunityRankingSummary(rankingProfile), [rankingProfile]);
   const deduplicatedCount = jobs.length - ranked.length;
+  /** Newest ingestion timestamp in the feed: how current this list actually is. */
+  const feedUpdated = useMemo(() => {
+    let newest: string | null = null;
+    for (const job of jobs) {
+      const stamp = job.updated_at ?? job.created_at ?? null;
+      if (stamp && (!newest || stamp > newest)) newest = stamp;
+    }
+    return formatPostedAgo(newest);
+  }, [jobs]);
   const fitByJob = useMemo(() => {
     const map = new Map<string, FitExplanation | null>();
     for (const result of ranked) {
@@ -460,9 +469,12 @@ const Opportunities = () => {
       .slice(0, 3);
   }, [rankingProfile.major, search]);
 
+  // The count is paired with when the feed was last refreshed, so a quiet list
+  // reads as "nothing new was pulled" rather than "nothing exists".
+  const feedSuffix = feedUpdated ? ` · updated ${feedUpdated.toLocaleLowerCase()}` : '';
   const searchFeedback = search.trim()
     ? `${filtered.length} ${filtered.length === 1 ? 'opportunity' : 'opportunities'} for “${search.trim()}”`
-    : `${filtered.length} open ${filtered.length === 1 ? 'opportunity' : 'opportunities'}`;
+    : `${filtered.length} open ${filtered.length === 1 ? 'opportunity' : 'opportunities'}${feedSuffix}`;
 
   const isLoading = loadStatus === 'loading';
 
@@ -829,7 +841,7 @@ const Opportunities = () => {
                         Saved ({savedIds.size})
                       </TabsTrigger>
                     </TabsList>
-                    {rankingSummary && tab === 'all' && (
+                    {tab === 'all' && (rankingSummary || deduplicatedCount > 0) && (
                       <p role="status" className="type-meta min-w-0 truncate">
                         {rankingSummary}
                         {deduplicatedCount > 0

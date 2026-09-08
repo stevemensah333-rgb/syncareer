@@ -28,7 +28,7 @@ export function LegalPageLayout({ document: documentType, eyebrow, title, descri
   }, []);
 
   return (
-    <div id="legal-page-top" className="legal-page min-h-screen bg-background text-foreground">
+    <div id="legal-page-top" className="theme-pf legal-page min-h-screen bg-background text-foreground">
       <a href="#legal-document" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-3 focus:text-sm focus:font-medium focus:text-primary-foreground">Skip to legal document</a>
       <header className="legal-screen-only sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex min-h-16 max-w-[1240px] flex-wrap items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">

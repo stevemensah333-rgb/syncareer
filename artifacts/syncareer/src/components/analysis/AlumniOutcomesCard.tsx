@@ -6,6 +6,7 @@ import { GraduationCap, ExternalLink, Building2, RefreshCw } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner';
 
 import { supabase } from '@/integrations/supabase/client';
+import { invokeWithTimeout } from '@/lib/invokeWithTimeout';
 
 interface Props {
   university: string | null;
@@ -27,9 +28,12 @@ export const AlumniOutcomesCard: React.FC<Props> = ({ university, major, region 
     setLoading(true);
     setError(null);
     try {
-      const { data: res, error: err } = await supabase.functions.invoke('alumni-outcomes', {
-        body: { university, major, region },
-      });
+      const { data: res, error: err } = await invokeWithTimeout(
+        () => supabase.functions.invoke('alumni-outcomes', {
+          body: { university, major, region },
+        }),
+        { label: 'Graduate outcomes', timeoutMs: 45_000 },
+      );
       if (err) throw err;
       setData(res);
     } catch (e: any) {
