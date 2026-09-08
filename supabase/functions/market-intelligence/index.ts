@@ -74,13 +74,55 @@ Deno.serve(async (req) => {
     const isRemote = region.startsWith("remote_");
     const currency = region === "accra_ghana" ? "GHS" : region === "lagos_nigeria" ? "NGN" : region === "nairobi_kenya" ? "KES" : region === "cape_town_sa" ? "ZAR" : "USD";
 
+    // Ground the report in the postings the daily aggregation already collected,
+    // so skills and employers reflect openings that actually exist right now.
+    const majorTerms = safeMajor.split(/\s+/).filter((w) => w.length > 3).slice(0, 4);
+    const titleFilter = majorTerms.length
+      ? majorTerms.map((t) => `title.ilike.%${t.replace(/[,%()]/g, "")}%`).join(",")
+      : null;
+    let postingsQuery = supabase
+      .from("job_postings")
+      .select("title, company_name, skills")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(120);
+    if (titleFilter) postingsQuery = postingsQuery.or(titleFilter);
+    const { data: postings } = await postingsQuery;
+
+    const skillCounts = new Map<string, number>();
+    const titleCounts = new Map<string, number>();
+    const employerCounts = new Map<string, number>();
+    for (const row of postings ?? []) {
+      for (const skill of (row.skills ?? []) as string[]) {
+        const key = String(skill).trim();
+        if (key) skillCounts.set(key, (skillCounts.get(key) ?? 0) + 1);
+      }
+      const title = (row.title ?? "").trim();
+      if (title) titleCounts.set(title, (titleCounts.get(title) ?? 0) + 1);
+      const employer = (row.company_name ?? "").trim();
+      if (employer) employerCounts.set(employer, (employerCounts.get(employer) ?? 0) + 1);
+    }
+    const topOf = (map: Map<string, number>, n: number) =>
+      [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n)
+        .map(([name, count]) => `${name} (${count})`).join(", ");
+
+    const observedBlock = (postings?.length ?? 0) > 0
+      ? `Observed evidence from ${postings!.length} job postings currently open in Syncareer's aggregated feed (skill/title/employer with posting counts). Treat this as the strongest available signal and let it shape your rankings:
+- Skills: ${topOf(skillCounts, 20) || "none recorded on these postings"}
+- Job titles: ${topOf(titleCounts, 15)}
+- Employers: ${topOf(employerCounts, 15)}`
+      : `No current postings matched this field in Syncareer's aggregated feed. Rely on your own knowledge of this market and set "data_confidence" to "low".`;
+
     const prompt = `You are a senior labour-market analyst. Produce a hyper-local, actionable career market report for ENTRY-LEVEL roles for someone studying "${safeMajor}" who wants to work in: ${regionLabel}.
 
+${observedBlock}
+
 Rules:
+- Prefer skills, titles and employers that appear in the observed evidence above over ones you recall from training data. Add well-known local skills only when the evidence is thin.
 - Be concrete and local. Name actual employers, actual job titles, actual salary ranges in ${currency} (entry-level reality, not aspirational).
 - ${isRemote ? "Focus on companies that genuinely hire remotely with no location restrictions." : "Focus on the named city's employers and economy. Do NOT give global averages."}
 - Salary numbers MUST reflect actual entry-level pay in this market, not USD-converted Silicon-Valley figures.
-- Job-posting volume should reflect this specific market's hiring activity.
+- "job_posting_volume" should follow the observed posting counts where available.
 - Skills must be ranked by demand IN THIS MARKET specifically.
 
 Return ONLY a single JSON object (no markdown, no commentary) with this exact shape:
