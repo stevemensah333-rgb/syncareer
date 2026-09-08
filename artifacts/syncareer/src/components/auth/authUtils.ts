@@ -52,9 +52,19 @@ export function getAuthErrorMessage(error: unknown, context: 'sign-in' | 'sign-u
   if (message.includes('email not confirmed')) {
     return 'Confirm your email before signing in. Open the latest confirmation email and try again.';
   }
+  if (message.includes('different from the old password') || message.includes('same_password')) {
+    return 'That is already your current password. Choose a different one.';
+  }
+  if (message.includes('pwned') || message.includes('weak') || message.includes('compromised')) {
+    return 'That password has appeared in a known data breach. Choose a different one.';
+  }
+  if (message.includes('at least') && message.includes('characters')) {
+    return 'That password is too short. Use at least 8 characters.';
+  }
   if (message.includes('rate limit') || message.includes('too many')) {
     return 'Too many attempts. Wait a few minutes, then try again.';
   }
+
   if (message.includes('expired') || message.includes('invalid token') || message.includes('session missing')) {
     return 'This link is no longer valid. Request a new link and try again.';
   }
