@@ -216,7 +216,7 @@ export default function ScrollStory() {
       <AnimatedSection>
         <section id="workflow" className="scroll-mt-24 border-b bg-card" aria-labelledby="workflow-title">
           <div className="mx-auto grid gap-16 py-16 sm:gap-20 lg:py-24 lg:grid-cols-[0.65fr_1fr]">
-            <div className="max-w-2xl">
+            <div className="max-w-2xl self-start lg:sticky lg:top-24">
               <p className="brand-eyebrow">One role, six connected steps</p>
               <h2 id="workflow-title" className="mt-4 text-balance text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
                 {JOURNEY_HEADING}
