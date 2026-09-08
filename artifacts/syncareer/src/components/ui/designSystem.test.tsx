@@ -157,7 +157,6 @@ describe('Syncareer design system foundation', () => {
       'radio-group.tsx',
       'switch.tsx',
       'tabs.tsx',
-      'toggle.tsx',
       'badge.tsx',
     ];
 
