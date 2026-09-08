@@ -2,6 +2,7 @@
   "name": "workspace",
   "version": "0.0.0",
   "license": "MIT",
+  "packageManager": "pnpm@10.18.0",
   "scripts": {
     "preinstall": "true",
     "ensure:deps": "corepack pnpm install --config.verify-deps-before-run=false --frozen-lockfile",

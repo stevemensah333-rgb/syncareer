@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertCircle, ArrowRight, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -10,26 +10,14 @@ import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { mentorshipApi } from '@/features/mentorship/api';
 import { OnboardingShell } from '@/features/onboarding/OnboardingShell';
 import { WelcomeScreen } from '@/features/onboarding/WelcomeScreen';
 import { StudentSetupForm, STUDENT_SETUP_STEPS } from '@/features/onboarding/StudentSetupForm';
+import { MentorSetupForm, MENTOR_SETUP_STEPS } from '@/features/onboarding/MentorSetupForm';
 import {
-  MAJORS,
-  DEGREE_TYPES,
-  ADMISSION_YEARS,
   studentSchema,
   counsellorSchema,
   isOnboardingRole,
@@ -114,6 +102,8 @@ const Onboarding = () => {
   const [mentorBio, setMentorBio] = useState('');
   const [expertise, setExpertise] = useState('');
   const [yearsExperience, setYearsExperience] = useState('0');
+  const [mentorAvailability, setMentorAvailability] = useState('accepting');
+  const [mentorStep, setMentorStep] = useState(1);
 
   useEffect(() => {
     mounted.current = true;
@@ -349,7 +339,7 @@ const Onboarding = () => {
           bio: mentorBio,
           expertiseTags: expertise.split(',').map((tag) => tag.trim()).filter(Boolean),
           yearsExperience: Number(yearsExperience),
-          availabilityStatus: 'paused',
+          availabilityStatus: mentorAvailability,
         });
         await mentorshipApi.submitVerification(organization);
       }
@@ -463,147 +453,36 @@ const Onboarding = () => {
 
   return (
     <OnboardingShell
-      eyebrow={isStudent ? 'Student profile' : 'Mentor profile'}
-      title={isStudent ? 'Add your study details' : 'Build your mentor profile'}
-      subtitle={isStudent
-        ? 'These details help Syncareer keep your opportunity and application context relevant.'
-        : 'Your organization email and professional details will be reviewed before your profile is listed.'}
-      currentStep={2}
-      totalSteps={2}
+      eyebrow="Mentor setup"
+      title="Build your mentor profile"
+      subtitle="Four short stages. What you enter here is what students see when they look for a mentor."
+      steps={MENTOR_SETUP_STEPS}
+      currentStep={mentorStep}
     >
-      <form onSubmit={handleSubmit} noValidate>
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle>{isStudent ? 'Education' : 'Professional profile'}</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Fields marked with <span aria-hidden="true">*</span><span className="sr-only">an asterisk</span> are required.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-5 p-5 sm:p-6">
-            {formError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                <AlertTitle>Profile not saved</AlertTitle>
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
-            )}
-
-            {isStudent ? (
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="onboarding-major">Major / field of study *</Label>
-                  <Select value={major} onValueChange={setMajor} disabled={saving}>
-                    <SelectTrigger id="onboarding-major" aria-required="true">
-                      <SelectValue placeholder="Select your major" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MAJORS.map((option) => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="onboarding-degree">Degree type *</Label>
-                  <Select value={degreeType} onValueChange={setDegreeType} disabled={saving}>
-                    <SelectTrigger id="onboarding-degree" aria-required="true">
-                      <SelectValue placeholder="Select degree type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DEGREE_TYPES.map((option) => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="onboarding-school">School / university</Label>
-                  <Input
-                    id="onboarding-school"
-                    name="school"
-                    autoComplete="organization"
-                    value={school}
-                    onChange={(event) => setSchool(event.target.value)}
-                    placeholder="Enter your school name"
-                    maxLength={200}
-                    disabled={saving}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="onboarding-admission">Year of admission</Label>
-                  <Select value={yearOfAdmission} onValueChange={handleYearOfAdmissionChange} disabled={saving}>
-                    <SelectTrigger id="onboarding-admission">
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ADMISSION_YEARS.map((year) => (
-                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="onboarding-completion">Expected completion</Label>
-                  <Select value={expectedCompletion} onValueChange={setExpectedCompletion} disabled={saving}>
-                    <SelectTrigger id="onboarding-completion">
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ADMISSION_YEARS
-                        .filter((year) => !yearOfAdmission || year >= Number(yearOfAdmission))
-                        .map((year) => (
-                          <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="onboarding-full-name">Full name *</Label>
-                  <Input
-                    id="onboarding-full-name"
-                    name="name"
-                    autoComplete="name"
-                    required
-                    value={counsellorFullName}
-                    onChange={(event) => setCounsellorFullName(event.target.value)}
-                    placeholder="Enter your full name"
-                    maxLength={100}
-                    disabled={saving}
-                  />
-                </div>
-
-                <div className="grid gap-5 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="onboarding-role">Current role *</Label><Input id="onboarding-role" value={currentRole} maxLength={120} onChange={(e) => setCurrentRole(e.target.value)} placeholder="e.g. Product Designer" /></div><div className="space-y-2"><Label htmlFor="onboarding-org">Organization *</Label><Input id="onboarding-org" autoComplete="organization" value={organization} maxLength={160} onChange={(e) => setOrganization(e.target.value)} /></div></div>
-                <div className="space-y-2"><Label htmlFor="onboarding-bio">Professional bio *</Label><Textarea id="onboarding-bio" value={mentorBio} maxLength={1000} rows={5} onChange={(e) => setMentorBio(e.target.value)} placeholder="Describe the experience and perspective you can offer students." /></div>
-                <div className="grid gap-5 md:grid-cols-[1fr_180px]"><div className="space-y-2"><Label htmlFor="onboarding-expertise">Expertise *</Label><Input id="onboarding-expertise" value={expertise} onChange={(e) => setExpertise(e.target.value)} placeholder="CV review, Data analytics, Fintech" /><p className="text-xs text-muted-foreground">Separate tags with commas.</p></div><div className="space-y-2"><Label htmlFor="onboarding-years">Years of experience *</Label><Input id="onboarding-years" type="number" min={0} max={60} value={yearsExperience} onChange={(e) => setYearsExperience(e.target.value)} /></div></div>
-                <p className="rounded-lg border bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">Your profile remains hidden while the Syncareer team verifies your confirmed organization email. Contact details are exchanged only after you accept a request.</p>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter className="flex flex-col-reverse items-stretch justify-between gap-3 border-t p-5 sm:flex-row sm:items-center sm:p-6">
-            <p className="text-xs text-muted-foreground">You can update these details later in Settings.</p>
-            <Button type="submit" disabled={saving} aria-busy={saving} className="gap-2 sm:min-w-40">
-              {saving ? (
-                <>
-                  <Spinner className="size-4" />
-                  Saving profile…
-                </>
-              ) : (
-                <>
-                  Complete setup
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
-      </form>
+      <MentorSetupForm
+        userId={userId!}
+        email={email}
+        avatarUrl={avatarUrl}
+        fullName={counsellorFullName}
+        onFullNameChange={setCounsellorFullName}
+        currentRole={currentRole}
+        onCurrentRoleChange={setCurrentRole}
+        organization={organization}
+        onOrganizationChange={setOrganization}
+        bio={mentorBio}
+        onBioChange={setMentorBio}
+        expertise={expertise}
+        onExpertiseChange={setExpertise}
+        yearsExperience={yearsExperience}
+        onYearsExperienceChange={setYearsExperience}
+        availabilityStatus={mentorAvailability}
+        onAvailabilityStatusChange={setMentorAvailability}
+        step={mentorStep}
+        onStepChange={setMentorStep}
+        saving={saving}
+        formError={formError}
+        onSubmit={handleSubmit}
+      />
     </OnboardingShell>
   );
 };
