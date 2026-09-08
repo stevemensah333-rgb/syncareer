@@ -853,7 +853,7 @@ export function CVEditorWorkspace({
                 <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{viewMode === 'focused' ? activeSection?.note : 'Expand the sections you need and work down the document in order.'}</p>
               </div>
 
-              <div className="p-4 sm:p-6">
+              <div className="cv-form-compact p-4 sm:p-5">
                 {viewMode === 'focused' ? (
                   <div>
                     {activeTab === 'personal' && (
