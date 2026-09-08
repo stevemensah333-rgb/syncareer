@@ -39,33 +39,6 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
               Save a real opportunity, connect its requirements to evidence from your experience, improve your CV, practise for the interview and keep track of what happens next.
             </p>
 
-            {/* DISCOVER → PROVE → ADVANCE journey sequence */}
-            <div className="relative mt-8" role="list" aria-label="Application journey: Discover, Prove, Advance">
-              <div
-                tabIndex={0}
-                className="flex items-stretch gap-2 overflow-x-auto pb-2 pr-8 snap-x snap-mandatory scrollbar-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:gap-3 lg:overflow-visible lg:pb-0 lg:pr-0"
-              >
-                {HERO_JOURNEY.map((step, index) => (
-                  <div key={step.id} className="flex items-center gap-2 snap-start lg:gap-3" role="listitem">
-                    <div className="group flex min-w-[120px] flex-col items-center gap-1.5 rounded-control border border-border bg-card px-3 py-2.5 transition-[border-color,background-color] duration-150 hover:border-accent-foreground/30 hover:bg-accent motion-reduce:transition-none lg:min-w-0 lg:px-4 lg:py-3">
-                      <span className="text-xs font-semibold text-accent-foreground uppercase tracking-wider">{step.label}</span>
-
-                      <span className="text-[11px] leading-tight text-muted-foreground text-center max-w-[130px] sm:max-w-[110px]">{step.short}</span>
-                    </div>
-                    {index < HERO_JOURNEY.length - 1 && (
-                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/40" aria-hidden="true" />
-                    )}
-                  </div>
-                ))}
-              </div>
-              {/* Edge fade signals the strip continues horizontally on narrow viewports. */}
-              <div
-                className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent lg:hidden"
-                aria-hidden="true"
-              />
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground lg:hidden">Swipe to see all six steps</p>
-
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Button size="lg" onClick={onGetStarted} className="min-h-12 w-full gap-2 px-6 text-base sm:w-auto">
                 Explore opportunities <ArrowRight className="h-4 w-4" aria-hidden="true" />
