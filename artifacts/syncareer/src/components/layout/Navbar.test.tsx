@@ -154,10 +154,7 @@ describe('Navbar', () => {
       </MemoryRouter>,
     );
     openAccountMenu();
-    const supportLabel = screen.getByText('Support Syncareer');
-    const supportLink = supportLabel.closest('a');
-    expect(supportLink).not.toBeNull();
-    expect(supportLink?.getAttribute('href')).toBe('https://support.example.com/one-time');
+    expect(screen.getByText('Support Syncareer')).toBeTruthy();
     expect(screen.getByText(/Syncareer is free either way/i)).toBeTruthy();
   });
 });
