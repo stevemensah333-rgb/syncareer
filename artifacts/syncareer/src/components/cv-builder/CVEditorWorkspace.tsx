@@ -9,7 +9,6 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
-  ChevronRight,
   Download,
   Eye,
   FileText,
@@ -23,7 +22,6 @@ import {
   Save,
   Sparkles,
   Upload,
-  Layers,
   BookOpen,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
