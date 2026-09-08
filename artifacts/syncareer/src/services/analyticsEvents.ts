@@ -56,7 +56,7 @@ export type AnalyticsEventName = typeof ANALYTICS_EVENTS[keyof typeof ANALYTICS_
 type AuthMethod = 'email' | 'google';
 type UserRole = 'student' | 'career_counsellor' | 'unknown';
 export type Surface = 'opportunity' | 'application' | 'cv';
-export type AssistantTask = 'opportunity.explain_requirement' | 'opportunity.compare_evidence' | 'opportunity.research_questions' | 'cv.rewrite_bullet' | 'application.draft_follow_up' | 'application.clarify_next_action' | 'application.organise_notes' | 'interview.explain_feedback' | 'interview.practice_question';
+export type AssistantTask = 'opportunity.explain_requirement' | 'opportunity.compare_evidence' | 'opportunity.research_questions' | 'cv.rewrite_bullet' | 'application.draft_follow_up' | 'application.draft_cover_letter' | 'application.clarify_next_action' | 'application.organise_notes' | 'interview.explain_feedback' | 'interview.practice_question';
 
 export interface AnalyticsEventProperties {
   page_viewed: { route: 'landing' | 'auth' | 'onboarding' | 'dashboard' | 'opportunities' | 'applications' | 'cv_builder' | 'interview' | 'assessment' | 'settings' | 'other' };

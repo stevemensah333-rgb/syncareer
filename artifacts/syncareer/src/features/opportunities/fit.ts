@@ -16,7 +16,7 @@ import type { OpportunityProfileSignals, RankedOpportunity } from './ranking';
 
 export type FitTier = 'strong' | 'good' | 'possible';
 
-export type FitReasonSource = 'major' | 'skill' | 'interest' | 'early-career';
+export type FitReasonSource = 'major' | 'skill' | 'cv-skill' | 'interest' | 'early-career';
 
 export interface FitReason {
   source: FitReasonSource;
@@ -51,6 +51,7 @@ export function hasProfileSignals(profile: OpportunityProfileSignals): boolean {
   return Boolean(
     profile.major?.trim() ||
       (profile.skills ?? []).length > 0 ||
+      (profile.cvSkills ?? []).length > 0 ||
       (profile.interests ?? []).length > 0,
   );
 }
@@ -86,22 +87,32 @@ export function buildFitExplanation(
       text: `Recorded skills · ${firstDetails(ranked.matchedSkills, 3)}`,
     });
   }
+  if (ranked.matchedCvSkills.length > 0) {
+    reasons.push({
+      source: 'cv-skill',
+      text: `Skills on your CV · ${firstDetails(ranked.matchedCvSkills, 3)}`,
+    });
+  }
   if (ranked.matchedInterests.length > 0) {
     reasons.push({
       source: 'interest',
       text: `Your interests · ${firstDetails(ranked.matchedInterests, 2)}`,
     });
   }
-  if (ranked.earlyCareerFriendly && ranked.matchedSkills.length > 0) {
+  // Skills the student has stated anywhere — profile or CV — carry the same
+  // weight for the tier, because both are their own claim.
+  const statedSkillMatches = ranked.matchedSkills.length + ranked.matchedCvSkills.length;
+
+  if (ranked.earlyCareerFriendly && statedSkillMatches > 0) {
     reasons.push({ source: 'early-career', text: 'Early-career role' });
   }
 
   if (reasons.length === 0) return null;
 
   let tier: FitTier;
-  if (ranked.matchedSkills.length >= 2 || (ranked.majorAligned && ranked.matchedSkills.length >= 1)) {
+  if (statedSkillMatches >= 2 || (ranked.majorAligned && statedSkillMatches >= 1)) {
     tier = 'strong';
-  } else if (ranked.majorAligned || ranked.matchedSkills.length >= 1) {
+  } else if (ranked.majorAligned || statedSkillMatches >= 1) {
     tier = 'good';
   } else if (ranked.matchedInterests.length >= 1) {
     tier = 'possible';
@@ -109,18 +120,20 @@ export function buildFitExplanation(
     return null;
   }
 
-  const recordedSkills = new Set(
-    (profile.skills ?? []).map((skill) => skill.trim().toLocaleLowerCase()).filter(Boolean),
+  const statedSkills = new Set(
+    [...(profile.skills ?? []), ...(profile.cvSkills ?? [])]
+      .map((skill) => skill.trim().toLocaleLowerCase())
+      .filter(Boolean),
   );
   const listedSkills = (job.skills ?? [])
     .map((skill) => skill.trim())
     .filter((skill) => skill.length > 0);
   const gaps = listedSkills
-    .filter((skill) => !recordedSkills.has(skill.toLocaleLowerCase()))
+    .filter((skill) => !statedSkills.has(skill.toLocaleLowerCase()))
     .slice(0, 2)
     .map((skill) => ({
       skill,
-      note: 'Listed by the source; not in your recorded skills',
+      note: 'Listed by the source; not in your skills or CV',
     }));
 
   return { tier, label: TIER_LABELS[tier], reasons, gaps };

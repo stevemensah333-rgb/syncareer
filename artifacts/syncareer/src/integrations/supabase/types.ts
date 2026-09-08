@@ -891,12 +891,14 @@ export type Database = {
           deadline_snapshot: string | null
           external_id_snapshot: string | null
           id: string
+          job_description_snapshot: string | null
           job_id: string | null
           job_title_snapshot: string | null
           location_snapshot: string | null
           next_action: string | null
           next_action_due: string | null
           notes: string | null
+          requirements_snapshot: string | null
           resume_id: string | null
           resume_url: string | null
           source_snapshot: string | null
@@ -912,12 +914,14 @@ export type Database = {
           deadline_snapshot?: string | null
           external_id_snapshot?: string | null
           id?: string
+          job_description_snapshot?: string | null
           job_id?: string | null
           job_title_snapshot?: string | null
           location_snapshot?: string | null
           next_action?: string | null
           next_action_due?: string | null
           notes?: string | null
+          requirements_snapshot?: string | null
           resume_id?: string | null
           resume_url?: string | null
           source_snapshot?: string | null
@@ -933,12 +937,14 @@ export type Database = {
           deadline_snapshot?: string | null
           external_id_snapshot?: string | null
           id?: string
+          job_description_snapshot?: string | null
           job_id?: string | null
           job_title_snapshot?: string | null
           location_snapshot?: string | null
           next_action?: string | null
           next_action_due?: string | null
           notes?: string | null
+          requirements_snapshot?: string | null
           resume_id?: string | null
           resume_url?: string | null
           source_snapshot?: string | null

@@ -40,6 +40,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import {
   removeApplicationRecord,
+  saveApplicationCoverLetter,
   saveApplicationNotes,
   updateApplicationStatus,
   updateApplicationWorkspace,
@@ -154,7 +155,10 @@ export default function ApplicationDossier() {
   const [evidenceWarning, setEvidenceWarning] = useState<string | null>(null);
   const [cvBusy, setCvBusy] = useState(false);
   const [cvSourceId, setCvSourceId] = useState<string>('');
+  const [coverLetter, setCoverLetter] = useState('');
+  const [coverLetterState, setCoverLetterState] = useState<SaveState>('idle');
   const assistantUndoNotes = useRef<string | null>(null);
+  const assistantUndoCoverLetter = useRef<string | null>(null);
 
   useEffect(() => {
     if (!userId || !applicationId) return;
@@ -199,6 +203,22 @@ export default function ApplicationDossier() {
   const dueState = application ? nextActionDueState(application.next_action, application.next_action_due) : 'none';
   const journey = useMemo(() => buildJourney(application?.status ?? ''), [application?.status]);
   const evidence = bundle?.evidence ?? null;
+
+  // Cover letters may only be drafted from evidence the user has confirmed.
+  const confirmedEvidenceContext = useMemo(
+    () =>
+      (evidence?.items ?? [])
+        .filter((item) => item.review_status === 'confirmed')
+        .slice(0, 8)
+        .map((item) => ({
+          id: `evidence-${item.id}`,
+          label: item.title,
+          provenance: 'primary_cv' as const,
+          content: [item.title, item.summary].filter(Boolean).join(' — ').slice(0, 1200),
+          personal: true,
+        })),
+    [evidence],
+  );
 
   // Progress facts for the strip under the header: requirement coverage and
   // evidence readiness, derived from the same rows the sections render.
@@ -336,12 +356,14 @@ export default function ApplicationDossier() {
   useEffect(() => {
     if (!application || hydratedFor === application.id) return;
     setNotes(application.notes ?? '');
+    setCoverLetter(application.cover_letter ?? '');
     setNextAction(application.next_action ?? '');
     setDue(application.next_action_due ?? '');
     setHydratedFor(application.id);
   }, [application, hydratedFor]);
 
   const notesDirty = application ? notes.trim() !== (application.notes ?? '') : false;
+  const coverLetterDirty = application ? coverLetter.trim() !== (application.cover_letter ?? '') : false;
   const actionDirty = application
     ? nextAction.trim() !== (application.next_action ?? '') || due !== (application.next_action_due ?? '')
     : false;
@@ -372,6 +394,21 @@ export default function ApplicationDossier() {
     const saved = notes.trim() || null;
     setBundle((current) => (current ? { ...current, application: { ...current.application, notes: saved } } : current));
     setNotesState('saved');
+  };
+
+  const handleCoverLetter = async () => {
+    if (!application || !userId) return;
+    setCoverLetterState('saving');
+    const result = await saveApplicationCoverLetter(supabase, application.id, coverLetter, userId);
+    if (!result.ok) {
+      setCoverLetterState('failed');
+      return;
+    }
+    const saved = coverLetter.trim() || null;
+    setBundle((current) =>
+      current ? { ...current, application: { ...current.application, cover_letter: saved } } : current,
+    );
+    setCoverLetterState('saved');
   };
 
   const handleDelete = async () => {
@@ -687,6 +724,22 @@ export default function ApplicationDossier() {
           </div>
         </dl>
       )}
+      {application?.job_description_snapshot && (
+        <div className="mt-4 space-y-2">
+          <p className="dossier-eyebrow">Posting text saved with this application</p>
+          <p className="max-h-64 overflow-y-auto whitespace-pre-wrap border border-border bg-muted/30 p-3 text-sm">
+            {application.job_description_snapshot}
+          </p>
+        </div>
+      )}
+      {application?.requirements_snapshot && (
+        <div className="mt-4 space-y-2">
+          <p className="dossier-eyebrow">Requirements as posted</p>
+          <p className="whitespace-pre-wrap border border-border bg-muted/30 p-3 text-sm">
+            {application.requirements_snapshot}
+          </p>
+        </div>
+      )}
     </DossierSection>
   );
 
@@ -983,6 +1036,71 @@ export default function ApplicationDossier() {
               Create a base CV first — the application copy is made from it without changing the original.
             </p>
           )}
+        </div>
+        <div className="space-y-2 border-t border-border pt-4">
+          <p className="dossier-eyebrow">Cover letter</p>
+          <Textarea
+            aria-label="Cover letter"
+            value={coverLetter}
+            onChange={(event) => setCoverLetter(event.target.value)}
+            rows={10}
+            placeholder="Write the letter here, or draft it from the role and your confirmed evidence."
+          />
+          {facts && confirmedEvidenceContext.length > 0 && (
+            <ContextualAssistantDrawer
+              task="application.draft_cover_letter"
+              description="Draft a cover letter using only the role facts and the confirmed evidence you choose to send."
+              suggestedPrompt="Draft a concise cover letter for this role using only the supplied evidence. Do not invent achievements, dates or employers."
+              context={[
+                {
+                  id: 'application-role',
+                  label: facts.title || 'Application',
+                  provenance: 'opportunity',
+                  content: [facts.title, organisation, facts.location].filter(Boolean).join(' · '),
+                },
+                ...(application?.job_description_snapshot
+                  ? [
+                      {
+                        id: 'application-posting',
+                        label: 'Posting text',
+                        provenance: 'job_description' as const,
+                        content: application.job_description_snapshot.slice(0, 4000),
+                        optional: true,
+                      },
+                    ]
+                  : []),
+                ...confirmedEvidenceContext,
+              ]}
+              acceptLabel="Use as cover letter draft"
+              onAccept={(text) => {
+                assistantUndoCoverLetter.current = coverLetter;
+                setCoverLetter((current) => (current.trim() ? `${current.trim()}\n\n${text}` : text));
+              }}
+              onUndo={() => {
+                if (assistantUndoCoverLetter.current !== null) {
+                  setCoverLetter(assistantUndoCoverLetter.current);
+                  assistantUndoCoverLetter.current = null;
+                }
+              }}
+            />
+          )}
+          {confirmedEvidenceContext.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Confirm at least one evidence item to draft a letter — drafts are written only from evidence you supplied.
+            </p>
+          )}
+          <div>
+            <Button
+              size="sm"
+              disabled={!coverLetterDirty || coverLetterState === 'saving' || !application}
+              onClick={() => void handleCoverLetter()}
+            >
+              {coverLetterState === 'saving' && <Spinner className="size-4" />}
+              {coverLetterState === 'failed' && <RotateCcw aria-hidden="true" className="h-4 w-4" />}
+              {coverLetterState === 'failed' ? 'Retry save' : 'Save cover letter'}
+            </Button>
+          </div>
+          <SaveMessage state={coverLetterState} />
         </div>
       </div>
     </DossierSection>

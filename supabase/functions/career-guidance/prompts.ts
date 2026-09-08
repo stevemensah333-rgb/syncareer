@@ -34,7 +34,8 @@ Preserve whether the evidence is employment, a project, education/coursework, an
 Use a metric, employer, organisation, date, technology, responsibility or outcome only when it appears in candidate evidence. Avoid keyword stuffing and generic claims such as results-driven, dynamic, passionate professional or proven track record.
 Return the rewritten bullet only. Nothing is applied automatically; the user reviews it. sourceContextIds must cite at least one requirement-* id and at least one evidence-* id that you actually used.`,
   application: `Task family: application.
-You may draft a follow-up message from the supplied facts, clarify a next action, or organise supplied notes.
+You may draft a follow-up message or a cover letter from the supplied facts, clarify a next action, or organise supplied notes.
+In a cover letter, every claim about the candidate must come from supplied candidate evidence. Requirements describe what the employer wants; they are never proof the candidate has it. Never upgrade coursework to employment, participation to achievement, or familiarity to expertise, and never state years of experience, grades, metrics or employers that were not supplied.
 Use explicit placeholders such as [contact name], [date] or [organisation] when a necessary fact is missing.
 You must not claim that an application was submitted, reviewed, shortlisted or answered unless the supplied context says so.`,
   interview: `Task family: interview.
@@ -48,6 +49,7 @@ const TASK_RULES: Record<AssistantTask, string> = {
   "opportunity.research_questions": "List questions the user should research about this opportunity. Questions only; do not answer them.",
   "cv.rewrite_bullet": "Rewrite the selected bullet for the selected opportunity requirement using only selected candidate evidence. Output the bullet text only.",
   "application.draft_follow_up": "Draft a short professional follow-up message using only supplied facts and placeholders.",
+  "application.draft_cover_letter": "Draft a cover letter of at most four short paragraphs for the supplied role, using only supplied candidate evidence for every claim about the candidate. Use placeholders such as [hiring manager] when a fact is missing. Output the letter body only.",
   "application.clarify_next_action": "Clarify the single most useful next action and why it follows from the supplied context.",
   "application.organise_notes": "Reorganise the supplied notes into a clear, ordered outline. Add no new information.",
   "interview.explain_feedback": "Explain the supplied feedback and what improving it would look like in practice.",

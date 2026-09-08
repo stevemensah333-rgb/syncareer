@@ -84,6 +84,15 @@ const cvContext = [
   { id: "evidence-project", label: "Evidence", provenance: "selected_cv_text", content: "Built a Python project" },
 ];
 
+const coverLetterContext = [
+  { id: "role", label: "Data Intern", provenance: "opportunity", content: "Data Intern at Example Ltd" },
+  { id: "evidence-project", label: "Evidence", provenance: "selected_cv_text", content: "Built a Python project" },
+];
+
+/** Tasks whose contract requires supplied candidate evidence. */
+const groundedContext = (task: AssistantTask) =>
+  task === "cv.rewrite_bullet" ? cvContext : task === "application.draft_cover_letter" ? coverLetterContext : baseContext;
+
 const proposalFor = (task: AssistantTask) =>
   JSON.stringify({
     kind: ALLOWED_KINDS[task][0],
@@ -96,13 +105,21 @@ const proposalFor = (task: AssistantTask) =>
 Deno.test("accepts every allowlisted task", async () => {
   for (const task of ASSISTANT_TASKS) {
     const h = harness({ gateway: () => Promise.resolve({ status: 200, text: proposalFor(task) }) });
-    const res = await handleV2(requestBody({ task, requestId: RID, context: task === "cv.rewrite_bullet" ? cvContext : baseContext }), "t", h.deps, cors);
+    const res = await handleV2(requestBody({ task, requestId: RID, context: groundedContext(task) }), "t", h.deps, cors);
     assertEquals(res.status, 200, task);
     const body = await res.json();
     assertEquals(body.usage.consumed, true);
     assertEquals(body.requestId, RID);
     assertEquals(body.proposal.sourceContextIds, task === "cv.rewrite_bullet" ? ["requirement-python", "evidence-project"] : ["role"]);
   }
+});
+
+Deno.test("cover letter requires supplied candidate evidence", () => {
+  assertEquals(
+    parseAssistantRequest(requestBody({ task: "application.draft_cover_letter", context: baseContext })),
+    { ok: false, failure: "cv_context" },
+  );
+  assert(parseAssistantRequest(requestBody({ task: "application.draft_cover_letter", context: coverLetterContext })).ok);
 });
 
 Deno.test("rejects unsupported task and provenance", () => {
