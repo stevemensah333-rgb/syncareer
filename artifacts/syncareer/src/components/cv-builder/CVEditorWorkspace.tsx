@@ -832,6 +832,9 @@ export function CVEditorWorkspace({
                 )}
               </div>
             </div>
+            </div>
+
+
 
 
 
