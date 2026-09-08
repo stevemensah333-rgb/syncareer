@@ -437,8 +437,6 @@ const Onboarding = () => {
           fullName={displayName}
           email={email}
           avatarUrl={avatarUrl}
-          onPhotoChange={setAvatarUrl}
-        onPhotoChange={setAvatarUrl}
           school={school}
           onSchoolChange={setSchool}
           major={major}
