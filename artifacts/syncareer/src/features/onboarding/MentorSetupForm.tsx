@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
-import { supabase } from '@/integrations/supabase/client';
+import { uploadAvatar } from '@/features/profile/avatarUpload';
 import { toast } from 'sonner';
 import {
   PfChip,
@@ -66,6 +66,7 @@ interface MentorSetupFormProps {
   userId: string;
   email: string;
   avatarUrl: string | null;
+  onPhotoChange?: (url: string) => void;
   fullName: string;
   onFullNameChange: (value: string) => void;
   currentRole: string;
@@ -98,6 +99,7 @@ export function MentorSetupForm({
   userId,
   email,
   avatarUrl,
+  onPhotoChange,
   fullName,
   onFullNameChange,
   currentRole,
@@ -148,28 +150,19 @@ export function MentorSetupForm({
   };
 
   const handlePhoto = async (file: File) => {
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Choose an image under 2 MB.');
-      return;
-    }
     setUploading(true);
-    const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const path = `${userId}/avatar-${Date.now()}.${extension}`;
-    const upload = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
-    if (upload.error) {
+    try {
+      // The mentor record may not exist yet during onboarding; the submit step
+      // carries this URL into counsellor_details.
+      const publicUrl = await uploadAvatar(userId, file, { isMentor: false });
+      setPhoto(publicUrl);
+      onPhotoChange?.(publicUrl);
+      toast.success('Photo updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Your photo could not be uploaded.');
+    } finally {
       setUploading(false);
-      toast.error('Your photo could not be uploaded. You can add it later in Settings.');
-      return;
     }
-    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-    const update = await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', userId);
-    setUploading(false);
-    if (update.error) {
-      toast.error('Your photo could not be saved to your profile.');
-      return;
-    }
-    setPhoto(data.publicUrl);
-    toast.success('Photo updated');
   };
 
   const goNext = () => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { accountRoleLabel } from '@/lib/accountRoles';
+import { removeAvatar, uploadAvatar } from '@/features/profile/avatarUpload';
 import { EducationSection } from './EducationSection';
 import { QualificationsSection } from './QualificationsSection';
 import { SettingField, SettingsEditor, SettingsGroup, SettingsRow, SettingsValue } from './SettingsScaffold';
@@ -66,6 +67,37 @@ export function ProfileSection() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<IdentityForm>(emptyForm);
   const [errors, setErrors] = useState<IdentityErrors>({});
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const isMentor = profile?.user_type === 'career_counsellor';
+
+  const changePhoto = async (file: File) => {
+    if (!userId) return;
+    setPhotoBusy(true);
+    try {
+      await uploadAvatar(userId, file, { isMentor });
+      await refreshProfile();
+      toast.success('Photo updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Your photo could not be uploaded.');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const clearPhoto = async () => {
+    if (!userId) return;
+    setPhotoBusy(true);
+    try {
+      await removeAvatar(userId, { isMentor });
+      await refreshProfile();
+      toast.success('Photo removed');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Your photo could not be removed.');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
   const email = user?.email ?? '';
 
@@ -163,8 +195,41 @@ export function ProfileSection() {
           <SettingsValue>{accountRoleLabel(profile?.user_type)}</SettingsValue>
         </SettingsRow>
 
-        <SettingsRow label="Profile picture" hint="Syncareer has no image upload of its own.">
-          <SettingsValue>{profile?.avatar_url ? 'Shown from your account image' : 'Your initials are used'}</SettingsValue>
+        <SettingsRow
+          label="Profile picture"
+          hint={
+            isMentor
+              ? 'Shown on your account and on your mentor profile. JPG or PNG under 2 MB.'
+              : 'Shown across Syncareer. JPG or PNG under 2 MB.'
+          }
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = '';
+                if (file) void changePhoto(file);
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={photoBusy || !userId}
+              onClick={() => fileInput.current?.click()}
+            >
+              {photoBusy ? 'Working…' : profile?.avatar_url ? 'Change photo' : 'Upload photo'}
+            </Button>
+            {profile?.avatar_url && (
+              <Button type="button" variant="ghost" size="sm" disabled={photoBusy} onClick={() => void clearPhoto()}>
+                Remove
+              </Button>
+            )}
+          </div>
         </SettingsRow>
 
         <SettingsRow label="Summary" hint="A short note on what you study or do.">
