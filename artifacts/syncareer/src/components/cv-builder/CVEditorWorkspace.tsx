@@ -731,8 +731,10 @@ export function CVEditorWorkspace({
             </div>
           )}
 
-          <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
+          <div className="grid gap-4 lg:grid-cols-[200px_minmax(0,1fr)]">
+            <div className="space-y-3">
             <nav className="surface-content h-fit overflow-hidden" aria-label="CV sections">
+
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <div>
                   <p className="type-label text-primary">Document outline</p>
