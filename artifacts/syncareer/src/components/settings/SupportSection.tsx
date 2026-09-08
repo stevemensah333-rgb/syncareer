@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Copy, MessageCircle, Smartphone } from 'lucide-react';
+import { Copy, Mail, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { SettingsGroup, SettingsRow, SettingsValue } from './SettingsScaffold';
 import { toast } from 'sonner';
-import { supportMomoNumber, supportWhatsAppHref, supportSmsHref, SUPPORT_DEFAULT_MESSAGE } from '@/lib/support';
+import { supportMomoNumber, supportEmailHref, supportSmsHref, SUPPORT_DEFAULT_MESSAGE } from '@/lib/support';
+
 
 /**
  * Optional, voluntary support. It is deliberately plain: no pricing, no tiers,
