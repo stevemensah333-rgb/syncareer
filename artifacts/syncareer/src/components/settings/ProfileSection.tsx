@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { accountRoleLabel } from '@/lib/accountRoles';
+import { removeAvatar, uploadAvatar } from '@/features/profile/avatarUpload';
 import { EducationSection } from './EducationSection';
 import { QualificationsSection } from './QualificationsSection';
 import { SettingField, SettingsEditor, SettingsGroup, SettingsRow, SettingsValue } from './SettingsScaffold';
@@ -66,6 +67,37 @@ export function ProfileSection() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<IdentityForm>(emptyForm);
   const [errors, setErrors] = useState<IdentityErrors>({});
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const isMentor = profile?.user_type === 'career_counsellor';
+
+  const changePhoto = async (file: File) => {
+    if (!userId) return;
+    setPhotoBusy(true);
+    try {
+      await uploadAvatar(userId, file, { isMentor });
+      await refreshProfile();
+      toast.success('Photo updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Your photo could not be uploaded.');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const clearPhoto = async () => {
+    if (!userId) return;
+    setPhotoBusy(true);
+    try {
+      await removeAvatar(userId, { isMentor });
+      await refreshProfile();
+      toast.success('Photo removed');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Your photo could not be removed.');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
   const email = user?.email ?? '';
 
