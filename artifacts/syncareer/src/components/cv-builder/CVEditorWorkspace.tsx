@@ -575,13 +575,67 @@ export function CVEditorWorkspace({
     },
   ], [cvData]);
 
-  const activeSection = sectionsList.find((section) => section.key === activeTab) ?? sectionsList[0];
   const completedSections = sectionsList.filter((section) => section.filled).length;
 
-  const openSection = (section: SectionKey) => {
-    setActiveTab(section);
-    if (collapsedSections[section]) {
-      setCollapsedSections((previous) => ({ ...previous, [section]: false }));
+  const renderSectionForm = (key: SectionKey) => {
+    switch (key) {
+      case 'personal':
+        return <CVFormPersonal data={cvData.personal} onChange={updatePersonal} errors={fieldErrors} />;
+      case 'education':
+        return (
+          <CVFormEducation
+            education={cvData.education}
+            achievements={cvData.achievements}
+            onEducationChange={updateEducation}
+            onAchievementsChange={updateAchievements}
+          />
+        );
+      case 'experience':
+        return (
+          <CVFormExperience
+            experience={cvData.experience}
+            onChange={updateExperience}
+            onSuggestBullet={handleSuggestForBullet}
+            selectedFieldPath={targetAIBulletPath}
+          />
+        );
+      case 'projects':
+        return (
+          <CVFormProjects
+            projects={cvData.projects}
+            onChange={updateProjects}
+            onSuggestBullet={handleSuggestForBullet}
+            selectedFieldPath={targetAIBulletPath}
+          />
+        );
+      case 'activities':
+        return (
+          <CVFormActivities
+            activities={cvData.activities}
+            onChange={updateActivities}
+            onSuggestBullet={handleSuggestForBullet}
+            selectedFieldPath={targetAIBulletPath}
+          />
+        );
+      case 'skills':
+        return <CVFormSkills skills={cvData.skills} onChange={updateSkills} />;
+      case 'references':
+        return (
+          <div className="space-y-2">
+            <Label htmlFor="references-text" className="text-xs font-medium">Standard reference statement</Label>
+            <Textarea
+              id="references-text"
+              value={cvData.references}
+              onChange={(e) => updateReferences(e.target.value)}
+              placeholder="Available upon request"
+              className="rounded-input text-sm"
+              rows={2}
+            />
+            <p className="text-xs text-muted-foreground">
+              Standard international practice is to state &ldquo;Available upon request&rdquo; unless the application specifically asks for referee contact details.
+            </p>
+          </div>
+        );
     }
   };
 
