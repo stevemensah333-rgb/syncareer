@@ -117,6 +117,7 @@ export default function Landing() {
             startAssessment();
           }}
         />
+        <WorkspacePreview />
         <ScrollStory />
         <MentorCallout
           onBecomeMentor={() => {
