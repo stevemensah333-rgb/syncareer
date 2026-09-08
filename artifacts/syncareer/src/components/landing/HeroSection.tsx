@@ -47,7 +47,7 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
               className="type-display mt-5 text-balance text-[2.6rem] leading-[1.03] sm:text-[3.1rem] lg:text-[3.75rem]"
             >
               Know what your application needs—and{" "}
-              <span className="text-primary">what to do next.</span>
+              <span className="text-accent-foreground">what to do next.</span>
             </h1>
 
             <p className="mt-6 max-w-lg text-pretty text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
@@ -62,8 +62,9 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
               >
                 {HERO_JOURNEY.map((step, index) => (
                   <div key={step.id} className="flex items-center gap-2 snap-start lg:gap-3" role="listitem">
-                    <div className="group flex min-w-[120px] flex-col items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5 transition-[border-color,background-color] duration-150 hover:border-primary/30 hover:bg-primary/[0.04] motion-reduce:transition-none lg:min-w-0 lg:px-4 lg:py-3">
-                      <span className="text-xs font-semibold text-primary uppercase tracking-wider transition-colors duration-150 group-hover:text-primary-hover">{step.label}</span>
+                    <div className="group flex min-w-[120px] flex-col items-center gap-1.5 rounded-control border border-border bg-card px-3 py-2.5 transition-[border-color,background-color] duration-150 hover:border-accent-foreground/30 hover:bg-accent motion-reduce:transition-none lg:min-w-0 lg:px-4 lg:py-3">
+                      <span className="text-xs font-semibold text-accent-foreground uppercase tracking-wider">{step.label}</span>
+
                       <span className="text-[11px] leading-tight text-muted-foreground text-center max-w-[130px] sm:max-w-[110px]">{step.short}</span>
                     </div>
                     {index < HERO_JOURNEY.length - 1 && (
@@ -98,7 +99,7 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
             </p>
 
             <p className="mt-3 flex max-w-lg items-start gap-2 text-sm leading-6 text-muted-foreground">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent-foreground" aria-hidden="true" />
               Free for students and recent graduates — no subscription or paid tier, and every
               feature is available to every user.
             </p>
