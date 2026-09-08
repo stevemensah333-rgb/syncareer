@@ -1452,3 +1452,34 @@
   }
 }
 
+
+@layer components {
+  /* Live CV preview: highlight the section currently being edited. */
+  .cv-live-page [data-cv-active='true'] {
+    box-shadow: 0 0 0 6px hsl(var(--primary) / 0.1);
+    border-radius: 2px;
+    transition: box-shadow 150ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cv-live-page [data-cv-active='true'] {
+      transition: none;
+    }
+  }
+
+  /* Slimmer CV form fields so more of the document fits beside the editor. */
+  .cv-form-compact label {
+    font-size: 0.6875rem;
+  }
+
+  .cv-form-compact input,
+  .cv-form-compact [role='combobox'] {
+    height: 2rem;
+    font-size: 0.8125rem;
+  }
+
+  .cv-form-compact textarea {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+  }
+}
