@@ -841,10 +841,9 @@ const Opportunities = () => {
                         Saved ({savedIds.size})
                       </TabsTrigger>
                     </TabsList>
-                    {tab === 'all' && (rankingSummary || feedUpdated || deduplicatedCount > 0) && (
+                    {tab === 'all' && (rankingSummary || deduplicatedCount > 0) && (
                       <p role="status" className="type-meta min-w-0 truncate">
                         {rankingSummary}
-                        {feedUpdated ? `${rankingSummary ? ' ' : ''}Feed last updated ${feedUpdated.toLocaleLowerCase()}.` : ''}
                         {deduplicatedCount > 0
                           ? ` ${deduplicatedCount} duplicate ${deduplicatedCount === 1 ? 'listing was' : 'listings were'} hidden.`
                           : ''}
