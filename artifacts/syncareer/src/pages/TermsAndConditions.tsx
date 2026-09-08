@@ -36,6 +36,6 @@ export default function TermsAndConditions() {
     <LegalSection number={11} {...TERMS_SECTIONS[10]}><p>We reserve the right to modify or discontinue features and to update these Terms. Users will be notified of material changes. Continued use after updates constitutes acceptance.</p></LegalSection>
     <LegalSection number={12} {...TERMS_SECTIONS[11]}><p>We may suspend or terminate your access if you violate these Terms. You may delete your account at any time.</p></LegalSection>
     <LegalSection number={13} {...TERMS_SECTIONS[12]}><p>These Terms shall be governed by the laws of the Republic of Ghana. Any disputes shall be resolved under applicable local laws.</p></LegalSection>
-    <LegalSection number={14} {...TERMS_SECTIONS[13]}><p>If you have questions about these Terms, contact:</p><ul><li>Email: <a href="mailto:syncareer01@gmail.com">syncareer01@gmail.com</a></li><li>Website: <a href="https://syncareer.me">https://syncareer.me</a></li></ul></LegalSection>
+    <LegalSection number={14} {...TERMS_SECTIONS[13]}><p>If you have questions about these Terms, contact:</p><ul><li>Email: <a href="mailto:nyarkomensah33@gmail.com">nyarkomensah33@gmail.com</a></li><li>Website: <a href="https://syncareer.me">https://syncareer.me</a></li></ul></LegalSection>
   </LegalPageLayout>;
 }

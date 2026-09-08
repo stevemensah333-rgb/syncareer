@@ -36,7 +36,7 @@ export function LegalPageLayout({ document: documentType, eyebrow, title, descri
           <nav aria-label="Legal documents" className="flex flex-wrap items-center gap-1 text-sm">
             <LegalNavLink to="/terms" active={documentType === 'terms'}>Terms</LegalNavLink>
             <LegalNavLink to="/privacy" active={documentType === 'privacy'}>Privacy</LegalNavLink>
-            <a href="mailto:syncareer01@gmail.com" className="flex min-h-11 items-center rounded-md px-3 font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Contact</a>
+            <a href="mailto:nyarkomensah33@gmail.com" className="flex min-h-11 items-center rounded-md px-3 font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Contact</a>
             <Link to="/" className="flex min-h-11 items-center rounded-md border px-3 font-medium">Back to Syncareer</Link>
           </nav>
         </div>
@@ -72,7 +72,7 @@ export function LegalPageLayout({ document: documentType, eyebrow, title, descri
                   <a href="#legal-page-top" className="inline-flex min-h-11 items-center gap-2 rounded-md border px-3 text-sm font-medium"><ArrowUp className="h-4 w-4" aria-hidden="true" />Back to top</a>
                 </div>
               </div>
-              <p className="mt-8 text-sm text-muted-foreground">Questions? <a href="mailto:syncareer01@gmail.com" className="font-medium text-primary underline underline-offset-4">Contact Syncareer</a>.</p>
+              <p className="mt-8 text-sm text-muted-foreground">Questions? <a href="mailto:nyarkomensah33@gmail.com" className="font-medium text-primary underline underline-offset-4">Contact Syncareer</a>.</p>
             </footer>
           </article>
         </div>

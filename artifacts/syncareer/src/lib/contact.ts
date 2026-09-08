@@ -6,7 +6,7 @@
  * human channel (email and phone), not a ticket queue — feedback captured in
  * the product is stored separately in `user_feedback`.
  */
-export const SUPPORT_EMAIL = 'syncareer01@gmail.com';
+export const SUPPORT_EMAIL = 'nyarkomensah33@gmail.com';
 
 /** Display form, as it appears to a user. */
 export const SUPPORT_PHONE = '+233 555 156 128';

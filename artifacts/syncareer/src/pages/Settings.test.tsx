@@ -116,6 +116,7 @@ describe('Settings information architecture', () => {
       '/settings?tab=preferences',
       '/settings?tab=feedback',
       '/settings?tab=help',
+      '/settings?tab=support',
     ]);
     expect(links[0]!.getAttribute('aria-current')).toBe('page');
   });
@@ -130,21 +131,11 @@ describe('Settings information architecture', () => {
     }
   });
 
-  it('keeps the optional support destination out of the list until it is configured', () => {
+  it('always shows the MoMo-based support destination in the list', () => {
     resetSupabase();
     renderSettings();
-    expect(screen.queryByText('Support Syncareer')).toBeNull();
-
-    const previous = import.meta.env.VITE_SUPPORT_URL;
-    import.meta.env.VITE_SUPPORT_URL = 'https://support.example.org/syncareer';
-    try {
-      renderSettings();
-      expect(screen.getAllByText('Support Syncareer').length).toBeGreaterThan(0);
-      expect(screen.getAllByRole('link', { name: /Support Syncareer/ }).length).toBeGreaterThan(0);
-    } finally {
-      if (previous === undefined) delete import.meta.env.VITE_SUPPORT_URL;
-      else import.meta.env.VITE_SUPPORT_URL = previous;
-    }
+    expect(screen.getAllByText('Support Syncareer').length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: /Support Syncareer/ }).length).toBeGreaterThan(0);
   });
 
   it('uses a plain list on mobile and a back control inside a section', () => {
@@ -335,7 +326,7 @@ describe('Settings support destinations', () => {
     resetSupabase();
     renderSettings('help');
 
-    expect(screen.getByRole('link', { name: /syncareer01@gmail\.com/ })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /nyarkomensah33@gmail\.com/ })).toBeTruthy();
     expect(screen.getByRole('link', { name: /\+233 555 156 128/ })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Privacy policy' })).toBeTruthy();
     expect(screen.queryByText(/knowledge base|articles/i)).toBeNull();
