@@ -1345,9 +1345,9 @@
 
   /* Pill buttons: element-scoped so blocks that share `rounded-control`
      geometry are unaffected. */
-  .theme-pf button.rounded-control,
-  .theme-pf a.rounded-control,
-  .theme-pf label.rounded-control {
+  .theme-pf .rounded-control.h-control,
+  .theme-pf .rounded-control.h-control-sm,
+  .theme-pf .rounded-control.h-control-lg {
     border-radius: var(--radius-pill);
   }
 
