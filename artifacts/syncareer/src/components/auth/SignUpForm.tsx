@@ -9,7 +9,7 @@ import GoogleSignInButton from './GoogleSignInButton';
 import PasswordField from './PasswordField';
 import { authPath, getAuthErrorMessage, getAuthReturnTo } from './authUtils';
 import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
-import { ACCOUNT_ROLES } from '@/lib/accountRoles';
+import { ACCOUNT_ROLES, isAccountRole } from '@/lib/accountRoles';
 
 const ROLE_OPTIONS = [
   { value: ACCOUNT_ROLES[0], label: 'Student / Job seeker' },
@@ -22,7 +22,10 @@ export default function SignUpForm() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [userType, setUserType] = useState<string>('student');
+  const [userType, setUserType] = useState<string>(() => {
+    const requested = new URLSearchParams(location.search).get('role');
+    return isAccountRole(requested) ? requested : 'student';
+  });
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [confirmationEmail, setConfirmationEmail] = useState('');
