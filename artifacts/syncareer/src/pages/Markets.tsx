@@ -843,7 +843,13 @@ const Opportunities = () => {
                       list (already filtered by `tab`) inside its panel so the
                       tab triggers reference real tabpanel ids. */}
                   {(['all', 'saved'] as const).map((value) => (
-                    <TabsContent key={value} value={value} className="flex min-h-0 flex-col lg:flex-1">
+                    {/* `flex` would otherwise override Radix's [hidden] on the
+                        inactive panel, leaving it taking half the pane. */}
+                    <TabsContent
+                      key={value}
+                      value={value}
+                      className="flex min-h-0 flex-col data-[state=inactive]:hidden lg:flex-1"
+                    >
                       <div
                         ref={listRef}
                         className={cn(
