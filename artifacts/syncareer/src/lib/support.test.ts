@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isSupportEnabled, supportMomoNumber, supportUrl, supportEmailHref, supportSmsHref, SUPPORT_PATH } from './support';
+import { isSupportEnabled, supportMomoNumber, supportUrl, supportEmailHref, supportGmailHref, supportSmsHref, SUPPORT_PATH } from './support';
 import { SUPPORT_EMAIL, SUPPORT_PHONE } from './contact';
 
 /**
@@ -24,6 +24,9 @@ describe('MoMo support seam', () => {
   it('accepts a custom message on both email and SMS links', () => {
     expect(supportEmailHref('Thanks!')).toBe(
       `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Support for Syncareer')}&body=${encodeURIComponent('Thanks!')}`,
+    );
+    expect(supportGmailHref('Thanks!')).toBe(
+      `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(SUPPORT_EMAIL)}&su=${encodeURIComponent('Support for Syncareer')}&body=${encodeURIComponent('Thanks!')}`,
     );
     const smsPhone = SUPPORT_PHONE.replace(/\s/g, '');
     expect(supportSmsHref('Thanks!')).toBe(`sms:${smsPhone}?body=${encodeURIComponent('Thanks!')}`);
