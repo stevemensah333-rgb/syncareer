@@ -149,12 +149,16 @@ const Opportunities = () => {
         return;
       }
 
+      // Postings whose deadline has already passed are not opportunities any more;
+      // postings without a stated deadline stay visible.
+      const today = new Date().toISOString().slice(0, 10);
       const [jobsRes, savedRes, appsRes, skillsRes, interestsRes] = await Promise.all([
         supabase
           .from('job_postings')
           .select('*')
           .eq('status', 'active')
           .eq('is_external', true)
+          .or(`application_deadline.is.null,application_deadline.gte.${today}`)
           .order('created_at', { ascending: false }),
         supabase.from('saved_jobs').select('job_id').eq('user_id', session.user.id),
         supabase

@@ -102,10 +102,11 @@ export function NextActionsSection({ major, gaps, postings, loading }: Props) {
         <p className="text-sm font-semibold text-foreground">Relevant open opportunities</p>
         {relevant.length > 0 ? (
           <ul className="mt-2 divide-y divide-border-subtle">
-            {relevant.map((posting) => {
+            {relevant.map((posting, index) => {
               const asked = postingGaps(posting);
               return (
-                <li key={posting.title} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 py-2.5">
+                // Different employers post the same role title, so the title alone is not unique.
+                <li key={`${posting.title}-${index}`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 py-2.5">
                   <div className="flex min-w-0 items-center gap-2">
                     <Search aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
                     <span className="truncate text-sm font-medium text-foreground">{posting.title}</span>
