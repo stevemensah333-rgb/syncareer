@@ -151,6 +151,8 @@ export function CVEditorWorkspace({
   });
 
   const [showPreview, setShowPreview] = useState(false);
+  const [showScore, setShowScore] = useState(false);
+
   const [showAIAssistance, setShowAIAssistance] = useState(false);
   const [targetAIBulletPath, setTargetAIBulletPath] = useState<string | null>(null);
   const [undoCVData, setUndoCVData] = useState<CVData | null>(null);
