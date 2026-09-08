@@ -1030,50 +1030,32 @@ export function CVEditorWorkspace({
           </div>
         </div>
 
-        <div className="space-y-4 lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
-          <h2 className="sr-only">CV progress and guidance</h2>
-          <CVStrengthScore result={strengthResult} />
-          {sidebarExtras}
-
-          <div className="rounded-surface border border-border bg-card p-4 space-y-3 shadow-card">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-                <h3 className="type-label">Wording help</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs rounded-control"
-                onClick={() => setShowAIAssistance((open) => !open)}
-              >
-                {showAIAssistance ? 'Hide' : 'Open'}
-              </Button>
+        <div className="flex flex-col gap-3 lg:sticky lg:top-16 lg:h-[calc(100vh-5rem)]">
+          <h2 className="sr-only">Live preview and CV strength</h2>
+          {showScore && (
+            <div className="shrink-0 lg:max-h-[45%] lg:overflow-y-auto">
+              <CVStrengthScore result={strengthResult} />
             </div>
-
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {assistantOpportunity
-                ? `Grounded in requirement context for ${assistantOpportunity.title}.`
-                : 'Select an opportunity to get bullet rewrites grounded in the role.'}
-            </p>
-
-            {showAIAssistance && (
-              <div className="pt-2">
-                <CVAIAssistant
-                  cvData={cvData}
-                  activeSection={activeTab}
-                  opportunity={assistantOpportunity ?? null}
-                  opportunityLoading={assistantOpportunityLoading}
-                  opportunityError={assistantOpportunityError}
-                  onSuggestion={handleAISuggestion}
-                  onUndo={applyUndo}
-                  targetFieldPath={targetAIBulletPath ?? undefined}
-                  onClose={() => setShowAIAssistance(false)}
-                />
-              </div>
-            )}
+          )}
+          <div className="h-[70vh] min-h-0 lg:h-auto lg:flex-1">
+            <CVLivePreview
+              data={cvData}
+              activeSection={activeTab}
+              headerRight={
+                <button
+                  type="button"
+                  onClick={() => setShowScore((open) => !open)}
+                  aria-expanded={showScore}
+                  className="interactive inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-semibold"
+                >
+                  <span className="tabular-nums text-primary">{strengthResult.completion.percentage}%</span>
+                  <span className="text-muted-foreground">{showScore ? 'Hide score' : 'CV score'}</span>
+                </button>
+              }
+            />
           </div>
         </div>
+
       </div>
 
       <CVPreviewDialog
