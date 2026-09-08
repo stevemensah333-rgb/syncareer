@@ -7,21 +7,6 @@ interface HeroSectionProps {
   onAssessment: () => void;
 }
 
-/**
- * Journey stages shown in the hero flow strip. These map to the six
- * ApplicationRecord tabs but are presented as a connected journey rather
- * than a tablist, so visitors understand the relationship between stages
- * before they interact with the demo.
- */
-const HERO_JOURNEY = [
-  { id: "opportunity", label: "Opportunity", short: "Find it" },
-  { id: "evidence", label: "Evidence", short: "Prove it" },
-  { id: "cv", label: "CV", short: "Build it" },
-  { id: "interview", label: "Interview", short: "Practice it" },
-  { id: "action", label: "Next action", short: "Plan it" },
-  { id: "outcome", label: "Outcome", short: "Track it" },
-] as const;
-
 export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionProps) {
   const handleTryDemo = () => {
     const evidenceTab = document.getElementById("hero-record-tab-evidence");
