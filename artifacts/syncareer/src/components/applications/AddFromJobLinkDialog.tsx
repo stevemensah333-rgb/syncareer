@@ -191,12 +191,12 @@ export function AddFromJobLinkDialog({ userId, onCreated }: AddFromJobLinkDialog
           </Button>
           {step === 'link' ? (
             <Button onClick={() => void read()} disabled={busy || !link.trim()}>
-              {busy && <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />}
+              {busy && <Loader2 className="mr-2 size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />}
               {busy ? 'Reading the page…' : 'Read the posting'}
             </Button>
           ) : (
             <Button onClick={() => void create()} disabled={busy}>
-              {busy && <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />}
+              {busy && <Loader2 className="mr-2 size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />}
               Open application
             </Button>
           )}
