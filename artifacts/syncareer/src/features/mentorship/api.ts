@@ -5,7 +5,7 @@ import type { MentorProfile, MentorshipRequest, MyMentorProfile } from './types'
 type RpcResult = { data: unknown; error: PostgrestError | null };
 type RpcCall = (name: string, args?: Record<string, unknown>) => PromiseLike<RpcResult>;
 // Bound to the client: the detached method loses `this` and throws before any request.
-const rpc: RpcCall = (name, args) => (supabase.rpc as unknown as RpcCall)(name, args);
+const rpc: RpcCall = (name, args) => (supabase as unknown as { rpc: RpcCall }).rpc(name, args);
 
 async function call<T>(name: string, args?: Record<string, unknown>): Promise<T> {
   const { data, error } = await rpc(name, args);
