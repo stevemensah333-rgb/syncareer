@@ -13,6 +13,7 @@ import {
 import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
 import ScrollStory from "@/components/landing/ScrollStory";
+import WorkspacePreview from "@/components/landing/WorkspacePreview";
 import MentorCallout from "@/components/landing/MentorCallout";
 import FAQSection, { LANDING_FAQS } from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
