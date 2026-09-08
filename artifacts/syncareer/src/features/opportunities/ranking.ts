@@ -111,6 +111,9 @@ export interface OpportunityProfileSignals {
   major?: string | null;
   skills?: string[];
   interests?: string[];
+  /** Skills read from the student's own CV, kept separate from recorded skills
+   * so the feed can say which of the two produced a match. */
+  cvSkills?: string[];
   /** Apply strong seniority penalties only for current students/early-career users. */
   earlyCareer?: boolean;
 }
@@ -124,6 +127,8 @@ export interface RankedOpportunity {
   matchedSkills: string[];
   /** Actual recorded interest names that appeared in the posting. */
   matchedInterests: string[];
+  /** CV skills that appeared in the posting and are not already recorded skills. */
+  matchedCvSkills: string[];
   /** True when the posting is early-career friendly (or early-career is the only signal). */
   earlyCareerFriendly: boolean;
 }
@@ -188,12 +193,17 @@ export function scoreOpportunity(job: OpportunityJob, profile: OpportunityProfil
   const interests = (profile.interests ?? [])
     .map((value) => value.trim())
     .filter((value) => value.length >= 3);
+  const recorded = new Set(skills.map((value) => value.toLocaleLowerCase()));
+  const cvSkills = (profile.cvSkills ?? [])
+    .map((value) => value.trim())
+    .filter((value) => value.length >= 3 && !recorded.has(value.toLocaleLowerCase()));
 
   let score = ingestionRecencyScore(job.created_at);
   let majorAligned = false;
   let matchedSkillCount = 0;
   const matchedSkills: string[] = [];
   const matchedInterests: string[] = [];
+  const matchedCvSkills: string[] = [];
 
   for (const term of majorTerms) {
     if (includesTerm(title, term)) {
@@ -215,6 +225,21 @@ export function scoreOpportunity(job: OpportunityJob, profile: OpportunityProfil
       score += 5;
       matchedSkillCount += 1;
       matchedSkills.push(skill);
+    }
+  }
+
+  // A CV skill is the student's own written claim, so it counts like a recorded
+  // skill but slightly lower: it was never confirmed on the skills profile.
+  for (const skill of cvSkills) {
+    const term = skill.toLocaleLowerCase();
+    if (includesTerm(title, term)) {
+      score += 8;
+      matchedSkillCount += 1;
+      matchedCvSkills.push(skill);
+    } else if (includesTerm(body, term)) {
+      score += 4;
+      matchedSkillCount += 1;
+      matchedCvSkills.push(skill);
     }
   }
 
@@ -250,6 +275,7 @@ export function scoreOpportunity(job: OpportunityJob, profile: OpportunityProfil
     matchedSkillCount,
     matchedSkills,
     matchedInterests,
+    matchedCvSkills,
     earlyCareerFriendly,
   };
 }
@@ -308,6 +334,7 @@ export function opportunityRankingSummary(profile: OpportunityProfileSignals): s
   const parts: string[] = [];
   if (profile.major?.trim()) parts.push(profile.major.trim());
   if ((profile.skills ?? []).length > 0) parts.push(`${Math.min(profile.skills!.length, 3)} skill${profile.skills!.length === 1 ? '' : 's'}`);
+  if ((profile.cvSkills ?? []).length > 0) parts.push('skills from your CV');
   if ((profile.interests ?? []).length > 0) parts.push('career interests');
   if (parts.length === 0) return null;
   return `Ordered using ${parts.join(' and ')}${profile.earlyCareer ? ', with early-career roles prioritised' : ''}.`;

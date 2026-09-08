@@ -96,14 +96,36 @@ const useRemainingViewportHeight = () => {
   return { ref, constrained, style: constrained ? { height: `${height}px` } : undefined };
 };
 
+/**
+ * Reads skill names out of a stored CV. The column is free-form JSON written by
+ * the CV builder over several versions, so entries may be plain strings or
+ * objects with a name.
+ */
+const readCvSkills = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  const names = value
+    .map((entry) => {
+      if (typeof entry === 'string') return entry;
+      if (entry && typeof entry === 'object' && 'name' in entry) {
+        const name = (entry as { name?: unknown }).name;
+        return typeof name === 'string' ? name : '';
+      }
+      return '';
+    })
+    .map((name) => name.trim())
+    .filter((name) => name.length > 0);
+  return Array.from(new Set(names)).slice(0, 30);
+};
+
 const Opportunities = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { studentDetails, profile } = useUserProfile();
 
   const [jobs, setJobs] = useState<OpportunityJob[]>([]);
-  const [profileSignals, setProfileSignals] = useState<Pick<OpportunityProfileSignals, 'skills' | 'interests'>>({
+  const [profileSignals, setProfileSignals] = useState<Pick<OpportunityProfileSignals, 'skills' | 'cvSkills' | 'interests'>>({
     skills: [],
+    cvSkills: [],
     interests: [],
   });
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_ROWS);
@@ -152,7 +174,7 @@ const Opportunities = () => {
       // Postings whose deadline has already passed are not opportunities any more;
       // postings without a stated deadline stay visible.
       const today = new Date().toISOString().slice(0, 10);
-      const [jobsRes, savedRes, appsRes, skillsRes, interestsRes] = await Promise.all([
+      const [jobsRes, savedRes, appsRes, skillsRes, interestsRes, resumeRes] = await Promise.all([
         supabase
           .from('job_postings')
           .select('*')
@@ -173,12 +195,22 @@ const Opportunities = () => {
           .not('completed_at', 'is', null)
           .order('completed_at', { ascending: false })
           .limit(1),
+        // The student's own CV: its skills are a personalization signal even when
+        // they were never added to the skills profile.
+        supabase
+          .from('resumes')
+          .select('skills')
+          .eq('user_id', session.user.id)
+          .eq('document_scope', 'base')
+          .order('updated_at', { ascending: false })
+          .limit(1),
       ]);
 
       if (jobsRes.error) throw jobsRes.error;
 
       setProfileSignals({
         skills: skillsRes.error ? [] : (skillsRes.data ?? []).map((skill) => skill.skill_name).filter(Boolean),
+        cvSkills: resumeRes.error ? [] : readCvSkills(resumeRes.data?.[0]?.skills),
         interests: interestsRes.error
           ? []
           : (interestsRes.data ?? []).flatMap((assessment) => [
@@ -217,10 +249,11 @@ const Opportunities = () => {
     () => ({
       major: studentDetails?.major ?? null,
       skills: profileSignals.skills,
+      cvSkills: profileSignals.cvSkills,
       interests: profileSignals.interests,
       earlyCareer: profile?.user_type === 'student' || Boolean(studentDetails),
     }),
-    [profile?.user_type, profileSignals.interests, profileSignals.skills, studentDetails],
+    [profile?.user_type, profileSignals.cvSkills, profileSignals.interests, profileSignals.skills, studentDetails],
   );
 
   const ranked = useMemo(

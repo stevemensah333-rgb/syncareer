@@ -11,6 +11,10 @@ export interface ApplicationWorkspaceFields {
   location_snapshot: string | null;
   deadline_snapshot: string | null;
   external_id_snapshot: string | null;
+  /** Posting text captured when the application was opened from a pasted link. */
+  job_description_snapshot: string | null;
+  requirements_snapshot: string | null;
+  cover_letter: string | null;
 }
 
 export type WorkspaceApplication = TrackedApplication & ApplicationWorkspaceFields;
@@ -37,6 +41,7 @@ export function applicationFacts(application: WorkspaceApplication): TrackedJobS
     title: application.job_title_snapshot ?? 'Tracked application',
     company_name: application.company_name_snapshot,
     department: null,
+    description: application.job_description_snapshot,
     source: application.source_snapshot,
     source_url: application.source_url_snapshot,
     location: application.location_snapshot,

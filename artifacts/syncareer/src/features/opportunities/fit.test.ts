@@ -82,7 +82,7 @@ describe('buildFitExplanation', () => {
     const fit = rankAndExplain(makeJob(), PROFILE)!;
 
     expect(fit.gaps.map((gap) => gap.skill)).toContain('Cloud deployment');
-    expect(fit.gaps[0]?.note).toBe('Listed by the source; not in your recorded skills');
+    expect(fit.gaps[0]?.note).toBe('Listed by the source; not in your skills or CV');
   });
 
   it('does not call a gap when the skill is already recorded', () => {

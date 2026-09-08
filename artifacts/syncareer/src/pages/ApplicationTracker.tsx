@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ApplicationObject } from '@/components/applications/ApplicationObject';
+import { AddFromJobLinkDialog } from '@/components/applications/AddFromJobLinkDialog';
 import { supabase } from '@/integrations/supabase/client';
+import { ANALYTICS_EVENTS, captureProductEvent } from '@/services/analytics';
 import { classifyTrackerError, type TrackerWriteFailure } from '@/features/application-tracker/tracking';
 import { loadApplicationIndex } from '@/features/application-tracker/applicationIndexData';
 import {
@@ -38,6 +40,7 @@ export default function ApplicationTracker() {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [loadError, setLoadError] = useState<TrackerWriteFailure | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const objectRefs = useRef(new Map<string, HTMLButtonElement>());
   const now = useRef(Date.now()).current;
 
@@ -60,6 +63,7 @@ export default function ApplicationTracker() {
       setLoadState('error');
       return;
     }
+    setUserId(session.user.id);
     const result = await loadApplicationIndex(supabase, session.user.id);
     if (!result.ok) {
       setLoadError(result.error);
@@ -98,6 +102,11 @@ export default function ApplicationTracker() {
   // A filter can disappear when the records behind it do; fall back to All.
   const activeFilter = options.some((option) => option.value === filter) ? filter : 'all';
 
+  const handleCreatedFromLink = (applicationId: string) => {
+    captureProductEvent(ANALYTICS_EVENTS.APPLICATION_CREATED, { origin: 'manual' });
+    navigate(`/applications/${encodeURIComponent(applicationId)}`);
+  };
+
   const openApplication = (applicationId: string) => {
     setOpeningId(applicationId);
     navigate(`/applications/${encodeURIComponent(applicationId)}`);
@@ -123,6 +132,10 @@ export default function ApplicationTracker() {
       headerVariant="document"
     >
       <div className="space-y-6">
+        <div className="flex justify-end">
+          <AddFromJobLinkDialog userId={userId} onCreated={handleCreatedFromLink} />
+        </div>
+
         <section className="surface-content overflow-hidden">
           <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="flex flex-wrap gap-1" role="group" aria-label="Filter applications by state">

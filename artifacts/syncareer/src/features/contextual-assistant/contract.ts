@@ -11,7 +11,8 @@ function toCountBucket(count: number): '1' | '2' | '3_plus' {
 
 export const assistantTasks = [
   'opportunity.explain_requirement', 'opportunity.compare_evidence', 'opportunity.research_questions',
-  'cv.rewrite_bullet', 'application.draft_follow_up', 'application.clarify_next_action',
+  'cv.rewrite_bullet', 'application.draft_follow_up', 'application.draft_cover_letter',
+  'application.clarify_next_action',
   'application.organise_notes', 'interview.explain_feedback', 'interview.practice_question',
 ] as const;
 
@@ -51,6 +52,7 @@ const allowedKinds: Record<AssistantTask, readonly AssistantProposal['kind'][]> 
   'opportunity.research_questions': ['outline'],
   'cv.rewrite_bullet': ['rewrite'],
   'application.draft_follow_up': ['draft'],
+  'application.draft_cover_letter': ['draft'],
   'application.clarify_next_action': ['explanation', 'outline'],
   'application.organise_notes': ['outline'],
   'interview.explain_feedback': ['explanation'],

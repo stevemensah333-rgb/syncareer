@@ -171,6 +171,25 @@ export async function updateApplicationStatus(
 }
 
 /** Save notes on a tracked application (blank saves as null). */
+export async function saveApplicationCoverLetter(
+  client: TrackerClient,
+  applicationId: string,
+  coverLetter: string,
+  userId: string,
+): Promise<TrackerWriteResult> {
+  try {
+    const { error } = await client
+      .from('job_applications')
+      .update({ cover_letter: coverLetter.trim() || null })
+      .eq('id', applicationId)
+      .eq('applicant_id', userId);
+    if (error) return classifyTrackerError(error);
+    return { ok: true };
+  } catch (err) {
+    return classifyTrackerError(err);
+  }
+}
+
 export async function saveApplicationNotes(
   client: TrackerClient,
   applicationId: string,
