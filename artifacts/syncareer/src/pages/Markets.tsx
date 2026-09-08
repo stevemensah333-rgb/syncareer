@@ -47,16 +47,16 @@ const DEADLINE_FILTERS = [
 type LoadStatus = 'loading' | 'error' | 'ready';
 const SCROLL_STORAGE_KEY = 'syncareer.opportunities.scrollTop';
 const INITIAL_VISIBLE_ROWS = 20;
-// Low enough that laptop-height viewports still get the two independently
-// scrolling panes; below this the page scrolls as one instead.
-const WORKSPACE_MIN_HEIGHT = 300;
+// Floor for the two-pane workspace: short viewports still get panes that scroll
+// on their own rather than one page-level scroll that moves both.
+const WORKSPACE_MIN_HEIGHT = 560;
 const WORKSPACE_BOTTOM_PADDING = 24;
 
 // On desktop, sizes the two-pane workspace to the remaining viewport height so the
-// job list scrolls inside the viewport instead of extending below the fold (a fixed
-// calc offset breaks whenever the header height changes). When too little room
-// remains — short viewports — it opts out so the page scrolls naturally instead of
-// showing a cramped, half-clipped pane.
+// list and the selected opportunity each scroll inside their own pane instead of
+// extending below the fold (a fixed calc offset breaks whenever the header height
+// changes). Short viewports keep the minimum height rather than opting out, because
+// a single page-level scroll would move both panes together.
 const useRemainingViewportHeight = () => {
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | null>(null);
@@ -75,7 +75,7 @@ const useRemainingViewportHeight = () => {
       // an oscillation that leaves the workspace clipped.
       const top = element.getBoundingClientRect().top + window.scrollY;
       const available = window.innerHeight - top - WORKSPACE_BOTTOM_PADDING;
-      setHeight(available >= WORKSPACE_MIN_HEIGHT ? Math.floor(available) : null);
+      setHeight(Math.max(Math.floor(available), WORKSPACE_MIN_HEIGHT));
     };
 
     update();
@@ -843,7 +843,13 @@ const Opportunities = () => {
                       list (already filtered by `tab`) inside its panel so the
                       tab triggers reference real tabpanel ids. */}
                   {(['all', 'saved'] as const).map((value) => (
-                    <TabsContent key={value} value={value} className="flex min-h-0 flex-col lg:flex-1">
+                    // `flex` would otherwise override Radix's [hidden] on the
+                    // inactive panel, leaving it taking half the pane.
+                    <TabsContent
+                      key={value}
+                      value={value}
+                      className="flex min-h-0 flex-col data-[state=inactive]:hidden lg:flex-1"
+                    >
                       <div
                         ref={listRef}
                         className={cn(
