@@ -312,7 +312,8 @@ describe('Opportunities page', () => {
     await screen.findAllByText('Software Engineer');
     expect(screen.getAllByText('Strong fit').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Recorded skills · Python, FastAPI/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Not recorded:/).length).toBeGreaterThan(0);
+    // Rows stay slim: the fit explanation and skill detail live in the
+    // detail view and the hover preview, not the list card.
     expect(screen.getAllByText(/Cloud deployment/).length).toBeGreaterThan(0);
     // The explanation wins; a percentage must never appear.
     expect(screen.queryByText(/\d{2}%/)).toBeNull();
