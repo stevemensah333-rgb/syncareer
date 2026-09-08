@@ -74,12 +74,12 @@ export default function ApplicationRecord({
     >
       <header className="flex flex-col gap-4 border-b bg-secondary/40 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
         <div>
-          <p className="eyebrow text-primary">Application / 0147 · illustrative record</p>
+          <p className="eyebrow text-accent-foreground">Application / 0147 · illustrative record</p>
           <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em]">Graduate Data Analyst</h2>
           <p className="mt-1 text-sm text-muted-foreground">Example organisation · Accra · Entry level</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-selected-foreground">
+          <span className="inline-flex items-center gap-1.5 border border-accent-foreground/20 bg-accent px-2.5 py-1 text-xs font-semibold text-selected-foreground">
             <Bookmark className="h-3.5 w-3.5" aria-hidden="true" /> Saved
           </span>
         </div>
@@ -121,7 +121,7 @@ export default function ApplicationRecord({
                   move(APPLICATION_STAGES.length - 1);
                 }
               }}
-              className={`landing-record-tab relative min-h-10 shrink-0 snap-start px-3 py-2 text-left text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:px-3.5 ${active === stage.id ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              className={`landing-record-tab relative min-h-10 shrink-0 snap-start px-3 py-2 text-left text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:px-3.5 ${active === stage.id ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
             >
               <span className="mr-1.5 text-[10px]" aria-hidden="true">0{index + 1}</span>{stage.label}
               <span className="landing-record-tab-indicator" aria-hidden="true" />
@@ -156,9 +156,9 @@ export default function ApplicationRecord({
                       onMouseEnter={() => setSelectedRequirement(row.requirement)}
                       onFocus={() => setSelectedRequirement(row.requirement)}
                       onClick={() => setSelectedRequirement(row.requirement)}
-                      className={`group/requirement grid w-full gap-2 border-l-2 px-3 py-3 text-left transition-[background-color,border-color] duration-150 ease-standard motion-reduce:transition-none sm:grid-cols-[0.62fr_1fr] sm:items-center ${isSelected ? "border-primary bg-primary/[0.075]" : "border-transparent hover:border-primary/40 hover:bg-secondary/60"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`}
+                      className={`group/requirement grid w-full gap-2 border-l-2 px-3 py-3 text-left transition-[background-color,border-color] duration-150 ease-standard motion-reduce:transition-none sm:grid-cols-[0.62fr_1fr] sm:items-center ${isSelected ? "border-accent-foreground bg-accent" : "border-transparent hover:border-accent-foreground/40 hover:bg-secondary/60"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`}
                     >
-                      <span className={`text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none ${isSelected ? "text-primary" : ""}`}>{row.requirement}</span>
+                      <span className={`text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none ${isSelected ? "text-accent-foreground" : ""}`}>{row.requirement}</span>
                       <span className={`flex items-center gap-2 text-sm ${supported ? "text-success" : "text-muted-foreground"}`}>
                         {supported ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : <Circle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
                         <span>
@@ -204,7 +204,7 @@ function StageDetail({ stage }: { stage: ApplicationStage }) {
     opportunity: {
       label: "Opportunity context",
       title: "Start with the real listing.",
-      body: <><p className="text-sm leading-6 text-muted-foreground">See the organisation, location and listed requirements before deciding whether the role is worth pursuing.</p><p className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"><ExternalLink className="h-4 w-4" aria-hidden="true" /> Open original source</p></>,
+      body: <><p className="text-sm leading-6 text-muted-foreground">See the organisation, location and listed requirements before deciding whether the role is worth pursuing.</p><p className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-foreground"><ExternalLink className="h-4 w-4" aria-hidden="true" /> Open original source</p></>,
     },
     evidence: {
       label: "Evidence review",
@@ -214,17 +214,17 @@ function StageDetail({ stage }: { stage: ApplicationStage }) {
     cv: {
       label: "CV preparation",
       title: "Turn a vague line into specific evidence.",
-      body: <><p className="text-xs text-muted-foreground line-through">Worked on a data project.</p><div className="mt-3 border-l-2 border-primary pl-3"><p className="text-xs font-semibold text-primary">Suggested for review</p><p className="mt-2 text-sm leading-6">Created a SQL reporting dashboard for a coursework project.</p></div><p className="mt-4 text-xs leading-5 text-muted-foreground"><FileText className="mr-1 inline h-3.5 w-3.5 text-primary" aria-hidden="true" /> Uses only the facts supplied in this illustration.</p></>,
+      body: <><p className="text-xs text-muted-foreground line-through">Worked on a data project.</p><div className="mt-3 border-l-2 border-accent-foreground pl-3"><p className="text-xs font-semibold text-accent-foreground">Suggested for review</p><p className="mt-2 text-sm leading-6">Created a SQL reporting dashboard for a coursework project.</p></div><p className="mt-4 text-xs leading-5 text-muted-foreground"><FileText className="mr-1 inline h-3.5 w-3.5 text-accent-foreground" aria-hidden="true" /> Uses only the facts supplied in this illustration.</p></>,
     },
     interview: {
       label: "Interview preparation",
       title: "Practice stays tied to this role.",
-      body: <><p className="text-sm font-medium">How did you use SQL to turn coursework data into a clear dashboard?</p><p className="mt-3 text-sm leading-6 text-muted-foreground">The question uses the same requirement and evidence, so your practice stays focused on this role.</p><p className="mt-4 text-xs leading-5 text-muted-foreground"><Mic2 className="mr-1 inline h-3.5 w-3.5 text-primary" aria-hidden="true" /> Practice guidance is not an employer assessment.</p></>,
+      body: <><p className="text-sm font-medium">How did you use SQL to turn coursework data into a clear dashboard?</p><p className="mt-3 text-sm leading-6 text-muted-foreground">The question uses the same requirement and evidence, so your practice stays focused on this role.</p><p className="mt-4 text-xs leading-5 text-muted-foreground"><Mic2 className="mr-1 inline h-3.5 w-3.5 text-accent-foreground" aria-hidden="true" /> Practice guidance is not an employer assessment.</p></>,
     },
     action: {
       label: "Next action",
       title: "Leave yourself one clear task.",
-      body: <><div className="border-y py-3"><p className="text-xs font-semibold text-primary">Set by you</p><p className="mt-1 text-sm font-semibold">Check whether the role needs AWS evidence before applying</p><p className="mt-1 text-xs text-muted-foreground">No due date set</p></div><p className="mt-4 text-sm leading-6 text-muted-foreground">Your next action stays connected to the Graduate Data Analyst application.</p></>,
+      body: <><div className="border-y py-3"><p className="text-xs font-semibold text-accent-foreground">Set by you</p><p className="mt-1 text-sm font-semibold">Check whether the role needs AWS evidence before applying</p><p className="mt-1 text-xs text-muted-foreground">No due date set</p></div><p className="mt-4 text-sm leading-6 text-muted-foreground">Your next action stays connected to the Graduate Data Analyst application.</p></>,
     },
     outcome: {
       label: "Outcome",
@@ -233,7 +233,7 @@ function StageDetail({ stage }: { stage: ApplicationStage }) {
     },
   };
   const detail = details[stage];
-  return <div className="flex h-full flex-col justify-between"><div><p className="eyebrow text-primary">{detail.label}</p><h3 className="mt-2 text-lg font-semibold tracking-[-0.025em]">{detail.title}</h3><div className="mt-4">{detail.body}</div></div><p className="mt-8 text-[11px] leading-5 text-muted-foreground">Illustrative product state — not a live listing or user record.</p></div>;
+  return <div className="flex h-full flex-col justify-between"><div><p className="eyebrow text-accent-foreground">{detail.label}</p><h3 className="mt-2 text-lg font-semibold tracking-[-0.025em]">{detail.title}</h3><div className="mt-4">{detail.body}</div></div><p className="mt-8 text-[11px] leading-5 text-muted-foreground">Illustrative product state — not a live listing or user record.</p></div>;
 }
 
 function stageLabel(stage: ApplicationStage) {
