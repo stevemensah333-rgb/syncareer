@@ -11,9 +11,9 @@ interface CVPreviewProps {
  * user is currently editing.
  */
 const SectionHeading = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="font-bold uppercase border-b border-black mb-1 pb-[1px]" style={{ fontSize: '11pt' }}>
+  <div className="font-bold uppercase border-b border-black mb-1 pb-[1px]" style={{ fontSize: '11pt' }}>
     {children}
-  </h2>
+  </div>
 );
 
 const Bullets = ({ items }: { items: string[] }) => {
@@ -44,9 +44,9 @@ export const CVPreview = forwardRef<HTMLDivElement, CVPreviewProps>(({ data }, r
       }}
     >
       <header data-cv-section="personal" className="text-center mb-2">
-        <h1 className="font-bold uppercase tracking-wide" style={{ fontSize: '15pt', lineHeight: 1.1 }}>
+        <div className="font-bold uppercase tracking-wide" style={{ fontSize: '15pt', lineHeight: 1.1 }}>
           {personal.firstName || 'FIRSTNAME'} {personal.lastName || 'LAST NAME'}
-        </h1>
+        </div>
         <div style={{ fontSize: '9.5pt' }}>
           <p>
             {personal.phone || '+23300000000'}
