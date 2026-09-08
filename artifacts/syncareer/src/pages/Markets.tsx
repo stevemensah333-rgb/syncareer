@@ -469,9 +469,12 @@ const Opportunities = () => {
       .slice(0, 3);
   }, [rankingProfile.major, search]);
 
+  // The count is paired with when the feed was last refreshed, so a quiet list
+  // reads as "nothing new was pulled" rather than "nothing exists".
+  const feedSuffix = feedUpdated ? ` · updated ${feedUpdated.toLocaleLowerCase()}` : '';
   const searchFeedback = search.trim()
     ? `${filtered.length} ${filtered.length === 1 ? 'opportunity' : 'opportunities'} for “${search.trim()}”`
-    : `${filtered.length} open ${filtered.length === 1 ? 'opportunity' : 'opportunities'}`;
+    : `${filtered.length} open ${filtered.length === 1 ? 'opportunity' : 'opportunities'}${feedSuffix}`;
 
   const isLoading = loadStatus === 'loading';
 
