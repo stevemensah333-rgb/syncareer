@@ -1,4 +1,4 @@
-import { SUPPORT_PHONE } from '@/lib/contact';
+import { SUPPORT_EMAIL, SUPPORT_PHONE } from '@/lib/contact';
 
 /**
  * Optional voluntary support for Syncareer (Mobile Money based).
@@ -11,7 +11,7 @@ import { SUPPORT_PHONE } from '@/lib/contact';
  * Contributions are sent directly via Mobile Money to the Syncareer number
  * (SUPPORT_PHONE). There is no payment processor in the client: the donor
  * initiates the MoMo transfer on their own device, then optionally sends a
- * short message (WhatsApp or SMS) so the team can acknowledge it.
+ * short message (email or SMS) so the team can acknowledge it.
  */
 
 const momoDigits = SUPPORT_PHONE.replace(/[^\d]/g, '');
@@ -19,19 +19,23 @@ const momoDigits = SUPPORT_PHONE.replace(/[^\d]/g, '');
 export const SUPPORT_DEFAULT_MESSAGE =
   'Hi Syncareer, I just sent a voluntary support contribution via MoMo. Thank you for keeping it free!';
 
+export const SUPPORT_EMAIL_SUBJECT = 'Support for Syncareer';
+
 export const supportMomoNumber = (): string => SUPPORT_PHONE;
 
-export const supportWhatsAppHref = (message: string = SUPPORT_DEFAULT_MESSAGE): string =>
-  `https://wa.me/${momoDigits}?text=${encodeURIComponent(message)}`;
+export const supportEmailHref = (message: string = SUPPORT_DEFAULT_MESSAGE): string =>
+  `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(SUPPORT_EMAIL_SUBJECT)}&body=${encodeURIComponent(message)}`;
 
 export const supportSmsHref = (message: string = SUPPORT_DEFAULT_MESSAGE): string =>
   `sms:${SUPPORT_PHONE.replace(/\s/g, '')}?body=${encodeURIComponent(message)}`;
 
 /**
- * Single link used by the navbar and footer. Returns the WhatsApp "click to
- * chat" link with the default message, so the existing external-anchor callers
- * keep working without a hosted payment URL.
+ * In-app destination used by the navbar and footer: the Support tab in
+ * Settings, where the MoMo number and message composer live.
  */
-export const supportUrl = (): string => supportWhatsAppHref();
+export const SUPPORT_PATH = '/settings?tab=support';
+
+export const supportUrl = (): string => SUPPORT_PATH;
 
 export const isSupportEnabled = (): boolean => momoDigits.length > 0;
+
