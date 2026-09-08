@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { SettingsGroup, SettingsRow, SettingsValue } from './SettingsScaffold';
 import { toast } from 'sonner';
-import { supportMomoNumber, supportEmailHref, supportSmsHref, SUPPORT_DEFAULT_MESSAGE } from '@/lib/support';
+import { supportMomoNumber, supportEmailHref, supportGmailHref, supportSmsHref, SUPPORT_DEFAULT_MESSAGE } from '@/lib/support';
 
 
 /**
