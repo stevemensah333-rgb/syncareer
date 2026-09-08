@@ -145,7 +145,7 @@ export const CVPreview = forwardRef<HTMLDivElement, CVPreviewProps>(({ data }, r
       {skills.length > 0 && (
         <section data-cv-section="skills" className="mb-2">
           <SectionHeading>Skills</SectionHeading>
-          <Bullets items={skills} />
+          <p>{skills.filter((s) => s.trim()).join(', ')}</p>
         </section>
       )}
 
