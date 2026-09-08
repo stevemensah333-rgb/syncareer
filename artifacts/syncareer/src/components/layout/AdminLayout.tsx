@@ -27,7 +27,10 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
   };
 
   return (
-    <div className="app-canvas min-h-screen bg-background">
+    // `theme-pf` keeps the admin shell on the same token layer as the rest of
+    // the signed-in product, so admin does not read as a second application.
+    <div className="theme-pf app-canvas min-h-screen bg-background text-foreground">
+
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-primary-foreground"

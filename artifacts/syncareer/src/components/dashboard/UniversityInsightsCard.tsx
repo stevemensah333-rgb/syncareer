@@ -5,6 +5,7 @@ import { GraduationCap, TrendingUp } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
 import { supabase } from '@/integrations/supabase/client';
+import { invokeWithTimeout } from '@/lib/invokeWithTimeout';
 
 interface UniversityInsightsCardProps {
   university: string | null;
@@ -44,9 +45,12 @@ export const UniversityInsightsCard: React.FC<UniversityInsightsCardProps> = ({ 
         }
 
         // Generate via edge function
-        const { data, error } = await supabase.functions.invoke('compute-university-insights', {
-          body: { university, major },
-        });
+        const { data, error } = await invokeWithTimeout(
+          () => supabase.functions.invoke('compute-university-insights', {
+            body: { university, major },
+          }),
+          { label: 'University insights', timeoutMs: 45_000 },
+        );
 
         if (!error && data?.top_careers) {
           setInsights(data.top_careers);

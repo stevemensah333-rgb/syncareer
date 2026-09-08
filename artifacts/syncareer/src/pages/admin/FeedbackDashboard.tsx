@@ -34,6 +34,13 @@ const RESPONSE_LABELS: Record<string, string> = {
   general: 'General feedback',
 };
 
+const RANGE_LABELS: Record<string, string> = {
+  '7': 'the last 7 days',
+  '30': 'the last 30 days',
+  '90': 'the last 90 days',
+  '365': 'the last year',
+};
+
 const FEATURE_LABELS: Record<string, string> = {
   general: 'General',
   assessment: 'Assessment',
@@ -48,7 +55,11 @@ const FeedbackDashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [featureFilter, setFeatureFilter] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<string>('30');
+  // Feedback arrives in a slow trickle, so a 30-day default rendered the whole
+  // dashboard empty whenever nobody had written in that month. The widest
+  // window the function supports is the honest default; narrower ranges stay
+  // available in the selector.
+  const [dateRange, setDateRange] = useState<string>('365');
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -142,6 +153,8 @@ const FeedbackDashboard = () => {
     }
     return items;
   }, [feedback, searchQuery]);
+
+  const rangeLabel = RANGE_LABELS[dateRange] ?? 'the selected period';
 
   const pieData = [
     { name: 'Positive', value: stats.positive, color: 'hsl(142, 71%, 45%)' },
@@ -278,7 +291,7 @@ const FeedbackDashboard = () => {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">No feedback data yet.</p>
+                <p className="text-sm text-muted-foreground text-center py-8">No feedback in {rangeLabel}.</p>
               )}
             </CardContent>
           </Card>
@@ -311,7 +324,7 @@ const FeedbackDashboard = () => {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">No data available.</p>
+                <p className="text-sm text-muted-foreground text-center py-8">No responses in {rangeLabel}.</p>
               )}
             </CardContent>
           </Card>
@@ -399,7 +412,7 @@ const FeedbackDashboard = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">No comments found.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{searchQuery ? 'No comments match that search.' : `No written comments in ${rangeLabel}.`}</p>
             )}
           </CardContent>
         </Card>

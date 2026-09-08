@@ -44,7 +44,7 @@ export function MessageScreen({
       {...(as === 'main' ? { id: 'main-content', tabIndex: -1 } : {})}
       role={role}
       className={cn(
-        'surface-canvas flex min-h-screen items-center justify-center px-4 py-12 focus:outline-none',
+        'theme-pf surface-canvas flex min-h-screen items-center justify-center px-4 py-12 focus:outline-none',
         className,
       )}
     >

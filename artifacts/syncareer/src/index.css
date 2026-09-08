@@ -1301,6 +1301,83 @@
     letter-spacing: -0.011em;
   }
 
+  /* Dark mode for the Pathfind surfaces.
+   *
+   * `.theme-pf` hard-sets the light palette, and because it lives in the
+   * components layer it also out-ranks the `.dark` block in the base layer.
+   * Without this override the theme switch had no visible effect anywhere
+   * inside the authenticated workspace. The ink/paper relationship is
+   * inverted rather than re-hued, so the two modes read as one product.
+   */
+  .dark .theme-pf {
+    --background: 224 20% 7%;
+    --canvas: 224 20% 7%;
+    --foreground: 220 14% 97%;
+    --text: 220 14% 97%;
+    --card: 224 18% 10%;
+    --card-foreground: 220 14% 97%;
+    --popover: 224 18% 10%;
+    --popover-foreground: 220 14% 97%;
+    --surface: 224 18% 10%;
+    --surface-secondary: 224 16% 14%;
+    --surface-elevated: 224 18% 12%;
+    --secondary: 224 16% 14%;
+    --secondary-foreground: 220 14% 97%;
+    --muted: 224 16% 13%;
+    --muted-foreground: 220 10% 68%;
+    --foreground-secondary: 220 12% 82%;
+    --text-secondary: 220 12% 82%;
+    --text-muted: 220 10% 68%;
+    /* Ink flips to paper: the primary action is a light pill on dark. */
+    --primary: 220 14% 97%;
+    --primary-foreground: 224 20% 7%;
+    --primary-hover: 220 12% 86%;
+    --accent: 226 30% 18%;
+    --accent-foreground: 217 91% 76%;
+    --selected: 226 30% 18%;
+    --selected-foreground: 217 91% 76%;
+    --border: 224 14% 20%;
+    --border-subtle: 224 14% 16%;
+    --input: 224 14% 22%;
+    --ring: 220 14% 97%;
+    --pf-panel: 226 30% 15%;
+    --pf-blue: 217 91% 68%;
+    --pf-green: 152 52% 55%;
+
+    --sidebar-background: 224 20% 7%;
+    --sidebar-foreground: 220 14% 97%;
+    --sidebar-primary: 220 14% 97%;
+    --sidebar-primary-foreground: 224 20% 7%;
+    --sidebar-accent: 226 30% 15%;
+    --sidebar-accent-foreground: 220 14% 97%;
+    --sidebar-border: 224 14% 20%;
+    --sidebar-ring: 220 14% 97%;
+
+    --success: 152 52% 52%;
+    --success-foreground: 224 20% 7%;
+    --warning: 38 88% 60%;
+    --warning-foreground: 224 20% 7%;
+    --danger: 0 72% 62%;
+    --danger-foreground: 0 0% 100%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --error: 0 72% 62%;
+    --error-foreground: 0 0% 100%;
+    --info: 217 91% 68%;
+    --info-foreground: 224 20% 7%;
+
+    /* Evidence washes re-derived for the dark canvas so dossier surfaces
+       stay legible instead of glowing. */
+    --dossier-indigo-wash: 226 34% 16%;
+    --dossier-jade-wash: 166 30% 14%;
+    --dossier-clay-wash: 34 34% 15%;
+  }
+
+  /* The selected chip inverts with the theme: light ink on dark paper. */
+  .dark .theme-pf .pf-chip[data-selected='true'] {
+    @apply border-foreground bg-foreground text-background;
+  }
+
   .theme-pf h1,
   .theme-pf h2,
   .theme-pf h3 {

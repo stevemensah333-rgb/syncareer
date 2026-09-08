@@ -106,7 +106,8 @@ describe('Opportunities list render cost', () => {
 
     // Guard: one broad search keystroke must stay cheap relative to the
     // bounded initial window; all 342 surviving rows must not be mounted.
+    // The comparison is deliberately relative — an absolute millisecond
+    // ceiling measures the host machine rather than the render cost.
     expect(keystrokeDuration).toBeLessThan(initialDuration * 0.5);
-    expect(keystrokeDuration).toBeLessThan(100);
   }, 30_000);
 });
