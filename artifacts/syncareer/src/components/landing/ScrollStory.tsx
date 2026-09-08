@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ArrowRight, Bookmark, CheckCircle2, FileText, Mic2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AnimatedSection from "./AnimatedSection";
@@ -20,20 +20,9 @@ interface StagePanelProps {
 }
 
 function StagePanel({ stage, index, isActive, onActivate }: StagePanelProps) {
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (isActive && panelRef.current) {
-      panelRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      const tab = document.getElementById(`story-record-tab-${stage.id}`);
-      tab?.focus();
-      tab?.click();
-    }
-  }, [isActive, stage.id]);
-
   return (
     <article
-      ref={panelRef}
+      id={`story-panel-${stage.id}`}
       className={`story-panel group relative overflow-hidden rounded-surface border ${
         isActive
           ? "border-primary/40 bg-card shadow-[0_28px_70px_-42px_hsl(var(--foreground)/0.38)]"
