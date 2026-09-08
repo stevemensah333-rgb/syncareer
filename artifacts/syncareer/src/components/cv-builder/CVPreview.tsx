@@ -5,164 +5,154 @@ interface CVPreviewProps {
   data: CVData;
 }
 
+/**
+ * Print-faithful, deliberately dense one-page CV. Section wrappers carry
+ * `data-cv-section` so the live editor can scroll the page to whatever the
+ * user is currently editing.
+ */
+const SectionHeading = ({ children }: { children: React.ReactNode }) => (
+  <h2 className="font-bold uppercase border-b border-black mb-1 pb-[1px]" style={{ fontSize: '11pt' }}>
+    {children}
+  </h2>
+);
+
+const Bullets = ({ items }: { items: string[] }) => {
+  const filled = items.filter((item) => item.trim());
+  if (filled.length === 0) return null;
+  return (
+    <ul className="list-disc ml-4">
+      {filled.map((bullet, index) => (
+        <li key={index} className="pl-0">{bullet}</li>
+      ))}
+    </ul>
+  );
+};
+
 export const CVPreview = forwardRef<HTMLDivElement, CVPreviewProps>(({ data }, ref) => {
   const { personal, education, achievements, experience, projects, activities, skills, references } = data;
 
   return (
-    <div 
+    <div
       ref={ref}
-      className="bg-white text-black p-8 w-full max-w-[210mm] mx-auto"
-      style={{ 
+      className="bg-white text-black w-full max-w-[210mm] mx-auto"
+      style={{
         fontFamily: 'Times New Roman, serif',
-        fontSize: '11pt',
-        lineHeight: '1.3',
+        fontSize: '10pt',
+        lineHeight: '1.22',
         minHeight: '297mm',
+        padding: '12mm 13mm',
       }}
     >
-      {/* Header - Name */}
-      <div className="text-center mb-2">
-        <h1 
-          className="font-bold uppercase tracking-wide"
-          style={{ fontSize: '16pt' }}
-        >
+      <header data-cv-section="personal" className="text-center mb-2">
+        <h1 className="font-bold uppercase tracking-wide" style={{ fontSize: '15pt', lineHeight: 1.1 }}>
           {personal.firstName || 'FIRSTNAME'} {personal.lastName || 'LAST NAME'}
         </h1>
-      </div>
-
-      {/* Contact Info */}
-      <div className="text-center mb-4" style={{ fontSize: '10pt' }}>
-        <p>
-          {personal.phone || '+23300000000'} / {personal.nationality || 'Ghanaian'}
-        </p>
-        <p>
-          {personal.email || 'email@gmail.com'} / {personal.schoolEmail || 'email@school.edu'}
-        </p>
-        {personal.linkedIn && (
-          <p>{personal.linkedIn}</p>
-        )}
-      </div>
-
-      {/* Education Section */}
-      <div className="mb-4">
-        <h2 className="font-bold border-b border-black mb-2 pb-0.5" style={{ fontSize: '12pt' }}>
-          EDUCATION
-        </h2>
-        <div className="flex justify-between">
-          <div>
-            <p className="font-bold">{education.university || 'University Name'}, {education.location || 'Location'}</p>
-            <p className="italic">{education.degree || 'Degree Program'}</p>
-          </div>
+        <div style={{ fontSize: '9.5pt' }}>
+          <p>
+            {personal.phone || '+23300000000'}
+            {personal.nationality ? ` / ${personal.nationality}` : ''}
+          </p>
+          <p className="underline">
+            {personal.email || 'email@gmail.com'}
+            {personal.schoolEmail ? ` / ${personal.schoolEmail}` : ''}
+          </p>
+          {personal.linkedIn && <p className="underline">{personal.linkedIn}</p>}
         </div>
-        <p>Expected Date of Graduation: {education.graduationDate || 'Month Year'}</p>
-        <p>Cumulative GPA: {education.gpa || '0.00/4.00'}</p>
-      </div>
+      </header>
 
-      {/* Achievements Section */}
+      <section data-cv-section="education" className="mb-2">
+        <SectionHeading>Education</SectionHeading>
+        <div className="flex justify-between gap-4">
+          <p className="font-bold">{education.university || 'University Name'}</p>
+          <p className="font-bold whitespace-nowrap">{education.location || 'Location'}</p>
+        </div>
+        <div className="flex justify-between gap-4">
+          <p className="font-bold">{education.degree || 'Degree Program'}</p>
+          <p className="font-bold whitespace-nowrap">{education.graduationDate || 'Month Year'}</p>
+        </div>
+        {education.gpa && <p>Cumulative GPA: {education.gpa}</p>}
+      </section>
+
       {achievements.length > 0 && (
-        <div className="mb-4">
-          <h2 className="font-bold border-b border-black mb-2 pb-0.5" style={{ fontSize: '12pt' }}>
-            ACHIEVEMENTS/AWARDS
-          </h2>
+        <section data-cv-section="achievements" className="mb-2">
+          <SectionHeading>Achievements/Awards</SectionHeading>
           {achievements.map((achievement) => (
-            <p key={achievement.id}>
-              <span className="font-bold">{achievement.title}</span>
-              {achievement.organization && `, ${achievement.organization}`}
-              {achievement.date && `, ${achievement.date}`}
-            </p>
+            <div key={achievement.id} className="flex justify-between gap-4">
+              <p>
+                <span className="font-bold">{achievement.title}</span>
+                {achievement.organization && `, ${achievement.organization}`}
+              </p>
+              {achievement.date && <p className="font-bold whitespace-nowrap">{achievement.date}</p>}
+            </div>
           ))}
-        </div>
+        </section>
       )}
 
-      {/* Work Experience Section */}
       {experience.length > 0 && (
-        <div className="mb-4">
-          <h2 className="font-bold border-b border-black mb-2 pb-0.5" style={{ fontSize: '12pt' }}>
-            WORK EXPERIENCE
-          </h2>
+        <section data-cv-section="experience" className="mb-2">
+          <SectionHeading>Work Experience</SectionHeading>
           {experience.map((exp) => (
-            <div key={exp.id} className="mb-3">
-              <div className="flex justify-between">
-                <p className="font-bold">{exp.company} – {exp.location}</p>
-                <p>{exp.date}</p>
+            <div key={exp.id} className="mb-1.5 last:mb-0">
+              <div className="flex justify-between gap-4">
+                <p className="font-bold">
+                  {exp.company}
+                  {exp.location && <span className="font-normal"> - {exp.location}</span>}
+                </p>
+                <p className="font-bold whitespace-nowrap">{exp.date}</p>
               </div>
-              <p className="italic">{exp.role}</p>
-              <ul className="list-disc ml-6">
-                {exp.bullets.filter(b => b.trim()).map((bullet, i) => (
-                  <li key={i}>{bullet}</li>
-                ))}
-              </ul>
+              <p className="font-bold">{exp.role}</p>
+              <Bullets items={exp.bullets} />
             </div>
           ))}
-        </div>
+        </section>
       )}
 
-      {/* Projects Section */}
       {projects.length > 0 && (
-        <div className="mb-4">
-          <h2 className="font-bold border-b border-black mb-2 pb-0.5" style={{ fontSize: '12pt' }}>
-            PROJECT AND RESEARCH
-          </h2>
+        <section data-cv-section="projects" className="mb-2">
+          <SectionHeading>Project and Research</SectionHeading>
           {projects.map((project) => (
-            <div key={project.id} className="mb-3">
-              <div className="flex justify-between">
-                <p className="font-bold">{project.organization}</p>
-                <p>{project.date}</p>
+            <div key={project.id} className="mb-1.5 last:mb-0">
+              <div className="flex justify-between gap-4">
+                <p className="font-bold">{project.projectName || project.organization}</p>
+                <p className="font-bold whitespace-nowrap">{project.date}</p>
               </div>
-              <p className="italic">{project.projectName} - {project.role}</p>
-              <ul className="list-disc ml-6">
-                {project.bullets.filter(b => b.trim()).map((bullet, i) => (
-                  <li key={i}>{bullet}</li>
-                ))}
-              </ul>
+              <p className="font-bold">{project.role}</p>
+              <Bullets items={project.bullets} />
             </div>
           ))}
-        </div>
+        </section>
       )}
 
-      {/* Activities Section */}
       {activities.length > 0 && (
-        <div className="mb-4">
-          <h2 className="font-bold border-b border-black mb-2 pb-0.5" style={{ fontSize: '12pt' }}>
-            CO-CURRICULAR ACTIVITIES
-          </h2>
+        <section data-cv-section="activities" className="mb-2">
+          <SectionHeading>Co-curricular Activities</SectionHeading>
           {activities.map((activity) => (
-            <div key={activity.id} className="mb-3">
-              <div className="flex justify-between">
-                <p className="font-bold">{activity.organization}, {activity.activity}</p>
-                <p>{activity.date}</p>
+            <div key={activity.id} className="mb-1.5 last:mb-0">
+              <div className="flex justify-between gap-4">
+                <p className="font-bold">
+                  {activity.organization}
+                  {activity.activity && `, ${activity.activity}`}
+                </p>
+                <p className="font-bold whitespace-nowrap">{activity.date}</p>
               </div>
-              <p className="italic">{activity.role}</p>
-              <ul className="list-disc ml-6">
-                {activity.bullets.filter(b => b.trim()).map((bullet, i) => (
-                  <li key={i}>{bullet}</li>
-                ))}
-              </ul>
+              <p className="font-bold">{activity.role}</p>
+              <Bullets items={activity.bullets} />
             </div>
           ))}
-        </div>
+        </section>
       )}
 
-      {/* Skills Section */}
       {skills.length > 0 && (
-        <div className="mb-4">
-          <h2 className="font-bold border-b border-black mb-2 pb-0.5" style={{ fontSize: '12pt' }}>
-            SKILLS
-          </h2>
-          <ul className="list-disc ml-6">
-            {skills.map((skill, index) => (
-              <li key={index}>{skill}</li>
-            ))}
-          </ul>
-        </div>
+        <section data-cv-section="skills" className="mb-2">
+          <SectionHeading>Skills</SectionHeading>
+          <Bullets items={skills} />
+        </section>
       )}
 
-      {/* References Section */}
-      <div className="mb-4">
-        <h2 className="font-bold border-b border-black mb-2 pb-0.5" style={{ fontSize: '12pt' }}>
-          REFERENCES
-        </h2>
+      <section data-cv-section="references">
+        <SectionHeading>References</SectionHeading>
         <p>{references || 'Available upon request'}</p>
-      </div>
+      </section>
     </div>
   );
 });
