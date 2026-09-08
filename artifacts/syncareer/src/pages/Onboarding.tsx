@@ -64,6 +64,11 @@ function saveErrorMessage(error: unknown): string {
   if (error instanceof OnboardingFlowError) return error.message;
   const code = safeErrorCode(error);
   if (code === '42501') return 'Your account does not have permission to save these profile details. Refresh the page or contact support.';
+  // Server-side validation messages are written for people; show them instead of the generic fallback.
+  if (code === 'P0001') {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string' && message.length > 0 && message.length <= 200) return message;
+  }
   if (isNetworkError(error)) return 'We could not reach Syncareer. Check your connection and try again.';
   return 'Your profile could not be saved. Nothing was marked complete, so you can try again safely.';
 }
