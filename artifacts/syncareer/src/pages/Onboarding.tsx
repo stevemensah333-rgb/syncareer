@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { mentorshipApi } from '@/features/mentorship/api';
 import { OnboardingShell } from '@/features/onboarding/OnboardingShell';
 import { WelcomeScreen } from '@/features/onboarding/WelcomeScreen';
+import { StudentSetupForm, STUDENT_SETUP_STEPS } from '@/features/onboarding/StudentSetupForm';
 import {
   MAJORS,
   DEGREE_TYPES,
@@ -95,6 +96,10 @@ const Onboarding = () => {
   const [profileExists, setProfileExists] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [firstName, setFirstName] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [studentStep, setStudentStep] = useState(1);
   const [userType, setUserType] = useState<OnboardingRole | null>(null);
 
   const [yearOfAdmission, setYearOfAdmission] = useState('');
@@ -132,7 +137,7 @@ const Onboarding = () => {
 
       const profileResult = await supabase
         .from('profiles')
-        .select('full_name, onboarding_completed, user_type')
+        .select('full_name, onboarding_completed, user_type, avatar_url')
         .eq('id', session.user.id)
         .maybeSingle();
       if (profileResult.error) {
@@ -148,7 +153,7 @@ const Onboarding = () => {
         if (initialiseResult.data) {
           const refreshedProfileResult = await supabase
             .from('profiles')
-            .select('full_name, onboarding_completed, user_type')
+            .select('full_name, onboarding_completed, user_type, avatar_url')
             .eq('id', session.user.id)
             .maybeSingle();
           if (refreshedProfileResult.error) {
@@ -226,6 +231,9 @@ const Onboarding = () => {
       setUserId(session.user.id);
       setProfileExists(Boolean(profile));
       setFirstName(first);
+      setDisplayName(fullName);
+      setEmail(session.user.email ?? '');
+      setAvatarUrl(profile?.avatar_url ?? null);
       setUserType(role);
       setShowWelcome(!welcomeSeen);
       setInitialState('ready');
@@ -418,6 +426,40 @@ const Onboarding = () => {
   }
 
   const isStudent = userType === 'student';
+
+  if (isStudent) {
+    return (
+      <OnboardingShell
+        eyebrow="Student setup"
+        title="Set up your career workspace"
+        subtitle="Three short stages. Everything you enter here shapes the opportunities, CV guidance and mentors you see."
+        steps={STUDENT_SETUP_STEPS}
+        currentStep={studentStep}
+      >
+        <StudentSetupForm
+          userId={userId!}
+          fullName={displayName}
+          email={email}
+          avatarUrl={avatarUrl}
+          school={school}
+          onSchoolChange={setSchool}
+          major={major}
+          onMajorChange={setMajor}
+          degreeType={degreeType}
+          onDegreeTypeChange={setDegreeType}
+          yearOfAdmission={yearOfAdmission}
+          onYearOfAdmissionChange={handleYearOfAdmissionChange}
+          expectedCompletion={expectedCompletion}
+          onExpectedCompletionChange={setExpectedCompletion}
+          step={studentStep}
+          onStepChange={setStudentStep}
+          saving={saving}
+          formError={formError}
+          onSubmit={handleSubmit}
+        />
+      </OnboardingShell>
+    );
+  }
 
   return (
     <OnboardingShell

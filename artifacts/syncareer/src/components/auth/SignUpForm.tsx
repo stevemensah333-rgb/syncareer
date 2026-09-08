@@ -4,13 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { PfOption } from '@/components/pathfind/primitives';
 import GoogleSignInButton from './GoogleSignInButton';
 import PasswordField from './PasswordField';
 import { authPath, getAuthErrorMessage, getAuthReturnTo } from './authUtils';
@@ -105,33 +99,39 @@ export default function SignUpForm() {
           <Button asChild className="w-full"><Link to={authPath('/sign-in', returnTo)}>Continue to sign in</Link></Button>
         </div>
       ) : <>
-      <div className="mb-5 space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="user-type">I'm joining as</Label>
-          <Select value={userType} onValueChange={setUserType}>
-            <SelectTrigger id="user-type" className="h-11">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ROLE_OPTIONS.map((role) => (
-                <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="mb-6 space-y-5">
+        <div className="space-y-2.5">
+          <p className="text-sm font-medium text-foreground">I'm joining as</p>
+          <div className="grid gap-2.5 sm:grid-cols-2" role="radiogroup" aria-label="Account type">
+            {ROLE_OPTIONS.map((role) => (
+              <PfOption
+                key={role.value}
+                title={role.label}
+                description={
+                  role.value === 'student'
+                    ? 'Find opportunities, build evidence, apply.'
+                    : 'Offer your time to students, for free.'
+                }
+                selected={userType === role.value}
+                onSelect={() => setUserType(role.value)}
+              />
+            ))}
+          </div>
         </div>
         {userType === 'student' ? (
           <GoogleSignInButton label="Sign up with Google" returnTo={authPath('/onboarding', returnTo)} />
         ) : (
-          <p className="rounded-lg border bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">
+          <p className="pf-panel p-4 text-sm leading-6 text-muted-foreground">
             Mentor accounts use an organization email. The Syncareer team verifies the email domain before your profile is listed.
           </p>
         )}
-        <div className="flex items-center gap-3 type-label">
+        <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           <div className="h-px flex-1 bg-border" />
           <span>{userType === 'student' ? 'or use email' : 'continue with email'}</span>
           <div className="h-px flex-1 bg-border" />
         </div>
       </div>
+
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-1.5">
           <Label htmlFor="full-name">Full name</Label>
@@ -142,7 +142,7 @@ export default function SignUpForm() {
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            name="name" className="h-11"
+            name="name" className="h-12"
           />
         </div>
         <div className="space-y-1.5">
@@ -154,7 +154,7 @@ export default function SignUpForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-11"
+            className="h-12"
           />
         </div>
         <PasswordField id="sign-up-password" label="Password" value={password} onChange={setPassword} autoComplete="new-password" minLength={8} description="At least 8 characters." />
@@ -162,7 +162,7 @@ export default function SignUpForm() {
         <Button
           type="submit"
           disabled={submitting}
-          aria-busy={submitting} className="h-11 w-full"
+          aria-busy={submitting} size="lg" className="w-full"
         >
           {submitting ? 'Creating account…' : 'Create account'}
         </Button>

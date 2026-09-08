@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Check } from 'lucide-react';
 import syncareerLogo from '@/assets/syncareer-logo.svg';
+import { PfBadge, PfStepper } from '@/components/pathfind/primitives';
 
 interface OnboardingShellProps {
   eyebrow: string;
@@ -9,15 +9,21 @@ interface OnboardingShellProps {
   subtitle?: string;
   currentStep?: number;
   totalSteps?: number;
+  /** Named stages. When supplied the shell shows the stepped rail instead of
+   *  a plain progress bar. */
+  steps?: string[];
   children: ReactNode;
 }
 
+/** Account setup canvas: white, generous, one task in the middle of the page
+ *  with a named stage rail above it. */
 export function OnboardingShell({
   eyebrow,
   title,
   subtitle,
   currentStep,
   totalSteps,
+  steps,
   children,
 }: OnboardingShellProps) {
   const hasProgress = Boolean(currentStep && totalSteps);
@@ -27,56 +33,45 @@ export function OnboardingShell({
     <main
       id="main-content"
       tabIndex={-1}
-      className="surface-canvas relative min-h-screen overflow-x-hidden bg-background px-4 py-8 focus:outline-none sm:px-6 sm:py-12"
+      className="theme-pf min-h-screen bg-background px-5 py-8 focus:outline-none sm:px-8 sm:py-12"
     >
-      <div
-        className="public-grid public-grid-fade pointer-events-none absolute inset-0"
-        aria-hidden="true"
-      />
-      <div className="relative mx-auto w-full max-w-2xl">
+      <div className="mx-auto w-full max-w-3xl">
         <div className="mb-10 flex items-center justify-between gap-4">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-md text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-2 rounded-pill text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Syncareer home"
           >
             <img src={syncareerLogo} alt="" className="h-8 w-8 object-contain" />
             Syncareer
           </Link>
-          <span className="text-xs font-medium text-muted-foreground">Account setup</span>
+          <PfBadge tone="green">Free · no paid tier</PfBadge>
         </div>
 
-        <header className="mb-7">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="brand-eyebrow">{eyebrow}</p>
-            {hasProgress && (
-              <p className="text-xs font-medium text-muted-foreground">
-                Step {currentStep} of {totalSteps}
-              </p>
-            )}
-          </div>
-          <h1 className="type-page-title mt-3">{title}</h1>
+        <header className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{eyebrow}</p>
+          <h1 className="mt-3 text-[34px] font-semibold leading-[1.1] tracking-[-0.035em] text-foreground sm:text-[40px]">
+            {title}
+          </h1>
           {subtitle && (
-            <p className="type-secondary mt-2 max-w-xl">
-              {subtitle}
-            </p>
+            <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">{subtitle}</p>
           )}
-          {hasProgress && (
-            <div className="mt-6" aria-label={`Onboarding progress: step ${currentStep} of ${totalSteps}`}>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+
+          {steps && steps.length > 0 && currentStep ? (
+            <PfStepper steps={steps} current={currentStep} className="mt-7" />
+          ) : hasProgress ? (
+            <div className="mt-7" aria-label={`Onboarding progress: step ${currentStep} of ${totalSteps}`}>
+              <div className="h-1.5 overflow-hidden rounded-pill bg-secondary">
                 <div
-                  className="h-full rounded-pill bg-primary transition-[width] duration-150 ease-standard motion-reduce:transition-none"
+                  className="h-full rounded-pill bg-foreground transition-[width] duration-150 ease-standard motion-reduce:transition-none"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <div className="mt-2.5 flex items-center gap-2 text-xs text-muted-foreground">
-                {currentStep === totalSteps ? (
-                  <Check className="h-3.5 w-3.5 text-success" aria-hidden="true" />
-                ) : null}
-                <span>{currentStep === totalSteps ? 'Profile details' : 'Welcome'}</span>
-              </div>
+              <p className="mt-2.5 text-xs text-muted-foreground">
+                Step {currentStep} of {totalSteps}
+              </p>
             </div>
-          )}
+          ) : null}
         </header>
 
         {children}

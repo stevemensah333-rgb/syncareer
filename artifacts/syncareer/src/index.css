@@ -1223,3 +1223,108 @@
     }
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Student journey theme ("pf")
+ * ---------------------------------------------------------------------------
+ * Scoped token overrides for the redesigned student surfaces: sign-up,
+ * onboarding, mentor browsing, booking and the student dashboard. Landing and
+ * the mentor/counsellor surfaces keep the original workspace tokens, so this
+ * class is opted into per page rather than applied globally.
+ * ------------------------------------------------------------------------ */
+@layer components {
+  .theme-pf {
+    --background: 0 0% 100%;
+    --canvas: 0 0% 100%;
+    --foreground: 0 0% 4%;
+    --text: 0 0% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+    --surface: 0 0% 100%;
+    --surface-secondary: 231 60% 98%;
+    --secondary: 231 60% 98%;
+    --secondary-foreground: 0 0% 4%;
+    --muted: 220 20% 97%;
+    --muted-foreground: 220 9% 46%;
+    --foreground-secondary: 220 10% 32%;
+    --text-secondary: 220 10% 32%;
+    --text-muted: 220 9% 46%;
+    --primary: 0 0% 4%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 0 0% 16%;
+    --accent: 231 100% 97%;
+    --accent-foreground: 221 83% 53%;
+    --selected: 231 100% 97%;
+    --selected-foreground: 221 83% 53%;
+    --border: 220 14% 91%;
+    --border-subtle: 220 16% 94%;
+    --input: 220 14% 89%;
+    --ring: 0 0% 4%;
+    --radius: 1rem;
+    --radius-control: 9999px;
+    --radius-input: 0.75rem;
+    --radius-surface: 1rem;
+    --radius-surface-lg: 1.25rem;
+    --radius-overlay: 1.25rem;
+    --control-height: 3rem;
+    --control-height-sm: 2.5rem;
+    --control-height-lg: 3.5rem;
+    /* Soft lavender panel used for quotes, notices and summary rails. */
+    --pf-panel: 231 100% 97%;
+    --pf-blue: 221 83% 53%;
+    --pf-green: 152 60% 40%;
+
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
+    letter-spacing: -0.011em;
+  }
+
+  .theme-pf h1,
+  .theme-pf h2,
+  .theme-pf h3 {
+    letter-spacing: -0.03em;
+    font-weight: 600;
+  }
+
+  /* A bordered white block: the base object of every screen in this flow. */
+  .pf-card {
+    @apply rounded-[1.25rem] border border-border bg-card;
+  }
+
+  /* The lavender information / quote panel. */
+  .pf-panel {
+    background-color: hsl(var(--pf-panel));
+    @apply rounded-[1.25rem];
+  }
+
+  /* Selectable row or tile: quiet by default, ink-bordered when chosen. */
+  .pf-option {
+    @apply relative w-full rounded-[0.875rem] border border-border bg-card px-4 py-3.5 text-left transition-[border-color,background-color,box-shadow] duration-150 ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none;
+  }
+  .pf-option:hover {
+    @apply border-foreground/25;
+  }
+  .pf-option[data-selected='true'] {
+    border-color: hsl(var(--foreground));
+    background-color: hsl(var(--pf-panel));
+    box-shadow: 0 0 0 1px hsl(var(--foreground));
+  }
+
+  /* Pill chip used for tracks, fields and filters. */
+  .pf-chip {
+    @apply inline-flex items-center gap-2 rounded-pill border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors duration-150 ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none;
+  }
+  .pf-chip:hover {
+    @apply border-foreground/30;
+  }
+  .pf-chip[data-selected='true'] {
+    @apply border-foreground bg-foreground text-background;
+  }
+
+  .theme-pf input,
+  .theme-pf textarea,
+  .theme-pf select {
+    font-family: inherit;
+  }
+}
