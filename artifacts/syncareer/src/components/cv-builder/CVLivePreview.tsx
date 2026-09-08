@@ -27,10 +27,11 @@ export function CVLivePreview({ data, activeSection, headerRight }: CVLivePrevie
   useLayoutEffect(() => {
     const frame = frameRef.current;
     if (!frame) return;
-    const observer = new ResizeObserver(([entry]) => {
-      const width = entry.contentRect.width;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0;
       if (width > 0) setScale(Math.min(1, width / PAGE_WIDTH_PX));
     });
+
     observer.observe(frame);
     return () => observer.disconnect();
   }, []);
