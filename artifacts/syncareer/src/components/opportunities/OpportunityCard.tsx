@@ -90,20 +90,20 @@ export const OpportunityCard = memo(function OpportunityCard({
       data-interactive="true"
       data-emphasis={selected ? 'true' : undefined}
     >
-      <div className="flex flex-col p-4 pb-3">
+      <div className="flex flex-col p-3 pb-2">
         {/* Company + role identity */}
-        <div className="flex items-start gap-3">
-          <CompanyLogo job={job} size={44} />
+        <div className="flex items-start gap-2.5">
+          <CompanyLogo job={job} size={36} />
           <div className="min-w-0 flex-1">
-            <h3 className="text-[15px] font-semibold leading-snug text-foreground">{job.title}</h3>
-            <p className="mt-0.5 truncate text-sm text-muted-foreground">
+            <h3 className="truncate text-[14px] font-semibold leading-snug text-foreground">{job.title}</h3>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
               {organisation ?? 'Organisation not specified'}
             </p>
           </div>
         </div>
 
         {/* Location / arrangement / type */}
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span className="inline-flex min-w-0 items-center gap-1">
             <MapPin aria-hidden="true" className="size-3.5 shrink-0" />
             <span className="truncate">{job.location}</span>
@@ -112,46 +112,10 @@ export const OpportunityCard = memo(function OpportunityCard({
           <span className="capitalize">{job.employment_type}</span>
         </div>
 
-        {/* Fit explanation — real evidence only, never a percentage */}
-        {fit && (
-          <div className="mt-3 rounded-control border border-accent/70 bg-accent p-2.5">
-            <p className="text-xs font-semibold text-accent-foreground">{fit.label}</p>
-            <ul className="mt-1 space-y-0.5">
-              {fit.reasons.map((reason) => (
-                <li key={reason.source} className="text-xs leading-5 text-muted-foreground">
-                  {reason.text}
-                </li>
-              ))}
-            </ul>
-            {fit.gaps.length > 0 && (
-              <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-                <span className="font-medium text-foreground-secondary">Not recorded:</span>{' '}
-                {fit.gaps.map((gap) => gap.skill).join(', ')}
-                <span className="text-muted-foreground/80"> — verify before you apply</span>
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* The role's own skills, kept to a decision-sized subset */}
-        {visibleSkills.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            {visibleSkills.map((skill) => (
-              <span
-                key={skill}
-                className="rounded-control border border-border bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
-              >
-                {skill}
-              </span>
-            ))}
-            {remainingSkills > 0 && (
-              <span className="text-[11px] text-muted-foreground">+{remainingSkills} more</span>
-            )}
-          </div>
-        )}
-
-        {/* Deadline + provenance — quiet, factual */}
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        {/* Deadline + provenance — quiet, factual. Fit reasoning and the role's
+            own skills live in the hover preview and the detail view, so the row
+            itself stays scannable. */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           {deadline.kind === 'none' ? (
             <span className="text-xs text-muted-foreground">Deadline not listed</span>
           ) : (
