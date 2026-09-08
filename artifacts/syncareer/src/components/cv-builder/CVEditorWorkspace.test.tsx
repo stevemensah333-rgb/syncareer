@@ -91,12 +91,12 @@ describe('CVEditorWorkspace interaction & professional workbench', () => {
     expect(screen.getByRole('button', { name: /upload cv/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /preview/i })).toBeTruthy();
 
-    // Section outline
-    expect(screen.getByRole('tab', { name: /personal/i })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /education/i })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /work experience/i })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /projects/i })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /skills/i })).toBeTruthy();
+    // Section accordion headers
+    expect(screen.getByRole('button', { name: /personal details/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /education & honors/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /work experience/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /projects & research/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /skills/i })).toBeTruthy();
   });
 
   it('transitions saving -> saved with visual feedback on confirmed save', async () => {
@@ -134,7 +134,7 @@ describe('CVEditorWorkspace interaction & professional workbench', () => {
     });
   });
 
-  it('supports toggling between focused section view and continuous document view with collapsible sections', () => {
+  it('expands one section at a time when its header is clicked', () => {
     const saveMock = vi.fn().mockResolvedValue({ ok: true, resumeId: 'res-1' });
     render(
       <MemoryRouter>
@@ -145,18 +145,22 @@ describe('CVEditorWorkspace interaction & professional workbench', () => {
       </MemoryRouter>
     );
 
-    const toggleViewBtn = screen.getByRole('button', { name: /all sections/i });
-    fireEvent.click(toggleViewBtn);
-
-    // Should now show continuous document view with expandable headers
+    // Every section header is always visible
     expect(screen.getByRole('heading', { level: 2, name: /personal details/i })).toBeTruthy();
     expect(screen.getByRole('heading', { level: 2, name: /work experience/i })).toBeTruthy();
     expect(screen.getByRole('heading', { level: 2, name: /education & honors/i })).toBeTruthy();
 
-    const sectionToggle = screen.getByRole('heading', { level: 2, name: /work experience/i }).closest('button');
-    expect(sectionToggle).toBeTruthy();
-    fireEvent.click(sectionToggle!);
-    expect(screen.getByText('Expand')).toBeTruthy();
+    // Personal details starts expanded
+    const personalToggle = screen.getByRole('button', { name: /personal details/i });
+    expect(personalToggle.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByLabelText(/first name/i)).toBeTruthy();
+
+    // Opening work experience collapses personal details
+    const experienceToggle = screen.getByRole('button', { name: /work experience/i });
+    fireEvent.click(experienceToggle);
+    expect(experienceToggle.getAttribute('aria-expanded')).toBe('true');
+    expect(personalToggle.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByLabelText(/first name/i)).toBeNull();
   });
 
   it('provides contextual AI assistance trigger and supports undoing an assisted change', async () => {
@@ -170,8 +174,8 @@ describe('CVEditorWorkspace interaction & professional workbench', () => {
       </MemoryRouter>
     );
 
-    // Navigate to experience tab
-    fireEvent.click(screen.getByRole('tab', { name: /work experience/i }));
+    // Expand the work experience section
+    fireEvent.click(screen.getByRole('button', { name: /work experience/i }));
 
     // Check for inline contextual improve button
     const improveBtn = screen.getByRole('button', { name: /improve/i });
