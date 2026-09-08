@@ -49,7 +49,7 @@ export function OnboardingShell({
         </div>
 
         <header className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{eyebrow}</p>
+          <p className="eyebrow">{eyebrow}</p>
           <h1 className="mt-3 text-[34px] font-semibold leading-[1.1] tracking-[-0.035em] text-foreground sm:text-[40px]">
             {title}
           </h1>

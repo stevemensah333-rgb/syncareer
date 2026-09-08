@@ -57,8 +57,8 @@ export function PfStepper({ steps, current, className }: PfStepperProps) {
               <span className="block truncate text-sm font-medium text-foreground">{label}</span>
               <span
                 className={cn(
-                  'block text-[11px] font-semibold uppercase tracking-wide',
-                  active ? 'text-[hsl(var(--pf-blue))]' : 'text-muted-foreground',
+                  'eyebrow block',
+                  active && 'text-[hsl(var(--pf-blue))]',
                 )}
               >
                 {done ? 'Complete' : active ? 'In progress' : 'Upcoming'}
@@ -122,7 +122,7 @@ export function PfOption({
             <span className="text-sm font-semibold text-foreground">{title}</span>
             {meta && <span className="text-xs font-medium text-muted-foreground">{meta}</span>}
             {selected && !meta && (
-              <span className="rounded-pill bg-foreground px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-background">
+              <span className="eyebrow rounded-pill bg-foreground px-2.5 py-0.5 text-background">
                 Selected
               </span>
             )}
@@ -232,7 +232,7 @@ export function PfSectionHeading({
         {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
       </div>
       {meta && (
-        <span className="rounded-[0.5rem] bg-[hsl(var(--pf-panel))] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-foreground">
+        <span className="eyebrow rounded-[0.5rem] bg-[hsl(var(--pf-panel))] px-2.5 py-1 text-foreground">
           {meta}
         </span>
       )}

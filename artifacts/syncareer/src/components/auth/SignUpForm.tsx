@@ -125,7 +125,7 @@ export default function SignUpForm() {
             Mentor accounts use an organization email. The Syncareer team verifies the email domain before your profile is listed.
           </p>
         )}
-        <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="type-label flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
           <span>{userType === 'student' ? 'or use email' : 'continue with email'}</span>
           <div className="h-px flex-1 bg-border" />

@@ -166,7 +166,7 @@ export function StudentSetupForm({
                   disabled={uploading}
                   onClick={() => fileInput.current?.click()}
                 >
-                  {uploading ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <Camera aria-hidden="true" className="size-4" />}
+                  {uploading ? <Loader2 aria-hidden="true" className="size-4 animate-spin motion-reduce:animate-none" /> : <Camera aria-hidden="true" className="size-4" />}
                   {photo ? 'Change photo' : 'Upload photo'}
                 </Button>
                 <p className="mt-2 text-xs text-muted-foreground">Optional. JPG or PNG, up to 2 MB.</p>
