@@ -49,14 +49,14 @@ const SCROLL_STORAGE_KEY = 'syncareer.opportunities.scrollTop';
 const INITIAL_VISIBLE_ROWS = 20;
 // Low enough that laptop-height viewports still get the two independently
 // scrolling panes; below this the page scrolls as one instead.
-const WORKSPACE_MIN_HEIGHT = 300;
+const WORKSPACE_MIN_HEIGHT = 420;
 const WORKSPACE_BOTTOM_PADDING = 24;
 
 // On desktop, sizes the two-pane workspace to the remaining viewport height so the
-// job list scrolls inside the viewport instead of extending below the fold (a fixed
-// calc offset breaks whenever the header height changes). When too little room
-// remains — short viewports — it opts out so the page scrolls naturally instead of
-// showing a cramped, half-clipped pane.
+// list and the selected opportunity each scroll inside their own pane instead of
+// extending below the fold (a fixed calc offset breaks whenever the header height
+// changes). Short viewports keep the minimum height rather than opting out, because
+// a single page-level scroll would move both panes together.
 const useRemainingViewportHeight = () => {
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | null>(null);
