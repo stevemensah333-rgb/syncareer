@@ -47,7 +47,9 @@ const DEADLINE_FILTERS = [
 type LoadStatus = 'loading' | 'error' | 'ready';
 const SCROLL_STORAGE_KEY = 'syncareer.opportunities.scrollTop';
 const INITIAL_VISIBLE_ROWS = 20;
-const WORKSPACE_MIN_HEIGHT = 420;
+// Low enough that laptop-height viewports still get the two independently
+// scrolling panes; below this the page scrolls as one instead.
+const WORKSPACE_MIN_HEIGHT = 300;
 const WORKSPACE_BOTTOM_PADDING = 24;
 
 // On desktop, sizes the two-pane workspace to the remaining viewport height so the
