@@ -79,9 +79,6 @@ export const OpportunityCard = memo(function OpportunityCard({
     hasSourceUrl: Boolean(job.source_url),
     tracked: application !== null,
   });
-  const listedSkills = job.skills ?? [];
-  const visibleSkills = listedSkills.slice(0, 3);
-  const remainingSkills = listedSkills.length - visibleSkills.length;
   const openLabel = `${job.title}${organisation ? ` at ${organisation}` : ''}. Open details.`;
 
   return (
