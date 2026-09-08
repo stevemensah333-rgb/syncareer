@@ -192,7 +192,7 @@ IMPORTANT: rename salary fields to use lowercase currency suffix (e.g. avg_entry
       career_outlook: parsed.career_outlook ?? [],
       market_insights: parsed.market_insights ?? [],
       region_summary: parsed.region_summary ?? "",
-      data_confidence: parsed.data_confidence ?? "medium",
+      data_confidence: (postings?.length ?? 0) === 0 ? "low" : (parsed.data_confidence ?? "medium"),
     };
 
     await supabase.from("market_intelligence_cache").upsert({
