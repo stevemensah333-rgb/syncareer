@@ -36,6 +36,8 @@ import { CVFormProjects } from '@/components/cv-builder/CVFormProjects';
 import { CVFormActivities } from '@/components/cv-builder/CVFormActivities';
 import { CVFormSkills } from '@/components/cv-builder/CVFormSkills';
 import { CVPreview } from '@/components/cv-builder/CVPreview';
+import { CVLivePreview } from '@/components/cv-builder/CVLivePreview';
+
 import { CVPreviewDialog } from '@/components/cv-builder/CVPreviewDialog';
 import { CVAIAssistant } from '@/components/cv-builder/CVAIAssistant';
 import { CVStrengthScore } from '@/components/cv-builder/CVStrengthScore';
@@ -151,6 +153,8 @@ export function CVEditorWorkspace({
   });
 
   const [showPreview, setShowPreview] = useState(false);
+  const [showScore, setShowScore] = useState(false);
+
   const [showAIAssistance, setShowAIAssistance] = useState(false);
   const [targetAIBulletPath, setTargetAIBulletPath] = useState<string | null>(null);
   const [undoCVData, setUndoCVData] = useState<CVData | null>(null);
@@ -588,7 +592,7 @@ export function CVEditorWorkspace({
 
   return (
     <>
-      <div className={`grid grid-cols-1 gap-6 ${leftShelf ? 'xl:grid-cols-[minmax(260px,0.85fr)_minmax(0,2fr)_minmax(300px,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(300px,1fr)]' : 'lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]'}`}>
+      <div className={`grid grid-cols-1 gap-6 ${leftShelf ? 'xl:grid-cols-[minmax(240px,0.7fr)_minmax(0,1.6fr)_minmax(320px,1fr)] lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,1fr)]' : 'lg:grid-cols-[minmax(0,1.25fr)_minmax(340px,1fr)]'}`}>
         {leftShelf && <aside className="min-w-0">{leftShelf}</aside>}
 
         <div className="min-w-0 space-y-4">
@@ -731,8 +735,10 @@ export function CVEditorWorkspace({
             </div>
           )}
 
-          <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
+          <div className="grid gap-4 lg:grid-cols-[200px_minmax(0,1fr)]">
+            <div className="space-y-3">
             <nav className="surface-content h-fit overflow-hidden" aria-label="CV sections">
+
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <div>
                   <p className="type-label text-primary">Document outline</p>
@@ -788,6 +794,54 @@ export function CVEditorWorkspace({
               </div>
             </nav>
 
+            <div className="order-last space-y-3 xl:order-none">
+              {sidebarExtras}
+
+              <div className="rounded-surface border border-border bg-card p-3 space-y-2 shadow-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
+                    <h3 className="type-label">Wording help</h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs rounded-control"
+                    onClick={() => setShowAIAssistance((open) => !open)}
+                  >
+                    {showAIAssistance ? 'Hide' : 'Open'}
+                  </Button>
+                </div>
+
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  {assistantOpportunity
+                    ? `Grounded in requirement context for ${assistantOpportunity.title}.`
+                    : 'Select an opportunity to get bullet rewrites grounded in the role.'}
+                </p>
+
+                {showAIAssistance && (
+                  <div className="pt-1">
+                    <CVAIAssistant
+                      cvData={cvData}
+                      activeSection={activeTab}
+                      opportunity={assistantOpportunity ?? null}
+                      opportunityLoading={assistantOpportunityLoading}
+                      opportunityError={assistantOpportunityError}
+                      onSuggestion={handleAISuggestion}
+                      onUndo={applyUndo}
+                      targetFieldPath={targetAIBulletPath ?? undefined}
+                      onClose={() => setShowAIAssistance(false)}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            </div>
+
+
+
+
+
             <div className="overflow-hidden rounded-surface border border-border bg-white shadow-card">
               <div className="border-b border-border bg-card px-4 py-4 sm:px-6">
                 <p className="type-label text-primary">{viewMode === 'focused' ? 'Focused section' : 'Continuous document'}</p>
@@ -803,7 +857,7 @@ export function CVEditorWorkspace({
                 <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{viewMode === 'focused' ? activeSection?.note : 'Expand the sections you need and work down the document in order.'}</p>
               </div>
 
-              <div className="p-4 sm:p-6">
+              <div className="cv-form-compact p-4 sm:p-5">
                 {viewMode === 'focused' ? (
                   <div>
                     {activeTab === 'personal' && (
@@ -1030,50 +1084,32 @@ export function CVEditorWorkspace({
           </div>
         </div>
 
-        <div className="space-y-4 lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto">
-          <h2 className="sr-only">CV progress and guidance</h2>
-          <CVStrengthScore result={strengthResult} />
-          {sidebarExtras}
-
-          <div className="rounded-surface border border-border bg-card p-4 space-y-3 shadow-card">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-                <h3 className="type-label">Wording help</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs rounded-control"
-                onClick={() => setShowAIAssistance((open) => !open)}
-              >
-                {showAIAssistance ? 'Hide' : 'Open'}
-              </Button>
+        <div className="flex flex-col gap-3 lg:sticky lg:top-16 lg:h-[calc(100vh-5rem)]">
+          <h2 className="sr-only">Live preview and CV strength</h2>
+          {showScore && (
+            <div className="shrink-0 lg:max-h-[45%] lg:overflow-y-auto">
+              <CVStrengthScore result={strengthResult} />
             </div>
-
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {assistantOpportunity
-                ? `Grounded in requirement context for ${assistantOpportunity.title}.`
-                : 'Select an opportunity to get bullet rewrites grounded in the role.'}
-            </p>
-
-            {showAIAssistance && (
-              <div className="pt-2">
-                <CVAIAssistant
-                  cvData={cvData}
-                  activeSection={activeTab}
-                  opportunity={assistantOpportunity ?? null}
-                  opportunityLoading={assistantOpportunityLoading}
-                  opportunityError={assistantOpportunityError}
-                  onSuggestion={handleAISuggestion}
-                  onUndo={applyUndo}
-                  targetFieldPath={targetAIBulletPath ?? undefined}
-                  onClose={() => setShowAIAssistance(false)}
-                />
-              </div>
-            )}
+          )}
+          <div className="h-[70vh] min-h-0 lg:h-auto lg:flex-1">
+            <CVLivePreview
+              data={cvData}
+              activeSection={activeTab}
+              headerRight={
+                <button
+                  type="button"
+                  onClick={() => setShowScore((open) => !open)}
+                  aria-expanded={showScore}
+                  className="interactive inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-semibold"
+                >
+                  <span className="tabular-nums text-primary">{strengthResult.completion.percentage}%</span>
+                  <span className="text-muted-foreground">{showScore ? 'Hide score' : 'CV score'}</span>
+                </button>
+              }
+            />
           </div>
         </div>
+
       </div>
 
       <CVPreviewDialog

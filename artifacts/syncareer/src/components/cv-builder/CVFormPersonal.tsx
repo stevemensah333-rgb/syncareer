@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Phone, Mail, Linkedin, Globe } from 'lucide-react';
+import { User, Phone, Mail, Linkedin, Globe, Link2 } from 'lucide-react';
 
 interface PersonalData {
   firstName: string;
@@ -124,18 +124,20 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="schoolEmail" className="flex items-center gap-1.5 text-xs font-medium">
-              <Mail className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-              Institutional / University Email
+              <Link2 className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+              GitHub or portfolio link
             </Label>
             <Input
               id="schoolEmail"
-              type="email"
-              placeholder="kwame.mensah@ashesi.edu.gh"
+              type="text"
+              autoComplete="url"
+              placeholder="github.com/yourusername"
               value={data.schoolEmail}
               onChange={(e) => onChange({ schoolEmail: e.target.value })}
               className="rounded-input"
             />
           </div>
+
         </div>
 
         <div className="space-y-1.5">
