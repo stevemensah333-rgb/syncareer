@@ -75,7 +75,7 @@ const useRemainingViewportHeight = () => {
       // an oscillation that leaves the workspace clipped.
       const top = element.getBoundingClientRect().top + window.scrollY;
       const available = window.innerHeight - top - WORKSPACE_BOTTOM_PADDING;
-      setHeight(available >= WORKSPACE_MIN_HEIGHT ? Math.floor(available) : null);
+      setHeight(Math.max(Math.floor(available), WORKSPACE_MIN_HEIGHT));
     };
 
     update();
