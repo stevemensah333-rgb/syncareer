@@ -809,280 +809,69 @@ export function CVEditorWorkspace({
             </div>
           )}
 
-          <div className="grid gap-4 lg:grid-cols-[200px_minmax(0,1fr)]">
-            <div className="space-y-3">
-            <nav className="surface-content h-fit overflow-hidden" aria-label="CV sections">
-
-              <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <div>
-                  <p className="type-label text-primary">Document outline</p>
-                  <p className="text-sm font-semibold text-foreground">{completedSections} of {sectionsList.length} sections complete</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewMode(prev => prev === 'focused' ? 'document' : 'focused')}
-                  className="h-8 rounded-control text-xs text-muted-foreground"
-                  title={viewMode === 'focused' ? 'Switch to continuous document view' : 'Switch to focused section view'}
-                >
-                  <Layers className="mr-1 h-3.5 w-3.5" />
-                  {viewMode === 'focused' ? 'All sections' : 'Single section'}
-                </Button>
+          <div className="space-y-4">
+            <div className="overflow-hidden rounded-surface border border-border bg-white shadow-card">
+              <div className="border-b border-border bg-card px-4 py-3 sm:px-5">
+                <p className="type-label text-primary">CV sections</p>
+                <p className="mt-0.5 text-sm font-semibold text-foreground">
+                  {completedSections} of {sectionsList.length} sections complete
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Open a section to fill it in — the preview on the right follows along.
+                </p>
               </div>
-              <div role="tablist" aria-label="CV sections" className="divide-y divide-border">
+
+              <div className="cv-form-compact divide-y divide-border">
                 {sectionsList.map((sec, index) => {
-                  const isCurrent = activeTab === sec.key;
+                  const isOpen = !collapsedSections[sec.key];
                   const Icon = sec.icon;
                   return (
-                    <button
-                      key={sec.key}
-                      role="tab"
-                      aria-selected={isCurrent}
-                      onClick={() => openSection(sec.key)}
-                      className={`interactive flex w-full items-start justify-between gap-3 px-4 py-3 text-left ${isCurrent ? 'is-selected bg-selected' : 'bg-card'}`}
-                    >
-                      <span className="flex min-w-0 items-start gap-3">
-                        <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-control border border-border bg-secondary text-[11px] font-semibold text-secondary-foreground">
-                          {index + 1}
-                        </span>
-                        <span className="min-w-0">
-                          <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                            <Icon className="h-3.5 w-3.5 text-primary" />
-                            {sec.label}
+                    <section key={sec.key}>
+                      <h2>
+                        <button
+                          type="button"
+                          onClick={() => toggleSectionCollapse(sec.key)}
+                          aria-expanded={isOpen}
+                          aria-controls={`cv-section-${sec.key}`}
+                          className={`interactive flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:px-5 ${isOpen ? 'bg-selected' : 'bg-card'}`}
+                        >
+                          <span className="flex min-w-0 items-center gap-3">
+                            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-control border border-border bg-secondary text-[11px] font-semibold text-secondary-foreground">
+                              {index + 1}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                                <Icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                                {sec.label}
+                                {sec.filled && <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-label="Complete" />}
+                              </span>
+                              {!isOpen && (
+                                <span className="mt-0.5 block text-[11px] leading-5 text-muted-foreground">{sec.note}</span>
+                              )}
+                            </span>
                           </span>
-                          <span className="mt-0.5 block text-[11px] leading-5 text-muted-foreground">{sec.note}</span>
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-right">
-                        {typeof sec.count === 'number' && (
-                          <span className="block text-xs font-medium tabular-nums text-foreground">{sec.count}</span>
-                        )}
-                        <span className={`mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium ${sec.filled ? 'text-success' : 'text-muted-foreground'}`}>
-                          {sec.filled && <CheckCircle2 className="h-3.5 w-3.5" />}
-                          {sec.filled ? 'Complete' : 'Open'}
-                        </span>
-                      </span>
-                    </button>
+                          <span className="flex shrink-0 items-center gap-2">
+                            {typeof sec.count === 'number' && sec.count > 0 && (
+                              <span className="text-xs font-medium tabular-nums text-muted-foreground">{sec.count}</span>
+                            )}
+                            <ChevronDown
+                              className={`h-4 w-4 text-muted-foreground transition-transform duration-150 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`}
+                              aria-hidden="true"
+                            />
+                          </span>
+                        </button>
+                      </h2>
+                      {isOpen && (
+                        <div id={`cv-section-${sec.key}`} className="border-t border-border-subtle px-4 py-4 sm:px-5">
+                          {renderSectionForm(sec.key)}
+                        </div>
+                      )}
+                    </section>
                   );
                 })}
               </div>
-            </nav>
 
-            <div className="order-last space-y-3 xl:order-none">
-              {sidebarExtras}
-
-              <div className="rounded-surface border border-border bg-card p-3 space-y-2 shadow-card">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-                    <h3 className="type-label">Wording help</h3>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs rounded-control"
-                    onClick={() => setShowAIAssistance((open) => !open)}
-                  >
-                    {showAIAssistance ? 'Hide' : 'Open'}
-                  </Button>
-                </div>
-
-                <p className="text-[11px] leading-relaxed text-muted-foreground">
-                  {assistantOpportunity
-                    ? `Grounded in requirement context for ${assistantOpportunity.title}.`
-                    : 'Select an opportunity to get bullet rewrites grounded in the role.'}
-                </p>
-
-                {showAIAssistance && (
-                  <div className="pt-1">
-                    <CVAIAssistant
-                      cvData={cvData}
-                      activeSection={activeTab}
-                      opportunity={assistantOpportunity ?? null}
-                      opportunityLoading={assistantOpportunityLoading}
-                      opportunityError={assistantOpportunityError}
-                      onSuggestion={handleAISuggestion}
-                      onUndo={applyUndo}
-                      targetFieldPath={targetAIBulletPath ?? undefined}
-                      onClose={() => setShowAIAssistance(false)}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-            </div>
-
-
-
-
-
-            <div className="overflow-hidden rounded-surface border border-border bg-white shadow-card">
-              <div className="border-b border-border bg-card px-4 py-4 sm:px-6">
-                <p className="type-label text-primary">{viewMode === 'focused' ? 'Focused section' : 'Continuous document'}</p>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <h3 className="text-xl font-semibold tracking-tight text-foreground">{activeSection?.label ?? 'CV section'}</h3>
-                  {activeSection?.filled && (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Ready for review
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{viewMode === 'focused' ? activeSection?.note : 'Expand the sections you need and work down the document in order.'}</p>
-              </div>
-
-              <div className="cv-form-compact p-4 sm:p-5">
-                {viewMode === 'focused' ? (
-                  <div>
-                    {activeTab === 'personal' && (
-                      <CVFormPersonal data={cvData.personal} onChange={updatePersonal} errors={fieldErrors} />
-                    )}
-                    {activeTab === 'education' && (
-                      <CVFormEducation
-                        education={cvData.education}
-                        achievements={cvData.achievements}
-                        onEducationChange={updateEducation}
-                        onAchievementsChange={updateAchievements}
-                      />
-                    )}
-                    {activeTab === 'experience' && (
-                      <CVFormExperience
-                        experience={cvData.experience}
-                        onChange={updateExperience}
-                        onSuggestBullet={handleSuggestForBullet}
-                        selectedFieldPath={targetAIBulletPath}
-                      />
-                    )}
-                    {activeTab === 'projects' && (
-                      <CVFormProjects
-                        projects={cvData.projects}
-                        onChange={updateProjects}
-                        onSuggestBullet={handleSuggestForBullet}
-                        selectedFieldPath={targetAIBulletPath}
-                      />
-                    )}
-                    {activeTab === 'activities' && (
-                      <CVFormActivities
-                        activities={cvData.activities}
-                        onChange={updateActivities}
-                        onSuggestBullet={handleSuggestForBullet}
-                        selectedFieldPath={targetAIBulletPath}
-                      />
-                    )}
-                    {activeTab === 'skills' && (
-                      <CVFormSkills skills={cvData.skills} onChange={updateSkills} />
-                    )}
-                    {activeTab === 'references' && (
-                      <section className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />
-                          <h3 className="text-base font-semibold">References Section</h3>
-                        </div>
-                        <Label htmlFor="references-text" className="text-xs font-medium">Standard reference statement</Label>
-                        <Textarea
-                          id="references-text"
-                          value={cvData.references}
-                          onChange={(e) => updateReferences(e.target.value)}
-                          placeholder="Available upon request"
-                          className="rounded-input text-sm"
-                          rows={3}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Standard international practice is to state &ldquo;Available upon request&rdquo; unless the application specifically asks for referee contact details.
-                        </p>
-                      </section>
-                    )}
-                  </div>
-                ) : (
-                  <div className="divide-y divide-border">
-                    {sectionsList.map((sec) => {
-                      const isCollapsed = collapsedSections[sec.key];
-                      const Icon = sec.icon;
-                      return (
-                        <section key={sec.key} className="py-1 first:pt-0 last:pb-0">
-                          <header>
-                            <button
-                              type="button"
-                              onClick={() => toggleSectionCollapse(sec.key)}
-                              aria-expanded={!isCollapsed}
-                              className="flex w-full items-center justify-between px-1 py-3 text-left transition-colors duration-150 hover:bg-secondary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
-                            >
-                              <div className="flex items-center gap-2.5">
-                                {isCollapsed ? (
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                                )}
-                                <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                                <h2 className="text-sm font-semibold text-foreground">{sec.label}</h2>
-                                {sec.filled && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
-                              </div>
-                              <span className="text-xs text-muted-foreground">{isCollapsed ? 'Expand' : 'Collapse'}</span>
-                            </button>
-                          </header>
-                          <div className="cv-section-body" data-collapsed={isCollapsed ? 'true' : 'false'}>
-                            <div className="border-t border-border-subtle pt-4">
-                              {sec.key === 'personal' && (
-                                <CVFormPersonal data={cvData.personal} onChange={updatePersonal} errors={fieldErrors} />
-                              )}
-                              {sec.key === 'education' && (
-                                <CVFormEducation
-                                  education={cvData.education}
-                                  achievements={cvData.achievements}
-                                  onEducationChange={updateEducation}
-                                  onAchievementsChange={updateAchievements}
-                                />
-                              )}
-                              {sec.key === 'experience' && (
-                                <CVFormExperience
-                                  experience={cvData.experience}
-                                  onChange={updateExperience}
-                                  onSuggestBullet={handleSuggestForBullet}
-                                  selectedFieldPath={targetAIBulletPath}
-                                />
-                              )}
-                              {sec.key === 'projects' && (
-                                <CVFormProjects
-                                  projects={cvData.projects}
-                                  onChange={updateProjects}
-                                  onSuggestBullet={handleSuggestForBullet}
-                                  selectedFieldPath={targetAIBulletPath}
-                                />
-                              )}
-                              {sec.key === 'activities' && (
-                                <CVFormActivities
-                                  activities={cvData.activities}
-                                  onChange={updateActivities}
-                                  onSuggestBullet={handleSuggestForBullet}
-                                  selectedFieldPath={targetAIBulletPath}
-                                />
-                              )}
-                              {sec.key === 'skills' && (
-                                <CVFormSkills skills={cvData.skills} onChange={updateSkills} />
-                              )}
-                              {sec.key === 'references' && (
-                                <div className="space-y-2">
-                                  <Label htmlFor="references-text-doc" className="text-xs font-medium">References Statement</Label>
-                                  <Textarea
-                                    id="references-text-doc"
-                                    value={cvData.references}
-                                    onChange={(e) => updateReferences(e.target.value)}
-                                    placeholder="Available upon request"
-                                    className="rounded-input text-sm"
-                                    rows={2}
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </section>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className="border-t border-border bg-card px-4 py-4 sm:px-6">
+              <div className="border-t border-border bg-card px-4 py-4 sm:px-5">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
                   <div className="flex items-center gap-2">
                     <div className="flex h-7 w-7 items-center justify-center rounded-control bg-primary/10 text-primary">
@@ -1153,6 +942,49 @@ export function CVEditorWorkspace({
                     </Button>
                   )}
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {sidebarExtras}
+
+              <div className="rounded-surface border border-border bg-card p-3 space-y-2 shadow-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
+                    <h3 className="type-label">Wording help</h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs rounded-control"
+                    onClick={() => setShowAIAssistance((open) => !open)}
+                  >
+                    {showAIAssistance ? 'Hide' : 'Open'}
+                  </Button>
+                </div>
+
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  {assistantOpportunity
+                    ? `Grounded in requirement context for ${assistantOpportunity.title}.`
+                    : 'Select an opportunity to get bullet rewrites grounded in the role.'}
+                </p>
+
+                {showAIAssistance && (
+                  <div className="pt-1">
+                    <CVAIAssistant
+                      cvData={cvData}
+                      activeSection={activeTab}
+                      opportunity={assistantOpportunity ?? null}
+                      opportunityLoading={assistantOpportunityLoading}
+                      opportunityError={assistantOpportunityError}
+                      onSuggestion={handleAISuggestion}
+                      onUndo={applyUndo}
+                      targetFieldPath={targetAIBulletPath ?? undefined}
+                      onClose={() => setShowAIAssistance(false)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
