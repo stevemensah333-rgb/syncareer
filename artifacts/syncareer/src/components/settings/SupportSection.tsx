@@ -59,9 +59,16 @@ export function SupportSection() {
             />
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" asChild>
-                <a href={supportEmailHref(message)}>
+                <a href={supportGmailHref(message)} target="_blank" rel="noopener noreferrer">
                   <Mail className="size-3.5" aria-hidden="true" />
-                  Email
+                  Email via Gmail
+                </a>
+              </Button>
+
+              <Button variant="outline" size="sm" asChild>
+                <a href={supportEmailHref(message)} target="_blank" rel="noopener noreferrer">
+                  <Mail className="size-3.5" aria-hidden="true" />
+                  Use my email app
                 </a>
               </Button>
 
