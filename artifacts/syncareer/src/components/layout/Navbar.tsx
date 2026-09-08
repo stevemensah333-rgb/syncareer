@@ -201,17 +201,16 @@ export function Navbar({ className, breadcrumbs, navigation }: NavbarProps) {
               {isSupportEnabled() && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href={supportUrl()} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
-                      <HeartHandshake className="h-4 w-4 mr-2" />
-                      <span>
-                        <span className="block">Support Syncareer</span>
-                        <span className="block text-[11px] font-normal text-muted-foreground">
-                          Optional one-time support — Syncareer is free either way
-                        </span>
+                  <DropdownMenuItem onClick={() => navigate(supportUrl())} className="cursor-pointer">
+                    <HeartHandshake className="h-4 w-4 mr-2" />
+                    <span>
+                      <span className="block">Support Syncareer</span>
+                      <span className="block text-[11px] font-normal text-muted-foreground">
+                        Optional one-time support — Syncareer is free either way
                       </span>
-                    </a>
+                    </span>
                   </DropdownMenuItem>
+
                 </>
               )}
               <DropdownMenuSeparator />

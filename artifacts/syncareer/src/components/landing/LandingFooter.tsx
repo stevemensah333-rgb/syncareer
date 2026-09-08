@@ -37,8 +37,8 @@ const FOOTER_GROUPS: FooterGroup[] = [
 export default function LandingFooter() {
   const year = new Date().getFullYear();
 
-  // "Support Syncareer" is optional and configured by URL only; while unset it
-  // is absent from the footer. Syncareer stays free to use regardless.
+  // "Support Syncareer" is optional; it links to the Support tab in Settings.
+  // Syncareer stays free to use regardless.
   const groups: FooterGroup[] = isSupportEnabled()
     ? FOOTER_GROUPS.map((group) =>
         group.title === "Resources"
@@ -46,8 +46,9 @@ export default function LandingFooter() {
               ...group,
               links: [
                 ...group.links,
-                { label: "Support Syncareer", href: supportUrl(), external: true },
+                { label: "Support Syncareer", href: supportUrl() },
               ],
+
             }
           : group,
       )
