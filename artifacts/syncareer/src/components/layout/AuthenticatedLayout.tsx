@@ -39,7 +39,11 @@ export function AuthenticatedLayout({
   const currentDossier = useCurrentDossier(role === 'student');
 
   return (
-    <div className="workspace-shell min-h-screen bg-background text-foreground">
+    // `theme-pf` scopes the redesigned token layer (white surfaces, ink
+    // primary, lavender panels, rounded geometry, Outfit) to the authenticated
+    // workspace, so every signed-in page matches sign-up and onboarding. The
+    // public landing page sits outside this shell and is unaffected.
+    <div className="theme-pf workspace-shell min-h-screen bg-background text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-primary-foreground"

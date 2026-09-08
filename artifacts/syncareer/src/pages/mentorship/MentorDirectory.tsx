@@ -51,7 +51,7 @@ export default function MentorDirectory() {
     >
       <div className="space-y-6">
         {/* Search & Filters Surface */}
-        <div className="surface-content grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_170px_170px_170px_170px]">
+        <div className="surface-content grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-5">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <Input

@@ -213,14 +213,9 @@ describe('Opportunities page', () => {
 
     fireEvent.change(screen.getByRole('textbox', { name: /Search opportunities/i }), { target: { value: '' } });
 
-    // Filters live behind one progressive disclosure: the Filters sheet.
+    // Filters live behind one progressive disclosure that opens in place.
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
-    fireEvent.pointerDown(screen.getByRole('combobox', { name: /Filter by deadline/i }), {
-      button: 0,
-      ctrlKey: false,
-      pointerType: 'mouse',
-    });
-    fireEvent.click(await screen.findByText('Closing in 30 days'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Closing in 30 days' }));
     expect(screen.queryByText('Graduate Analyst')).toBeNull();
   });
 

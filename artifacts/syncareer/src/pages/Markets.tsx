@@ -4,7 +4,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PfChip } from '@/components/pathfind/primitives';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -575,7 +575,8 @@ const Opportunities = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setFiltersOpen(true)}
+              onClick={() => setFiltersOpen((open) => !open)}
+              aria-expanded={filtersOpen}
               className="h-11 shrink-0 gap-2"
               aria-label={activeFilterCount > 0 ? `Filters, ${activeFilterCount} active` : 'Filters'}
             >
@@ -588,6 +589,84 @@ const Opportunities = () => {
               )}
             </Button>
           </form>
+
+          {/* Filters stay behind one disclosure, but open in place as pills so
+              the choices and the feed are visible at the same time. */}
+          {filtersOpen && (
+            <div className="pf-panel mt-3 space-y-4 p-4" role="group" aria-label="Opportunity filters">
+              <div className="space-y-1.5">
+                <label htmlFor="filter-location" className="type-label">
+                  Location
+                </label>
+                <div className="relative max-w-sm">
+                  <MapPin
+                    aria-hidden="true"
+                    className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                  />
+                  <Input
+                    id="filter-location"
+                    value={locationFilter}
+                    onChange={(event) => setLocationFilter(event.target.value)}
+                    placeholder="Anywhere"
+                    autoComplete="off"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="type-label">Opportunity type</p>
+                <div className="flex flex-wrap gap-2">
+                  {EMPLOYMENT_TYPES.map((type) => (
+                    <PfChip
+                      key={type}
+                      label={type === 'all' ? 'All types' : `${type.charAt(0).toUpperCase()}${type.slice(1)}`}
+                      selected={typeFilter === type}
+                      onSelect={() => setTypeFilter(type)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="type-label">Experience level</p>
+                <div className="flex flex-wrap gap-2">
+                  {EXPERIENCE_LEVELS.map((level) => (
+                    <PfChip
+                      key={level}
+                      label={level === 'all' ? 'Any experience' : `${level.charAt(0).toUpperCase()}${level.slice(1)}`}
+                      selected={experienceFilter === level}
+                      onSelect={() => setExperienceFilter(level)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="type-label">Deadline</p>
+                <div className="flex flex-wrap gap-2">
+                  {DEADLINE_FILTERS.map((option) => (
+                    <PfChip
+                      key={option.value}
+                      label={option.label}
+                      selected={deadlineFilter === option.value}
+                      onSelect={() => setDeadlineFilter(option.value)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
+                <Button variant="ghost" size="sm" onClick={resetFilters} disabled={activeFilterCount === 0}>
+                  Reset
+                </Button>
+                <Button size="sm" onClick={() => setFiltersOpen(false)}>
+                  Show {filtered.length} {filtered.length === 1 ? 'opportunity' : 'opportunities'}
+                </Button>
+              </div>
+            </div>
+          )}
+
 
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5 min-w-0">
             <p
@@ -895,98 +974,6 @@ const Opportunities = () => {
         )}
       </div>
 
-      {/* Filters — shallow set behind one disclosure */}
-      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <SheetContent side="right" className="w-full p-0 sm:max-w-md">
-          <SheetHeader className="border-b border-border px-5 py-4">
-            <SheetTitle className="text-lg font-semibold">Filters</SheetTitle>
-            <SheetDescription>
-              Narrow the feed with a few meaningful choices. Active filters appear as chips above
-              the results and can be removed there.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="space-y-5 px-5 py-5">
-            <div className="space-y-1.5">
-              <label htmlFor="filter-location" className="type-label">
-                Location
-              </label>
-              <div className="relative">
-                <MapPin
-                  aria-hidden="true"
-                  className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-                />
-                <Input
-                  id="filter-location"
-                  value={locationFilter}
-                  onChange={(event) => setLocationFilter(event.target.value)}
-                  placeholder="Anywhere"
-                  autoComplete="off"
-                  className="pl-9"
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="type-label" htmlFor="filter-type">
-                Opportunity type
-              </label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger id="filter-type" aria-label="Filter by opportunity type" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {EMPLOYMENT_TYPES.map((type) => (
-                    <SelectItem key={type} value={type} className="capitalize">
-                      {type === 'all' ? 'All types' : type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="type-label" htmlFor="filter-level">
-                Experience level
-              </label>
-              <Select value={experienceFilter} onValueChange={setExperienceFilter}>
-                <SelectTrigger id="filter-level" aria-label="Filter by experience level" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPERIENCE_LEVELS.map((level) => (
-                    <SelectItem key={level} value={level} className="capitalize">
-                      {level === 'all' ? 'Any experience' : level}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="type-label" htmlFor="filter-deadline">
-                Deadline
-              </label>
-              <Select value={deadlineFilter} onValueChange={setDeadlineFilter}>
-                <SelectTrigger id="filter-deadline" aria-label="Filter by deadline" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DEADLINE_FILTERS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="mt-auto flex items-center justify-between gap-2 border-t border-border px-5 py-4">
-            <Button variant="ghost" size="sm" onClick={resetFilters} disabled={activeFilterCount === 0}>
-              Reset
-            </Button>
-            <Button size="sm" onClick={() => setFiltersOpen(false)}>
-              Show {filtered.length} {filtered.length === 1 ? 'opportunity' : 'opportunities'}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
     </PageLayout>
   );
 };

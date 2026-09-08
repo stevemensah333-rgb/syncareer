@@ -1261,7 +1261,10 @@
     --input: 220 14% 89%;
     --ring: 0 0% 4%;
     --radius: 1rem;
-    --radius-control: 9999px;
+    /* Blocks and chips keep a soft radius; the pill shape is reserved for
+       actual buttons (see the rule below), because `rounded-control` is also
+       used for non-interactive blocks across the workspace. */
+    --radius-control: 0.75rem;
     --radius-input: 0.75rem;
     --radius-surface: 1rem;
     --radius-surface-lg: 1.25rem;
@@ -1273,6 +1276,24 @@
     --pf-panel: 231 100% 97%;
     --pf-blue: 221 83% 53%;
     --pf-green: 152 60% 40%;
+
+    /* Workspace chrome inside this theme: the rail and top bar sit on the
+       same white canvas, separated by the single hairline. */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 4%;
+    --sidebar-primary: 0 0% 4%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 231 100% 97%;
+    --sidebar-accent-foreground: 0 0% 4%;
+    --sidebar-border: 220 14% 91%;
+    --sidebar-ring: 0 0% 4%;
+
+    /* Status roles keep their meaning but are re-tuned to this lighter,
+       lower-chroma palette. */
+    --success: 152 60% 32%;
+    --info: 221 83% 53%;
+    --selected: 231 100% 97%;
+    --selected-foreground: 221 83% 53%;
 
     font-family: 'Outfit', 'Inter', system-ui, sans-serif;
     color: hsl(var(--foreground));
@@ -1320,6 +1341,14 @@
   }
   .pf-chip[data-selected='true'] {
     @apply border-foreground bg-foreground text-background;
+  }
+
+  /* Pill buttons: element-scoped so blocks that share `rounded-control`
+     geometry are unaffected. */
+  .theme-pf .rounded-control.h-control,
+  .theme-pf .rounded-control.h-control-sm,
+  .theme-pf .rounded-control.h-control-lg {
+    border-radius: var(--radius-pill);
   }
 
   .theme-pf input,
