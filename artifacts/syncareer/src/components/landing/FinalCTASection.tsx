@@ -18,8 +18,9 @@ export default function FinalCTASection({ onGetStarted, onAssessment }: FinalCTA
         <div className="relative mx-auto grid w-full max-w-[1280px] gap-8 px-4 py-16 sm:px-6 md:grid-cols-[1fr_auto] md:items-center lg:px-8 lg:py-20">
           <div className="max-w-2xl">
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-background/70">
-              <span className="h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
+              <span className="h-2 w-2 rounded-full bg-background/60" aria-hidden="true" />
               Ready when you are
+
             </p>
             <h2 id="final-cta-title" className="mt-4 text-balance text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
               Start with an opportunity worth pursuing.
@@ -29,7 +30,7 @@ export default function FinalCTASection({ onGetStarted, onAssessment }: FinalCTA
             </p>
           </div>
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center md:flex-col md:items-stretch">
-            <Button size="lg" onClick={onGetStarted} className="min-h-12 gap-2 px-6 text-base">
+            <Button size="lg" onClick={onGetStarted} className="min-h-12 gap-2 bg-background px-6 text-base text-foreground hover:bg-background/90">
               Explore opportunities <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
             <button

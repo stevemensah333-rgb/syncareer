@@ -1433,4 +1433,22 @@
   .theme-pf select {
     font-family: inherit;
   }
+
+  /* Landing brand accents.
+   *
+   * `.theme-pf` makes `--primary` near-black so real buttons read as ink.
+   * The public page still needs the brand blue for non-interactive brand
+   * marks, so those keep the accent role instead of the primary role. */
+  .theme-pf .brand-eyebrow {
+    color: hsl(var(--accent-foreground));
+  }
+
+  .theme-pf .brand-eyebrow::before {
+    background: hsl(var(--accent-foreground));
+  }
+
+  .theme-pf .landing-record-tab-indicator {
+    background: hsl(var(--accent-foreground));
+  }
 }
+

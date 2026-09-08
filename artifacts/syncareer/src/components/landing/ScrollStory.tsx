@@ -32,7 +32,7 @@ function StagePanel({ stage, index, isActive, onActivate }: StagePanelProps) {
     >
       <header className="flex flex-col gap-3 border-b border-border/80 bg-secondary/40 px-5 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:py-5">
         <div className="min-w-0">
-          <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+          <span className="text-xs font-semibold text-accent-foreground uppercase tracking-wider">
             {index + 1} / {APPLICATION_STAGES.length}
           </span>
           <h3 className="mt-1 text-lg font-semibold tracking-[-0.02em]">{stage.label}</h3>
@@ -79,7 +79,7 @@ function StageBody({ stage }: { stage: (typeof APPLICATION_STAGES)[number] }) {
           <p className="text-sm leading-6 text-muted-foreground">
             See the organisation, location and listed requirements before deciding whether the role is worth pursuing.
           </p>
-          <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-primary">
+          <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-accent-foreground">
             <ExternalLink className="h-4 w-4" aria-hidden="true" />
             Open original source
           </div>
@@ -107,11 +107,11 @@ function StageBody({ stage }: { stage: (typeof APPLICATION_STAGES)[number] }) {
         <>
           <p className="text-xs text-muted-foreground line-through">Worked on a data project.</p>
           <div className="mt-3 border-l-2 border-primary pl-3">
-            <p className="text-xs font-semibold text-primary">Suggested for review</p>
+            <p className="text-xs font-semibold text-accent-foreground">Suggested for review</p>
             <p className="mt-2 text-sm leading-6">Created a SQL reporting dashboard for a coursework project.</p>
           </div>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
-            <FileText className="mr-1 inline h-3.5 w-3.5 text-primary" aria-hidden="true" />
+            <FileText className="mr-1 inline h-3.5 w-3.5 text-accent-foreground" aria-hidden="true" />
             Uses only the facts supplied in this illustration.
           </p>
         </>
@@ -127,7 +127,7 @@ function StageBody({ stage }: { stage: (typeof APPLICATION_STAGES)[number] }) {
             The question uses the same requirement and evidence, so your practice stays focused on this role.
           </p>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
-            <Mic2 className="mr-1 inline h-3.5 w-3.5 text-primary" aria-hidden="true" />
+            <Mic2 className="mr-1 inline h-3.5 w-3.5 text-accent-foreground" aria-hidden="true" />
             Practice guidance is not an employer assessment.
           </p>
         </>
@@ -139,7 +139,7 @@ function StageBody({ stage }: { stage: (typeof APPLICATION_STAGES)[number] }) {
       body: (
         <>
           <div className="border-y border-border py-3">
-            <p className="text-xs font-semibold text-primary">Set by you</p>
+            <p className="text-xs font-semibold text-accent-foreground">Set by you</p>
             <p className="mt-1 text-sm font-semibold">Check whether the role needs AWS evidence before applying</p>
             <p className="mt-1 text-xs text-muted-foreground">No due date set</p>
           </div>
@@ -170,7 +170,7 @@ function StageBody({ stage }: { stage: (typeof APPLICATION_STAGES)[number] }) {
   return (
     <div className="flex h-full flex-col justify-between">
       <div>
-        <p className="eyebrow text-primary">{stage.label}</p>
+        <p className="eyebrow text-accent-foreground">{stage.label}</p>
         <h4 className="mt-1 text-base font-semibold tracking-[-0.015em]">{content.cue}</h4>
         <div className="mt-3">{content.body}</div>
         {content.note && (

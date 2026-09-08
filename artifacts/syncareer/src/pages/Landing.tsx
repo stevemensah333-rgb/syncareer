@@ -87,7 +87,7 @@ export default function Landing() {
   const startWithOpportunity = () => navigate("/sign-up?returnTo=%2Fopportunities");
 
   return (
-    <div className="app-canvas min-h-screen bg-background text-foreground">
+    <div className="theme-pf app-canvas min-h-screen bg-background text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-3 focus:text-sm focus:font-medium focus:text-primary-foreground"
