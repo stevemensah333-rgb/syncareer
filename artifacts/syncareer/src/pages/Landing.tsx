@@ -13,6 +13,7 @@ import {
 import LandingHeader from "@/components/landing/LandingHeader";
 import HeroSection from "@/components/landing/HeroSection";
 import ScrollStory from "@/components/landing/ScrollStory";
+import MentorCallout from "@/components/landing/MentorCallout";
 import FAQSection, { LANDING_FAQS } from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import LandingFooter from "@/components/landing/LandingFooter";
@@ -85,6 +86,8 @@ export default function Landing() {
   const goToSignIn = () => navigate("/sign-in");
   const startAssessment = () => navigate("/assessment");
   const startWithOpportunity = () => navigate("/sign-up?returnTo=%2Fopportunities");
+  const startAsMentor = () => navigate("/sign-up?role=career_counsellor");
+  const findMentor = () => navigate("/sign-up?returnTo=%2Fmentors");
 
   return (
     <div className="theme-pf app-canvas min-h-screen bg-background text-foreground">
@@ -114,6 +117,16 @@ export default function Landing() {
           }}
         />
         <ScrollStory />
+        <MentorCallout
+          onBecomeMentor={() => {
+            captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: "mentor_sign_up", placement: "mentorship" });
+            startAsMentor();
+          }}
+          onFindMentor={() => {
+            captureProductEvent(ANALYTICS_EVENTS.PUBLIC_CTA_SELECTED, { destination: "mentors", placement: "mentorship" });
+            findMentor();
+          }}
+        />
         <FAQSection />
         <FinalCTASection
           onGetStarted={() => {

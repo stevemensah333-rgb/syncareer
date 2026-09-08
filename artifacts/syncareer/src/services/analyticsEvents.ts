@@ -60,7 +60,10 @@ export type AssistantTask = 'opportunity.explain_requirement' | 'opportunity.com
 
 export interface AnalyticsEventProperties {
   page_viewed: { route: 'landing' | 'auth' | 'onboarding' | 'dashboard' | 'opportunities' | 'applications' | 'cv_builder' | 'interview' | 'assessment' | 'settings' | 'other' };
-  public_cta_selected: { destination: 'opportunities' | 'assessment'; placement: 'header' | 'hero' | 'final' };
+  public_cta_selected: {
+    destination: 'opportunities' | 'assessment' | 'mentors' | 'mentor_sign_up';
+    placement: 'header' | 'hero' | 'final' | 'mentorship';
+  };
   sign_up_started: { method: AuthMethod; user_role: UserRole };
   account_created: { method: AuthMethod; user_role: UserRole; confirmation_required: boolean };
   onboarding_completed: { user_role: UserRole };
