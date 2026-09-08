@@ -1261,7 +1261,10 @@
     --input: 220 14% 89%;
     --ring: 0 0% 4%;
     --radius: 1rem;
-    --radius-control: 9999px;
+    /* Blocks and chips keep a soft radius; the pill shape is reserved for
+       actual buttons (see the rule below), because `rounded-control` is also
+       used for non-interactive blocks across the workspace. */
+    --radius-control: 0.75rem;
     --radius-input: 0.75rem;
     --radius-surface: 1rem;
     --radius-surface-lg: 1.25rem;
@@ -1338,6 +1341,14 @@
   }
   .pf-chip[data-selected='true'] {
     @apply border-foreground bg-foreground text-background;
+  }
+
+  /* Pill buttons: element-scoped so blocks that share `rounded-control`
+     geometry are unaffected. */
+  .theme-pf button.rounded-control,
+  .theme-pf a.rounded-control,
+  .theme-pf label.rounded-control {
+    border-radius: var(--radius-pill);
   }
 
   .theme-pf input,
