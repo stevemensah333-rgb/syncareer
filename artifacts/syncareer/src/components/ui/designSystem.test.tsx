@@ -28,9 +28,11 @@ describe('Syncareer design system foundation', () => {
   });
 
 
-  it('keeps the navigation rail on the canvas, not a white panel', () => {
-    expect(stylesheet).toMatch(/--sidebar-background:\s*216 33% 97%/);
-    expect(stylesheet).not.toMatch(/--sidebar-background:\s*0 0% 100%/);
+  it('keeps the navigation rail on the base canvas, not a white panel', () => {
+    // The scoped `.theme-pf` workspace theme deliberately runs a white
+    // canvas with the rail on it; that override is out of scope here.
+    expect(rootTokens).toMatch(/--sidebar-background:\s*216 33% 97%/);
+    expect(rootTokens).not.toMatch(/--sidebar-background:\s*0 0% 100%/);
   });
 
   it('exposes the required semantic colour tokens', () => {
