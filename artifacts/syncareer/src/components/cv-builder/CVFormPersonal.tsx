@@ -124,18 +124,20 @@ export const CVFormPersonal: React.FC<CVFormPersonalProps> = ({ data, onChange, 
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="schoolEmail" className="flex items-center gap-1.5 text-xs font-medium">
-              <Mail className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-              Institutional / University Email
+              <Link2 className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+              GitHub or portfolio link
             </Label>
             <Input
               id="schoolEmail"
-              type="email"
-              placeholder="kwame.mensah@ashesi.edu.gh"
+              type="text"
+              autoComplete="url"
+              placeholder="github.com/yourusername"
               value={data.schoolEmail}
               onChange={(e) => onChange({ schoolEmail: e.target.value })}
               className="rounded-input"
             />
           </div>
+
         </div>
 
         <div className="space-y-1.5">
