@@ -332,6 +332,7 @@ const Onboarding = () => {
           {
             user_id: userId,
             full_name: counsellorFullName.trim(),
+            avatar_url: avatarUrl,
             country_code: '',
             phone_number: '',
           },
@@ -436,6 +437,8 @@ const Onboarding = () => {
           fullName={displayName}
           email={email}
           avatarUrl={avatarUrl}
+          onPhotoChange={setAvatarUrl}
+        onPhotoChange={setAvatarUrl}
           school={school}
           onSchoolChange={setSchool}
           major={major}
@@ -468,6 +471,7 @@ const Onboarding = () => {
         userId={userId!}
         email={email}
         avatarUrl={avatarUrl}
+        onPhotoChange={setAvatarUrl}
         fullName={counsellorFullName}
         onFullNameChange={setCounsellorFullName}
         currentRole={currentRole}
