@@ -55,10 +55,10 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
             </p>
 
             {/* DISCOVER → PROVE → ADVANCE journey sequence */}
-            <div className="mt-8" role="list" aria-label="Application journey: Discover, Prove, Advance">
+            <div className="relative mt-8" role="list" aria-label="Application journey: Discover, Prove, Advance">
               <div
                 tabIndex={0}
-                className="flex items-stretch gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:gap-3 lg:overflow-visible lg:pb-0"
+                className="flex items-stretch gap-2 overflow-x-auto pb-2 pr-8 snap-x snap-mandatory scrollbar-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:gap-3 lg:overflow-visible lg:pb-0 lg:pr-0"
               >
                 {HERO_JOURNEY.map((step, index) => (
                   <div key={step.id} className="flex items-center gap-2 snap-start lg:gap-3" role="listitem">
@@ -73,7 +73,13 @@ export default function HeroSection({ onGetStarted, onAssessment }: HeroSectionP
                   </div>
                 ))}
               </div>
+              {/* Edge fade signals the strip continues horizontally on narrow viewports. */}
+              <div
+                className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent lg:hidden"
+                aria-hidden="true"
+              />
             </div>
+            <p className="mt-2 text-xs text-muted-foreground lg:hidden">Swipe to see all six steps</p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Button size="lg" onClick={onGetStarted} className="min-h-12 w-full gap-2 px-6 text-base sm:w-auto">

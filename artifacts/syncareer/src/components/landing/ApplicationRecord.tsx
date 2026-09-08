@@ -93,7 +93,7 @@ export default function ApplicationRecord({
           // Focusable so keyboard users can scroll the stage strip on narrow
           // viewports (tab scroll happens natively once the region has focus).
           tabIndex={0}
-          className="flex snap-x overflow-x-auto border-b bg-background px-2 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          className="flex gap-1.5 snap-x overflow-x-auto border-b bg-background px-2 py-2 scrollbar-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:gap-2"
         >
           {APPLICATION_STAGES.map((stage, index) => (
             <button
