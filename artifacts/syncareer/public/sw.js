@@ -1,4 +1,7 @@
-self.addEventListener('install', (event) => {
+// Tombstone worker. Offline support was removed, but browsers that installed the
+// old service worker keep it until a fetch of this path succeeds. Deleting this
+// file would strand those clients on stale cached assets. Do not remove.
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
@@ -19,8 +22,4 @@ self.addEventListener('activate', (event) => {
       }
     })(),
   );
-});
-
-self.addEventListener('fetch', () => {
-  return;
 });

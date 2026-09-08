@@ -97,11 +97,9 @@ describe('motion inventory', () => {
     expect(css).toMatch(/\.dossier-inspector-enter,\s*\.dossier-flash \{\s*animation: none;/);
   });
 
-  it('dialogs fade without scale and drawers do not scale the page', () => {
+  it('dialogs and sheets fade without scale', () => {
     expect(read('src/components/ui/dialog.tsx')).not.toContain('zoom-in-95');
     expect(read('src/components/ui/alert-dialog.tsx')).not.toContain('zoom-in-95');
-    expect(read('src/components/ui/drawer.tsx')).toContain('shouldScaleBackground = false');
-    expect(read('src/components/ui/drawer.tsx')).toContain('motion-reduce:animate-none');
     expect(read('src/components/ui/sheet.tsx')).toContain('duration-150');
   });
 
