@@ -36,6 +36,8 @@ import { CVFormProjects } from '@/components/cv-builder/CVFormProjects';
 import { CVFormActivities } from '@/components/cv-builder/CVFormActivities';
 import { CVFormSkills } from '@/components/cv-builder/CVFormSkills';
 import { CVPreview } from '@/components/cv-builder/CVPreview';
+import { CVLivePreview } from '@/components/cv-builder/CVLivePreview';
+
 import { CVPreviewDialog } from '@/components/cv-builder/CVPreviewDialog';
 import { CVAIAssistant } from '@/components/cv-builder/CVAIAssistant';
 import { CVStrengthScore } from '@/components/cv-builder/CVStrengthScore';
