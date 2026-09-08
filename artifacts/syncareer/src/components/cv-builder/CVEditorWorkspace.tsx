@@ -788,6 +788,51 @@ export function CVEditorWorkspace({
               </div>
             </nav>
 
+            <div className="order-last space-y-3 xl:order-none">
+              {sidebarExtras}
+
+              <div className="rounded-surface border border-border bg-card p-3 space-y-2 shadow-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
+                    <h3 className="type-label">Wording help</h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs rounded-control"
+                    onClick={() => setShowAIAssistance((open) => !open)}
+                  >
+                    {showAIAssistance ? 'Hide' : 'Open'}
+                  </Button>
+                </div>
+
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  {assistantOpportunity
+                    ? `Grounded in requirement context for ${assistantOpportunity.title}.`
+                    : 'Select an opportunity to get bullet rewrites grounded in the role.'}
+                </p>
+
+                {showAIAssistance && (
+                  <div className="pt-1">
+                    <CVAIAssistant
+                      cvData={cvData}
+                      activeSection={activeTab}
+                      opportunity={assistantOpportunity ?? null}
+                      opportunityLoading={assistantOpportunityLoading}
+                      opportunityError={assistantOpportunityError}
+                      onSuggestion={handleAISuggestion}
+                      onUndo={applyUndo}
+                      targetFieldPath={targetAIBulletPath ?? undefined}
+                      onClose={() => setShowAIAssistance(false)}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+
+
             <div className="overflow-hidden rounded-surface border border-border bg-white shadow-card">
               <div className="border-b border-border bg-card px-4 py-4 sm:px-6">
                 <p className="type-label text-primary">{viewMode === 'focused' ? 'Focused section' : 'Continuous document'}</p>
