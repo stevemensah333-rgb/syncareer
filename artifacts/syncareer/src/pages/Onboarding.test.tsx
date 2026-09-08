@@ -95,10 +95,10 @@ describe('Onboarding interface', () => {
     expect(main?.getAttribute('style')).toBeNull();
     expect(container.querySelector('.font-serif')).toBeNull();
     expect(container.querySelector('.italic')).toBeNull();
-    // Onboarding uses the shared product title style, not a document/marketing one.
-    expect(heading.className).toContain('type-page-title');
+    // Onboarding uses the product title style, not a document/marketing one.
+    expect(heading.className).toContain('font-semibold');
     expect(heading.className).not.toContain('dossier-title');
-    expect(container.textContent).toContain('Account setup');
+    expect(container.textContent).toContain('Student profile');
   });
 
   it('loads saved student details and presents a complete retry-safe form', async () => {
@@ -122,10 +122,14 @@ describe('Onboarding interface', () => {
 
     renderPage();
 
-    expect(await screen.findByRole('heading', { name: 'Add your study details' })).toBeTruthy();
-    expect((screen.getByLabelText('School / university') as HTMLInputElement).value).toBe('University of Ghana');
-    expect(screen.getAllByText('Computer Science').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /Complete setup/i })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Set up your career workspace' })).toBeTruthy();
+    expect((screen.getByLabelText('School or university *') as HTMLInputElement).value).toBe('University of Ghana');
+
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    expect(screen.getByRole('button', { name: /Computer Science/i }).getAttribute('aria-pressed')).toBe('true');
+
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    expect(screen.getByRole('button', { name: /Finish setup/i })).toBeTruthy();
   });
 
   it('saves role details before marking the profile complete', async () => {
@@ -148,7 +152,9 @@ describe('Onboarding interface', () => {
     });
 
     renderPage();
-    fireEvent.click(await screen.findByRole('button', { name: /Complete setup/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Continue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Finish setup/i }));
 
     await waitFor(() => expect(refreshProfile).toHaveBeenCalled());
     expect(writes.map(({ table, operation }) => `${table}:${operation}`)).toEqual([
@@ -217,6 +223,6 @@ describe('Onboarding interface', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toContain('account role is missing or unsupported');
-    expect(screen.queryByRole('button', { name: /Complete setup/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Finish setup/i })).toBeNull();
   });
 });

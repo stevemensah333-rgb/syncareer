@@ -74,8 +74,8 @@ describe('SignUpForm (email sign-up contract)', () => {
 
   it('preserves mentor role through organization-email signup and does not offer role-losing Google signup', async () => {
     renderForm();
-    fireEvent.click(screen.getByRole('combobox', { name: /I'm joining as/i }));
-    fireEvent.click(await screen.findByRole('option', { name: 'Career mentor' }));
+    fireEvent.click(screen.getByRole('radio', { name: /Career mentor/i }));
+
 
     expect(screen.queryByRole('button', { name: /Sign up with Google/i })).toBeNull();
     expect(screen.getByText(/Mentor accounts use an organization email/i)).toBeTruthy();

@@ -11,13 +11,22 @@ const stylesheet = read('src/index.css');
 const tailwind = read('tailwind.config.ts');
 const html = read('index.html');
 
+/** The workspace palette lives in `:root`. Opt-in scoped themes (for example
+ *  the student journey `.theme-pf` layer) intentionally define their own
+ *  surfaces and are not covered by the canvas rules below. */
+const rootTokens = stylesheet.slice(
+  stylesheet.indexOf(':root {'),
+  stylesheet.indexOf('.dark {'),
+);
+
 describe('Syncareer design system foundation', () => {
   it('keeps a cool canvas rather than a pure-white page', () => {
-    expect(stylesheet).toMatch(/--background:\s*216 33% 97%/);
-    expect(stylesheet).toMatch(/--canvas:\s*216 33% 97%/);
-    expect(stylesheet).not.toMatch(/--background:\s*0 0% 100%/);
-    expect(stylesheet).not.toMatch(/--canvas:\s*0 0% 100%/);
+    expect(rootTokens).toMatch(/--background:\s*216 33% 97%/);
+    expect(rootTokens).toMatch(/--canvas:\s*216 33% 97%/);
+    expect(rootTokens).not.toMatch(/--background:\s*0 0% 100%/);
+    expect(rootTokens).not.toMatch(/--canvas:\s*0 0% 100%/);
   });
+
 
   it('keeps the navigation rail on the canvas, not a white panel', () => {
     expect(stylesheet).toMatch(/--sidebar-background:\s*216 33% 97%/);

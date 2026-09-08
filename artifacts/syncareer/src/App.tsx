@@ -90,9 +90,40 @@ function SignInPage() {
     <AuthShell
       title="Welcome back"
       subtitle="Sign in to continue your applications."
+      eyebrow="Free career support"
+      aside={<AuthAside />}
     >
       <SignInForm />
     </AuthShell>
+  );
+}
+
+/** Quiet panel beside the account form. It states what the product does — no
+ *  testimonials, counts or outcome claims. */
+function AuthAside() {
+  return (
+    <div className="max-w-sm">
+      <p className="text-2xl font-semibold leading-snug tracking-[-0.03em] text-foreground">
+        One workspace, from the opportunity you find to the outcome you record.
+      </p>
+      <p className="mt-4 text-sm leading-7 text-muted-foreground">
+        Save a real vacancy, see what it asks for, build the evidence to answer it,
+        tailor a CV to it, practise the interview, then log what happened.
+      </p>
+      <ul className="mt-8 space-y-3 text-left">
+        {[
+          'Opportunities matched to what you study',
+          'A CV built from evidence you can point to',
+          'Interview practice with specific feedback',
+          'Mentors you can reach for free',
+        ].map((line) => (
+          <li key={line} className="flex items-start gap-3 text-sm text-foreground">
+            <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-pill bg-foreground" />
+            {line}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -101,11 +132,14 @@ function SignUpPage() {
     <AuthShell
       title="Create your account"
       subtitle="Start building stronger, evidence-based applications."
+      eyebrow="100% free · no paid tier"
+      aside={<AuthAside />}
     >
       <SignUpForm />
     </AuthShell>
   );
 }
+
 
 function ResetPasswordPage() {
   return (
