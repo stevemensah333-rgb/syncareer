@@ -15,8 +15,8 @@ const html = read('index.html');
  *  the student journey `.theme-pf` layer) intentionally define their own
  *  surfaces and are not covered by the canvas rules below. */
 const rootTokens = stylesheet.slice(
-  stylesheet.indexOf(':root'),
-  stylesheet.indexOf('.dark'),
+  stylesheet.indexOf(':root {'),
+  stylesheet.indexOf('.dark {'),
 );
 
 describe('Syncareer design system foundation', () => {
