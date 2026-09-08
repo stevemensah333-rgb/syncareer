@@ -26,6 +26,15 @@ export const supportMomoNumber = (): string => SUPPORT_PHONE;
 export const supportEmailHref = (message: string = SUPPORT_DEFAULT_MESSAGE): string =>
   `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(SUPPORT_EMAIL_SUBJECT)}&body=${encodeURIComponent(message)}`;
 
+/**
+ * Web compose URL. `mailto:` links do nothing when no desktop mail client is
+ * registered (and are blocked in embedded previews), so the primary email
+ * action opens Gmail's compose view in a new tab instead.
+ */
+export const supportGmailHref = (message: string = SUPPORT_DEFAULT_MESSAGE): string =>
+  `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(SUPPORT_EMAIL)}` +
+  `&su=${encodeURIComponent(SUPPORT_EMAIL_SUBJECT)}&body=${encodeURIComponent(message)}`;
+
 export const supportSmsHref = (message: string = SUPPORT_DEFAULT_MESSAGE): string =>
   `sms:${SUPPORT_PHONE.replace(/\s/g, '')}?body=${encodeURIComponent(message)}`;
 

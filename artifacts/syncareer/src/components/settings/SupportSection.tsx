@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { SettingsGroup, SettingsRow, SettingsValue } from './SettingsScaffold';
 import { toast } from 'sonner';
-import { supportMomoNumber, supportEmailHref, supportSmsHref, SUPPORT_DEFAULT_MESSAGE } from '@/lib/support';
+import { supportMomoNumber, supportEmailHref, supportGmailHref, supportSmsHref, SUPPORT_DEFAULT_MESSAGE } from '@/lib/support';
 
 
 /**
@@ -59,9 +59,16 @@ export function SupportSection() {
             />
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" asChild>
-                <a href={supportEmailHref(message)}>
+                <a href={supportGmailHref(message)} target="_blank" rel="noopener noreferrer">
                   <Mail className="size-3.5" aria-hidden="true" />
-                  Email
+                  Email via Gmail
+                </a>
+              </Button>
+
+              <Button variant="outline" size="sm" asChild>
+                <a href={supportEmailHref(message)} target="_blank" rel="noopener noreferrer">
+                  <Mail className="size-3.5" aria-hidden="true" />
+                  Use my email app
                 </a>
               </Button>
 
