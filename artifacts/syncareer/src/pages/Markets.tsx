@@ -843,8 +843,8 @@ const Opportunities = () => {
                       list (already filtered by `tab`) inside its panel so the
                       tab triggers reference real tabpanel ids. */}
                   {(['all', 'saved'] as const).map((value) => (
-                    {/* `flex` would otherwise override Radix's [hidden] on the
-                        inactive panel, leaving it taking half the pane. */}
+                    // `flex` would otherwise override Radix's [hidden] on the
+                    // inactive panel, leaving it taking half the pane.
                     <TabsContent
                       key={value}
                       value={value}
