@@ -163,8 +163,41 @@ export function ProfileSection() {
           <SettingsValue>{accountRoleLabel(profile?.user_type)}</SettingsValue>
         </SettingsRow>
 
-        <SettingsRow label="Profile picture" hint="Syncareer has no image upload of its own.">
-          <SettingsValue>{profile?.avatar_url ? 'Shown from your account image' : 'Your initials are used'}</SettingsValue>
+        <SettingsRow
+          label="Profile picture"
+          hint={
+            isMentor
+              ? 'Shown on your account and on your mentor profile. JPG or PNG under 2 MB.'
+              : 'Shown across Syncareer. JPG or PNG under 2 MB.'
+          }
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = '';
+                if (file) void changePhoto(file);
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={photoBusy || !userId}
+              onClick={() => fileInput.current?.click()}
+            >
+              {photoBusy ? 'Working…' : profile?.avatar_url ? 'Change photo' : 'Upload photo'}
+            </Button>
+            {profile?.avatar_url && (
+              <Button type="button" variant="ghost" size="sm" disabled={photoBusy} onClick={() => void clearPhoto()}>
+                Remove
+              </Button>
+            )}
+          </div>
         </SettingsRow>
 
         <SettingsRow label="Summary" hint="A short note on what you study or do.">
