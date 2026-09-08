@@ -141,15 +141,15 @@ export function CVEditorWorkspace({
   const navigate = useNavigate();
   const [cvData, setCVData] = useState<CVData>(initialCv ?? initialCVData);
   const [activeTab, setActiveTab] = useState<SectionKey>('personal');
-  const [viewMode, setViewMode] = useState<'focused' | 'document'>('focused');
+  // Single-open accordion: only one section's form is expanded at a time.
   const [collapsedSections, setCollapsedSections] = useState<Record<SectionKey, boolean>>({
     personal: false,
-    education: false,
-    experience: false,
-    projects: false,
-    activities: false,
-    skills: false,
-    references: false,
+    education: true,
+    experience: true,
+    projects: true,
+    activities: true,
+    skills: true,
+    references: true,
   });
 
   const [showPreview, setShowPreview] = useState(false);
@@ -296,20 +296,40 @@ export function CVEditorWorkspace({
     markChanged();
   };
 
+  const openSectionAccordion = (section: SectionKey) => {
+    setActiveTab(section);
+    setCollapsedSections({
+      personal: true,
+      education: true,
+      experience: true,
+      projects: true,
+      activities: true,
+      skills: true,
+      references: true,
+      [section]: false,
+    });
+  };
+
   const focusInvalidPersonalField = (field: string) => {
-    setActiveTab('personal');
+    openSectionAccordion('personal');
     requestAnimationFrame(() => document.getElementById(field)?.focus());
   };
 
   const toggleSectionCollapse = (section: SectionKey) => {
-    setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+    const isOpen = !collapsedSections[section];
+    if (isOpen) {
+      // Collapse the open section.
+      setCollapsedSections((prev) => ({ ...prev, [section]: true }));
+    } else {
+      openSectionAccordion(section);
+    }
   };
 
   const handleSuggestForBullet = (fieldPath: string, _text: string) => {
     setTargetAIBulletPath(fieldPath);
     setShowAIAssistance(true);
     const section = fieldPath.split('.')[0] as SectionKey;
-    if (section) setActiveTab(section);
+    if (section) openSectionAccordion(section);
     setWorkspaceNotice({
       tone: 'info',
       title: 'Context ready',
