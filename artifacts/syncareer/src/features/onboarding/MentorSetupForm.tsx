@@ -66,6 +66,7 @@ interface MentorSetupFormProps {
   userId: string;
   email: string;
   avatarUrl: string | null;
+  onPhotoChange?: (url: string) => void;
   fullName: string;
   onFullNameChange: (value: string) => void;
   currentRole: string;
@@ -98,6 +99,7 @@ export function MentorSetupForm({
   userId,
   email,
   avatarUrl,
+  onPhotoChange,
   fullName,
   onFullNameChange,
   currentRole,
