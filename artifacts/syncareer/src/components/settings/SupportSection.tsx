@@ -47,7 +47,7 @@ export function SupportSection() {
 
         <SettingsRow
           label="Send a message along"
-          hint="Let the team know you contributed, or send a word of encouragement. Opens WhatsApp or your phone's messaging app."
+          hint="Let the team know you contributed, or send a word of encouragement. Opens your email app or your phone's messaging app."
         >
           <div className="space-y-3">
             <Textarea
@@ -59,11 +59,12 @@ export function SupportSection() {
             />
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" asChild>
-                <a href={supportWhatsAppHref(message)} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="size-3.5" aria-hidden="true" />
-                  WhatsApp
+                <a href={supportEmailHref(message)}>
+                  <Mail className="size-3.5" aria-hidden="true" />
+                  Email
                 </a>
               </Button>
+
               <Button variant="outline" size="sm" asChild>
                 <a href={supportSmsHref(message)}>
                   <Smartphone className="size-3.5" aria-hidden="true" />
