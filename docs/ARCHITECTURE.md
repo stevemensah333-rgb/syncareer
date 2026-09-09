@@ -1,8 +1,8 @@
 # Architecture & Data Flow
 
-This is the **current** architecture. Older docs (e.g. `replit.md`,
-`docs/archive/`) reference an Express API server, employer dashboards, and an
-offline PWA — **none of those exist in the current code**. They are historical.
+This is the **current** architecture. Older docs that referenced an Express
+API server, employer dashboards, or an offline PWA described architecture
+that no longer exists and have been removed.
 
 ## System overview
 

@@ -4,7 +4,7 @@
 
 - **Frontend Application:** Located at `artifacts/syncareer/` (React 19, TypeScript 5.9, Vite 7, Tailwind CSS).
 - **Backend Architecture:** Supabase Auth, Postgres/PostgREST/RLS, database triggers/functions, and Supabase Edge Functions in `supabase/functions/`.
-- **Note on Historical Docs:** Stale documentation (such as `replit.md` or `docs/archive/`) referenced an Express API server (`artifacts/api-server/`) or employer dashboards. No Express server exists; the current operating application relies on Supabase.
+- **Note on Historical Docs:** Stale documentation (such as the removed `replit.md`) referenced an Express API server (`artifacts/api-server/`) or employer dashboards. No Express server exists; the current operating application relies on Supabase.
 
 ---
 

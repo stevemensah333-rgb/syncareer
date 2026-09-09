@@ -16,8 +16,7 @@ import type { RecordedSkill } from '@/features/assessment/careerProfile';
  *
  * These are all genuine backend relations. There is deliberately no goals
  * fetch: the backend has no goals store, and career-direction preferences
- * ("this interests me" / "not for me") are not persisted either — see
- * docs/CAREER_PROFILE_BACKEND_GAPS.md.
+ * ("this interests me" / "not for me") are not persisted either.
  *
  * Guests have no persisted profile; the hook simply stays in an empty,
  * not-loading state so the UI can show its sign-up prompt.
