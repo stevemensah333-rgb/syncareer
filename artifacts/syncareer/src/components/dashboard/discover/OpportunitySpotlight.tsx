@@ -237,4 +237,3 @@ export function OpportunitySpotlight({
   );
 }
 
-export default OpportunitySpotlight;
