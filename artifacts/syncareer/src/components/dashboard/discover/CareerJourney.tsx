@@ -105,4 +105,3 @@ export function CareerJourney({ phases }: { phases: JourneyPhase[] }) {
   );
 }
 
-export default CareerJourney;

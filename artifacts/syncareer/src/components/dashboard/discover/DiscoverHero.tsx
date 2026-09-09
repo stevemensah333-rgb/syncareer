@@ -130,4 +130,3 @@ function PhaseSteps({ current }: { current: NextMove['phase'] }) {
   );
 }
 
-export default DiscoverHero;

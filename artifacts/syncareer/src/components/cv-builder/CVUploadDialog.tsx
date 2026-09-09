@@ -140,4 +140,3 @@ export const CVUploadDialog: React.FC<CVUploadDialogProps> = ({
   );
 };
 
-export default CVUploadDialog;

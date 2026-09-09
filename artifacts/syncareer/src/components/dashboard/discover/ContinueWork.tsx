@@ -165,4 +165,3 @@ export function ContinueWork({ applications, totalTracked, items }: ContinueWork
   );
 }
 
-export default ContinueWork;
