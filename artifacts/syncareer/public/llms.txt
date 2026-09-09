@@ -8,6 +8,10 @@ Syncareer is free to use. There are no paid plans, tiers, or subscriptions, and 
 
 - [Home](/): Platform overview, product story, FAQs, and sign-up.
 - [Career assessment](/assessment): A public 45-question RIASEC interest assessment; results are shown without an account.
+- [Blog](/blog): Practical career guidance for students and recent graduates — CV writing, interview preparation, and finding real entry-level jobs.
+- [How to write a CV that gets read](/blog/how-to-write-a-cv-that-gets-read): Structure, bullet points, and what to leave out for a CV that passes screening.
+- [How to prepare for a job interview](/blog/how-to-prepare-for-a-job-interview): Research, STAR, role-specific practice, and talking about limited experience.
+- [Where to find entry-level jobs](/blog/where-to-find-entry-level-jobs): Better sources than big job boards, organising your search, and connecting requirements to evidence.
 - [Terms and Conditions](/terms): Rules governing access to and use of Syncareer.
 - [Privacy Policy](/privacy): How Syncareer collects, uses and handles information.
 

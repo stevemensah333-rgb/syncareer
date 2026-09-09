@@ -127,7 +127,9 @@ describe("landing page content and navigation", () => {
     expect(document.activeElement).toBe(menu);
     expect(screen.queryByRole("link", { name: /counsellors/i })).toBeNull();
     expect(screen.queryByRole("link", { name: /pricing/i })).toBeNull();
-    expect(screen.queryByRole("link", { name: /blog/i })).toBeNull();
+    // Blog is now an intentional public route — header and footer both link to it.
+    const blogLinks = screen.getAllByRole("link", { name: /blog/i });
+    expect(blogLinks.length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Product" }).length).toBeGreaterThan(0);
   });
 });
