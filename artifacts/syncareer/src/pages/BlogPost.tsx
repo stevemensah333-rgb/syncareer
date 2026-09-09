@@ -152,7 +152,7 @@ export default function BlogPost() {
 
             {related.length > 0 && (
               <div className="mt-14 border-t pt-10">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="dossier-eyebrow">
                   Keep reading
                 </p>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
