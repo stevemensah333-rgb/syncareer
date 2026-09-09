@@ -97,7 +97,7 @@ exist) and Replit-agent *output* with no consumer were removed.
 |---|---|---|---|
 | `useClerk()` in `artifacts/syncareer/src/lib/auth.tsx` | Clerk (abandoned provider) | Call sites migrated to `useAuth()` | **Removed.** Replaced by `useAuth()` in `Navbar.tsx` and `Settings.tsx`. Its unused siblings were removed (§3.6) |
 | `.lovable/plan.md` | Lovable | Audit log of a prior automated pass; inside a directory Lovable owns | **Kept** — prior explicit retention decision (`LOVABLE_INTEGRATION.md`, `BACKEND_PLATFORM_INVENTORY.md` §5) |
-| `docs/archive/**` | Various | Explicitly non-authoritative; linked from `README.md` and `docs/archive/README.md` | **Kept**, and two superseded docs were moved *into* it (§3.7) |
+| `docs/archive/**` | Various | Was explicitly non-authoritative | **Removed** — historical docs are deleted rather than archived (§3.7) |
 
 ### 2.4 `UNKNOWN` — kept, with the exact evidence required before removal
 
@@ -213,13 +213,11 @@ Kept: `AuthProvider` and `useAuth` — all live (`useClerk` was removed and its 
 
 ### 3.7 Superseded documentation
 
-Moved to `docs/archive/` with header notes explaining what superseded them
-(content preserved, not deleted):
-
-| Document | Why it is no longer current |
-|---|---|
-| `TYPECHECK_TRACKING.md` → `docs/archive/` | Tracks a 205-error typecheck baseline that is resolved; `tsc --noEmit` now reports 0. It was already described as "retained for history" but sat at the repository root as though current |
-| `docs/CLEANUP_BACKLOG.md` → `docs/archive/` | Materially contradicted by the repository: claims 3 tracked edge functions (there are 11), ~150 strict-null errors (there are 0), and "no tooling for duplicate types" (`schema:types:check` / `schema:types:sync` exist). Not referenced from the README index |
+Superseded and historical docs are **deleted**, not archived. The former
+`docs/archive/` directory and the root `TYPECHECK_TRACKING.md` it held tracked
+resolved baselines (205-error typecheck, 3 tracked edge functions) that no
+longer describe the repository; all were removed. A current
+`docs/CLEANUP_BACKLOG.md` records ongoing cleanup decisions.
 
 ---
 

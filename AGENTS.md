@@ -20,7 +20,7 @@ Support payments must never be used as a mechanism for feature access.
 - The backend is Supabase Auth + Postgres/PostgREST/RLS + database functions + Edge Functions. There is no in-repo HTTP server.
 - The hosted backend is **Lovable Cloud**, which remains an intentional part of the workflow (Supabase integration, OAuth, AI gateway, email/webhooks, analytics, deployment). A Supabase-style project ref is not proof of personal Supabase ownership.
 - Replit is retired. Legacy Replit files may be removed only after confirming no build, runtime, deployment, or docs path uses them.
-- `docs/archive` is historical, not authoritative. `docs/` holds current architecture, design tokens, test matrix, and runbooks.
+- `docs/` holds current architecture, design tokens, test matrix, and runbooks; stale or superseded docs are deleted rather than archived.
 
 ## Read before changing
 

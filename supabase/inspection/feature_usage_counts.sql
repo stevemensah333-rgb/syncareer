@@ -1,5 +1,5 @@
 -- Syncareer feature usage counts — READ-ONLY inspection for the feature-portfolio
--- decision stage (docs/FEATURE_PORTFOLIO_DECISIONS.md).
+-- decision stage.
 --
 -- How to run (owner only):
 --   Lovable Cloud -> SQL editor -> run each statement separately.

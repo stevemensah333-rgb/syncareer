@@ -1,5 +1,5 @@
 -- READ ONLY. Run in Lovable Cloud SQL editor immediately before any separately
--- approved apply. Every result must match docs/MIGRATION_PROPOSAL_APPLICATION_JOURNEY.md.
+-- approved apply. Every result must match the approved application-workspace migration plan.
 BEGIN TRANSACTION READ ONLY;
 
 SELECT current_setting('server_version') AS postgres_version;

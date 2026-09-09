@@ -9,8 +9,7 @@
  *                        directions that are not yet in user_skills
  *
  * Goals and direction preferences ("this interests me") are NOT shown as
- * stored data: no backend table holds them yet. See
- * docs/CAREER_PROFILE_BACKEND_GAPS.md for the proposed backend changes.
+ * stored data: no backend table holds them yet.
  */
 import { ArrowRight, FileText, Star, Target, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';

@@ -29,7 +29,7 @@ Use this order when sources disagree:
 3. **A private full Lovable database export** for restore validation only. It contains production rows and must never be committed, pasted into chat, or used as ordinary schema documentation.
 4. **Root Lovable-generated types** at `src/integrations/supabase/types.ts`, as shape evidence only. Types omit policies, grants, indexes, triggers, extensions, cron, queues, function bodies, non-exposed schemas, and possibly non-API routines.
 5. **Current root migrations**, as ordered change intent only. They do not establish an initial state.
-6. **Git-history migrations/types and `docs/archive` SQL**, as historical leads only. They are not evidence of current live state.
+6. **Git-history migrations/types and superseded SQL scripts**, as historical leads only. They are not evidence of current live state.
 
 Generated TypeScript and archived SQL must never be converted into a baseline by inference.
 
@@ -158,7 +158,7 @@ This is **repository missing**, not permission to recover or invent SQL.
 
 ### Archived SQL dump
 
-`docs/archive/DATABASE_SCHEMA.sql` is a 96-line, hand-run credential feature script, not a database dump. It defines only `counsellor_credentials`, related policies/indexes, and a prose-only storage recommendation. The active app calls this table, but neither generated type copy includes it. Treat it as **historical/unknown**, not executable authority.
+A 96-line hand-run credential feature script recovered from git history is not a database dump. It defines only `counsellor_credentials`, related policies/indexes, and a prose-only storage recommendation. The active app calls this table, but neither generated type copy includes it. Treat it as **historical/unknown**, not executable authority.
 
 ### Functions, triggers, grants, policies, storage, queues, cron
 
@@ -308,7 +308,7 @@ For project reference `fsorkxlcasekndigezlx`:
 | Unguarded `pnpm schema:types:sync` | Refused to write and left the application type hash unchanged. The confirmed copy mode was not run because no fresh Lovable regeneration exists. |
 | Application tests | Passed: 11 files, 99 tests (post-repair). |
 | Production Vite build | Passed. Existing dynamic/static import chunk warnings remain. |
-| TypeScript typecheck | Passed with 0 diagnostics (post-repair) under the strict compiler settings. The historical 205-diagnostic baseline in `docs/archive/TYPECHECK_TRACKING.md` is resolved; the known schema/type seams (`counsellor_credentials`, `counsellor_messages`, `get_my_referral_code`, `meeting_platform`) are handled in the application type copy at `artifacts/syncareer/src/integrations/supabase/types.ts`, which is why the two copies remain intentionally out of sync until a fresh Lovable regeneration cycle. |
+| TypeScript typecheck | Passed with 0 diagnostics (post-repair) under the strict compiler settings. The historical 205-diagnostic typecheck baseline is resolved; the known schema/type seams (`counsellor_credentials`, `counsellor_messages`, `get_my_referral_code`, `meeting_platform`) are handled in the application type copy at `artifacts/syncareer/src/integrations/supabase/types.ts`, which is why the two copies remain intentionally out of sync until a fresh Lovable regeneration cycle. |
 | Live metadata SQL | Not run: this Arena session has no Lovable project-session SQL editor access. |
 | Isolated schema restore + SQL smoke | Blocked: no complete Lovable schema-only export was available, and no SQL was invented. |
 | Lovable safe schema-change regeneration cycle | Blocked until the owner confirms an existing Test environment or another approved non-production Lovable workflow. |
