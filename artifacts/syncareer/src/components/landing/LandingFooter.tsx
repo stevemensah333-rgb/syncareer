@@ -21,6 +21,7 @@ const FOOTER_GROUPS: FooterGroup[] = [
   {
     title: "Resources",
     links: [
+      { label: "Blog", href: "/blog" },
       { label: "Contact", href: "mailto:hello@syncareer.me", external: true },
     ],
   },

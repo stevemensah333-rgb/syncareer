@@ -683,6 +683,41 @@
   }
 
   /* ---------------------------------------------------------------
+   * BLOG ARTICLE PROSE
+   * Mirrors the legal-document approach: scoped, theme-aware, no
+   * external typography plugin. One class on the article wrapper.
+   * --------------------------------------------------------------- */
+  .blog-article {
+    @apply text-base leading-7 text-foreground;
+  }
+
+  .blog-article p {
+    @apply mt-4 max-w-none;
+  }
+
+  .blog-article > p:first-child {
+    @apply mt-0;
+  }
+
+  .blog-article h2 {
+    @apply mt-10 text-xl font-semibold tracking-[-0.02em];
+    scroll-margin-top: 6rem;
+  }
+
+  .blog-article ul {
+    @apply mt-4 space-y-2 pl-6;
+    list-style: disc;
+  }
+
+  .blog-article a {
+    @apply text-primary underline underline-offset-4;
+  }
+
+  .blog-article strong {
+    @apply font-semibold text-foreground;
+  }
+
+  /* ---------------------------------------------------------------
    * SCROLL-DRIVEN ANIMATION — progressive enhancement.
    *
    * Browsers that support `animation-timeline: view()` (Chrome 115+,
