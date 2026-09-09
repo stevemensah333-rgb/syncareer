@@ -37,3 +37,19 @@ Do this one function at a time:
    on to the next.
 
 Delete a directory here once its function has been promoted.
+
+## `legacy/` — live but uncalled
+
+`legacy/` holds recovered source for seven functions that are still deployed but have no
+caller in the app, in tracked Edge Functions, or in database functions:
+
+`generate-module-quiz`, `suggest-courses`, `suggest-free-resources` (learning module,
+retired), `verify-paystack-payment` (paid model, removed), `cv-ai-assistant`,
+`talent-recommend` (employer sourcing, never shipped), `compute-university-insights`
+(table dropped).
+
+Source is kept here so deleting the deployed functions is reversible. Same staleness
+warning applies.
+
+Still live and in use, so not listed here: `interview-tts`
+(`src/hooks/useVoiceInterview.ts`) and `auth-email-hook` (wired into Supabase Auth).
