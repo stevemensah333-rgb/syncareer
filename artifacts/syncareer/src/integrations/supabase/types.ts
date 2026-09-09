@@ -255,84 +255,6 @@ export type Database = {
         }
         Relationships: []
       }
-      career_guidance_sessions: {
-        Row: {
-          confidence_score: number | null
-          created_at: string
-          id: string
-          messages: Json
-          risk_notes: string | null
-          session_type: string
-          structured_output: Json | null
-          suggested_next_skill: string | null
-          top_recommendation: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          confidence_score?: number | null
-          created_at?: string
-          id?: string
-          messages?: Json
-          risk_notes?: string | null
-          session_type?: string
-          structured_output?: Json | null
-          suggested_next_skill?: string | null
-          top_recommendation?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          confidence_score?: number | null
-          created_at?: string
-          id?: string
-          messages?: Json
-          risk_notes?: string | null
-          session_type?: string
-          structured_output?: Json | null
-          suggested_next_skill?: string | null
-          top_recommendation?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      career_skills: {
-        Row: {
-          career_id: string
-          created_at: string
-          id: string
-          skill_id: string
-        }
-        Insert: {
-          career_id: string
-          created_at?: string
-          id?: string
-          skill_id: string
-        }
-        Update: {
-          career_id?: string
-          created_at?: string
-          id?: string
-          skill_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "career_skills_career_id_fkey"
-            columns: ["career_id"]
-            isOneToOne: false
-            referencedRelation: "careers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "career_skills_skill_id_fkey"
-            columns: ["skill_id"]
-            isOneToOne: false
-            referencedRelation: "skills_taxonomy"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       careers: {
         Row: {
           created_at: string
@@ -368,65 +290,6 @@ export type Database = {
           title?: string
         }
         Relationships: []
-      }
-      counsellor_availability: {
-        Row: {
-          counsellor_id: string
-          created_at: string
-          day_of_week: number
-          end_time: string
-          id: string
-          is_available: boolean
-          start_time: string
-        }
-        Insert: {
-          counsellor_id: string
-          created_at?: string
-          day_of_week: number
-          end_time: string
-          id?: string
-          is_available?: boolean
-          start_time: string
-        }
-        Update: {
-          counsellor_id?: string
-          created_at?: string
-          day_of_week?: number
-          end_time?: string
-          id?: string
-          is_available?: boolean
-          start_time?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "counsellor_availability_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "counsellor_booking_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "counsellor_availability_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "counsellor_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "counsellor_availability_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "counsellor_profiles_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "counsellor_availability_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "mentor_profiles_public"
-            referencedColumns: ["mentor_id"]
-          },
-        ]
       }
       counsellor_bookings: {
         Row: {
@@ -558,139 +421,6 @@ export type Database = {
           years_experience?: number
         }
         Relationships: []
-      }
-      counsellor_reviews: {
-        Row: {
-          counsellor_id: string
-          created_at: string
-          id: string
-          rating: number
-          review_text: string | null
-          reviewer_id: string
-          updated_at: string
-        }
-        Insert: {
-          counsellor_id: string
-          created_at?: string
-          id?: string
-          rating: number
-          review_text?: string | null
-          reviewer_id: string
-          updated_at?: string
-        }
-        Update: {
-          counsellor_id?: string
-          created_at?: string
-          id?: string
-          rating?: number
-          review_text?: string | null
-          reviewer_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "counsellor_reviews_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "counsellor_booking_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "counsellor_reviews_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "counsellor_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "counsellor_reviews_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "counsellor_profiles_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "counsellor_reviews_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "mentor_profiles_public"
-            referencedColumns: ["mentor_id"]
-          },
-        ]
-      }
-      counsellor_sessions: {
-        Row: {
-          amount_paid: number | null
-          client_id: string
-          counsellor_id: string
-          created_at: string
-          duration_minutes: number
-          id: string
-          meeting_link: string | null
-          payment_status: string | null
-          scheduled_at: string
-          session_notes: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          amount_paid?: number | null
-          client_id: string
-          counsellor_id: string
-          created_at?: string
-          duration_minutes?: number
-          id?: string
-          meeting_link?: string | null
-          payment_status?: string | null
-          scheduled_at: string
-          session_notes?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          amount_paid?: number | null
-          client_id?: string
-          counsellor_id?: string
-          created_at?: string
-          duration_minutes?: number
-          id?: string
-          meeting_link?: string | null
-          payment_status?: string | null
-          scheduled_at?: string
-          session_notes?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "counsellor_sessions_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "counsellor_booking_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "counsellor_sessions_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "counsellor_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "counsellor_sessions_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "counsellor_profiles_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "counsellor_sessions_counsellor_id_fkey"
-            columns: ["counsellor_id"]
-            isOneToOne: false
-            referencedRelation: "mentor_profiles_public"
-            referencedColumns: ["mentor_id"]
-          },
-        ]
       }
       email_send_log: {
         Row: {
@@ -1504,48 +1234,6 @@ export type Database = {
         }
         Relationships: []
       }
-      payments: {
-        Row: {
-          amount: number
-          created_at: string
-          currency: string
-          email: string
-          id: string
-          metadata: Json | null
-          payment_method: string | null
-          paystack_reference: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          currency?: string
-          email: string
-          id?: string
-          metadata?: Json | null
-          payment_method?: string | null
-          paystack_reference: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          currency?: string
-          email?: string
-          id?: string
-          metadata?: Json | null
-          payment_method?: string | null
-          paystack_reference?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1672,39 +1360,6 @@ export type Database = {
           recommended_item_title?: string
           user_action?: string | null
           user_id?: string
-        }
-        Relationships: []
-      }
-      referrals: {
-        Row: {
-          created_at: string
-          id: string
-          referee_id: string | null
-          referral_code: string
-          referrer_id: string
-          reward_granted: boolean
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          referee_id?: string | null
-          referral_code: string
-          referrer_id: string
-          reward_granted?: boolean
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          referee_id?: string | null
-          referral_code?: string
-          referrer_id?: string
-          reward_granted?: boolean
-          status?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1839,68 +1494,6 @@ export type Database = {
         }
         Relationships: []
       }
-      skill_endorsements: {
-        Row: {
-          created_at: string
-          endorser_id: string
-          id: string
-          skill_name: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          endorser_id: string
-          id?: string
-          skill_name: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          endorser_id?: string
-          id?: string
-          skill_name?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      skill_evidence: {
-        Row: {
-          created_at: string
-          id: string
-          signal_strength: number
-          skill_id: string
-          source_id: string | null
-          source_type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          signal_strength?: number
-          skill_id: string
-          source_id?: string | null
-          source_type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          signal_strength?: number
-          skill_id?: string
-          source_id?: string | null
-          source_type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "skill_evidence_skill_id_fkey"
-            columns: ["skill_id"]
-            isOneToOne: false
-            referencedRelation: "skills_taxonomy"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       skills_taxonomy: {
         Row: {
           canonical_name: string
@@ -1970,7 +1563,6 @@ export type Database = {
           current_period_end: string | null
           current_period_start: string | null
           id: string
-          payment_id: string | null
           status: string
           tier: string
           updated_at: string
@@ -1981,7 +1573,6 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
-          payment_id?: string | null
           status?: string
           tier?: string
           updated_at?: string
@@ -1992,21 +1583,12 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
-          payment_id?: string | null
           status?: string
           tier?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "subscriptions_payment_id_fkey"
-            columns: ["payment_id"]
-            isOneToOne: false
-            referencedRelation: "payments"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       suppressed_emails: {
         Row: {
@@ -2029,36 +1611,6 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
-        }
-        Relationships: []
-      }
-      university_insights: {
-        Row: {
-          created_at: string
-          graduate_outcomes: Json
-          id: string
-          major: string
-          top_careers: Json
-          university_name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          graduate_outcomes?: Json
-          id?: string
-          major: string
-          top_careers?: Json
-          university_name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          graduate_outcomes?: Json
-          id?: string
-          major?: string
-          top_careers?: Json
-          university_name?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -2184,35 +1736,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      user_skill_map: {
-        Row: {
-          confidence_score: number | null
-          last_updated_at: string
-          skill_id: string
-          user_id: string
-        }
-        Insert: {
-          confidence_score?: number | null
-          last_updated_at?: string
-          skill_id: string
-          user_id: string
-        }
-        Update: {
-          confidence_score?: number | null
-          last_updated_at?: string
-          skill_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_skill_map_skill_id_fkey"
-            columns: ["skill_id"]
-            isOneToOne: false
-            referencedRelation: "skills_taxonomy"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_skills: {
         Row: {
@@ -2512,7 +2035,6 @@ export type Database = {
       }
       get_my_mentor_profile: { Args: never; Returns: Json }
       get_my_mentorship_requests: { Args: never; Returns: Json }
-      get_my_referral_code: { Args: never; Returns: string }
       get_profile_user_type: { Args: { _id: string }; Returns: string }
       has_role: {
         Args: {
